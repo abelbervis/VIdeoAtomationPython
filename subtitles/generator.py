@@ -1,0 +1,137 @@
+"""
+Subtitle Generator for Vertical Shorts.
+Generates synchronized .srt and styled .ass subtitles formatted for mobile vertical video.
+Optimized for readability: short word chunks, high contrast colors, and mobile UI safe-zones.
+"""
+
+import math
+import re
+from pathlib import Path
+from typing import Dict, List, Tuple, Any
+
+from config import (
+    SUBTITLES_DIR,
+    SUBTITLE_FONT,
+    SUBTITLE_FONT_SIZE,
+    SUBTITLE_PRIMARY_COLOR,
+    SUBTITLE_OUTLINE_COLOR,
+    SUBTITLE_OUTLINE_WIDTH,
+    SUBTITLE_MARGIN_BOTTOM,
+    VIDEO_WIDTH,
+    VIDEO_HEIGHT
+)
+
+
+def format_timestamp_srt(seconds: float) -> str:
+    """Format seconds into SRT timestamp (HH:MM:SS,mmm)."""
+    hrs = int(seconds // 3600)
+    mins = int((seconds % 3600) // 60)
+    secs = int(seconds % 60)
+    millis = int(round((seconds - int(seconds)) * 1000))
+    return f"{hrs:02d}:{mins:02d}:{secs:02d},{millis:03d}"
+
+
+def format_timestamp_ass(seconds: float) -> str:
+    """Format seconds into ASS timestamp (H:MM:SS.cc)."""
+    hrs = int(seconds // 3600)
+    mins = int((seconds % 3600) // 60)
+    secs = int(seconds % 60)
+    centis = int(round((seconds - int(seconds)) * 100))
+    if centis >= 100:
+        centis = 99
+    return f"{hrs}:{mins:02d}:{secs:02d}.{centis:02d}"
+
+
+class SubtitleGenerator:
+    """Creates mobile-ready vertical subtitles from scene narration timings."""
+
+    def __init__(self, output_dir: Path = SUBTITLES_DIR):
+        self.output_dir = Path(output_dir)
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+
+    def generate_subtitles(
+        self,
+        scene_timings: List[Dict[str, Any]],
+        max_words_per_line: int = 5
+    ) -> Tuple[Path, Path]:
+        """
+        Generate both SRT and styled ASS subtitle files.
+        Splits scene narrations into short, rhythmic chunks for vertical video.
+        """
+        subtitle_chunks: List[Dict[str, Any]] = []
+
+        for scene in scene_timings:
+            narration = scene.get("narration", "").strip()
+            start_time = scene.get("start", 0.0)
+            end_time = scene.get("end", start_time + 4.0)
+            duration = max(0.5, end_time - start_time)
+
+            # Split narration into words
+            words = narration.split()
+            if not words:
+                continue
+
+            total_words = len(words)
+            # Group into small readable chunks (3-5 words)
+            chunk_size = min(max_words_per_line, max(3, math.ceil(total_words / max(1, duration / 1.5))))
+            word_groups = [words[i:i + chunk_size] for i in range(0, total_words, chunk_size)]
+            num_groups = len(word_groups)
+
+            chunk_duration = duration / num_groups
+            for idx, group in enumerate(word_groups):
+                chunk_start = start_time + (idx * chunk_duration)
+                chunk_end = min(end_time, chunk_start + chunk_duration)
+                text = " ".join(group)
+
+                subtitle_chunks.append({
+                    "start": chunk_start,
+                    "end": chunk_end,
+                    "text": text.upper()  # Uppercase for high-impact Shorts typography
+                })
+
+        srt_path = self.output_dir / "subtitles.srt"
+        ass_path = self.output_dir / "subtitles.ass"
+
+        self._write_srt(subtitle_chunks, srt_path)
+        self._write_ass(subtitle_chunks, ass_path)
+
+        print(f"  📝 Subtitles generated: {srt_path.name} & {ass_path.name} ({len(subtitle_chunks)} cues)")
+        return srt_path, ass_path
+
+    def _write_srt(self, chunks: List[Dict[str, Any]], file_path: Path) -> None:
+        """Write standard SRT format."""
+        with open(file_path, "w", encoding="utf-8") as f:
+            for i, chunk in enumerate(chunks, 1):
+                start_str = format_timestamp_srt(chunk["start"])
+                end_str = format_timestamp_srt(chunk["end"])
+                f.write(f"{i}\n")
+                f.write(f"{start_str} --> {end_str}\n")
+                f.write(f"{chunk['text']}\n\n")
+
+    def _write_ass(self, chunks: List[Dict[str, Any]], file_path: Path) -> None:
+        """
+        Write ASS format with custom styling for 1080x1920 vertical canvas.
+        Positions subtitles above TikTok/Shorts UI bar with crisp outline.
+        """
+        header = f"""[Script Info]
+ScriptType: v4.00+
+PlayResX: {VIDEO_WIDTH}
+PlayResY: {VIDEO_HEIGHT}
+WrapStyle: 0
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: ShortsDefault,{SUBTITLE_FONT},{SUBTITLE_FONT_SIZE},{SUBTITLE_PRIMARY_COLOR},&H000000FF,{SUBTITLE_OUTLINE_COLOR},&H80000000,-1,0,0,0,100,100,1.2,0,1,{SUBTITLE_OUTLINE_WIDTH},2.0,2,80,80,{SUBTITLE_MARGIN_BOTTOM},1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+"""
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.write(header)
+            for chunk in chunks:
+                start_str = format_timestamp_ass(chunk["start"])
+                end_str = format_timestamp_ass(chunk["end"])
+                # Clean ASS text
+                text = chunk["text"].replace("\n", "\\N")
+                f.write(f"Dialogue: 0,{start_str},{end_str},ShortsDefault,,0,0,0,,{text}\n")

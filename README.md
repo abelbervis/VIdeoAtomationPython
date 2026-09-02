@@ -1,11 +1,176 @@
-<div align="center">
+# 🚀 NASA Shorts Generator (`nasa_shorts`)
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+Generador minimalista de videos verticales automáticos (formato YouTube Shorts, Instagram Reels y TikTok) sobre ciencia, astronomía y física utilizando material audiovisual oficial de la **NASA**.
 
-  <h1>Built with AI Studio</h2>
+---
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+## 🌟 Características
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+- **Sin interfaz gráfica ni servidores**: Aplicación CLI minimalista y robusta para la terminal.
+- **Formato Vertical Óptimo**: Resolución 1080x1920 (9:16), 30 FPS, H.264 / AAC, renderizado rápido con FFmpeg.
+- **Contenido Oficial de la NASA**: Consulta en tiempo real la API oficial de la NASA (*NASA Image and Video Library*). Prioriza videos en movimiento y complementa con fotografías de alta resolución.
+- **Guiones Científicos Estructurados**: Generación mediante LLM (Gemini / OpenAI / motor científico local) con gancho inicial (hook), división por escenas y palabras clave en inglés para máxima precisión en la búsqueda astronómica.
+- **Narración y Subtítulos Sincronizados**: Módulo TTS con timestamps reales y subtítulos automáticos (`.srt` y `.ass`) adaptados a zonas seguras de pantalla vertical para smartphones.
+- **Música de Fondo Opcional**: Mezcla automática con *audio ducking* si existe un archivo en `assets/music/background.mp3`.
+- **Registro de Licencias y Fuentes**: Exporta `output/source_metadata.json` con todos los identificadores de NASA, autores y enlaces originales.
+- **Bajo Consumo de Hardware**: Optimizado para ejecutarse en computadoras estándar (Intel i5, 8GB RAM, sin GPU dedicada).
 
-</div>
+---
+
+## 📁 Estructura del Proyecto
+
+```text
+nasa_shorts/
+│
+├── main.py                     # Punto de entrada CLI
+├── config.py                   # Configuraciones centralizadas y variables de entorno
+├── requirements.txt            # Dependencias Python
+├── .env.example                # Plantilla de variables de entorno y API keys
+│
+├── providers/
+│   └── nasa.py                 # Cliente oficial NASA Image & Video API
+│
+├── ai/
+│   └── script_generator.py     # Generador de guiones estructurados (Gemini/OpenAI)
+│
+├── audio/
+│   ├── tts.py                  # Motor TTS (Edge-TTS, OpenAI, Google)
+│   └── music.py                # Mezcla y ajuste de música de fondo
+│
+├── subtitles/
+│   └── generator.py            # Generación de subtítulos .srt y .ass verticales
+│
+├── video/
+│   └── render.py               # Renderizado con FFmpeg y efectos Ken Burns
+│
+├── utils/
+│   └── files.py                # Utilidades de descarga, metadatos y sistema de archivos
+│
+├── assets/
+│   ├── music/                  # Carpeta para background.mp3 opcional
+│   └── .gitkeep
+│
+├── output/                     # Carpeta de videos generados y metadatos
+│   └── .gitkeep
+│
+└── README.md
+```
+
+---
+
+## 🐳 Ejecución Rápida con Docker (Sin instalar Python ni FFmpeg localmente)
+
+Si tienes **Docker** instalado, no necesitas instalar Python, ni librerías, ni FFmpeg en tu sistema operativo:
+
+### 1. Construir la imagen (solo una vez):
+```bash
+docker build -t nasa_shorts .
+```
+
+### 2. Ejecutar y generar tu video:
+```bash
+# En Linux / macOS:
+docker run --rm -v "$(pwd)/output:/app/output" --env-file .env nasa_shorts --topic "agujeros negros"
+
+# En Windows (PowerShell):
+docker run --rm -v "${PWD}/output:/app/output" --env-file .env nasa_shorts --topic "agujeros negros"
+
+# En Windows (CMD):
+docker run --rm -v "%cd%/output:/app/output" --env-file .env nasa_shorts --topic "agujeros negros"
+```
+
+El video se guardará automáticamente en la carpeta local `output/` de tu máquina.
+
+---
+
+## ⚙️ Requisitos Previos (Sin Docker)
+
+1. **Python 3.10+**
+2. **FFmpeg** instalado en tu sistema:
+   - **Ubuntu/Debian**: `sudo apt update && sudo apt install -y ffmpeg`
+   - **macOS** (Homebrew): `brew install ffmpeg`
+   - **Windows** (Chocolatey o Scoop): `choco install ffmpeg` o descarga desde [ffmpeg.org](https://ffmpeg.org/download.html).
+
+---
+
+## 📥 Instalación
+
+1. Clona o copia el repositorio:
+   ```bash
+   cd nasa_shorts
+   ```
+
+2. Instala las dependencias:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. (Opcional) Configura tus API keys en `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+   *Nota: La API oficial de la NASA de imágenes y videos es pública y no requiere clave obligatoria. Si agregas `GEMINI_API_KEY` u `OPENAI_API_KEY`, el generador creará guiones dinámicos personalizados con IA.*
+
+---
+
+## 💻 Uso en Terminal (CLI)
+
+### 1. Generación Básica
+```bash
+python main.py --topic "agujeros negros"
+```
+
+### 2. Con Pregunta Específica
+```bash
+python main.py --topic "¿Qué pasaría si la Tierra dejara de girar?"
+```
+
+### 3. Ajustando la Duración
+```bash
+python main.py --topic "Marte" --duration 30
+python main.py --topic "James Webb" --duration 45
+```
+
+### 4. Usar la API de Pexels (Stock Videos en 9:16 Vertical & Fotos HD)
+Puedes generar videos usando la biblioteca oficial de **Pexels** (ideal para temas de naturaleza, océanos, tecnología, ciudades, física, etc.):
+
+1. Obtén tu clave gratuita en [pexels.com/api](https://www.pexels.com/api/) (se genera al instante en 30 segundos).
+2. Agrégala en tu archivo `.env`:
+   ```env
+   PEXELS_API_KEY="tu_clave_de_pexels_aqui"
+   ```
+3. Ejecuta indicando `--provider pexels`:
+   ```bash
+   # Océanos con Pexels
+   python main.py --topic "los secretos del océano profundo" --provider pexels
+
+   # Inteligencia artificial o tecnología con Pexels
+   python main.py --topic "la revolución de la inteligencia artificial" --provider pexels
+
+   # O pasando la clave directamente por parámetro CLI:
+   python main.py --topic "volcanes" --provider pexels --pexels-key "tu_clave"
+   ```
+
+### 5. Modo Inteligente Automático (`--provider auto`)
+Por defecto (`auto`), el sistema enruta inteligentemente:
+- Si el tema es astronómico/espacio ("Marte", "agujeros negros", "Tierra"), consulta primero la **NASA**.
+- Si el tema es general o no se encuentra en la NASA, busca videos verticales en **Pexels**.
+
+### 6. Con Música de Fondo
+Coloca un archivo en `assets/music/background.mp3` o pásalo como argumento:
+```bash
+python main.py --topic "El Sistema Solar" --music "ruta/a/mi_musica.mp3"
+```
+
+### 7. Ayuda de Comandos
+```bash
+python main.py --help
+```
+
+---
+
+## 📜 Salidas Generadas
+
+Tras la ejecución, encontrarás los resultados en la carpeta `output/`:
+- `output/<tema_del_video>.mp4`: Video vertical 1080x1920 con audio, subtítulos y assets de NASA o Pexels.
+- `output/source_metadata.json`: Registro de cada recurso multimedia utilizado (NASA o Pexels), con su identificador, autor/fotógrafo, enlace original, créditos y tipo de licencia.

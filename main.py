@@ -1,0 +1,271 @@
+#!/usr/bin/env python3
+"""
+NASA Shorts Generator - Main CLI Entry Point.
+Automatically creates vertical science shorts (1080x1920 MP4) using official NASA media, AI scripts, TTS, and FFmpeg.
+
+Usage:
+  python main.py --topic "¿Qué pasaría si la Tierra dejara de girar?"
+  python main.py --topic "agujeros negros" --duration 35
+  python main.py --topic "Marte" --duration 30
+  python main.py --topic "James Webb" --duration 45
+"""
+
+import argparse
+import sys
+import time
+from pathlib import Path
+
+from config import (
+    BASE_DIR,
+    OUTPUT_DIR,
+    TEMP_DIR,
+    DEFAULT_DURATION,
+    DEFAULT_TTS_VOICE,
+    TTS_PROVIDER,
+    MEDIA_PROVIDER,
+    PEXELS_API_KEY
+)
+from ai.script_generator import ScriptGenerator
+from providers.nasa import NASAProvider
+from providers.pexels import PexelsProvider
+from audio.tts import TTSManager
+from audio.music import MusicManager
+from subtitles.generator import SubtitleGenerator
+from video.render import VideoRenderer
+from utils.files import sanitize_filename, clean_temp_directory, check_ffmpeg
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="🚀 Science & Stock Shorts Generator: Create automated vertical videos using NASA & Pexels media.",
+        formatter_class=argparse.RawTextHelpFormatter
+    )
+    parser.add_argument(
+        "--topic",
+        type=str,
+        required=True,
+        help="Topic for the video (e.g., 'agujeros negros', 'los secretos del océano', 'inteligencia artificial', 'Marte')"
+    )
+    parser.add_argument(
+        "--duration",
+        type=int,
+        default=DEFAULT_DURATION,
+        help=f"Target duration in seconds (default: {DEFAULT_DURATION}s, range: 20-60s)"
+    )
+    parser.add_argument(
+        "--provider",
+        type=str,
+        default=MEDIA_PROVIDER,
+        choices=["auto", "nasa", "pexels"],
+        help="Media source provider:\n"
+             "  'auto'   : Intelligent routing (NASA for space, Pexels for nature/tech/curiosities)\n"
+             "  'nasa'   : Official NASA Image & Video Library (public domain space media)\n"
+             "  'pexels' : Pexels API (high-definition vertical 9:16 stock videos & photos)"
+    )
+    parser.add_argument(
+        "--pexels-key",
+        type=str,
+        default=None,
+        help="Custom Pexels API key (or set PEXELS_API_KEY in .env file)"
+    )
+    parser.add_argument(
+        "--output",
+        type=str,
+        default=None,
+        help="Custom output file name (default: output/<sanitized_topic>.mp4)"
+    )
+    parser.add_argument(
+        "--voice",
+        type=str,
+        default=DEFAULT_TTS_VOICE,
+        help=f"TTS voice model (default: {DEFAULT_TTS_VOICE})"
+    )
+    parser.add_argument(
+        "--music",
+        type=str,
+        default=None,
+        help="Path to custom background MP3 music file (optional)"
+    )
+    parser.add_argument(
+        "--keep-temp",
+        action="store_true",
+        help="Keep intermediate scene clips and audio files in temp/ directory"
+    )
+    return parser.parse_args()
+
+
+def main():
+    start_time = time.time()
+    args = parse_args()
+
+    print("=" * 65)
+    print("🌌  SHORTS GENERATOR  |  Vertical Video Automation Engine")
+    print("=" * 65)
+    print(f"🎯 Topic:    '{args.topic}'")
+    print(f"⏱️  Duration: ~{args.duration} seconds")
+    print(f"🗣️  Voice:    {args.voice}")
+    print(f"🌐 Provider: {args.provider.upper()}")
+
+    # 0. Check system prerequisites
+    if not check_ffmpeg():
+        print("\n❌ Error: FFmpeg is required but was not found in your system PATH.")
+        print("Please install FFmpeg: https://ffmpeg.org/download.html")
+        sys.exit(1)
+
+    # 0.1 Setup Media Providers
+    nasa = NASAProvider()
+    pexels_key = args.pexels_key or PEXELS_API_KEY
+    pexels = PexelsProvider(api_key=pexels_key)
+
+    chosen_provider = args.provider.lower()
+    if chosen_provider == "pexels" and not pexels.is_configured():
+        print("\n❌ Error: PEXELS_API_KEY is required when using '--provider pexels'.")
+        print("👉 You can get a free API key in 30 seconds at: https://www.pexels.com/api/")
+        print("👉 Add it to your .env file: PEXELS_API_KEY=\"your_key_here\" or pass --pexels-key.\n")
+        sys.exit(1)
+
+    # 1. Generate Structured AI Script
+    script_gen = ScriptGenerator()
+    script = script_gen.generate(args.topic, target_duration=args.duration)
+    scenes = script.get("scenes", [])
+    print(f"📋 Script generated: \"{script.get('title', args.topic)}\" ({len(scenes)} scenes)")
+    print(f"🪝 Hook: \"{script.get('hook', '')}\"")
+
+    # 2. Synthesize Audio Narration & Timing
+    tts_mgr = TTSManager(provider_type=TTS_PROVIDER, voice=args.voice)
+    narration_audio, scene_timings, total_duration = tts_mgr.synthesize_script(script)
+
+    # 3. Generate Subtitles (SRT & ASS for vertical canvas)
+    sub_gen = SubtitleGenerator()
+    srt_path, ass_path = sub_gen.generate_subtitles(scene_timings)
+
+    # 4. Search and Download Visual Media Assets (NASA or Pexels)
+    print(f"\n🔭 Fetching media assets (Mode: {chosen_provider.upper()})...")
+    scene_assets = []
+    assets_metadata = []
+
+    # Detect if topic is space-specific for auto mode
+    space_triggers = [
+        "tierra", "marte", "agujero", "nasa", "galaxia", "hubble", "webb", "universo",
+        "planeta", "estrella", "espacio", "jupiter", "luna", "saturno", "cosmos",
+        "astronauta", "sol", "solar", "orbita", "meteorito", "asteroide", "cometa", "jwst"
+    ]
+    is_space_topic = any(t in args.topic.lower() for t in space_triggers)
+
+    for idx, (scene, timing) in enumerate(zip(scenes, scene_timings), start=1):
+        keywords = scene.get("keywords", [args.topic])
+        visual_type = scene.get("visual_type", "video")
+        asset_file = None
+        meta = None
+
+        if chosen_provider == "pexels":
+            asset_file, meta = pexels.fetch_scene_asset(
+                scene_idx=idx,
+                keywords=keywords,
+                preferred_type=visual_type
+            )
+        elif chosen_provider == "nasa":
+            asset_file, meta = nasa.fetch_scene_asset(
+                scene_idx=idx,
+                keywords=keywords,
+                preferred_type=visual_type
+            )
+        else:
+            # Auto mode: route according to topic domain and available keys
+            if is_space_topic or not pexels.is_configured():
+                asset_file, meta = nasa.fetch_scene_asset(
+                    scene_idx=idx,
+                    keywords=keywords,
+                    preferred_type=visual_type
+                )
+                if not asset_file and pexels.is_configured():
+                    print(f"    ↳ NASA visual not found for scene {idx}, querying Pexels...")
+                    asset_file, meta = pexels.fetch_scene_asset(
+                        scene_idx=idx,
+                        keywords=keywords,
+                        preferred_type=visual_type
+                    )
+            else:
+                asset_file, meta = pexels.fetch_scene_asset(
+                    scene_idx=idx,
+                    keywords=keywords,
+                    preferred_type=visual_type
+                )
+                if not asset_file:
+                    print(f"    ↳ Pexels visual not found for scene {idx}, querying NASA...")
+                    asset_file, meta = nasa.fetch_scene_asset(
+                        scene_idx=idx,
+                        keywords=keywords,
+                        preferred_type=visual_type
+                    )
+
+        if asset_file and meta:
+            scene_assets.append({
+                "scene_idx": idx,
+                "file": asset_file,
+                "is_video": (meta["media_type"] == "video"),
+                "duration": timing["duration"]
+            })
+            assets_metadata.append(meta)
+        else:
+            print(f"  ⚠️ Using fallback background for scene {idx}...")
+            scene_assets.append({
+                "scene_idx": idx,
+                "file": None,
+                "is_video": False,
+                "duration": timing["duration"]
+            })
+
+    # 5. Prepare Background Music (if available)
+    music_mgr = MusicManager()
+    bg_track = music_mgr.get_background_track(args.music)
+    prepared_music = music_mgr.prepare_music(bg_track, target_duration=total_duration)
+
+    # 6. Render Video Clips for Each Scene
+    renderer = VideoRenderer()
+    print("\n🎞️  Rendering scene clips (1080x1920 @ 30fps)...")
+    scene_clips = []
+
+    for item in scene_assets:
+        s_idx = item["scene_idx"]
+        s_duration = item["duration"]
+        asset_file = item["file"]
+        is_video = item["is_video"]
+
+        if asset_file and asset_file.exists():
+            clip = renderer.render_scene_clip(asset_file, s_duration, s_idx, is_video=is_video)
+        else:
+            clip = renderer.render_emergency_color_clip(s_duration, s_idx)
+        scene_clips.append(clip)
+
+    # 7. Assemble Final Video Output
+    if args.output:
+        output_filename = args.output if args.output.endswith(".mp4") else f"{args.output}.mp4"
+    else:
+        output_filename = f"{sanitize_filename(args.topic)}.mp4"
+
+    final_video = renderer.assemble_final_video(
+        scene_clips=scene_clips,
+        narration_audio=narration_audio,
+        subtitles_file=ass_path,
+        output_filename=output_filename,
+        background_music=prepared_music,
+        assets_metadata=assets_metadata
+    )
+
+    # 8. Clean temporary files
+    if not args.keep_temp:
+        clean_temp_directory(TEMP_DIR)
+
+    elapsed = time.time() - start_time
+    print("\n" + "=" * 65)
+    print("🎉 VIDEO CREATION COMPLETED SUCCESSFULLY!")
+    print(f"📁 Output Video:     {final_video.resolve()}")
+    print(f"📊 Total Duration:   {total_duration:.1f}s")
+    print(f"⏱️  Processing Time:  {elapsed:.1f}s")
+    print(f"📜 Metadata File:    {OUTPUT_DIR / 'source_metadata.json'}")
+    print("=" * 65)
+
+
+if __name__ == "__main__":
+    main()

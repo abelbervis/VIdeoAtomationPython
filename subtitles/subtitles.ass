@@ -1,0 +1,38 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1080
+PlayResY: 1920
+WrapStyle: 0
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: ShortsDefault,Arial,46,&H00FFFF,&H000000FF,&H000000,&H80000000,-1,0,0,0,100,100,1.2,0,1,3.5,2.0,2,80,80,280,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.00,0:00:01.38,ShortsDefault,,0,0,0,,EN EL ECUADOR NOS
+Dialogue: 0,0:00:01.38,0:00:02.75,ShortsDefault,,0,0,0,,MOVEMOS A MÁS DE
+Dialogue: 0,0:00:02.75,0:00:04.12,ShortsDefault,,0,0,0,,MIL SEISCIENTOS KILÓMETROS POR
+Dialogue: 0,0:00:04.12,0:00:05.50,ShortsDefault,,0,0,0,,HORA.
+Dialogue: 0,0:00:05.50,0:00:07.07,ShortsDefault,,0,0,0,,POR INERCIA, LA
+Dialogue: 0,0:00:07.07,0:00:08.64,ShortsDefault,,0,0,0,,ATMÓSFERA, LOS OCÉANOS
+Dialogue: 0,0:00:08.64,0:00:10.21,ShortsDefault,,0,0,0,,Y TODO LO
+Dialogue: 0,0:00:10.21,0:00:11.79,ShortsDefault,,0,0,0,,QUE NO ESTÉ
+Dialogue: 0,0:00:11.79,0:00:13.36,ShortsDefault,,0,0,0,,ANCLADO SALDRÍA DESPEDIDO
+Dialogue: 0,0:00:13.36,0:00:14.93,ShortsDefault,,0,0,0,,A VELOCIDAD SUPERSÓNICA.
+Dialogue: 0,0:00:14.93,0:00:16.50,ShortsDefault,,0,0,0,,LOS OCÉANOS MIGRARÍAN
+Dialogue: 0,0:00:16.50,0:00:18.07,ShortsDefault,,0,0,0,,HACIA LOS POLOS,
+Dialogue: 0,0:00:18.07,0:00:19.64,ShortsDefault,,0,0,0,,CREANDO DOS GIGANTESCOS
+Dialogue: 0,0:00:19.64,0:00:21.22,ShortsDefault,,0,0,0,,MARES POLARES Y
+Dialogue: 0,0:00:21.22,0:00:22.79,ShortsDefault,,0,0,0,,UN MEGACONTINENTE SECO
+Dialogue: 0,0:00:22.79,0:00:24.36,ShortsDefault,,0,0,0,,EN EL CENTRO.
+Dialogue: 0,0:00:24.36,0:00:26.13,ShortsDefault,,0,0,0,,UN DÍA DURARÍA UN
+Dialogue: 0,0:00:26.13,0:00:27.90,ShortsDefault,,0,0,0,,AÑO ENTERO: SEIS MESES
+Dialogue: 0,0:00:27.90,0:00:29.68,ShortsDefault,,0,0,0,,DE CALOR ABRASADOR SEGUIDOS
+Dialogue: 0,0:00:29.68,0:00:31.45,ShortsDefault,,0,0,0,,DE SEIS MESES DE
+Dialogue: 0,0:00:31.45,0:00:33.22,ShortsDefault,,0,0,0,,CONGELACIÓN MORTAL.
+Dialogue: 0,0:00:33.22,0:00:35.02,ShortsDefault,,0,0,0,,POR SUERTE, LA ROTACIÓN
+Dialogue: 0,0:00:35.02,0:00:36.82,ShortsDefault,,0,0,0,,DE NUESTRO PLANETA ESTÁ
+Dialogue: 0,0:00:36.82,0:00:38.62,ShortsDefault,,0,0,0,,A SALVO DURANTE MILES
+Dialogue: 0,0:00:38.62,0:00:40.42,ShortsDefault,,0,0,0,,DE MILLONES DE AÑOS.

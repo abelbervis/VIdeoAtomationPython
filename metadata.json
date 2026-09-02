@@ -1,0 +1,6 @@
+{
+  "name": "NASA Shorts Generator",
+  "description": "CLI tool to automatically generate vertical YouTube Shorts/Reels/TikTok science videos using official NASA media, AI scripts, TTS narration, and FFmpeg.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

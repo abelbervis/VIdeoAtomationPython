@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  nasa-shorts:
+    build: .
+    image: nasa_shorts:latest
+    env_file:
+      - .env
+    volumes:
+      # Mount output folder to your local machine to get the generated MP4s
+      - ./output:/app/output
+      # Optional: Mount assets/music to use your local background music
+      - ./assets/music:/app/assets/music
