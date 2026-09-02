@@ -46,28 +46,37 @@ def _load_env_file():
 
 _load_env_file()
 
+def clean_env(key: str, default: str = "") -> str:
+    """Retrieve an environment variable and strip extraneous quotes/spaces."""
+    val = os.getenv(key)
+    if val is None:
+        return default
+    v = str(val).strip().strip("'\"").strip()
+    return v if v else default
+
+
 # API Keys and Services
-NASA_API_KEY = os.getenv("NASA_API_KEY", "DEMO_KEY")
+NASA_API_KEY = clean_env("NASA_API_KEY", "DEMO_KEY")
 NASA_IMAGE_API_BASE = "https://images-api.nasa.gov"
 
-PEXELS_API_KEY = os.getenv("PEXELS_API_KEY", "")
+PEXELS_API_KEY = clean_env("PEXELS_API_KEY", "")
 PEXELS_API_BASE = "https://api.pexels.com"
 
-MEDIA_PROVIDER = os.getenv("MEDIA_PROVIDER", "auto").lower()
+MEDIA_PROVIDER = clean_env("MEDIA_PROVIDER", "auto").lower()
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
-LLM_API_BASE_URL = os.getenv("LLM_API_BASE_URL", "")
+GEMINI_API_KEY = clean_env("GEMINI_API_KEY", "")
+OPENAI_API_KEY = clean_env("OPENAI_API_KEY", "")
+LLM_API_BASE_URL = clean_env("LLM_API_BASE_URL", "")
 
 # TTS Settings
-TTS_PROVIDER = os.getenv("TTS_PROVIDER", "edge").lower()
-TTS_API_KEY = os.getenv("TTS_API_KEY", "")
-DEFAULT_TTS_VOICE = os.getenv("TTS_VOICE", "es-ES-AlvaroNeural")
+TTS_PROVIDER = clean_env("TTS_PROVIDER", "edge").lower()
+TTS_API_KEY = clean_env("TTS_API_KEY", "")
+DEFAULT_TTS_VOICE = clean_env("TTS_VOICE", "es-ES-AlvaroNeural")
 
 # Video Standards (Vertical YouTube Shorts / Reels / TikTok)
-VIDEO_WIDTH = int(os.getenv("VIDEO_WIDTH", "1080"))
-VIDEO_HEIGHT = int(os.getenv("VIDEO_HEIGHT", "1920"))
-VIDEO_FPS = int(os.getenv("VIDEO_FPS", "30"))
+VIDEO_WIDTH = int(clean_env("VIDEO_WIDTH", "1080"))
+VIDEO_HEIGHT = int(clean_env("VIDEO_HEIGHT", "1920"))
+VIDEO_FPS = int(clean_env("VIDEO_FPS", "30"))
 VIDEO_CODEC = "libx264"
 AUDIO_CODEC = "aac"
 AUDIO_BITRATE = "192k"

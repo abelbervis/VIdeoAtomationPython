@@ -31,10 +31,10 @@ class EdgeTTSProvider(BaseTTSProvider):
     """Microsoft Edge Neural TTS (Free, high-grade documentary quality voices)."""
 
     def __init__(self, default_voice: str = DEFAULT_TTS_VOICE):
-        self.default_voice = default_voice
+        self.default_voice = (default_voice or "es-ES-AlvaroNeural").strip().strip("'\"").strip()
 
     def synthesize_text(self, text: str, output_path: Path, voice: Optional[str] = None) -> bool:
-        selected_voice = voice or self.default_voice
+        selected_voice = (voice or self.default_voice or "es-ES-AlvaroNeural").strip().strip("'\"").strip()
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -166,7 +166,7 @@ class TTSManager:
     """Manages narration generation, scene audio synchronization, and combined narration."""
 
     def __init__(self, provider_type: str = TTS_PROVIDER, voice: str = DEFAULT_TTS_VOICE):
-        self.voice = voice
+        self.voice = (voice or DEFAULT_TTS_VOICE or "es-ES-AlvaroNeural").strip().strip("'\"").strip()
         self.providers: List[BaseTTSProvider] = []
 
         # Setup primary provider

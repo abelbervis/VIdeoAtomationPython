@@ -24,12 +24,18 @@ class PexelsProvider:
     """Official Pexels Video & Photo API Client."""
 
     def __init__(self, api_key: Optional[str] = None, base_url: str = PEXELS_API_BASE):
-        self.api_key = (api_key or PEXELS_API_KEY or "").strip()
-        self.base_url = base_url.rstrip("/")
+        raw_key = api_key if api_key is not None else PEXELS_API_KEY
+        self.api_key = str(raw_key or "").strip().strip("'\"").strip()
+        self.base_url = (base_url or PEXELS_API_BASE).rstrip("/")
 
     def is_configured(self) -> bool:
         """Check if a valid Pexels API key is present."""
-        return bool(self.api_key and len(self.api_key) > 10)
+        if not self.api_key or len(self.api_key) < 15:
+            return False
+        placeholders = ["tu_clave", "your_key", "demo_key", "placeholder", "xxx", "your_pexels_api_key"]
+        if any(p in self.api_key.lower() for p in placeholders):
+            return False
+        return True
 
     def _get_headers(self) -> Dict[str, str]:
         """HTTP headers required for Pexels API authentication."""
@@ -37,6 +43,47 @@ class PexelsProvider:
             "Authorization": self.api_key,
             "User-Agent": "NASA-Shorts-Generator/1.0 (Educational Video Creator)"
         }
+
+    @staticmethod
+    def _optimize_query_for_pexels(query: str) -> str:
+        """
+        Translates and adapts Spanish/general queries into high-match English keywords for Pexels.
+        """
+        q = query.lower().strip()
+        translations = {
+            "la depresion": "depression mental health sad",
+            "depresion": "depression mental health thoughtful",
+            "depresión": "depression mental health thoughtful",
+            "tristeza": "sad person dramatic window",
+            "ansiedad": "anxiety stress mental health",
+            "estres": "stress headache mental health",
+            "estrés": "stress headache mental health",
+            "cerebro": "human brain neuroscience",
+            "mente": "mind thinking meditation",
+            "salud mental": "mental health psychological",
+            "oceano": "deep ocean underwater",
+            "océano": "deep ocean underwater",
+            "mar": "ocean waves cinematic",
+            "volcan": "volcano lava eruption",
+            "volcán": "volcano lava eruption",
+            "inteligencia artificial": "artificial intelligence technology",
+            "tierra": "planet earth from space",
+            "espacio": "space cosmos stars galaxy",
+            "universo": "universe astronomy deep space",
+            "agujeros negros": "black hole cosmos space",
+            "agujero negro": "black hole cosmos space",
+            "marte": "mars planet red planet",
+            "luna": "moon in night sky"
+        }
+
+        for es_term, en_term in translations.items():
+            if es_term in q:
+                return en_term
+
+        # Strip common Spanish articles
+        stop_words = {"el", "la", "los", "las", "un", "una", "unos", "unas", "de", "del", "en", "para", "por", "y"}
+        tokens = [w for w in q.split() if w not in stop_words]
+        return " ".join(tokens) if tokens else query
 
     def search_videos(
         self,
@@ -51,10 +98,11 @@ class PexelsProvider:
         if not self.is_configured():
             return []
 
-        results = self._query_videos(query, orientation=orientation, per_page=per_page)
+        search_q = self._optimize_query_for_pexels(query)
+        results = self._query_videos(search_q, orientation=orientation, per_page=per_page)
         # If no results with portrait, search without orientation constraint
         if not results and orientation:
-            results = self._query_videos(query, orientation=None, per_page=per_page)
+            results = self._query_videos(search_q, orientation=None, per_page=per_page)
         return results
 
     def _query_videos(
@@ -99,7 +147,8 @@ class PexelsProvider:
             return parsed
         except urllib.error.HTTPError as e:
             if e.code == 401:
-                print("  ❌ Pexels API Authentication Error (401): Invalid or expired PEXELS_API_KEY.")
+                print("  ❌ Pexels API Error (401 Unauthorized): Clave PEXELS_API_KEY inválida o sin configurar.")
+                print("     👉 Obtén tu clave gratis en https://www.pexels.com/api/ y colócala en tu .env sin comillas.")
             else:
                 print(f"  ⚠️ Pexels video search error HTTP {e.code} for '{query}': {e.reason}")
             return []
@@ -120,9 +169,10 @@ class PexelsProvider:
         if not self.is_configured():
             return []
 
-        results = self._query_photos(query, orientation=orientation, per_page=per_page)
+        search_q = self._optimize_query_for_pexels(query)
+        results = self._query_photos(search_q, orientation=orientation, per_page=per_page)
         if not results and orientation:
-            results = self._query_photos(query, orientation=None, per_page=per_page)
+            results = self._query_photos(search_q, orientation=None, per_page=per_page)
         return results
 
     def _query_photos(

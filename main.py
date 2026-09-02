@@ -98,6 +98,11 @@ def main():
     start_time = time.time()
     args = parse_args()
 
+    # Sanitize inputs (strip surrounding quotes if passed from shell or docker)
+    args.voice = str(args.voice or DEFAULT_TTS_VOICE).strip().strip("'\"").strip()
+    if args.pexels_key:
+        args.pexels_key = str(args.pexels_key).strip().strip("'\"").strip()
+
     print("=" * 65)
     print("🌌  SHORTS GENERATOR  |  Vertical Video Automation Engine")
     print("=" * 65)

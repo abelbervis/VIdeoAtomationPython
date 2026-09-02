@@ -47,22 +47,30 @@ class ScriptGenerator:
     """Generates structured science video scripts via LLM APIs with fallback."""
 
     def __init__(self):
-        self.gemini_key = GEMINI_API_KEY
-        self.openai_key = OPENAI_API_KEY
-        self.base_url = LLM_API_BASE_URL
+        self.gemini_key = str(GEMINI_API_KEY or "").strip().strip("'\"").strip()
+        self.openai_key = str(OPENAI_API_KEY or "").strip().strip("'\"").strip()
+        raw_url = str(LLM_API_BASE_URL or "").strip().strip("'\"").strip()
+        self.base_url = raw_url if raw_url.startswith("http") else ""
+
+    def _is_valid_api_key(self, key: str) -> bool:
+        """Check if an API key looks like an actual valid key and not a dummy placeholder."""
+        if not key or len(key) < 15:
+            return False
+        placeholders = ["my_gemini_api_key", "tu_clave", "your_key", "demo_key", "sk-...", "placeholder", "xxx"]
+        return not any(p in key.lower() for p in placeholders)
 
     def generate(self, topic: str, target_duration: int = 35) -> Dict[str, Any]:
         """Generate a structured script for the given topic."""
         print(f"\n🧠 Generating script for: '{topic}' (~{target_duration}s)...")
 
-        # 1. Try Gemini if configured
-        if self.gemini_key and self.gemini_key != "MY_GEMINI_API_KEY":
+        # 1. Try Gemini if configured with a real key
+        if self._is_valid_api_key(self.gemini_key):
             script = self._generate_gemini(topic, target_duration)
             if script:
                 return script
 
-        # 2. Try OpenAI if configured
-        if self.openai_key:
+        # 2. Try OpenAI if configured with a real key
+        if self._is_valid_api_key(self.openai_key):
             script = self._generate_openai(topic, target_duration)
             if script:
                 return script
@@ -109,7 +117,7 @@ class ScriptGenerator:
     def _generate_openai(self, topic: str, target_duration: int) -> Optional[Dict[str, Any]]:
         """Call OpenAI API or custom endpoint."""
         try:
-            endpoint = self.base_url or "https://api.openai.com/v1/chat/completions"
+            endpoint = self.base_url if (self.base_url and self.base_url.startswith("http")) else "https://api.openai.com/v1/chat/completions"
             payload = {
                 "model": "gpt-4o-mini",
                 "messages": [
@@ -328,6 +336,49 @@ class ScriptGenerator:
                         "scene_id": 5,
                         "narration": "El universo primitivo ya no puede esconder sus secretos más profundos.",
                         "keywords": ["deep space universe cosmos webb", "stars galaxy cluster"],
+                        "visual_type": "video",
+                        "estimated_duration": 6
+                    }
+                ]
+            }
+
+        elif any(w in topic_lower for w in ["depresion", "depresión", "salud mental", "ansiedad", "estrés", "estres", "tristeza", "cerebro humano"]):
+            return {
+                "title": "La Ciencia Detrás de la Depresión",
+                "hook": "La depresión no es una simple tristeza: es un cambio biológico profundo en las redes neuronales de nuestro cerebro.",
+                "scenes": [
+                    {
+                        "scene_id": 1,
+                        "narration": "A nivel microscópico, se produce un desbalance en neurotransmisores esenciales como la serotonina, dopamina y noradrenalina.",
+                        "keywords": ["human brain neurons neuroscience", "mental health thoughtful"],
+                        "visual_type": "video",
+                        "estimated_duration": 7
+                    },
+                    {
+                        "scene_id": 2,
+                        "narration": "Estudios neurológicos revelan que regiones como el hipocampo y la corteza prefrontal reducen su actividad y conectividad.",
+                        "keywords": ["sad thoughtful person looking at window rain", "deep contemplation emotion"],
+                        "visual_type": "video",
+                        "estimated_duration": 7
+                    },
+                    {
+                        "scene_id": 3,
+                        "narration": "No es una debilidad de carácter ni falta de voluntad: es una condición médica real que altera cómo procesamos las emociones.",
+                        "keywords": ["person alone thoughtful dramatic lighting", "mental health support therapy"],
+                        "visual_type": "video",
+                        "estimated_duration": 7
+                    },
+                    {
+                        "scene_id": 4,
+                        "narration": "Gracias a la neuroplasticidad cerebral, la terapia y el tratamiento médico adecuado pueden regenerar estas conexiones neuronales.",
+                        "keywords": ["hopeful person walking outside sunrise", "peaceful nature sunlight"],
+                        "visual_type": "video",
+                        "estimated_duration": 7
+                    },
+                    {
+                        "scene_id": 5,
+                        "narration": "Comprender la ciencia de lo que sentimos es el primer paso para acompañar, sanar y buscar ayuda profesional a tiempo.",
+                        "keywords": ["support friendship empathy hands together", "warm morning golden light horizon"],
                         "visual_type": "video",
                         "estimated_duration": 6
                     }

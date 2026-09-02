@@ -1,13 +1,14 @@
 {
   "scene_index": 2,
-  "title": "NASA's AIRS Images Cyclone Fani Before Landfall",
-  "nasa_id": "PIA22838",
-  "media_type": "image",
-  "source_url": "https://images-assets.nasa.gov/image/PIA22838/PIA22838~orig.jpg",
-  "description": "This image shows Tropical Cyclone Fani just off the east coast of India in the Bay of Bengal. NASA's Atmospheric Infrared Sounder (AIRS) collected the image at about 1 p.m. PDT (4 p.m. EDT) today, May 2. At the time, the cyclone's wind speeds were equivalent to a Category 4 hurricane, with maximum s",
-  "center": "JPL",
-  "photographer_or_credit": "NASA/JPL-Caltech AIRS Project",
-  "date_created": "2019-05-02T00:00:00Z",
+  "provider": "nasa",
+  "title": "NASA Astronaut Discusses Life In Space With International Space University Space Studies Program Participants – Thursday, July 24, 2025",
+  "nasa_id": "iss073m262051058_NASA_Astronaut_Discusses_Life_In_Space_With_International_Space_University_Space_Studies_Program_Participants_250724",
+  "media_type": "video",
+  "source_url": "https://images-assets.nasa.gov/video/iss073m262051058_NASA_Astronaut_Discusses_Life_In_Space_With_International_Space_University_Space_Studies_Program_Participants_250724/iss073m262051058_NASA_Astronaut_Discusses_Life_In_Space_With_International_Space_University_Space_Studies_Program_Participants_250724~medium.mp4",
+  "description": "Aboard the International Space Station, Expedition 73 flight engineer Jonny Kim of NASA discussed life and work aboard the orbital outpost during an in-flight interview July 24 with International Space University Space Studies Program participants in Seoul, South Korea. Kim is in the midst of a long",
+  "center": "JSC",
+  "photographer_or_credit": "JSC",
+  "date_created": "2025-07-24T00:00:00Z",
   "license": "Public Domain - NASA Content Policy: NASA material is generally not copyrighted and may be used for educational or informational purposes without explicit permission.",
-  "local_file": "scene_02.jpg"
+  "local_file": "scene_02.mp4"
 }
