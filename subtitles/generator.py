@@ -56,39 +56,92 @@ def is_cjk(text: str) -> bool:
 def resolve_chinese_font(custom_font: Optional[str] = None) -> str:
     """
     Find the best installed font family name for Chinese text rendering in libass.
-    Checks user-specified font, bundled fonts in assets/fonts/, Windows, macOS,
-    and Linux fontconfig and file paths.
+    Prioritizes native OS system fonts first (Windows Microsoft YaHei/SimHei, macOS PingFang SC)
+    because FFmpeg's libass on Windows (DirectWrite) and macOS (CoreText) queries
+    system-installed fonts directly.
+
     Guarantees returning a single clean font family name without commas,
     preventing corruption of the comma-delimited ASS Style line.
     """
     if custom_font and custom_font.strip():
         clean_name = custom_font.strip().split(",")[0].strip()
         if clean_name:
+            print(f"  🔤 Subtitle font (custom override): {clean_name}")
             return clean_name
 
-    # 1. Check bundled fonts directory (assets/fonts)
-    bundled_fonts_dir = ASSETS_DIR / "fonts"
-    if bundled_fonts_dir.exists():
-        for font_file in bundled_fonts_dir.glob("*"):
-            fname = font_file.name.lower()
-            if "wqy" in fname or "zenhei" in fname:
-                return "WenQuanYi Zen Hei"
-            elif "yahei" in fname:
-                return "Microsoft YaHei"
-            elif "noto" in fname:
-                return "Noto Sans CJK SC"
-            elif "simhei" in fname:
-                return "SimHei"
+    # 1. WINDOWS: DirectWrite & GDI use system-registered fonts from C:\Windows\Fonts
+    if sys.platform == "win32" or os.name == "nt":
+        # Register any bundled fonts in assets/fonts/ with Windows GDI so child processes can see them
+        bundled_fonts_dir = ASSETS_DIR / "fonts"
+        if bundled_fonts_dir.exists():
+            try:
+                import ctypes
+                for font_f in bundled_fonts_dir.glob("*"):
+                    if font_f.suffix.lower() in (".ttf", ".ttc", ".otf"):
+                        ctypes.windll.gdi32.AddFontResourceExW(str(font_f.resolve()), 0, 0)
+            except Exception:
+                pass
 
-    # 2. Check fontconfig (Linux / Unix / WSL)
+        win_dir = os.environ.get("WINDIR", os.environ.get("SYSTEMROOT", r"C:\Windows"))
+        win_fonts = os.path.join(win_dir, "Fonts")
+        local_fonts = os.path.expandvars(r"%LOCALAPPDATA%\Microsoft\Windows\Fonts")
+
+        win_map = [
+            ("msyh.ttc", "Microsoft YaHei"),
+            ("msyhbd.ttc", "Microsoft YaHei"),
+            ("msyhl.ttc", "Microsoft YaHei"),
+            ("simhei.ttf", "SimHei"),
+            ("simsun.ttc", "SimSun"),
+            ("simsun.ttf", "SimSun"),
+            ("deng.ttf", "DengXian"),
+            ("dengb.ttf", "DengXian"),
+            ("kaiti.ttf", "KaiTi"),
+            ("fangsong.ttf", "FangSong"),
+        ]
+        for file_name, font_name in win_map:
+            if os.path.exists(os.path.join(win_fonts, file_name)) or os.path.exists(os.path.join(local_fonts, file_name)):
+                print(f"  🔤 Subtitle font selected (Windows): {font_name} ({file_name})")
+                return font_name
+
+        # If none of the standard Windows Chinese fonts exist in C:\Windows\Fonts:
+        print("  ⚠️ Advertencia Windows: No se detectó 'Microsoft YaHei' ni 'SimHei' en C:\\Windows\\Fonts.")
+        print("  👉 Recomendación: Instala la característica 'Fuentes suplementarias en chino simplificado' en Configuración de Windows o usa el argumento --font.")
+
+        if bundled_fonts_dir.exists():
+            for f in bundled_fonts_dir.glob("*"):
+                if "wqy" in f.name.lower() or "zenhei" in f.name.lower():
+                    print("  🔤 Subtitle font fallback (bundled): WenQuanYi Zen Hei")
+                    return "WenQuanYi Zen Hei"
+
+        print("  🔤 Subtitle font fallback (Windows default): Microsoft YaHei")
+        return "Microsoft YaHei"
+
+    # 2. MACOS: CoreText queries /System/Library/Fonts and /Library/Fonts
+    if sys.platform == "darwin":
+        mac_dirs = ["/System/Library/Fonts", "/Library/Fonts", os.path.expanduser("~/Library/Fonts")]
+        mac_candidates = [
+            ("PingFang.ttc", "PingFang SC"),
+            ("STHeiti Medium.ttc", "Heiti SC"),
+            ("Hiragino Sans GB.ttc", "Hiragino Sans GB"),
+            ("Arial Unicode.ttf", "Arial Unicode MS"),
+        ]
+        for m_dir in mac_dirs:
+            if os.path.isdir(m_dir):
+                for f_name, f_title in mac_candidates:
+                    if os.path.exists(os.path.join(m_dir, f_name)):
+                        print(f"  🔤 Subtitle font selected (macOS): {f_title}")
+                        return f_title
+        print("  🔤 Subtitle font fallback (macOS): PingFang SC")
+        return "PingFang SC"
+
+    # 3. LINUX / DOCKER / WSL: Check fontconfig first
     candidates = [
         "WenQuanYi Zen Hei",
         "WenQuanYi Micro Hei",
         "Noto Sans CJK SC",
+        "Source Han Sans CN",
         "Microsoft YaHei",
         "SimHei",
-        "PingFang SC",
-        "Source Han Sans CN",
         "Droid Sans Fallback",
     ]
     if shutil.which("fc-list"):
@@ -97,42 +150,12 @@ def resolve_chinese_font(custom_font: Optional[str] = None) -> str:
             installed = r.stdout.lower()
             for cand in candidates:
                 if cand.lower() in installed:
+                    print(f"  🔤 Subtitle font selected (fontconfig): {cand}")
                     return cand
         except Exception:
             pass
 
-    # 3. Check Windows Fonts directory (C:\Windows\Fonts)
-    if sys.platform == "win32" or os.name == "nt":
-        win_dir = os.environ.get("WINDIR", os.environ.get("SYSTEMROOT", "C:\\Windows"))
-        win_fonts = os.path.join(win_dir, "Fonts")
-        if os.path.isdir(win_fonts):
-            win_map = [
-                ("msyh.ttc", "Microsoft YaHei"),
-                ("msyhbd.ttc", "Microsoft YaHei"),
-                ("simhei.ttf", "SimHei"),
-                ("simsun.ttc", "SimSun"),
-                ("deng.ttf", "DengXian"),
-            ]
-            for file_name, font_name in win_map:
-                if os.path.exists(os.path.join(win_fonts, file_name)):
-                    return font_name
-        return "Microsoft YaHei"
-
-    # 4. Check macOS Fonts
-    if sys.platform == "darwin":
-        mac_dirs = ["/System/Library/Fonts", "/Library/Fonts", os.path.expanduser("~/Library/Fonts")]
-        for m_dir in mac_dirs:
-            if os.path.isdir(m_dir):
-                for f_name, f_title in [
-                    ("PingFang.ttc", "PingFang SC"),
-                    ("STHeiti Medium.ttc", "Heiti SC"),
-                    ("Hiragino Sans GB.ttc", "Hiragino Sans GB"),
-                ]:
-                    if os.path.exists(os.path.join(m_dir, f_name)):
-                        return f_title
-        return "PingFang SC"
-
-    # 5. Check Linux standard font paths
+    # Check Linux standard font file paths
     linux_candidates = [
         ("/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc", "WenQuanYi Zen Hei"),
         ("/usr/share/fonts/truetype/wqy/wqy-microhei.ttc", "WenQuanYi Micro Hei"),
@@ -142,8 +165,25 @@ def resolve_chinese_font(custom_font: Optional[str] = None) -> str:
     ]
     for p_path, p_name in linux_candidates:
         if Path(p_path).exists():
+            print(f"  🔤 Subtitle font selected (Linux path): {p_name}")
             return p_name
 
+    # Check bundled fonts directory (assets/fonts)
+    bundled_fonts_dir = ASSETS_DIR / "fonts"
+    if bundled_fonts_dir.exists():
+        for font_file in bundled_fonts_dir.glob("*"):
+            fname = font_file.name.lower()
+            if "wqy" in fname or "zenhei" in fname:
+                print("  🔤 Subtitle font selected (bundled): WenQuanYi Zen Hei")
+                return "WenQuanYi Zen Hei"
+            elif "yahei" in fname:
+                return "Microsoft YaHei"
+            elif "noto" in fname:
+                return "Noto Sans CJK SC"
+            elif "simhei" in fname:
+                return "SimHei"
+
+    print("  🔤 Subtitle font fallback (Linux): WenQuanYi Zen Hei")
     return "WenQuanYi Zen Hei"
 
 
