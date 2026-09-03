@@ -148,7 +148,8 @@ class VideoRenderer:
         subtitles_file: Optional[Path],
         output_filename: str,
         background_music: Optional[Path] = None,
-        assets_metadata: Optional[List[Dict[str, Any]]] = None
+        assets_metadata: Optional[List[Dict[str, Any]]] = None,
+        output_dir: Optional[Path] = None
     ) -> Path:
         """
         Concatenate visual scene clips, mix audio tracks, burn subtitles, and render MP4.
@@ -156,7 +157,10 @@ class VideoRenderer:
         if not check_ffmpeg():
             raise RuntimeError("FFmpeg is not installed or not found in system PATH.")
 
-        final_output_path = self.output_dir / output_filename
+        target_dir = Path(output_dir) if output_dir else self.output_dir
+        target_dir.mkdir(parents=True, exist_ok=True)
+
+        final_output_path = target_dir / output_filename
         print(f"\n🎬 Rendering final vertical video: {final_output_path.name}...")
 
         # 1. Create concatenation list for video clips
@@ -243,15 +247,17 @@ class VideoRenderer:
 
         # 4. Save metadata audit file
         if assets_metadata:
-            meta_output_file = self.output_dir / "source_metadata.json"
-            save_json({
+            meta_data = {
                 "video_file": final_output_path.name,
                 "resolution": f"{self.width}x{self.height}",
                 "fps": self.fps,
                 "total_scenes": len(scene_clips),
                 "media_sources": assets_metadata,
                 "nasa_sources": assets_metadata
-            }, meta_output_file)
+            }
+            meta_output_file = target_dir / "metadata.json"
+            save_json(meta_data, meta_output_file)
+            save_json(meta_data, target_dir / "source_metadata.json")
             print(f"  📄 Source provenance saved to: {meta_output_file.name}")
 
         print(f"✨ Video successfully rendered: {final_output_path}")

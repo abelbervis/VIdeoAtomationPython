@@ -50,8 +50,14 @@ nasa_shorts/
 │   ├── music/                  # Carpeta para background.mp3 opcional
 │   └── .gitkeep
 │
-├── output/                     # Carpeta de videos generados y metadatos
-│   └── .gitkeep
+├── output/                     # Carpeta raíz de salidas
+│   └── <nombre_del_video>/     # Cada video se guarda en su propia carpeta organizada
+│       ├── <nombre>.mp4        # Video vertical final renderizado (1080x1920)
+│       ├── script.json         # Guión generado por la IA (título, hook, escenas, keywords)
+│       ├── subtitles.srt       # Subtítulos universales sincronizados
+│       ├── subtitles.ass       # Subtítulos verticales formateados para móviles
+│       ├── narration.mp3       # Pista de audio de la voz en off completa
+│       └── metadata.json       # Registro de resolución, duración y fuentes/licencias
 │
 └── README.md
 ```
@@ -171,6 +177,11 @@ python main.py --help
 
 ## 📜 Salidas Generadas
 
-Tras la ejecución, encontrarás los resultados en la carpeta `output/`:
-- `output/<tema_del_video>.mp4`: Video vertical 1080x1920 con audio, subtítulos y assets de NASA o Pexels.
-- `output/source_metadata.json`: Registro de cada recurso multimedia utilizado (NASA o Pexels), con su identificador, autor/fotógrafo, enlace original, créditos y tipo de licencia.
+Cada ejecución crea una **sola carpeta con el nombre del video** dentro de `output/<nombre_del_video>/` con todos sus archivos agrupados:
+
+- `output/<nombre_del_video>/<nombre_del_video>.mp4`: Video vertical final 1080x1920 optimizado para Shorts/Reels/TikTok.
+- `output/<nombre_del_video>/script.json`: Guión completo estructurado por la IA (título, gancho, escenas con narración y keywords).
+- `output/<nombre_del_video>/subtitles.srt`: Subtítulos universales sincronizados listos para subir a YouTube/TikTok.
+- `output/<nombre_del_video>/subtitles.ass`: Subtítulos con estilos y fuentes adaptadas a móviles.
+- `output/<nombre_del_video>/narration.mp3`: Audio completo de la locución/narración.
+- `output/<nombre_del_video>/metadata.json`: Registro de resolución, FPS, duración y atribución/licencias de las imágenes y videos (NASA / Pexels).

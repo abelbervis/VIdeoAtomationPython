@@ -11,6 +11,7 @@ Usage:
 """
 
 import argparse
+import shutil
 import sys
 import time
 from pathlib import Path
@@ -38,7 +39,7 @@ from audio.tts import TTSManager
 from audio.music import MusicManager
 from subtitles.generator import SubtitleGenerator
 from video.render import VideoRenderer
-from utils.files import sanitize_filename, clean_temp_directory, check_ffmpeg
+from utils.files import sanitize_filename, clean_temp_directory, check_ffmpeg, save_json
 
 
 def parse_args():
@@ -107,7 +108,7 @@ def parse_args():
         "--output",
         type=str,
         default=None,
-        help="Custom output file name (default: output/<sanitized_topic>.mp4)"
+        help="Custom output video or folder name (default: output/<video_name>/)"
     )
     parser.add_argument(
         "--voice",
@@ -299,11 +300,26 @@ def main():
             clip = renderer.render_emergency_color_clip(s_duration, s_idx)
         scene_clips.append(clip)
 
-    # 7. Assemble Final Video Output
+    # 7. Assemble Final Video Output into a single folder named after the video
     if args.output:
-        output_filename = args.output if args.output.endswith(".mp4") else f"{args.output}.mp4"
+        out_candidate = Path(args.output)
+        if len(out_candidate.parts) > 1:
+            if out_candidate.suffix.lower() == ".mp4":
+                video_name = sanitize_filename(out_candidate.stem)
+                video_folder = out_candidate.parent / video_name
+            else:
+                video_name = sanitize_filename(out_candidate.name)
+                video_folder = out_candidate
+        else:
+            video_name = sanitize_filename(out_candidate.stem)
+            video_folder = OUTPUT_DIR / video_name
     else:
-        output_filename = f"{sanitize_filename(args.topic)}.mp4"
+        video_name = sanitize_filename(args.topic)
+        video_folder = OUTPUT_DIR / video_name
+
+    video_name = video_name or "short_video"
+    video_folder.mkdir(parents=True, exist_ok=True)
+    output_filename = f"{video_name}.mp4"
 
     final_video = renderer.assemble_final_video(
         scene_clips=scene_clips,
@@ -311,8 +327,30 @@ def main():
         subtitles_file=ass_path,
         output_filename=output_filename,
         background_music=prepared_music,
-        assets_metadata=assets_metadata
+        assets_metadata=assets_metadata,
+        output_dir=video_folder
     )
+
+    # Save all associated deliverables inside the single video folder
+    # 1. Full AI script
+    script_dest = video_folder / "script.json"
+    save_json(script, script_dest)
+
+    # 2. Synchronized Subtitles (.srt and .ass)
+    srt_dest = video_folder / "subtitles.srt"
+    if srt_path and Path(srt_path).exists():
+        shutil.copy2(srt_path, srt_dest)
+
+    ass_dest = video_folder / "subtitles.ass"
+    if ass_path and Path(ass_path).exists():
+        shutil.copy2(ass_path, ass_dest)
+
+    # 3. Narration audio track (.mp3)
+    audio_dest = video_folder / "narration.mp3"
+    if narration_audio and Path(narration_audio).exists():
+        shutil.copy2(narration_audio, audio_dest)
+
+    meta_dest = video_folder / "metadata.json"
 
     # 8. Clean temporary files
     if not args.keep_temp:
@@ -321,10 +359,17 @@ def main():
     elapsed = time.time() - start_time
     print("\n" + "=" * 65)
     print("🎉 VIDEO CREATION COMPLETED SUCCESSFULLY!")
-    print(f"📁 Output Video:     {final_video.resolve()}")
-    print(f"📊 Total Duration:   {total_duration:.1f}s")
-    print(f"⏱️  Processing Time:  {elapsed:.1f}s")
-    print(f"📜 Metadata File:    {OUTPUT_DIR / 'source_metadata.json'}")
+    print(f"📁 Carpeta del Video:   {video_folder.resolve()}")
+    print(f"🎥 Video Final:         {final_video.resolve()}")
+    print(f"📜 Guión (.json):       {script_dest.resolve()}")
+    if srt_dest.exists():
+        print(f"📝 Subtítulos (.srt):   {srt_dest.resolve()}")
+    if audio_dest.exists():
+        print(f"🎵 Narración (.mp3):    {audio_dest.resolve()}")
+    if meta_dest.exists():
+        print(f"📊 Metadatos (.json):   {meta_dest.resolve()}")
+    print(f"⏱️  Duración Total:      {total_duration:.1f}s")
+    print(f"⚡ Tiempo de Proceso:    {elapsed:.1f}s")
     print("=" * 65)
 
 
