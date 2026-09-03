@@ -96,6 +96,36 @@ TTS_PROVIDER = clean_env("TTS_PROVIDER", "edge").lower()
 TTS_API_KEY = clean_env("TTS_API_KEY", "")
 DEFAULT_TTS_VOICE = clean_env("TTS_VOICE", "es-ES-AlvaroNeural")
 
+# Language and Voice Mappings
+DEFAULT_LANGUAGE = clean_env("DEFAULT_LANGUAGE", "es").lower()
+SUPPORTED_LANGUAGES = {
+    "es": {
+        "name": "Spanish",
+        "default_voice": "es-ES-AlvaroNeural",
+        "subtitle_font": "Arial",
+    },
+    "en": {
+        "name": "English",
+        "default_voice": "en-US-ChristopherNeural",
+        "subtitle_font": "Arial",
+    },
+    "zh": {
+        "name": "Chinese (Simplified Mandarin)",
+        "default_voice": "zh-CN-YunxiNeural",
+        "subtitle_font": "WenQuanYi Zen Hei, Microsoft YaHei, SimHei, Arial",
+    },
+}
+
+def get_language_voice(lang: str, custom_voice: str = "") -> str:
+    """Return appropriate TTS voice based on selected language and optional override."""
+    if custom_voice and custom_voice.strip():
+        return custom_voice.strip()
+    code = (lang or "es").lower().strip()
+    if code in SUPPORTED_LANGUAGES:
+        return SUPPORTED_LANGUAGES[code]["default_voice"]
+    # Fallback to Spanish or custom default voice
+    return DEFAULT_TTS_VOICE or "es-ES-AlvaroNeural"
+
 # Video Standards (Vertical YouTube Shorts / Reels / TikTok)
 VIDEO_WIDTH = int(clean_env("VIDEO_WIDTH", "1080"))
 VIDEO_HEIGHT = int(clean_env("VIDEO_HEIGHT", "1920"))

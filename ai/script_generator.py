@@ -28,11 +28,11 @@ Target duration: 30 to 45 seconds.
 
 Rules:
 1. Start with an irresistible 3-second hook that challenges common intuition.
-2. Absolutely NO generic greetings (Never say 'Hola amigos', 'En este video', 'Bienvenidos').
+2. Absolutely NO generic greetings (Never say 'Hola amigos', 'En este video', 'Bienvenidos', 'Hello guys').
 3. Keep the narration fast-paced, accurate, engaging, and based strictly on verifiable facts and science.
 4. End with a memorable, mind-blowing closing thought or punchline.
 5. Divide the script into 4 to 6 distinct visual scenes.
-6. Provide specific search keywords IN ENGLISH for each scene to query media libraries (Pexels, NASA). Keywords should describe exact visual actions (e.g. 'ocean waves aerial', 'deep space galaxy', 'brain neurons firing').
+6. Provide specific visual search keywords ALWAYS IN ENGLISH for each scene to query media libraries (Pexels, NASA). Keywords should describe exact visual actions (e.g. 'ocean waves aerial', 'deep space galaxy', 'brain neurons firing').
 7. Preferred visual types: "video" for motion scenes, "image" for high-detail captures.
 
 Respond ONLY with valid JSON matching this schema:
@@ -42,7 +42,7 @@ Respond ONLY with valid JSON matching this schema:
   "scenes": [
     {
       "scene_id": 1,
-      "narration": "Narration text in the requested language (e.g. Spanish)",
+      "narration": "Narration text in the requested target language",
       "keywords": ["specific english keyword 1", "specific keyword 2"],
       "visual_type": "video",
       "estimated_duration": 7
@@ -50,6 +50,32 @@ Respond ONLY with valid JSON matching this schema:
   ]
 }
 """
+
+
+def get_language_instructions(language: str) -> Tuple[str, str]:
+    """Return language label and specific prompt directives for the LLM."""
+    lang = (language or "es").lower().strip()
+    if lang == "en":
+        return (
+            "English",
+            "The narration and title MUST be written in natural, punchy, fluent English for viral shorts.\n"
+            "Visual search keywords MUST also be in English."
+        )
+    elif lang in ("zh", "zh-cn", "chinese"):
+        return (
+            "Simplified Chinese (Mandarin / 中文简体)",
+            "The entire narration and title MUST be written in natural, fluent Simplified Chinese (中文简体), "
+            "crafted for high-retention viral short videos.\n"
+            "CRITICAL: The visual search 'keywords' for NASA and Pexels MUST ALWAYS BE IN ENGLISH "
+            "(e.g. ['deep space nebula', 'mars surface', 'black hole event horizon']) so the media search succeeds!"
+        )
+    else:
+        return (
+            "Spanish (Español)",
+            "The entire narration and title MUST be written in natural, fluent Spanish (Español).\n"
+            "The visual search 'keywords' for NASA and Pexels MUST ALWAYS BE IN ENGLISH "
+            "(e.g. ['saturn rings', 'supernova explosion']) so the media search succeeds!"
+        )
 
 
 class ScriptGenerator:
@@ -90,9 +116,10 @@ class ScriptGenerator:
         ]
         return not any(p in key.lower() for p in placeholders)
 
-    def generate(self, topic: str, target_duration: int = 35) -> Optional[Dict[str, Any]]:
+    def generate(self, topic: str, target_duration: int = 35, language: str = "es") -> Optional[Dict[str, Any]]:
         """Generate a structured script for the given topic using configured AI providers."""
-        print(f"\n🧠 Generating script for: '{topic}' (~{target_duration}s)...")
+        lang_label, _ = get_language_instructions(language)
+        print(f"\n🧠 Generating script for: '{topic}' (~{target_duration}s, Language: {lang_label})...")
 
         # Specific provider selected
         if self.provider == "groq":
@@ -100,7 +127,7 @@ class ScriptGenerator:
                 print("  ❌ Error: Se especificó el proveedor 'groq' pero no se configuró una GROQ_API_KEY válida.")
                 print("     👉 Obtén tu clave gratuita en https://console.groq.com/keys y agrégala a tu .env o usa --groq-key.")
                 return None
-            script = self._generate_groq(topic, target_duration)
+            script = self._generate_groq(topic, target_duration, language)
             if not script:
                 print("  ❌ Error: Falló la generación del guión con la API de Groq.")
             return script
@@ -110,7 +137,7 @@ class ScriptGenerator:
                 print("  ❌ Error: Se especificó el proveedor 'gemini' pero no se configuró una GEMINI_API_KEY válida.")
                 print("     👉 Obtén tu clave en https://aistudio.google.com/ y agrégala a tu .env o usa --gemini-key.")
                 return None
-            script = self._generate_gemini(topic, target_duration)
+            script = self._generate_gemini(topic, target_duration, language)
             if not script:
                 print("  ❌ Error: Falló la generación del guión con la API de Gemini.")
             return script
@@ -120,7 +147,7 @@ class ScriptGenerator:
                 print("  ❌ Error: Se especificó el proveedor 'openai' pero no se configuró una OPENAI_API_KEY válida.")
                 print("     👉 Obtén tu clave en https://platform.openai.com/ y agrégala a tu .env o usa --openai-key.")
                 return None
-            script = self._generate_openai(topic, target_duration)
+            script = self._generate_openai(topic, target_duration, language)
             if not script:
                 print("  ❌ Error: Falló la generación del guión con la API de OpenAI.")
             return script
@@ -145,25 +172,26 @@ class ScriptGenerator:
         for prov in configured_providers:
             if prov == "groq":
                 print("  ⚡ Solicitando guión ultrarrápido a Groq LPU...")
-                script = self._generate_groq(topic, target_duration)
+                script = self._generate_groq(topic, target_duration, language)
                 if script:
                     return script
             elif prov == "gemini":
                 print("  ⚡ Solicitando guión a Google Gemini...")
-                script = self._generate_gemini(topic, target_duration)
+                script = self._generate_gemini(topic, target_duration, language)
                 if script:
                     return script
             elif prov == "openai":
                 print("  ⚡ Solicitando guión a OpenAI...")
-                script = self._generate_openai(topic, target_duration)
+                script = self._generate_openai(topic, target_duration, language)
                 if script:
                     return script
 
         print(f"  ❌ Error: Todas las APIs de IA configuradas ({', '.join(configured_providers)}) fallaron al generar el guión.")
         return None
 
-    def _call_groq_api(self, model: str, topic: str, target_duration: int) -> Tuple[Optional[Dict[str, Any]], Optional[int], str, str]:
+    def _call_groq_api(self, model: str, topic: str, target_duration: int, language: str = "es") -> Tuple[Optional[Dict[str, Any]], Optional[int], str, str]:
         """Execute a single REST call to Groq API. Returns (script_dict, status_code, err_code, err_msg)."""
+        lang_name, lang_guidance = get_language_instructions(language)
         try:
             endpoint = f"{self.groq_api_base}/chat/completions"
             payload = {
@@ -175,8 +203,9 @@ class ScriptGenerator:
                         "content": (
                             f"Topic: {topic}\n"
                             f"Target duration: {target_duration} seconds.\n"
-                            f"Language: Spanish (unless topic is strictly in another language).\n"
-                            f"Generate the JSON script:"
+                            f"Target Language: {lang_name}\n"
+                            f"Language Requirements:\n{lang_guidance}\n"
+                            f"Generate the JSON script following the schema:"
                         )
                     }
                 ],
@@ -198,7 +227,7 @@ class ScriptGenerator:
             with urllib.request.urlopen(req, timeout=30) as response:
                 result = json.loads(response.read().decode("utf-8"))
                 text = result["choices"][0]["message"]["content"]
-                return self._parse_json_response(text), None, "", ""
+                return self._parse_json_response(text, language), None, "", ""
         except urllib.error.HTTPError as e:
             err_body = ""
             err_msg = ""
@@ -218,10 +247,10 @@ class ScriptGenerator:
         except Exception as e:
             return None, -1, "exception", str(e)
 
-    def _generate_groq(self, topic: str, target_duration: int) -> Optional[Dict[str, Any]]:
+    def _generate_groq(self, topic: str, target_duration: int, language: str = "es") -> Optional[Dict[str, Any]]:
         """Call Groq API with automatic fallback to llama-3.3-70b-versatile if model is unavailable."""
         model = self.groq_model or "llama-3.3-70b-versatile"
-        script, status, err_code, err_msg = self._call_groq_api(model, topic, target_duration)
+        script, status, err_code, err_msg = self._call_groq_api(model, topic, target_duration, language)
         if script:
             return script
 
@@ -246,7 +275,7 @@ class ScriptGenerator:
         if is_model_unavailable and model != fallback_model:
             print(f"  ⚠️ Groq API: El modelo '{model}' no está disponible ({err_msg}).")
             print(f"  🔄 Cambiando automáticamente al modelo oficial activo: '{fallback_model}'...")
-            fb_script, fb_status, fb_code, fb_err = self._call_groq_api(fallback_model, topic, target_duration)
+            fb_script, fb_status, fb_code, fb_err = self._call_groq_api(fallback_model, topic, target_duration, language)
             if fb_script:
                 return fb_script
             print(f"  ❌ Falló también con el modelo '{fallback_model}': {fb_err}")
@@ -256,15 +285,17 @@ class ScriptGenerator:
         print(f"  ⚠️ Groq API HTTP Error {status}{detail}")
         return None
 
-    def _generate_gemini(self, topic: str, target_duration: int) -> Optional[Dict[str, Any]]:
+    def _generate_gemini(self, topic: str, target_duration: int, language: str = "es") -> Optional[Dict[str, Any]]:
         """Call Gemini API via REST."""
+        lang_name, lang_guidance = get_language_instructions(language)
         try:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={self.gemini_key}"
             prompt = (
                 f"{SYSTEM_PROMPT}\n\n"
                 f"Topic: {topic}\n"
                 f"Target duration: {target_duration} seconds.\n"
-                f"Language: Spanish (unless topic is strictly in another language).\n"
+                f"Target Language: {lang_name}\n"
+                f"Language Requirements:\n{lang_guidance}\n"
                 f"Generate the JSON script:"
             )
 
@@ -286,7 +317,7 @@ class ScriptGenerator:
             with urllib.request.urlopen(req, timeout=25) as response:
                 result = json.loads(response.read().decode("utf-8"))
                 text = result["candidates"][0]["content"]["parts"][0]["text"]
-                return self._parse_json_response(text)
+                return self._parse_json_response(text, language)
         except urllib.error.HTTPError as e:
             if e.code == 400:
                 print(f"  ⚠️ Gemini API Error (400 Bad Request): Parámetros o clave inválida.")
@@ -303,15 +334,25 @@ class ScriptGenerator:
             print(f"  ⚠️ Gemini API request failed ({e})")
             return None
 
-    def _generate_openai(self, topic: str, target_duration: int) -> Optional[Dict[str, Any]]:
+    def _generate_openai(self, topic: str, target_duration: int, language: str = "es") -> Optional[Dict[str, Any]]:
         """Call OpenAI API or custom endpoint."""
+        lang_name, lang_guidance = get_language_instructions(language)
         try:
             endpoint = self.base_url if (self.base_url and self.base_url.startswith("http")) else "https://api.openai.com/v1/chat/completions"
             payload = {
                 "model": "gpt-4o-mini",
                 "messages": [
                     {"role": "system", "content": SYSTEM_PROMPT},
-                    {"role": "user", "content": f"Topic: {topic}. Target duration: {target_duration}s. Generate JSON script."}
+                    {
+                        "role": "user",
+                        "content": (
+                            f"Topic: {topic}\n"
+                            f"Target duration: {target_duration}s.\n"
+                            f"Target Language: {lang_name}\n"
+                            f"Language Requirements:\n{lang_guidance}\n"
+                            f"Generate the JSON script:"
+                        )
+                    }
                 ],
                 "response_format": {"type": "json_object"},
                 "temperature": 0.4
@@ -330,7 +371,7 @@ class ScriptGenerator:
             with urllib.request.urlopen(req, timeout=25) as response:
                 result = json.loads(response.read().decode("utf-8"))
                 text = result["choices"][0]["message"]["content"]
-                return self._parse_json_response(text)
+                return self._parse_json_response(text, language)
         except urllib.error.HTTPError as e:
             if e.code == 401:
                 print("  ⚠️ OpenAI API Error (401 Unauthorized): OPENAI_API_KEY inválida.")
@@ -343,7 +384,7 @@ class ScriptGenerator:
             print(f"  ⚠️ OpenAI API request failed ({e})...")
             return None
 
-    def _parse_json_response(self, text: str) -> Optional[Dict[str, Any]]:
+    def _parse_json_response(self, text: str, language: str = "es") -> Optional[Dict[str, Any]]:
         """Clean markdown wrapping and validate JSON structure."""
         text = text.strip()
         if text.startswith("```"):
@@ -353,6 +394,7 @@ class ScriptGenerator:
         try:
             data = json.loads(text)
             if "scenes" in data and isinstance(data["scenes"], list) and len(data["scenes"]) > 0:
+                data["language"] = language
                 return data
         except Exception as e:
             print(f"  ⚠️ JSON parse error: {e}")

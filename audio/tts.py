@@ -106,13 +106,17 @@ class OpenAITTSProvider(BaseTTSProvider):
 class GoogleTTSProvider(BaseTTSProvider):
     """Google Translate TTS (REST client fallback for zero-key immediate audio)."""
 
+    def __init__(self, language: str = "es"):
+        self.language = (language or "es").lower().strip()
+
     def synthesize_text(self, text: str, output_path: Path, voice: Optional[str] = None) -> bool:
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
+        lang_code = "zh-CN" if self.language.startswith("zh") else ("en" if self.language.startswith("en") else "es")
         # Split long text if necessary
         text_encoded = urllib.parse.quote(text[:200])
-        url = f"https://translate.google.com/translate_tts?ie=UTF-8&q={text_encoded}&tl=es&client=tw-ob"
+        url = f"https://translate.google.com/translate_tts?ie=UTF-8&q={text_encoded}&tl={lang_code}&client=tw-ob"
 
         try:
             req = urllib.request.Request(
@@ -131,13 +135,17 @@ class GoogleTTSProvider(BaseTTSProvider):
 class SyntheticFallbackTTSProvider(BaseTTSProvider):
     """Generates clean synthetic speech audio via FFmpeg / eSpeak fallback if offline."""
 
+    def __init__(self, language: str = "es"):
+        self.language = (language or "es").lower().strip()
+
     def synthesize_text(self, text: str, output_path: Path, voice: Optional[str] = None) -> bool:
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
+        lang_code = "zh" if self.language.startswith("zh") else ("en" if self.language.startswith("en") else "es")
         # Try espeak if installed
         try:
-            cmd = ["espeak", "-v", "es", "-w", str(output_path), text]
+            cmd = ["espeak", "-v", lang_code, "-w", str(output_path), text]
             subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
             if output_path.exists() and output_path.stat().st_size > 0:
                 return True
@@ -165,20 +173,27 @@ class SyntheticFallbackTTSProvider(BaseTTSProvider):
 class TTSManager:
     """Manages narration generation, scene audio synchronization, and combined narration."""
 
-    def __init__(self, provider_type: str = TTS_PROVIDER, voice: str = DEFAULT_TTS_VOICE):
-        self.voice = (voice or DEFAULT_TTS_VOICE or "es-ES-AlvaroNeural").strip().strip("'\"").strip()
+    def __init__(
+        self,
+        provider_type: str = TTS_PROVIDER,
+        voice: Optional[str] = None,
+        language: str = "es"
+    ):
+        from config import get_language_voice
+        self.language = (language or "es").lower().strip()
+        self.voice = get_language_voice(self.language, voice)
         self.providers: List[BaseTTSProvider] = []
 
         # Setup primary provider
         if provider_type == "openai" and OPENAI_API_KEY:
             self.providers.append(OpenAITTSProvider())
         elif provider_type == "edge":
-            self.providers.append(EdgeTTSProvider(voice))
+            self.providers.append(EdgeTTSProvider(self.voice))
 
         # Add standard fallbacks
-        self.providers.append(EdgeTTSProvider(voice))
-        self.providers.append(GoogleTTSProvider())
-        self.providers.append(SyntheticFallbackTTSProvider())
+        self.providers.append(EdgeTTSProvider(self.voice))
+        self.providers.append(GoogleTTSProvider(language=self.language))
+        self.providers.append(SyntheticFallbackTTSProvider(language=self.language))
 
     def synthesize_script(
         self,

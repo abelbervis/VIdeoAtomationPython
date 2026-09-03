@@ -149,7 +149,8 @@ class VideoRenderer:
         output_filename: str,
         background_music: Optional[Path] = None,
         assets_metadata: Optional[List[Dict[str, Any]]] = None,
-        output_dir: Optional[Path] = None
+        output_dir: Optional[Path] = None,
+        language: str = "es"
     ) -> Path:
         """
         Concatenate visual scene clips, mix audio tracks, burn subtitles, and render MP4.
@@ -249,6 +250,7 @@ class VideoRenderer:
         if assets_metadata:
             meta_data = {
                 "video_file": final_output_path.name,
+                "language": language,
                 "resolution": f"{self.width}x{self.height}",
                 "fps": self.fps,
                 "total_scenes": len(scene_clips),

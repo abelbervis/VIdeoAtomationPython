@@ -18,7 +18,8 @@ from config import (
     SUBTITLE_OUTLINE_WIDTH,
     SUBTITLE_MARGIN_BOTTOM,
     VIDEO_WIDTH,
-    VIDEO_HEIGHT
+    VIDEO_HEIGHT,
+    SUPPORTED_LANGUAGES,
 )
 
 
@@ -42,6 +43,30 @@ def format_timestamp_ass(seconds: float) -> str:
     return f"{hrs}:{mins:02d}:{secs:02d}.{centis:02d}"
 
 
+def is_cjk(text: str) -> bool:
+    """Check if text contains Chinese or CJK characters."""
+    return any("\u4e00" <= c <= "\u9fff" for c in text)
+
+
+def chunk_chinese_text(text: str, max_chars: int = 7) -> List[str]:
+    """Break continuous Chinese text into short, natural rhythmic visual subtitle chunks."""
+    parts = re.split(r"([，。！？；：、,.!?;:\s]+)", text)
+    chunks = []
+    for p in parts:
+        p = p.strip()
+        if not p:
+            continue
+        if re.match(r"^[，。！？；：、,.!?;:]+$", p):
+            if chunks:
+                chunks[-1] += p
+            continue
+        for i in range(0, len(p), max_chars):
+            piece = p[i:i + max_chars]
+            if piece:
+                chunks.append(piece)
+    return chunks if chunks else [text]
+
+
 class SubtitleGenerator:
     """Creates mobile-ready vertical subtitles from scene narration timings."""
 
@@ -52,7 +77,8 @@ class SubtitleGenerator:
     def generate_subtitles(
         self,
         scene_timings: List[Dict[str, Any]],
-        max_words_per_line: int = 5
+        max_words_per_line: int = 5,
+        language: str = "es"
     ) -> Tuple[Path, Path]:
         """
         Generate both SRT and styled ASS subtitle files.
@@ -66,34 +92,40 @@ class SubtitleGenerator:
             end_time = scene.get("end", start_time + 4.0)
             duration = max(0.5, end_time - start_time)
 
-            # Split narration into words
-            words = narration.split()
-            if not words:
+            if not narration:
                 continue
 
-            total_words = len(words)
-            # Group into small readable chunks (3-5 words)
-            chunk_size = min(max_words_per_line, max(3, math.ceil(total_words / max(1, duration / 1.5))))
-            word_groups = [words[i:i + chunk_size] for i in range(0, total_words, chunk_size)]
-            num_groups = len(word_groups)
+            if is_cjk(narration) or (language or "").lower().startswith("zh"):
+                groups = chunk_chinese_text(narration, max_chars=7)
+            else:
+                words = narration.split()
+                if not words:
+                    continue
+                total_words = len(words)
+                chunk_size = min(max_words_per_line, max(3, math.ceil(total_words / max(1, duration / 1.5))))
+                groups = [" ".join(words[i:i + chunk_size]) for i in range(0, total_words, chunk_size)]
+
+            num_groups = len(groups)
+            if num_groups == 0:
+                continue
 
             chunk_duration = duration / num_groups
-            for idx, group in enumerate(word_groups):
+            for idx, group_text in enumerate(groups):
                 chunk_start = start_time + (idx * chunk_duration)
                 chunk_end = min(end_time, chunk_start + chunk_duration)
-                text = " ".join(group)
+                display_text = group_text if is_cjk(group_text) else group_text.upper()
 
                 subtitle_chunks.append({
                     "start": chunk_start,
                     "end": chunk_end,
-                    "text": text.upper()  # Uppercase for high-impact Shorts typography
+                    "text": display_text
                 })
 
         srt_path = self.output_dir / "subtitles.srt"
         ass_path = self.output_dir / "subtitles.ass"
 
         self._write_srt(subtitle_chunks, srt_path)
-        self._write_ass(subtitle_chunks, ass_path)
+        self._write_ass(subtitle_chunks, ass_path, language=language)
 
         print(f"  📝 Subtitles generated: {srt_path.name} & {ass_path.name} ({len(subtitle_chunks)} cues)")
         return srt_path, ass_path
@@ -108,11 +140,19 @@ class SubtitleGenerator:
                 f.write(f"{start_str} --> {end_str}\n")
                 f.write(f"{chunk['text']}\n\n")
 
-    def _write_ass(self, chunks: List[Dict[str, Any]], file_path: Path) -> None:
+    def _write_ass(self, chunks: List[Dict[str, Any]], file_path: Path, language: str = "es") -> None:
         """
         Write ASS format with custom styling for 1080x1920 vertical canvas.
         Positions subtitles above TikTok/Shorts UI bar with crisp outline.
         """
+        has_cjk = any(is_cjk(c.get("text", "")) for c in chunks)
+        if has_cjk or (language or "").lower().startswith("zh"):
+            font_family = SUPPORTED_LANGUAGES.get("zh", {}).get("subtitle_font", "WenQuanYi Zen Hei, Microsoft YaHei, SimHei, Arial")
+            font_size = SUBTITLE_FONT_SIZE + 2
+        else:
+            font_family = SUBTITLE_FONT
+            font_size = SUBTITLE_FONT_SIZE
+
         header = f"""[Script Info]
 ScriptType: v4.00+
 PlayResX: {VIDEO_WIDTH}
@@ -122,7 +162,7 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: ShortsDefault,{SUBTITLE_FONT},{SUBTITLE_FONT_SIZE},{SUBTITLE_PRIMARY_COLOR},&H000000FF,{SUBTITLE_OUTLINE_COLOR},&H80000000,-1,0,0,0,100,100,1.2,0,1,{SUBTITLE_OUTLINE_WIDTH},2.0,2,80,80,{SUBTITLE_MARGIN_BOTTOM},1
+Style: ShortsDefault,{font_family},{font_size},{SUBTITLE_PRIMARY_COLOR},&H000000FF,{SUBTITLE_OUTLINE_COLOR},&H80000000,-1,0,0,0,100,100,1.2,0,1,{SUBTITLE_OUTLINE_WIDTH},2.0,2,80,80,{SUBTITLE_MARGIN_BOTTOM},1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text

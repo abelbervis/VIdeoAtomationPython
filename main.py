@@ -22,6 +22,9 @@ from config import (
     TEMP_DIR,
     DEFAULT_DURATION,
     DEFAULT_TTS_VOICE,
+    DEFAULT_LANGUAGE,
+    SUPPORTED_LANGUAGES,
+    get_language_voice,
     TTS_PROVIDER,
     MEDIA_PROVIDER,
     PEXELS_API_KEY,
@@ -105,6 +108,14 @@ def parse_args():
         help="Custom OpenAI API key (or set OPENAI_API_KEY in .env file)"
     )
     parser.add_argument(
+        "--language", "--lang",
+        dest="language",
+        type=str,
+        default=DEFAULT_LANGUAGE,
+        choices=["es", "en", "zh"],
+        help="Target language for narration and subtitles: 'es' (Spanish), 'en' (English), 'zh' (Chinese) (default: es)"
+    )
+    parser.add_argument(
         "--output",
         type=str,
         default=None,
@@ -113,8 +124,8 @@ def parse_args():
     parser.add_argument(
         "--voice",
         type=str,
-        default=DEFAULT_TTS_VOICE,
-        help=f"TTS voice model (default: {DEFAULT_TTS_VOICE})"
+        default=None,
+        help="TTS voice model (default: auto-selected by language: es-ES-AlvaroNeural, en-US-ChristopherNeural, zh-CN-YunxiNeural)"
     )
     parser.add_argument(
         "--music",
@@ -135,7 +146,8 @@ def main():
     args = parse_args()
 
     # Sanitize inputs (strip surrounding quotes or comments if passed from shell, env, or docker)
-    args.voice = sanitize_env_value(args.voice) or DEFAULT_TTS_VOICE
+    args.language = (args.language or DEFAULT_LANGUAGE).lower().strip()
+    args.voice = get_language_voice(args.language, sanitize_env_value(args.voice) if args.voice else None)
     if args.pexels_key:
         args.pexels_key = sanitize_env_value(args.pexels_key)
     if args.groq_key:
@@ -145,10 +157,14 @@ def main():
     if args.openai_key:
         args.openai_key = sanitize_env_value(args.openai_key)
 
+    lang_info = SUPPORTED_LANGUAGES.get(args.language, {})
+    lang_name = lang_info.get("name", args.language.upper())
+
     print("=" * 65)
     print("🌌  SHORTS GENERATOR  |  Vertical Video Automation Engine")
     print("=" * 65)
     print(f"🎯 Topic:        '{args.topic}'")
+    print(f"🌍 Language:     {lang_name} ({args.language})")
     print(f"⏱️  Duration:     ~{args.duration} seconds")
     print(f"🤖 LLM Provider: {args.llm.upper()}")
     print(f"🗣️  Voice:        {args.voice}")
@@ -179,7 +195,7 @@ def main():
         groq_key=args.groq_key,
         preferred_provider=args.llm
     )
-    script = script_gen.generate(args.topic, target_duration=args.duration)
+    script = script_gen.generate(args.topic, target_duration=args.duration, language=args.language)
 
     # STRICT CHECK: If script generation fails, stop immediately without proceeding to audio/video
     if not script or not script.get("scenes"):
@@ -194,23 +210,30 @@ def main():
     print(f"🪝 Hook: \"{script.get('hook', '')}\"")
 
     # 2. Synthesize Audio Narration & Timing
-    tts_mgr = TTSManager(provider_type=TTS_PROVIDER, voice=args.voice)
+    tts_mgr = TTSManager(provider_type=TTS_PROVIDER, voice=args.voice, language=args.language)
     narration_audio, scene_timings, total_duration = tts_mgr.synthesize_script(script)
 
     # 3. Generate Subtitles (SRT & ASS for vertical canvas)
     sub_gen = SubtitleGenerator()
-    srt_path, ass_path = sub_gen.generate_subtitles(scene_timings)
+    srt_path, ass_path = sub_gen.generate_subtitles(scene_timings, language=args.language)
 
     # 4. Search and Download Visual Media Assets (NASA or Pexels)
     print(f"\n🔭 Fetching media assets (Mode: {chosen_provider.upper()})...")
     scene_assets = []
     assets_metadata = []
 
-    # Detect if topic is space-specific for auto mode
+    # Detect if topic is space-specific for auto mode (Spanish, English, Chinese triggers)
     space_triggers = [
+        # Spanish
         "tierra", "marte", "agujero", "nasa", "galaxia", "hubble", "webb", "universo",
         "planeta", "estrella", "espacio", "jupiter", "luna", "saturno", "cosmos",
-        "astronauta", "sol", "solar", "orbita", "meteorito", "asteroide", "cometa", "jwst"
+        "astronauta", "sol", "solar", "orbita", "meteorito", "asteroide", "cometa", "jwst",
+        # English
+        "earth", "mars", "black hole", "galaxy", "universe", "planet", "star",
+        "space", "jupiter", "moon", "saturn", "cosmos", "astronaut", "sun", "solar",
+        "orbit", "meteor", "asteroid", "comet",
+        # Chinese
+        "月球", "火星", "黑洞", "宇宙", "银河", "恒星", "行星", "地球", "太空", "太阳", "韦伯", "航天"
     ]
     is_space_topic = any(t in args.topic.lower() for t in space_triggers)
 
@@ -328,7 +351,8 @@ def main():
         output_filename=output_filename,
         background_music=prepared_music,
         assets_metadata=assets_metadata,
-        output_dir=video_folder
+        output_dir=video_folder,
+        language=args.language
     )
 
     # Save all associated deliverables inside the single video folder
