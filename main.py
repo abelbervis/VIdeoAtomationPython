@@ -131,7 +131,7 @@ def parse_args():
         "--font",
         type=str,
         default=None,
-        help="Subtitle font family (default: auto-detected by language and OS, e.g. 'WenQuanYi Zen Hei', 'Microsoft YaHei', 'PingFang SC')"
+        help="Subtitle font family (default: auto-detected, e.g. 'WenQuanYi Zen Hei' for Chinese, 'Arial' for Spanish/English)"
     )
     parser.add_argument(
         "--music",

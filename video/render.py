@@ -199,13 +199,13 @@ class VideoRenderer:
         # Handle Subtitles burning
         subtitle_filter = ""
         if subtitles_file and subtitles_file.exists():
-            sub_path_escaped = str(subtitles_file.resolve()).replace("\\", "/").replace(":", "\\:")
+            sub_path_escaped = str(subtitles_file.resolve()).replace(":", "\\:")
 
             # Check if assets/fonts contains bundled font files (e.g. CJK fonts)
             fonts_param = ""
             fonts_dir = ASSETS_DIR / "fonts"
             if fonts_dir.exists() and any(fonts_dir.iterdir()):
-                fonts_escaped = str(fonts_dir.resolve()).replace("\\", "/").replace(":", "\\:")
+                fonts_escaped = str(fonts_dir.resolve()).replace(":", "\\:")
                 fonts_param = f":fontsdir='{fonts_escaped}'"
 
             if subtitles_file.suffix == ".ass":
