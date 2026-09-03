@@ -5,13 +5,16 @@ Optimized for readability: short word chunks, high contrast colors, and mobile U
 """
 
 import math
+import os
 import re
 import shutil
 import subprocess
+import sys
 from pathlib import Path
-from typing import Dict, List, Tuple, Any
+from typing import Dict, List, Optional, Tuple, Any
 
 from config import (
+    ASSETS_DIR,
     SUBTITLES_DIR,
     SUBTITLE_FONT,
     SUBTITLE_FONT_SIZE,
@@ -50,12 +53,34 @@ def is_cjk(text: str) -> bool:
     return any("\u4e00" <= c <= "\u9fff" for c in text)
 
 
-def resolve_chinese_font() -> str:
+def resolve_chinese_font(custom_font: Optional[str] = None) -> str:
     """
     Find the best installed font family name for Chinese text rendering in libass.
+    Checks user-specified font, bundled fonts in assets/fonts/, Windows, macOS,
+    and Linux fontconfig and file paths.
     Guarantees returning a single clean font family name without commas,
     preventing corruption of the comma-delimited ASS Style line.
     """
+    if custom_font and custom_font.strip():
+        clean_name = custom_font.strip().split(",")[0].strip()
+        if clean_name:
+            return clean_name
+
+    # 1. Check bundled fonts directory (assets/fonts)
+    bundled_fonts_dir = ASSETS_DIR / "fonts"
+    if bundled_fonts_dir.exists():
+        for font_file in bundled_fonts_dir.glob("*"):
+            fname = font_file.name.lower()
+            if "wqy" in fname or "zenhei" in fname:
+                return "WenQuanYi Zen Hei"
+            elif "yahei" in fname:
+                return "Microsoft YaHei"
+            elif "noto" in fname:
+                return "Noto Sans CJK SC"
+            elif "simhei" in fname:
+                return "SimHei"
+
+    # 2. Check fontconfig (Linux / Unix / WSL)
     candidates = [
         "WenQuanYi Zen Hei",
         "WenQuanYi Micro Hei",
@@ -75,6 +100,50 @@ def resolve_chinese_font() -> str:
                     return cand
         except Exception:
             pass
+
+    # 3. Check Windows Fonts directory (C:\Windows\Fonts)
+    if sys.platform == "win32" or os.name == "nt":
+        win_dir = os.environ.get("WINDIR", os.environ.get("SYSTEMROOT", "C:\\Windows"))
+        win_fonts = os.path.join(win_dir, "Fonts")
+        if os.path.isdir(win_fonts):
+            win_map = [
+                ("msyh.ttc", "Microsoft YaHei"),
+                ("msyhbd.ttc", "Microsoft YaHei"),
+                ("simhei.ttf", "SimHei"),
+                ("simsun.ttc", "SimSun"),
+                ("deng.ttf", "DengXian"),
+            ]
+            for file_name, font_name in win_map:
+                if os.path.exists(os.path.join(win_fonts, file_name)):
+                    return font_name
+        return "Microsoft YaHei"
+
+    # 4. Check macOS Fonts
+    if sys.platform == "darwin":
+        mac_dirs = ["/System/Library/Fonts", "/Library/Fonts", os.path.expanduser("~/Library/Fonts")]
+        for m_dir in mac_dirs:
+            if os.path.isdir(m_dir):
+                for f_name, f_title in [
+                    ("PingFang.ttc", "PingFang SC"),
+                    ("STHeiti Medium.ttc", "Heiti SC"),
+                    ("Hiragino Sans GB.ttc", "Hiragino Sans GB"),
+                ]:
+                    if os.path.exists(os.path.join(m_dir, f_name)):
+                        return f_title
+        return "PingFang SC"
+
+    # 5. Check Linux standard font paths
+    linux_candidates = [
+        ("/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc", "WenQuanYi Zen Hei"),
+        ("/usr/share/fonts/truetype/wqy/wqy-microhei.ttc", "WenQuanYi Micro Hei"),
+        ("/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc", "Noto Sans CJK SC"),
+        ("/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc", "Noto Sans CJK SC"),
+        ("/usr/share/fonts/truetype/droid/DroidSansFallbackFull.ttf", "Droid Sans Fallback"),
+    ]
+    for p_path, p_name in linux_candidates:
+        if Path(p_path).exists():
+            return p_name
+
     return "WenQuanYi Zen Hei"
 
 
@@ -122,7 +191,8 @@ class SubtitleGenerator:
         self,
         scene_timings: List[Dict[str, Any]],
         max_words_per_line: int = 5,
-        language: str = "es"
+        language: str = "es",
+        custom_font: Optional[str] = None
     ) -> Tuple[Path, Path]:
         """
         Generate both SRT and styled ASS subtitle files.
@@ -169,7 +239,7 @@ class SubtitleGenerator:
         ass_path = self.output_dir / "subtitles.ass"
 
         self._write_srt(subtitle_chunks, srt_path)
-        self._write_ass(subtitle_chunks, ass_path, language=language)
+        self._write_ass(subtitle_chunks, ass_path, language=language, custom_font=custom_font)
 
         print(f"  📝 Subtitles generated: {srt_path.name} & {ass_path.name} ({len(subtitle_chunks)} cues)")
         return srt_path, ass_path
@@ -184,18 +254,29 @@ class SubtitleGenerator:
                 f.write(f"{start_str} --> {end_str}\n")
                 f.write(f"{chunk['text']}\n\n")
 
-    def _write_ass(self, chunks: List[Dict[str, Any]], file_path: Path, language: str = "es") -> None:
+    def _write_ass(
+        self,
+        chunks: List[Dict[str, Any]],
+        file_path: Path,
+        language: str = "es",
+        custom_font: Optional[str] = None
+    ) -> None:
         """
         Write ASS format with custom styling for 1080x1920 vertical canvas.
         Positions subtitles above TikTok/Shorts UI bar with crisp outline.
         """
         has_cjk = any(is_cjk(c.get("text", "")) for c in chunks)
-        if has_cjk or (language or "").lower().startswith("zh"):
-            font_family = resolve_chinese_font()
+        is_chinese = has_cjk or (language or "").lower().startswith("zh")
+        if is_chinese:
+            font_family = resolve_chinese_font(custom_font=custom_font)
             font_size = SUBTITLE_FONT_SIZE + 2
+            bold_val = 0  # Normal weight for CJK prevents font substitution errors on TTC files
+            outline_val = 4.0
         else:
-            font_family = SUBTITLE_FONT
+            font_family = custom_font if custom_font else SUBTITLE_FONT
             font_size = SUBTITLE_FONT_SIZE
+            bold_val = -1
+            outline_val = SUBTITLE_OUTLINE_WIDTH
 
         # Strictly ensure font_family has NO commas (ASS style fields are comma-separated)
         if "," in font_family:
@@ -210,7 +291,7 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: ShortsDefault,{font_family},{font_size},{SUBTITLE_PRIMARY_COLOR},&H000000FF,{SUBTITLE_OUTLINE_COLOR},&H80000000,-1,0,0,0,100,100,1.2,0,1,{SUBTITLE_OUTLINE_WIDTH},2.0,2,80,80,{SUBTITLE_MARGIN_BOTTOM},1
+Style: ShortsDefault,{font_family},{font_size},{SUBTITLE_PRIMARY_COLOR},&H000000FF,{SUBTITLE_OUTLINE_COLOR},&H80000000,{bold_val},0,0,0,100,100,1.2,0,1,{outline_val},2.0,2,80,80,{SUBTITLE_MARGIN_BOTTOM},1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text

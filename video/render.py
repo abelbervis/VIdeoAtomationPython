@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Any
 
 from config import (
+    ASSETS_DIR,
     VIDEO_WIDTH,
     VIDEO_HEIGHT,
     VIDEO_FPS,
@@ -199,10 +200,18 @@ class VideoRenderer:
         subtitle_filter = ""
         if subtitles_file and subtitles_file.exists():
             sub_path_escaped = str(subtitles_file.resolve()).replace("\\", "/").replace(":", "\\:")
+
+            # Check if assets/fonts contains bundled font files (e.g. CJK fonts)
+            fonts_param = ""
+            fonts_dir = ASSETS_DIR / "fonts"
+            if fonts_dir.exists() and any(fonts_dir.iterdir()):
+                fonts_escaped = str(fonts_dir.resolve()).replace("\\", "/").replace(":", "\\:")
+                fonts_param = f":fontsdir='{fonts_escaped}'"
+
             if subtitles_file.suffix == ".ass":
-                subtitle_filter = f"ass='{sub_path_escaped}'"
+                subtitle_filter = f"ass='{sub_path_escaped}'{fonts_param}"
             else:
-                subtitle_filter = f"subtitles='{sub_path_escaped}'"
+                subtitle_filter = f"subtitles='{sub_path_escaped}'{fonts_param}"
 
         if subtitle_filter:
             filter_complex.append(f"[0:v]{subtitle_filter}[vout]")

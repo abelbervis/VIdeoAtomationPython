@@ -128,6 +128,12 @@ def parse_args():
         help="TTS voice model (default: auto-selected by language: es-ES-AlvaroNeural, en-US-ChristopherNeural, zh-CN-YunxiNeural)"
     )
     parser.add_argument(
+        "--font",
+        type=str,
+        default=None,
+        help="Subtitle font family (default: auto-detected by language and OS, e.g. 'WenQuanYi Zen Hei', 'Microsoft YaHei', 'PingFang SC')"
+    )
+    parser.add_argument(
         "--music",
         type=str,
         default=None,
@@ -215,7 +221,11 @@ def main():
 
     # 3. Generate Subtitles (SRT & ASS for vertical canvas)
     sub_gen = SubtitleGenerator()
-    srt_path, ass_path = sub_gen.generate_subtitles(scene_timings, language=args.language)
+    srt_path, ass_path = sub_gen.generate_subtitles(
+        scene_timings,
+        language=args.language,
+        custom_font=args.font
+    )
 
     # 4. Search and Download Visual Media Assets (NASA or Pexels)
     print(f"\n🔭 Fetching media assets (Mode: {chosen_provider.upper()})...")

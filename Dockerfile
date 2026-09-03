@@ -5,6 +5,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     fonts-dejavu-core \
     fonts-freefont-ttf \
+    fonts-wqy-zenhei \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
