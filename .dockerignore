@@ -3,6 +3,6 @@ __pycache__/
 *.pyo
 *.pyd
 .env
-output/*.mp4
+output/
 temp/
 .git
