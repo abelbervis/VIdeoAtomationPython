@@ -9,7 +9,7 @@ import os
 import re
 import urllib.request
 import urllib.error
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Tuple
 
 from config import (
     GEMINI_API_KEY,
@@ -162,12 +162,12 @@ class ScriptGenerator:
         print(f"  ❌ Error: Todas las APIs de IA configuradas ({', '.join(configured_providers)}) fallaron al generar el guión.")
         return None
 
-    def _generate_groq(self, topic: str, target_duration: int) -> Optional[Dict[str, Any]]:
-        """Call Groq API via REST (OpenAI-compatible LPU inference)."""
+    def _call_groq_api(self, model: str, topic: str, target_duration: int) -> Tuple[Optional[Dict[str, Any]], Optional[int], str, str]:
+        """Execute a single REST call to Groq API. Returns (script_dict, status_code, err_code, err_msg)."""
         try:
             endpoint = f"{self.groq_api_base}/chat/completions"
             payload = {
-                "model": self.groq_model,
+                "model": model,
                 "messages": [
                     {"role": "system", "content": SYSTEM_PROMPT},
                     {
@@ -198,36 +198,63 @@ class ScriptGenerator:
             with urllib.request.urlopen(req, timeout=30) as response:
                 result = json.loads(response.read().decode("utf-8"))
                 text = result["choices"][0]["message"]["content"]
-                return self._parse_json_response(text)
+                return self._parse_json_response(text), None, "", ""
         except urllib.error.HTTPError as e:
             err_body = ""
             err_msg = ""
+            err_code_str = ""
             try:
                 err_body = e.read().decode("utf-8")
                 err_data = json.loads(err_body)
                 err_info = err_data.get("error", {})
                 if isinstance(err_info, dict):
                     err_msg = err_info.get("message", "")
+                    err_code_str = str(err_info.get("code", "") or "")
                 elif isinstance(err_info, str):
                     err_msg = err_info
             except Exception:
                 pass
-
-            if "Invalid API Key" in err_body or e.code == 401:
-                print("  ❌ Groq API Error: Clave GROQ_API_KEY no válida o incorrecta.")
-                print("     👉 Revisa o genera tu clave gratuita en https://console.groq.com/keys")
-            elif e.code == 429:
-                print("  ❌ Groq API Error (429 Rate Limit): Límite de tasa excedido en Groq.")
-            elif "model" in err_body.lower() and (e.code == 400 or e.code == 404):
-                print(f"  ❌ Groq API Error: Modelo '{self.groq_model}' no encontrado o no soportado en Groq.")
-                print("     👉 Modelos recomendados: llama-3.3-70b-versatile, llama-3.1-8b-instant")
-            else:
-                detail = f": {err_msg}" if err_msg else f" ({e.reason})"
-                print(f"  ⚠️ Groq API HTTP Error {e.code}{detail}")
-            return None
+            return None, e.code, err_code_str, err_msg or err_body
         except Exception as e:
-            print(f"  ⚠️ Groq API request error: {e}")
+            return None, -1, "exception", str(e)
+
+    def _generate_groq(self, topic: str, target_duration: int) -> Optional[Dict[str, Any]]:
+        """Call Groq API with automatic fallback to llama-3.3-70b-versatile if model is unavailable."""
+        model = self.groq_model or "llama-3.3-70b-versatile"
+        script, status, err_code, err_msg = self._call_groq_api(model, topic, target_duration)
+        if script:
+            return script
+
+        # Handle authentication errors
+        if status == 401 or "invalid api key" in err_msg.lower():
+            print("  ❌ Groq API Error: Clave GROQ_API_KEY no válida o incorrecta.")
+            print("     👉 Revisa o genera tu clave gratuita en https://console.groq.com/keys")
             return None
+
+        # Handle rate limits
+        if status == 429:
+            print("  ❌ Groq API Error (429 Rate Limit): Límite de peticiones excedido en Groq.")
+            return None
+
+        # Check if the requested model is deprecated, decommissioned, or non-existent
+        is_model_unavailable = (
+            status in (400, 404)
+            and any(kw in (err_msg + " " + err_code).lower() for kw in ("model", "decommission", "not_found", "not found", "does not exist"))
+        )
+
+        fallback_model = "llama-3.3-70b-versatile"
+        if is_model_unavailable and model != fallback_model:
+            print(f"  ⚠️ Groq API: El modelo '{model}' no está disponible ({err_msg}).")
+            print(f"  🔄 Cambiando automáticamente al modelo oficial activo: '{fallback_model}'...")
+            fb_script, fb_status, fb_code, fb_err = self._call_groq_api(fallback_model, topic, target_duration)
+            if fb_script:
+                return fb_script
+            print(f"  ❌ Falló también con el modelo '{fallback_model}': {fb_err}")
+            return None
+
+        detail = f": {err_msg}" if err_msg else ""
+        print(f"  ⚠️ Groq API HTTP Error {status}{detail}")
+        return None
 
     def _generate_gemini(self, topic: str, target_duration: int) -> Optional[Dict[str, Any]]:
         """Call Gemini API via REST."""
