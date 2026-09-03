@@ -28,7 +28,8 @@ from config import (
     OPENAI_API_KEY,
     GROQ_API_KEY,
     GROQ_MODEL,
-    LLM_PROVIDER
+    LLM_PROVIDER,
+    sanitize_env_value
 )
 from ai.script_generator import ScriptGenerator
 from providers.nasa import NASAProvider
@@ -132,16 +133,16 @@ def main():
     start_time = time.time()
     args = parse_args()
 
-    # Sanitize inputs (strip surrounding quotes if passed from shell or docker)
-    args.voice = str(args.voice or DEFAULT_TTS_VOICE).strip().strip("'\"").strip()
+    # Sanitize inputs (strip surrounding quotes or comments if passed from shell, env, or docker)
+    args.voice = sanitize_env_value(args.voice) or DEFAULT_TTS_VOICE
     if args.pexels_key:
-        args.pexels_key = str(args.pexels_key).strip().strip("'\"").strip()
+        args.pexels_key = sanitize_env_value(args.pexels_key)
     if args.groq_key:
-        args.groq_key = str(args.groq_key).strip().strip("'\"").strip()
+        args.groq_key = sanitize_env_value(args.groq_key)
     if args.gemini_key:
-        args.gemini_key = str(args.gemini_key).strip().strip("'\"").strip()
+        args.gemini_key = sanitize_env_value(args.gemini_key)
     if args.openai_key:
-        args.openai_key = str(args.openai_key).strip().strip("'\"").strip()
+        args.openai_key = sanitize_env_value(args.openai_key)
 
     print("=" * 65)
     print("🌌  SHORTS GENERATOR  |  Vertical Video Automation Engine")

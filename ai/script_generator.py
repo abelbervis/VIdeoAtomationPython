@@ -18,7 +18,8 @@ from config import (
     GROQ_MODEL,
     GROQ_API_BASE,
     LLM_PROVIDER,
-    LLM_API_BASE_URL
+    LLM_API_BASE_URL,
+    sanitize_env_value
 )
 
 
@@ -68,14 +69,15 @@ class ScriptGenerator:
         raw_openai = openai_key if openai_key is not None else OPENAI_API_KEY
         raw_groq = groq_key if groq_key is not None else GROQ_API_KEY
 
-        self.gemini_key = str(raw_gemini or "").strip().strip("'\"").strip()
-        self.openai_key = str(raw_openai or "").strip().strip("'\"").strip()
-        self.groq_key = str(raw_groq or "").strip().strip("'\"").strip()
-        self.groq_model = (groq_model or "llama-3.3-70b-versatile").strip().strip("'\"").strip()
-        self.groq_api_base = (groq_api_base or "https://api.groq.com/openai/v1").rstrip("/")
-        self.provider = (preferred_provider or "auto").lower().strip()
+        self.gemini_key = sanitize_env_value(raw_gemini)
+        self.openai_key = sanitize_env_value(raw_openai)
+        self.groq_key = sanitize_env_value(raw_groq)
+        raw_model = sanitize_env_value(groq_model)
+        self.groq_model = raw_model if raw_model else "llama-3.3-70b-versatile"
+        self.groq_api_base = (sanitize_env_value(groq_api_base) or "https://api.groq.com/openai/v1").rstrip("/")
+        self.provider = (sanitize_env_value(preferred_provider) or "auto").lower()
 
-        raw_url = str(base_url if base_url is not None else LLM_API_BASE_URL).strip().strip("'\"").strip()
+        raw_url = sanitize_env_value(base_url if base_url is not None else LLM_API_BASE_URL)
         self.base_url = raw_url if raw_url.startswith("http") else ""
 
     def _is_valid_api_key(self, key: str) -> bool:

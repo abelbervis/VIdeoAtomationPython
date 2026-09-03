@@ -21,6 +21,24 @@ for directory in [ASSETS_DIR, MUSIC_DIR, AUDIO_DIR, SUBTITLES_DIR, OUTPUT_DIR, T
     directory.mkdir(parents=True, exist_ok=True)
 
 
+def sanitize_env_value(v: str) -> str:
+    """Sanitize environment variable value, removing inline comments and outer quotes."""
+    if not v:
+        return ""
+    v = v.strip()
+    # If wrapped in quotes, extract the quoted string
+    if (v.startswith('"') and '"' in v[1:]) or (v.startswith("'") and "'" in v[1:]):
+        quote_char = v[0]
+        end_idx = v.find(quote_char, 1)
+        if end_idx != -1:
+            return v[1:end_idx].strip()
+    # Otherwise strip inline comments preceded by whitespace
+    for delimiter in (" #", "\t#"):
+        if delimiter in v:
+            v = v.split(delimiter, 1)[0]
+    return v.strip().strip("'\"").strip()
+
+
 def _load_env_file():
     """Load variables from .env if present (built-in or python-dotenv)."""
     env_file = BASE_DIR / ".env"
@@ -31,27 +49,28 @@ def _load_env_file():
         import dotenv
         dotenv.load_dotenv(dotenv_path=env_file)
     except ImportError:
-        # Minimal built-in .env parser
-        with open(env_file, "r", encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if not line or line.startswith("#") or "=" not in line:
-                    continue
-                k, v = line.split("=", 1)
-                k = k.strip()
-                v = v.strip().strip("'\"")
-                if k not in os.environ:
-                    os.environ[k] = v
+        pass
+
+    # Ensure all values from .env are properly sanitized (stripping inline comments and extra quotes)
+    with open(env_file, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            k, v = line.split("=", 1)
+            k = k.strip()
+            v = sanitize_env_value(v)
+            os.environ[k] = v
 
 
 _load_env_file()
 
 def clean_env(key: str, default: str = "") -> str:
-    """Retrieve an environment variable and strip extraneous quotes/spaces."""
+    """Retrieve an environment variable and strip extraneous quotes, spaces, and inline comments."""
     val = os.getenv(key)
     if val is None:
         return default
-    v = str(val).strip().strip("'\"").strip()
+    v = sanitize_env_value(str(val))
     return v if v else default
 
 
