@@ -66,6 +66,10 @@ MEDIA_PROVIDER = clean_env("MEDIA_PROVIDER", "auto").lower()
 
 GEMINI_API_KEY = clean_env("GEMINI_API_KEY", "")
 OPENAI_API_KEY = clean_env("OPENAI_API_KEY", "")
+GROK_API_KEY = clean_env("GROK_API_KEY", clean_env("XAI_API_KEY", ""))
+GROK_MODEL = clean_env("GROK_MODEL", "grok-3")
+GROK_API_BASE = clean_env("GROK_API_BASE", "https://api.x.ai/v1")
+LLM_PROVIDER = clean_env("LLM_PROVIDER", "auto").lower()
 LLM_API_BASE_URL = clean_env("LLM_API_BASE_URL", "")
 
 # TTS Settings

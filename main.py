@@ -23,7 +23,12 @@ from config import (
     DEFAULT_TTS_VOICE,
     TTS_PROVIDER,
     MEDIA_PROVIDER,
-    PEXELS_API_KEY
+    PEXELS_API_KEY,
+    GEMINI_API_KEY,
+    OPENAI_API_KEY,
+    GROK_API_KEY,
+    GROK_MODEL,
+    LLM_PROVIDER
 )
 from ai.script_generator import ScriptGenerator
 from providers.nasa import NASAProvider
@@ -69,6 +74,35 @@ def parse_args():
         help="Custom Pexels API key (or set PEXELS_API_KEY in .env file)"
     )
     parser.add_argument(
+        "--llm",
+        type=str,
+        default=LLM_PROVIDER,
+        choices=["auto", "grok", "gemini", "openai"],
+        help="AI LLM provider to write the script:\n"
+             "  'auto'   : Tries configured keys in priority order (Grok -> Gemini -> OpenAI)\n"
+             "  'grok'   : xAI Grok (grok-3 / grok-3-mini)\n"
+             "  'gemini' : Google Gemini (gemini-2.5-flash)\n"
+             "  'openai' : OpenAI (gpt-4o-mini)"
+    )
+    parser.add_argument(
+        "--grok-key",
+        type=str,
+        default=None,
+        help="Custom xAI Grok API key (or set GROK_API_KEY in .env file)"
+    )
+    parser.add_argument(
+        "--gemini-key",
+        type=str,
+        default=None,
+        help="Custom Google Gemini API key (or set GEMINI_API_KEY in .env file)"
+    )
+    parser.add_argument(
+        "--openai-key",
+        type=str,
+        default=None,
+        help="Custom OpenAI API key (or set OPENAI_API_KEY in .env file)"
+    )
+    parser.add_argument(
         "--output",
         type=str,
         default=None,
@@ -102,14 +136,21 @@ def main():
     args.voice = str(args.voice or DEFAULT_TTS_VOICE).strip().strip("'\"").strip()
     if args.pexels_key:
         args.pexels_key = str(args.pexels_key).strip().strip("'\"").strip()
+    if args.grok_key:
+        args.grok_key = str(args.grok_key).strip().strip("'\"").strip()
+    if args.gemini_key:
+        args.gemini_key = str(args.gemini_key).strip().strip("'\"").strip()
+    if args.openai_key:
+        args.openai_key = str(args.openai_key).strip().strip("'\"").strip()
 
     print("=" * 65)
     print("🌌  SHORTS GENERATOR  |  Vertical Video Automation Engine")
     print("=" * 65)
-    print(f"🎯 Topic:    '{args.topic}'")
-    print(f"⏱️  Duration: ~{args.duration} seconds")
-    print(f"🗣️  Voice:    {args.voice}")
-    print(f"🌐 Provider: {args.provider.upper()}")
+    print(f"🎯 Topic:        '{args.topic}'")
+    print(f"⏱️  Duration:     ~{args.duration} seconds")
+    print(f"🤖 LLM Provider: {args.llm.upper()}")
+    print(f"🗣️  Voice:        {args.voice}")
+    print(f"🌐 Media:        {args.provider.upper()}")
 
     # 0. Check system prerequisites
     if not check_ffmpeg():
@@ -130,8 +171,22 @@ def main():
         sys.exit(1)
 
     # 1. Generate Structured AI Script
-    script_gen = ScriptGenerator()
+    script_gen = ScriptGenerator(
+        gemini_key=args.gemini_key,
+        openai_key=args.openai_key,
+        grok_key=args.grok_key,
+        preferred_provider=args.llm
+    )
     script = script_gen.generate(args.topic, target_duration=args.duration)
+
+    # STRICT CHECK: If script generation fails, stop immediately without proceeding to audio/video
+    if not script or not script.get("scenes"):
+        print("\n" + "=" * 65)
+        print("❌ ERROR FATAL: La API no pudo generar el guión.")
+        print("🛑 El proceso se ha detenido por completo. No se generará audio, subtítulos ni video.")
+        print("=" * 65 + "\n")
+        sys.exit(1)
+
     scenes = script.get("scenes", [])
     print(f"📋 Script generated: \"{script.get('title', args.topic)}\" ({len(scenes)} scenes)")
     print(f"🪝 Hook: \"{script.get('hook', '')}\"")
