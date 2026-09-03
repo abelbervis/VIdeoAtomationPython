@@ -14,9 +14,9 @@ from typing import Dict, Any, Optional
 from config import (
     GEMINI_API_KEY,
     OPENAI_API_KEY,
-    GROK_API_KEY,
-    GROK_MODEL,
-    GROK_API_BASE,
+    GROQ_API_KEY,
+    GROQ_MODEL,
+    GROQ_API_BASE,
     LLM_PROVIDER,
     LLM_API_BASE_URL
 )
@@ -52,27 +52,27 @@ Respond ONLY with valid JSON matching this schema:
 
 
 class ScriptGenerator:
-    """Generates structured science video scripts via Grok (xAI), Gemini, or OpenAI."""
+    """Generates structured science video scripts via Groq, Gemini, or OpenAI."""
 
     def __init__(
         self,
         gemini_key: Optional[str] = None,
         openai_key: Optional[str] = None,
-        grok_key: Optional[str] = None,
-        grok_model: str = GROK_MODEL,
-        grok_api_base: str = GROK_API_BASE,
+        groq_key: Optional[str] = None,
+        groq_model: str = GROQ_MODEL,
+        groq_api_base: str = GROQ_API_BASE,
         preferred_provider: str = LLM_PROVIDER,
         base_url: Optional[str] = None,
     ):
         raw_gemini = gemini_key if gemini_key is not None else GEMINI_API_KEY
         raw_openai = openai_key if openai_key is not None else OPENAI_API_KEY
-        raw_grok = grok_key if grok_key is not None else GROK_API_KEY
+        raw_groq = groq_key if groq_key is not None else GROQ_API_KEY
 
         self.gemini_key = str(raw_gemini or "").strip().strip("'\"").strip()
         self.openai_key = str(raw_openai or "").strip().strip("'\"").strip()
-        self.grok_key = str(raw_grok or "").strip().strip("'\"").strip()
-        self.grok_model = (grok_model or "grok-3").strip().strip("'\"").strip()
-        self.grok_api_base = (grok_api_base or "https://api.x.ai/v1").rstrip("/")
+        self.groq_key = str(raw_groq or "").strip().strip("'\"").strip()
+        self.groq_model = (groq_model or "llama-3.3-70b-versatile").strip().strip("'\"").strip()
+        self.groq_api_base = (groq_api_base or "https://api.groq.com/openai/v1").rstrip("/")
         self.provider = (preferred_provider or "auto").lower().strip()
 
         raw_url = str(base_url if base_url is not None else LLM_API_BASE_URL).strip().strip("'\"").strip()
@@ -84,7 +84,7 @@ class ScriptGenerator:
             return False
         placeholders = [
             "my_gemini_api_key", "tu_clave", "your_key", "demo_key",
-            "sk-...", "placeholder", "xxx", "your_grok_key", "your_openai_key"
+            "sk-...", "placeholder", "xxx", "your_groq_key", "your_openai_key"
         ]
         return not any(p in key.lower() for p in placeholders)
 
@@ -93,14 +93,14 @@ class ScriptGenerator:
         print(f"\n🧠 Generating script for: '{topic}' (~{target_duration}s)...")
 
         # Specific provider selected
-        if self.provider == "grok":
-            if not self._is_valid_api_key(self.grok_key):
-                print("  ❌ Error: Se especificó el proveedor 'grok' pero no se configuró una GROK_API_KEY válida.")
-                print("     👉 Obtén tu clave en https://console.x.ai/ y agrégala a tu .env o usa --grok-key.")
+        if self.provider == "groq":
+            if not self._is_valid_api_key(self.groq_key):
+                print("  ❌ Error: Se especificó el proveedor 'groq' pero no se configuró una GROQ_API_KEY válida.")
+                print("     👉 Obtén tu clave gratuita en https://console.groq.com/keys y agrégala a tu .env o usa --groq-key.")
                 return None
-            script = self._generate_grok(topic, target_duration)
+            script = self._generate_groq(topic, target_duration)
             if not script:
-                print("  ❌ Error: Falló la generación del guión con la API de Grok.")
+                print("  ❌ Error: Falló la generación del guión con la API de Groq.")
             return script
 
         if self.provider == "gemini":
@@ -123,10 +123,10 @@ class ScriptGenerator:
                 print("  ❌ Error: Falló la generación del guión con la API de OpenAI.")
             return script
 
-        # Auto mode: try configured providers in priority order
+        # Auto mode: try configured providers in priority order (Groq -> Gemini -> OpenAI)
         configured_providers = []
-        if self._is_valid_api_key(self.grok_key):
-            configured_providers.append("grok")
+        if self._is_valid_api_key(self.groq_key):
+            configured_providers.append("groq")
         if self._is_valid_api_key(self.gemini_key):
             configured_providers.append("gemini")
         if self._is_valid_api_key(self.openai_key):
@@ -135,15 +135,15 @@ class ScriptGenerator:
         if not configured_providers:
             print("  ❌ Error: No hay ninguna API de IA configurada para generar el guión.")
             print("     👉 Debes configurar al menos una clave en tu archivo .env o pasarla por terminal:")
-            print("        • GROK_API_KEY   (https://console.x.ai/) o parámetro --grok-key")
+            print("        • GROQ_API_KEY   (https://console.groq.com/keys) o parámetro --groq-key")
             print("        • GEMINI_API_KEY (https://aistudio.google.com/) o parámetro --gemini-key")
             print("        • OPENAI_API_KEY (https://platform.openai.com/) o parámetro --openai-key")
             return None
 
         for prov in configured_providers:
-            if prov == "grok":
-                print("  ⚡ Solicitando guión a xAI Grok...")
-                script = self._generate_grok(topic, target_duration)
+            if prov == "groq":
+                print("  ⚡ Solicitando guión ultrarrápido a Groq LPU...")
+                script = self._generate_groq(topic, target_duration)
                 if script:
                     return script
             elif prov == "gemini":
@@ -160,12 +160,12 @@ class ScriptGenerator:
         print(f"  ❌ Error: Todas las APIs de IA configuradas ({', '.join(configured_providers)}) fallaron al generar el guión.")
         return None
 
-    def _generate_grok(self, topic: str, target_duration: int) -> Optional[Dict[str, Any]]:
-        """Call xAI Grok API via REST."""
+    def _generate_groq(self, topic: str, target_duration: int) -> Optional[Dict[str, Any]]:
+        """Call Groq API via REST (OpenAI-compatible LPU inference)."""
         try:
-            endpoint = f"{self.grok_api_base}/chat/completions"
+            endpoint = f"{self.groq_api_base}/chat/completions"
             payload = {
-                "model": self.grok_model,
+                "model": self.groq_model,
                 "messages": [
                     {"role": "system", "content": SYSTEM_PROMPT},
                     {
@@ -187,7 +187,7 @@ class ScriptGenerator:
                 data=json.dumps(payload).encode("utf-8"),
                 headers={
                     "Content-Type": "application/json",
-                    "Authorization": f"Bearer {self.grok_key}",
+                    "Authorization": f"Bearer {self.groq_key}",
                     "User-Agent": "NASA-Shorts-Generator/1.0"
                 },
                 method="POST"
@@ -203,23 +203,28 @@ class ScriptGenerator:
             try:
                 err_body = e.read().decode("utf-8")
                 err_data = json.loads(err_body)
-                err_msg = err_data.get("error") or err_data.get("message") or ""
+                err_info = err_data.get("error", {})
+                if isinstance(err_info, dict):
+                    err_msg = err_info.get("message", "")
+                elif isinstance(err_info, str):
+                    err_msg = err_info
             except Exception:
                 pass
 
-            if "Incorrect API key" in err_body or e.code == 401:
-                print("  ❌ Grok API Error: Clave GROK_API_KEY no válida o incorrecta.")
-                print("     👉 Revisa tu clave en https://console.x.ai/")
-            elif e.code == 403:
-                print(f"  ❌ Grok API Error (403 Forbidden): Cuenta sin fondos o sin acceso al modelo '{self.grok_model}'.")
+            if "Invalid API Key" in err_body or e.code == 401:
+                print("  ❌ Groq API Error: Clave GROQ_API_KEY no válida o incorrecta.")
+                print("     👉 Revisa o genera tu clave gratuita en https://console.groq.com/keys")
             elif e.code == 429:
-                print("  ❌ Grok API Error (429 Too Many Requests): Límite de tasa o cuota excedida en xAI.")
+                print("  ❌ Groq API Error (429 Rate Limit): Límite de tasa excedido en Groq.")
+            elif "model" in err_body.lower() and (e.code == 400 or e.code == 404):
+                print(f"  ❌ Groq API Error: Modelo '{self.groq_model}' no encontrado o no soportado en Groq.")
+                print("     👉 Modelos recomendados: llama-3.3-70b-versatile, llama-3.1-8b-instant")
             else:
                 detail = f": {err_msg}" if err_msg else f" ({e.reason})"
-                print(f"  ⚠️ Grok API HTTP Error {e.code}{detail}")
+                print(f"  ⚠️ Groq API HTTP Error {e.code}{detail}")
             return None
         except Exception as e:
-            print(f"  ⚠️ Grok API request error: {e}")
+            print(f"  ⚠️ Groq API request error: {e}")
             return None
 
     def _generate_gemini(self, topic: str, target_duration: int) -> Optional[Dict[str, Any]]:

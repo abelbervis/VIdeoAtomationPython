@@ -26,8 +26,8 @@ from config import (
     PEXELS_API_KEY,
     GEMINI_API_KEY,
     OPENAI_API_KEY,
-    GROK_API_KEY,
-    GROK_MODEL,
+    GROQ_API_KEY,
+    GROQ_MODEL,
     LLM_PROVIDER
 )
 from ai.script_generator import ScriptGenerator
@@ -77,18 +77,18 @@ def parse_args():
         "--llm",
         type=str,
         default=LLM_PROVIDER,
-        choices=["auto", "grok", "gemini", "openai"],
+        choices=["auto", "groq", "gemini", "openai"],
         help="AI LLM provider to write the script:\n"
-             "  'auto'   : Tries configured keys in priority order (Grok -> Gemini -> OpenAI)\n"
-             "  'grok'   : xAI Grok (grok-3 / grok-3-mini)\n"
+             "  'auto'   : Tries configured keys in priority order (Groq -> Gemini -> OpenAI)\n"
+             "  'groq'   : Groq LPU (llama-3.3-70b-versatile, ultra-fast)\n"
              "  'gemini' : Google Gemini (gemini-2.5-flash)\n"
              "  'openai' : OpenAI (gpt-4o-mini)"
     )
     parser.add_argument(
-        "--grok-key",
+        "--groq-key",
         type=str,
         default=None,
-        help="Custom xAI Grok API key (or set GROK_API_KEY in .env file)"
+        help="Custom Groq API key (or set GROQ_API_KEY in .env file)"
     )
     parser.add_argument(
         "--gemini-key",
@@ -136,8 +136,8 @@ def main():
     args.voice = str(args.voice or DEFAULT_TTS_VOICE).strip().strip("'\"").strip()
     if args.pexels_key:
         args.pexels_key = str(args.pexels_key).strip().strip("'\"").strip()
-    if args.grok_key:
-        args.grok_key = str(args.grok_key).strip().strip("'\"").strip()
+    if args.groq_key:
+        args.groq_key = str(args.groq_key).strip().strip("'\"").strip()
     if args.gemini_key:
         args.gemini_key = str(args.gemini_key).strip().strip("'\"").strip()
     if args.openai_key:
@@ -174,7 +174,7 @@ def main():
     script_gen = ScriptGenerator(
         gemini_key=args.gemini_key,
         openai_key=args.openai_key,
-        grok_key=args.grok_key,
+        groq_key=args.groq_key,
         preferred_provider=args.llm
     )
     script = script_gen.generate(args.topic, target_duration=args.duration)

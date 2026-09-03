@@ -7,3 +7,16 @@ coverage/
 .env*
 !.env.example
 output/
+temp/
+
+# Python cache and bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+venv/
+.venv/
+env/
