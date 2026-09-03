@@ -6,6 +6,8 @@ Optimized for readability: short word chunks, high contrast colors, and mobile U
 
 import math
 import re
+import shutil
+import subprocess
 from pathlib import Path
 from typing import Dict, List, Tuple, Any
 
@@ -48,22 +50,64 @@ def is_cjk(text: str) -> bool:
     return any("\u4e00" <= c <= "\u9fff" for c in text)
 
 
-def chunk_chinese_text(text: str, max_chars: int = 7) -> List[str]:
-    """Break continuous Chinese text into short, natural rhythmic visual subtitle chunks."""
-    parts = re.split(r"([，。！？；：、,.!?;:\s]+)", text)
+def resolve_chinese_font() -> str:
+    """
+    Find the best installed font family name for Chinese text rendering in libass.
+    Guarantees returning a single clean font family name without commas,
+    preventing corruption of the comma-delimited ASS Style line.
+    """
+    candidates = [
+        "WenQuanYi Zen Hei",
+        "WenQuanYi Micro Hei",
+        "Noto Sans CJK SC",
+        "Microsoft YaHei",
+        "SimHei",
+        "PingFang SC",
+        "Source Han Sans CN",
+        "Droid Sans Fallback",
+    ]
+    if shutil.which("fc-list"):
+        try:
+            r = subprocess.run(["fc-list", ":lang=zh", "family"], capture_output=True, text=True, timeout=5)
+            installed = r.stdout.lower()
+            for cand in candidates:
+                if cand.lower() in installed:
+                    return cand
+        except Exception:
+            pass
+    return "WenQuanYi Zen Hei"
+
+
+def chunk_chinese_text(text: str, max_chars: int = 9) -> List[str]:
+    """
+    Break continuous Chinese text into short, natural rhythmic visual subtitle chunks.
+    Splits by clauses (punctuation) and ensures chunks are readable on vertical video (6-10 chars).
+    """
+    raw_clauses = re.split(r"([，。！？；：\n]+)", text)
+    clauses = []
+    i = 0
+    while i < len(raw_clauses):
+        seg = raw_clauses[i].strip()
+        if not seg:
+            i += 1
+            continue
+        # If followed immediately by punctuation, attach it
+        if i + 1 < len(raw_clauses) and re.match(r"^[，。！？；：\n]+$", raw_clauses[i + 1]):
+            seg += raw_clauses[i + 1].strip()
+            i += 2
+        else:
+            i += 1
+        clauses.append(seg)
+
     chunks = []
-    for p in parts:
-        p = p.strip()
-        if not p:
-            continue
-        if re.match(r"^[，。！？；：、,.!?;:]+$", p):
-            if chunks:
-                chunks[-1] += p
-            continue
-        for i in range(0, len(p), max_chars):
-            piece = p[i:i + max_chars]
-            if piece:
-                chunks.append(piece)
+    for c in clauses:
+        if len(c) <= max_chars:
+            chunks.append(c)
+        else:
+            for j in range(0, len(c), max_chars):
+                piece = c[j:j + max_chars]
+                if piece:
+                    chunks.append(piece)
     return chunks if chunks else [text]
 
 
@@ -147,11 +191,15 @@ class SubtitleGenerator:
         """
         has_cjk = any(is_cjk(c.get("text", "")) for c in chunks)
         if has_cjk or (language or "").lower().startswith("zh"):
-            font_family = SUPPORTED_LANGUAGES.get("zh", {}).get("subtitle_font", "WenQuanYi Zen Hei, Microsoft YaHei, SimHei, Arial")
+            font_family = resolve_chinese_font()
             font_size = SUBTITLE_FONT_SIZE + 2
         else:
             font_family = SUBTITLE_FONT
             font_size = SUBTITLE_FONT_SIZE
+
+        # Strictly ensure font_family has NO commas (ASS style fields are comma-separated)
+        if "," in font_family:
+            font_family = font_family.split(",")[0].strip()
 
         header = f"""[Script Info]
 ScriptType: v4.00+

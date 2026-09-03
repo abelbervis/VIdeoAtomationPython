@@ -112,7 +112,7 @@ SUPPORTED_LANGUAGES = {
     "zh": {
         "name": "Chinese (Simplified Mandarin)",
         "default_voice": "zh-CN-YunxiNeural",
-        "subtitle_font": "WenQuanYi Zen Hei, Microsoft YaHei, SimHei, Arial",
+        "subtitle_font": "WenQuanYi Zen Hei",
     },
 }
 
