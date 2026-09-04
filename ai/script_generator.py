@@ -1,7 +1,8 @@
 """
-AI Script Generator for Vertical Science Shorts.
-Generates structured JSON scripts divided into scenes with narration and targeted NASA search keywords.
-Supports Google Gemini, OpenAI, and a reliable factual scientific generator fallback.
+AI Script Generator for Multi-Format Explanatory and Documentary Videos.
+Generates structured JSON scripts divided into scenes with narration and targeted search keywords.
+Supports Google Gemini, OpenAI, and Groq with adaptive pacing for vertical (Shorts/TikTok/Reels),
+horizontal (YouTube/Widescreen), and square social media formats.
 """
 
 import json
@@ -19,37 +20,70 @@ from config import (
     GROQ_API_BASE,
     LLM_PROVIDER,
     LLM_API_BASE_URL,
+    resolve_video_format,
     sanitize_env_value
 )
 
 
-SYSTEM_PROMPT = """You are an elite science communicator writing punchy, viral YouTube Shorts and TikTok documentary scripts.
-Target duration: 30 to 45 seconds.
+SYSTEM_PROMPT = """You are an elite documentary filmmaker and video creator crafting viral, high-retention scripts across science, technology, nature, history, mysteries, and human curiosity.
 
-Rules:
-1. Start with an irresistible 3-second hook that challenges common intuition.
-2. Absolutely NO generic greetings (Never say 'Hola amigos', 'En este video', 'Bienvenidos', 'Hello guys').
-3. Keep the narration fast-paced, accurate, engaging, and based strictly on verifiable facts and science.
-4. End with a memorable, mind-blowing closing thought or punchline.
-5. Divide the script into 4 to 6 distinct visual scenes.
-6. Provide specific visual search keywords ALWAYS IN ENGLISH for each scene to query media libraries (Pexels, NASA). Keywords should describe exact visual actions (e.g. 'ocean waves aerial', 'deep space galaxy', 'brain neurons firing').
-7. Preferred visual types: "video" for motion scenes, "image" for high-detail captures.
+Core Principles:
+1. Start with an irresistible 2-3 second hook that instantly captivates the audience and subverts expectations.
+2. Absolutely NO generic greetings, fluff, or filler (Never say 'Hola a todos', 'Bienvenidos', 'En este video', 'Hello guys').
+3. Keep the narration factual, punchy, engaging, and structured with clear narrative momentum.
+4. End with a memorable, thought-provoking conclusion or closing punchline.
+5. Divide the script into well-timed visual scenes (typically 4 to 7 scenes depending on total duration).
+6. Provide specific visual search keywords ALWAYS IN ENGLISH for each scene to query media libraries (Pexels, NASA). Keywords must describe concrete, cinematic visual actions (e.g. 'cinematic ocean waves aerial', 'ancient roman architecture drone shot', 'human brain synapses firing close up').
+7. Preferred visual types: "video" for motion and action scenes, "image" for high-detail captures or archival shots.
 
 Respond ONLY with valid JSON matching this schema:
 {
-  "title": "Short title",
+  "title": "Short captivating title",
   "hook": "Opening hook sentence",
   "scenes": [
     {
       "scene_id": 1,
       "narration": "Narration text in the requested target language",
-      "keywords": ["specific english keyword 1", "specific keyword 2"],
+      "keywords": ["specific english keyword 1", "specific english keyword 2"],
       "visual_type": "video",
-      "estimated_duration": 7
+      "estimated_duration": 6
     }
   ]
 }
 """
+
+
+def get_format_instructions(format_name: Optional[str] = None) -> Tuple[str, str]:
+    """Return platform context and narrative/visual directives based on video format."""
+    cfg = resolve_video_format(format_name)
+    fmt = cfg.get("name", "vertical").lower()
+    orientation = cfg.get("orientation", "portrait")
+
+    if fmt == "horizontal" or orientation == "landscape":
+        return (
+            "YouTube / Standard Widescreen (16:9 Landscape)",
+            "FORMAT DIRECTIVES (16:9 Widescreen / YouTube Video):\n"
+            "- Narrative Style: Cinematic documentary / video essay pacing. Explain concepts clearly with smooth transitions between ideas.\n"
+            "- Visual Keywords: Prioritize wide cinematic shots, aerial drone views, landscape panoramas, and establishing scenes (e.g., 'cinematic drone landscape', 'wide angle laboratory experiment', '4k cinematic slow motion').\n"
+            "- Scene Count: 4 to 6 richer scenes with cohesive narrative flow."
+        )
+    elif fmt == "square" or orientation == "square":
+        return (
+            "Instagram Feed / LinkedIn / Facebook (1:1 Square)",
+            "FORMAT DIRECTIVES (1:1 Square Social Media Post):\n"
+            "- Narrative Style: Concise, punchy, informative, and visually focused. Get straight to the key takeaway.\n"
+            "- Visual Keywords: Prioritize centered subjects, clear high-contrast focus, and clean compositions (e.g., 'centered object close up', 'studio lighting demonstration', 'crisp macro details').\n"
+            "- Scene Count: 4 to 5 quick, impactful scenes."
+        )
+    else:
+        # Default: vertical (Shorts / TikTok / Reels)
+        return (
+            "YouTube Shorts / TikTok / Instagram Reels (9:16 Vertical)",
+            "FORMAT DIRECTIVES (9:16 Vertical Shorts/Reels/TikTok):\n"
+            "- Narrative Style: Ultra high-retention, fast-paced, zero dead air. Hook in the first 2 seconds to stop the scroll.\n"
+            "- Visual Keywords: Prioritize vertical-friendly subjects, dynamic close-ups, intense motion, and strong focal points (e.g., 'vertical drone dive', 'dramatic close up portrait', 'fast motion city streets', 'first person perspective action').\n"
+            "- Scene Count: 4 to 7 fast, punchy scenes (3 to 6 seconds per scene)."
+        )
 
 
 def get_language_instructions(language: str) -> Tuple[str, str]:
@@ -58,28 +92,28 @@ def get_language_instructions(language: str) -> Tuple[str, str]:
     if lang == "en":
         return (
             "English",
-            "The narration and title MUST be written in natural, punchy, fluent English for viral shorts.\n"
+            "The narration, hook, and title MUST be written in natural, punchy, fluent English.\n"
             "Visual search keywords MUST also be in English."
         )
     elif lang in ("zh", "zh-cn", "chinese"):
         return (
             "Simplified Chinese (Mandarin / 中文简体)",
-            "The entire narration and title MUST be written in natural, fluent Simplified Chinese (中文简体), "
-            "crafted for high-retention viral short videos.\n"
+            "The entire narration, hook, and title MUST be written in natural, fluent Simplified Chinese (中文简体), "
+            "crafted for high audience engagement.\n"
             "CRITICAL: The visual search 'keywords' for NASA and Pexels MUST ALWAYS BE IN ENGLISH "
-            "(e.g. ['deep space nebula', 'mars surface', 'black hole event horizon']) so the media search succeeds!"
+            "(e.g. ['deep ocean trenches', 'supercomputer servers', 'mars rover surface']) so the media search succeeds!"
         )
     else:
         return (
             "Spanish (Español)",
-            "The entire narration and title MUST be written in natural, fluent Spanish (Español).\n"
+            "The entire narration, hook, and title MUST be written in natural, fluent Spanish (Español).\n"
             "The visual search 'keywords' for NASA and Pexels MUST ALWAYS BE IN ENGLISH "
-            "(e.g. ['saturn rings', 'supernova explosion']) so the media search succeeds!"
+            "(e.g. ['deep ocean trenches', 'supercomputer servers', 'mars rover surface']) so the media search succeeds!"
         )
 
 
 class ScriptGenerator:
-    """Generates structured science video scripts via Groq, Gemini, or OpenAI."""
+    """Generates structured video scripts via Groq, Gemini, or OpenAI."""
 
     def __init__(
         self,
@@ -116,10 +150,17 @@ class ScriptGenerator:
         ]
         return not any(p in key.lower() for p in placeholders)
 
-    def generate(self, topic: str, target_duration: int = 35, language: str = "es") -> Optional[Dict[str, Any]]:
-        """Generate a structured script for the given topic using configured AI providers."""
+    def generate(
+        self,
+        topic: str,
+        target_duration: int = 35,
+        language: str = "es",
+        video_format: str = "vertical"
+    ) -> Optional[Dict[str, Any]]:
+        """Generate a structured script for the given topic, format, and duration."""
         lang_label, _ = get_language_instructions(language)
-        print(f"\n🧠 Generating script for: '{topic}' (~{target_duration}s, Language: {lang_label})...")
+        platform_label, _ = get_format_instructions(video_format)
+        print(f"\n🧠 Generating script for: '{topic}' (~{target_duration}s, {platform_label}, Language: {lang_label})...")
 
         # Specific provider selected
         if self.provider == "groq":
@@ -127,7 +168,7 @@ class ScriptGenerator:
                 print("  ❌ Error: Se especificó el proveedor 'groq' pero no se configuró una GROQ_API_KEY válida.")
                 print("     👉 Obtén tu clave gratuita en https://console.groq.com/keys y agrégala a tu .env o usa --groq-key.")
                 return None
-            script = self._generate_groq(topic, target_duration, language)
+            script = self._generate_groq(topic, target_duration, language, video_format)
             if not script:
                 print("  ❌ Error: Falló la generación del guión con la API de Groq.")
             return script
@@ -137,7 +178,7 @@ class ScriptGenerator:
                 print("  ❌ Error: Se especificó el proveedor 'gemini' pero no se configuró una GEMINI_API_KEY válida.")
                 print("     👉 Obtén tu clave en https://aistudio.google.com/ y agrégala a tu .env o usa --gemini-key.")
                 return None
-            script = self._generate_gemini(topic, target_duration, language)
+            script = self._generate_gemini(topic, target_duration, language, video_format)
             if not script:
                 print("  ❌ Error: Falló la generación del guión con la API de Gemini.")
             return script
@@ -147,7 +188,7 @@ class ScriptGenerator:
                 print("  ❌ Error: Se especificó el proveedor 'openai' pero no se configuró una OPENAI_API_KEY válida.")
                 print("     👉 Obtén tu clave en https://platform.openai.com/ y agrégala a tu .env o usa --openai-key.")
                 return None
-            script = self._generate_openai(topic, target_duration, language)
+            script = self._generate_openai(topic, target_duration, language, video_format)
             if not script:
                 print("  ❌ Error: Falló la generación del guión con la API de OpenAI.")
             return script
@@ -172,26 +213,34 @@ class ScriptGenerator:
         for prov in configured_providers:
             if prov == "groq":
                 print("  ⚡ Solicitando guión ultrarrápido a Groq LPU...")
-                script = self._generate_groq(topic, target_duration, language)
+                script = self._generate_groq(topic, target_duration, language, video_format)
                 if script:
                     return script
             elif prov == "gemini":
                 print("  ⚡ Solicitando guión a Google Gemini...")
-                script = self._generate_gemini(topic, target_duration, language)
+                script = self._generate_gemini(topic, target_duration, language, video_format)
                 if script:
                     return script
             elif prov == "openai":
                 print("  ⚡ Solicitando guión a OpenAI...")
-                script = self._generate_openai(topic, target_duration, language)
+                script = self._generate_openai(topic, target_duration, language, video_format)
                 if script:
                     return script
 
         print(f"  ❌ Error: Todas las APIs de IA configuradas ({', '.join(configured_providers)}) fallaron al generar el guión.")
         return None
 
-    def _call_groq_api(self, model: str, topic: str, target_duration: int, language: str = "es") -> Tuple[Optional[Dict[str, Any]], Optional[int], str, str]:
+    def _call_groq_api(
+        self,
+        model: str,
+        topic: str,
+        target_duration: int,
+        language: str = "es",
+        video_format: str = "vertical"
+    ) -> Tuple[Optional[Dict[str, Any]], Optional[int], str, str]:
         """Execute a single REST call to Groq API. Returns (script_dict, status_code, err_code, err_msg)."""
         lang_name, lang_guidance = get_language_instructions(language)
+        plat_name, plat_guidance = get_format_instructions(video_format)
         try:
             endpoint = f"{self.groq_api_base}/chat/completions"
             payload = {
@@ -203,8 +252,10 @@ class ScriptGenerator:
                         "content": (
                             f"Topic: {topic}\n"
                             f"Target duration: {target_duration} seconds.\n"
+                            f"Target Platform/Format: {plat_name}\n\n"
+                            f"{plat_guidance}\n\n"
                             f"Target Language: {lang_name}\n"
-                            f"Language Requirements:\n{lang_guidance}\n"
+                            f"{lang_guidance}\n\n"
                             f"Generate the JSON script following the schema:"
                         )
                     }
@@ -219,7 +270,7 @@ class ScriptGenerator:
                 headers={
                     "Content-Type": "application/json",
                     "Authorization": f"Bearer {self.groq_key}",
-                    "User-Agent": "NASA-Shorts-Generator/1.0"
+                    "User-Agent": "Video-Generator/1.0"
                 },
                 method="POST"
             )
@@ -247,10 +298,16 @@ class ScriptGenerator:
         except Exception as e:
             return None, -1, "exception", str(e)
 
-    def _generate_groq(self, topic: str, target_duration: int, language: str = "es") -> Optional[Dict[str, Any]]:
+    def _generate_groq(
+        self,
+        topic: str,
+        target_duration: int,
+        language: str = "es",
+        video_format: str = "vertical"
+    ) -> Optional[Dict[str, Any]]:
         """Call Groq API with automatic fallback to llama-3.3-70b-versatile if model is unavailable."""
         model = self.groq_model or "llama-3.3-70b-versatile"
-        script, status, err_code, err_msg = self._call_groq_api(model, topic, target_duration, language)
+        script, status, err_code, err_msg = self._call_groq_api(model, topic, target_duration, language, video_format)
         if script:
             return script
 
@@ -275,7 +332,7 @@ class ScriptGenerator:
         if is_model_unavailable and model != fallback_model:
             print(f"  ⚠️ Groq API: El modelo '{model}' no está disponible ({err_msg}).")
             print(f"  🔄 Cambiando automáticamente al modelo oficial activo: '{fallback_model}'...")
-            fb_script, fb_status, fb_code, fb_err = self._call_groq_api(fallback_model, topic, target_duration, language)
+            fb_script, fb_status, fb_code, fb_err = self._call_groq_api(fallback_model, topic, target_duration, language, video_format)
             if fb_script:
                 return fb_script
             print(f"  ❌ Falló también con el modelo '{fallback_model}': {fb_err}")
@@ -285,17 +342,26 @@ class ScriptGenerator:
         print(f"  ⚠️ Groq API HTTP Error {status}{detail}")
         return None
 
-    def _generate_gemini(self, topic: str, target_duration: int, language: str = "es") -> Optional[Dict[str, Any]]:
+    def _generate_gemini(
+        self,
+        topic: str,
+        target_duration: int,
+        language: str = "es",
+        video_format: str = "vertical"
+    ) -> Optional[Dict[str, Any]]:
         """Call Gemini API via REST."""
         lang_name, lang_guidance = get_language_instructions(language)
+        plat_name, plat_guidance = get_format_instructions(video_format)
         try:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={self.gemini_key}"
             prompt = (
                 f"{SYSTEM_PROMPT}\n\n"
                 f"Topic: {topic}\n"
                 f"Target duration: {target_duration} seconds.\n"
+                f"Target Platform/Format: {plat_name}\n\n"
+                f"{plat_guidance}\n\n"
                 f"Target Language: {lang_name}\n"
-                f"Language Requirements:\n{lang_guidance}\n"
+                f"{lang_guidance}\n\n"
                 f"Generate the JSON script:"
             )
 
@@ -334,9 +400,16 @@ class ScriptGenerator:
             print(f"  ⚠️ Gemini API request failed ({e})")
             return None
 
-    def _generate_openai(self, topic: str, target_duration: int, language: str = "es") -> Optional[Dict[str, Any]]:
+    def _generate_openai(
+        self,
+        topic: str,
+        target_duration: int,
+        language: str = "es",
+        video_format: str = "vertical"
+    ) -> Optional[Dict[str, Any]]:
         """Call OpenAI API or custom endpoint."""
         lang_name, lang_guidance = get_language_instructions(language)
+        plat_name, plat_guidance = get_format_instructions(video_format)
         try:
             endpoint = self.base_url if (self.base_url and self.base_url.startswith("http")) else "https://api.openai.com/v1/chat/completions"
             payload = {
@@ -348,8 +421,10 @@ class ScriptGenerator:
                         "content": (
                             f"Topic: {topic}\n"
                             f"Target duration: {target_duration}s.\n"
+                            f"Target Platform/Format: {plat_name}\n\n"
+                            f"{plat_guidance}\n\n"
                             f"Target Language: {lang_name}\n"
-                            f"Language Requirements:\n{lang_guidance}\n"
+                            f"{lang_guidance}\n\n"
                             f"Generate the JSON script:"
                         )
                     }
@@ -399,3 +474,4 @@ class ScriptGenerator:
         except Exception as e:
             print(f"  ⚠️ JSON parse error: {e}")
         return None
+
