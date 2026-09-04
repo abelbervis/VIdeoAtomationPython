@@ -147,24 +147,43 @@ def chunk_chinese_text(text: str, max_chars: int = 9) -> List[str]:
 
 
 class SubtitleGenerator:
-    """Creates mobile-ready vertical subtitles from scene narration timings."""
+    """Creates subtitles from scene narration timings adapted to vertical, horizontal, or square canvas."""
 
-    def __init__(self, output_dir: Path = SUBTITLES_DIR):
+    def __init__(
+        self,
+        output_dir: Path = SUBTITLES_DIR,
+        width: int = VIDEO_WIDTH,
+        height: int = VIDEO_HEIGHT,
+        margin_bottom: int = SUBTITLE_MARGIN_BOTTOM,
+        font_size: int = SUBTITLE_FONT_SIZE,
+    ):
         self.output_dir = Path(output_dir)
+        self.width = width
+        self.height = height
+        self.margin_bottom = margin_bottom
+        self.font_size = font_size
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
     def generate_subtitles(
         self,
         scene_timings: List[Dict[str, Any]],
-        max_words_per_line: int = 5,
+        max_words_per_line: Optional[int] = None,
         language: str = "es",
         custom_font: Optional[str] = None
     ) -> Tuple[Path, Path]:
         """
         Generate both SRT and styled ASS subtitle files.
-        Splits scene narrations into short, rhythmic chunks for vertical video.
+        Splits scene narrations into short, rhythmic chunks adapted to canvas aspect ratio.
         """
         subtitle_chunks: List[Dict[str, Any]] = []
+
+        is_wide = self.width > self.height
+        if max_words_per_line is None:
+            max_words = 7 if is_wide else 5
+        else:
+            max_words = max_words_per_line
+
+        max_cjk_chars = 12 if is_wide else 7
 
         for scene in scene_timings:
             narration = scene.get("narration", "").strip()
@@ -176,13 +195,13 @@ class SubtitleGenerator:
                 continue
 
             if is_cjk(narration) or (language or "").lower().startswith("zh"):
-                groups = chunk_chinese_text(narration, max_chars=7)
+                groups = chunk_chinese_text(narration, max_chars=max_cjk_chars)
             else:
                 words = narration.split()
                 if not words:
                     continue
                 total_words = len(words)
-                chunk_size = min(max_words_per_line, max(3, math.ceil(total_words / max(1, duration / 1.5))))
+                chunk_size = min(max_words, max(3, math.ceil(total_words / max(1, duration / 1.5))))
                 groups = [" ".join(words[i:i + chunk_size]) for i in range(0, total_words, chunk_size)]
 
             num_groups = len(groups)
@@ -228,19 +247,18 @@ class SubtitleGenerator:
         custom_font: Optional[str] = None
     ) -> None:
         """
-        Write ASS format with custom styling for 1080x1920 vertical canvas.
-        Positions subtitles above TikTok/Shorts UI bar with crisp outline.
+        Write ASS format with custom styling adapted to current canvas dimensions and safe zone.
         """
         has_cjk = any(is_cjk(c.get("text", "")) for c in chunks)
         is_chinese = has_cjk or (language or "").lower().startswith("zh")
         if is_chinese:
             font_family = resolve_chinese_font(custom_font=custom_font)
-            font_size = SUBTITLE_FONT_SIZE + 2
+            font_size = self.font_size + 2
             bold_val = 0  # Normal weight for CJK prevents font substitution errors on TTC files
             outline_val = 4.0
         else:
             font_family = custom_font if custom_font else SUBTITLE_FONT
-            font_size = SUBTITLE_FONT_SIZE
+            font_size = self.font_size
             bold_val = -1
             outline_val = SUBTITLE_OUTLINE_WIDTH
 
@@ -250,14 +268,14 @@ class SubtitleGenerator:
 
         header = f"""[Script Info]
 ScriptType: v4.00+
-PlayResX: {VIDEO_WIDTH}
-PlayResY: {VIDEO_HEIGHT}
+PlayResX: {self.width}
+PlayResY: {self.height}
 WrapStyle: 0
 ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: ShortsDefault,{font_family},{font_size},{SUBTITLE_PRIMARY_COLOR},&H000000FF,{SUBTITLE_OUTLINE_COLOR},&H80000000,{bold_val},0,0,0,100,100,1.2,0,1,{outline_val},2.0,2,80,80,{SUBTITLE_MARGIN_BOTTOM},1
+Style: ShortsDefault,{font_family},{font_size},{SUBTITLE_PRIMARY_COLOR},&H000000FF,{SUBTITLE_OUTLINE_COLOR},&H80000000,{bold_val},0,0,0,100,100,1.2,0,1,{outline_val},2.0,2,80,80,{self.margin_bottom},1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text

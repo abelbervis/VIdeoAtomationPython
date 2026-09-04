@@ -6,6 +6,7 @@ Loads environment variables and sets defaults for paths, video, audio, and APIs.
 import os
 import sys
 from pathlib import Path
+from typing import Optional, Dict, Any
 
 # Base Paths
 BASE_DIR = Path(__file__).resolve().parent
@@ -126,9 +127,128 @@ def get_language_voice(lang: str, custom_voice: str = "") -> str:
     # Fallback to Spanish or custom default voice
     return DEFAULT_TTS_VOICE or "es-ES-AlvaroNeural"
 
-# Video Standards (Vertical YouTube Shorts / Reels / TikTok)
-VIDEO_WIDTH = int(clean_env("VIDEO_WIDTH", "1080"))
-VIDEO_HEIGHT = int(clean_env("VIDEO_HEIGHT", "1920"))
+# Video Formats & Aspect Ratio Presets
+VIDEO_FORMATS = {
+    "vertical": {
+        "name": "vertical",
+        "width": 1080,
+        "height": 1920,
+        "aspect_ratio": "9:16",
+        "orientation": "portrait",
+        "subtitle_margin_bottom": 280,
+        "subtitle_font_size": 46,
+        "description": "Vertical 9:16 (1080x1920) - YouTube Shorts, TikTok, Instagram Reels",
+    },
+    "horizontal": {
+        "name": "horizontal",
+        "width": 1920,
+        "height": 1080,
+        "aspect_ratio": "16:9",
+        "orientation": "landscape",
+        "subtitle_margin_bottom": 80,
+        "subtitle_font_size": 42,
+        "description": "Horizontal 16:9 (1920x1080) - YouTube, standard video",
+    },
+    "square": {
+        "name": "square",
+        "width": 1080,
+        "height": 1080,
+        "aspect_ratio": "1:1",
+        "orientation": "square",
+        "subtitle_margin_bottom": 100,
+        "subtitle_font_size": 42,
+        "description": "Square 1:1 (1080x1080) - Instagram Post, LinkedIn, Facebook",
+    },
+}
+
+FORMAT_ALIASES = {
+    "vertical": "vertical",
+    "vert": "vertical",
+    "portrait": "vertical",
+    "shorts": "vertical",
+    "short": "vertical",
+    "tiktok": "vertical",
+    "reels": "vertical",
+    "reel": "vertical",
+    "9:16": "vertical",
+    "9/16": "vertical",
+    "horizontal": "horizontal",
+    "horiz": "horizontal",
+    "landscape": "horizontal",
+    "youtube": "horizontal",
+    "yt": "horizontal",
+    "16:9": "horizontal",
+    "16/9": "horizontal",
+    "wide": "horizontal",
+    "widescreen": "horizontal",
+    "square": "square",
+    "cuadrado": "square",
+    "1:1": "square",
+    "1/1": "square",
+    "post": "square",
+}
+
+
+def resolve_video_format(fmt_input: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Resolve video format configuration from name, alias, or custom dimensions.
+    Examples:
+      - 'vertical', 'portrait', '9:16' -> 1080x1920
+      - 'horizontal', 'landscape', '16:9' -> 1920x1080
+      - 'square', '1:1' -> 1080x1080
+      - '1280x720', '3840x2160' -> custom resolution
+    """
+    val = (fmt_input or clean_env("VIDEO_FORMAT", "vertical")).lower().strip()
+
+    # Check aliases
+    alias = FORMAT_ALIASES.get(val)
+    if alias and alias in VIDEO_FORMATS:
+        return dict(VIDEO_FORMATS[alias])
+
+    # Check custom resolution like WIDTHxHEIGHT
+    if "x" in val:
+        try:
+            parts = val.split("x", 1)
+            w = int(parts[0].strip())
+            h = int(parts[1].strip())
+            if w > 0 and h > 0:
+                if w > h:
+                    orientation = "landscape"
+                    aspect = f"{w}:{h}"
+                    margin_v = max(40, int(h * 0.08))
+                    font_size = max(24, int(h * 0.038))
+                elif h > w:
+                    orientation = "portrait"
+                    aspect = f"{w}:{h}"
+                    margin_v = max(60, int(h * 0.15))
+                    font_size = max(24, int(h * 0.024))
+                else:
+                    orientation = "square"
+                    aspect = "1:1"
+                    margin_v = max(50, int(h * 0.10))
+                    font_size = max(24, int(h * 0.038))
+                return {
+                    "name": f"custom_{w}x{h}",
+                    "width": w,
+                    "height": h,
+                    "aspect_ratio": aspect,
+                    "orientation": orientation,
+                    "subtitle_margin_bottom": margin_v,
+                    "subtitle_font_size": font_size,
+                    "description": f"Custom {aspect} ({w}x{h})",
+                }
+        except (ValueError, IndexError):
+            pass
+
+    return dict(VIDEO_FORMATS["vertical"])
+
+
+# Video Standards (Configurable preset or custom dimensions)
+DEFAULT_VIDEO_FORMAT = clean_env("VIDEO_FORMAT", "vertical")
+_default_format_cfg = resolve_video_format(DEFAULT_VIDEO_FORMAT)
+
+VIDEO_WIDTH = int(clean_env("VIDEO_WIDTH", str(_default_format_cfg["width"])))
+VIDEO_HEIGHT = int(clean_env("VIDEO_HEIGHT", str(_default_format_cfg["height"])))
 VIDEO_FPS = int(clean_env("VIDEO_FPS", "30"))
 VIDEO_CODEC = "libx264"
 AUDIO_CODEC = "aac"
@@ -139,10 +259,11 @@ VIDEO_BITRATE = "5000k"
 DEFAULT_DURATION = 35
 MIN_SCENE_DURATION = 3.5
 
-# Subtitle Styling (for vertical video safe zones)
+# Subtitle Styling
 SUBTITLE_FONT = "Arial"
-SUBTITLE_FONT_SIZE = 46
+SUBTITLE_FONT_SIZE = int(clean_env("SUBTITLE_FONT_SIZE", str(_default_format_cfg["subtitle_font_size"])))
 SUBTITLE_PRIMARY_COLOR = "&H00FFFF"  # Yellow in BGR hex: &H00BBGGRR or &H00FFFFFF for white
 SUBTITLE_OUTLINE_COLOR = "&H000000"  # Black outline
 SUBTITLE_OUTLINE_WIDTH = 3.5
-SUBTITLE_MARGIN_BOTTOM = 280  # Safe zone: above TikTok/Shorts UI controls
+SUBTITLE_MARGIN_BOTTOM = int(clean_env("SUBTITLE_MARGIN_BOTTOM", str(_default_format_cfg["subtitle_margin_bottom"])))
+

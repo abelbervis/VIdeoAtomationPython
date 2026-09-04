@@ -223,10 +223,14 @@ class PexelsProvider:
             print(f"  ⚠️ Error querying Pexels photos for '{query}': {e}")
             return []
 
-    def select_best_video_file(self, video_files: List[Dict[str, Any]]) -> Optional[str]:
+    def select_best_video_file(
+        self,
+        video_files: List[Dict[str, Any]],
+        orientation: Optional[str] = "portrait"
+    ) -> Optional[str]:
         """
-        Choose the best MP4 video stream URL for vertical short format.
-        Favors vertical (height >= width) and HD (1080p/720p) quality.
+        Choose the best MP4 video stream URL adapted to orientation.
+        Favors portrait (height >= width) for vertical, landscape (width >= height) for horizontal.
         """
         if not video_files:
             return None
@@ -244,13 +248,27 @@ class PexelsProvider:
             quality = (vf.get("quality") or "").lower()
             score = 0
 
-            # Strongly prefer portrait vertical videos (9:16)
-            if h > w and h >= 1080:
-                score += 2000
-            elif h > w and h >= 720:
-                score += 1500
-            elif h > w:
-                score += 1000
+            # Orientation scoring
+            if orientation == "landscape":
+                if w > h and w >= 1920:
+                    score += 2000
+                elif w > h and w >= 1280:
+                    score += 1500
+                elif w > h:
+                    score += 1000
+                score += min(w, 1920)
+            elif orientation == "square":
+                diff = abs(w - h) / max(w, h, 1)
+                score += int((1.0 - diff) * 1500)
+                score += min(min(w, h), 1080)
+            else:  # portrait
+                if h > w and h >= 1080:
+                    score += 2000
+                elif h > w and h >= 720:
+                    score += 1500
+                elif h > w:
+                    score += 1000
+                score += min(h, 1920)
 
             # Quality bonus
             if quality == "hd":
@@ -260,18 +278,21 @@ class PexelsProvider:
             elif quality == "sd":
                 score += 100
 
-            # Resolution proximity
-            score += min(h, 1920)
             return score
 
         sorted_candidates = sorted(mp4_candidates, key=score_candidate, reverse=True)
         return sorted_candidates[0].get("link")
 
-    def select_best_photo_url(self, src: Dict[str, str]) -> Optional[str]:
-        """Pick optimal resolution image URL (preferring portrait or large2x)."""
+    def select_best_photo_url(
+        self,
+        src: Dict[str, str],
+        orientation: Optional[str] = "portrait"
+    ) -> Optional[str]:
+        """Pick optimal resolution image URL based on orientation."""
         if not src:
             return None
-        for key in ["portrait", "large2x", "original", "large", "medium"]:
+        pref = ["landscape", "large2x", "original", "large", "medium"] if orientation == "landscape" else ["portrait", "large2x", "original", "large", "medium"]
+        for key in pref:
             if src.get(key):
                 return src[key]
         # First available value in dict
@@ -285,7 +306,8 @@ class PexelsProvider:
         scene_idx: int,
         keywords: List[str],
         preferred_type: str = "video",
-        save_dir: Path = ASSETS_DIR
+        save_dir: Path = ASSETS_DIR,
+        orientation: Optional[str] = "portrait"
     ) -> Tuple[Optional[Path], Optional[Dict[str, Any]]]:
         """
         Search and download the best matching Pexels asset for a scene.
@@ -309,9 +331,9 @@ class PexelsProvider:
 
             # 1. Try preferred type (video first)
             if preferred_type == "video":
-                video_items = self.search_videos(query, orientation="portrait", per_page=8)
+                video_items = self.search_videos(query, orientation=orientation, per_page=8)
                 for item in video_items:
-                    best_url = self.select_best_video_file(item.get("video_files", []))
+                    best_url = self.select_best_video_file(item.get("video_files", []), orientation=orientation)
                     if not best_url:
                         continue
 
@@ -339,9 +361,9 @@ class PexelsProvider:
                         return dest_file, meta
 
             # 2. Try photos (if preferred_type was image or video search had no hits)
-            photo_items = self.search_photos(query, orientation="portrait", per_page=8)
+            photo_items = self.search_photos(query, orientation=orientation, per_page=8)
             for item in photo_items:
-                best_url = self.select_best_photo_url(item.get("src", {}))
+                best_url = self.select_best_photo_url(item.get("src", {}), orientation=orientation)
                 if not best_url:
                     continue
 

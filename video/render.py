@@ -82,7 +82,7 @@ class VideoRenderer:
             # Static image: Apply Ken Burns smooth subtle zoom motion
             total_frames = int(self.fps * duration)
             filter_chain = (
-                f"scale={self.width*2}:-1,"
+                f"scale={self.width*2}:{self.height*2}:force_original_aspect_ratio=increase,"
                 f"zoompan=z='min(zoom+0.0012,1.18)':d={total_frames}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s={self.width}x{self.height}:fps={self.fps},"
                 f"setsar=1"
             )
@@ -163,7 +163,7 @@ class VideoRenderer:
         target_dir.mkdir(parents=True, exist_ok=True)
 
         final_output_path = target_dir / output_filename
-        print(f"\n🎬 Rendering final vertical video: {final_output_path.name}...")
+        print(f"\n🎬 Rendering final video: {final_output_path.name} ({self.width}x{self.height})...")
 
         # 1. Create concatenation list for video clips
         concat_file = self.temp_dir / "video_concat.txt"

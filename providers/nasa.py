@@ -142,7 +142,8 @@ class NASAProvider:
         scene_idx: int,
         keywords: List[str],
         preferred_type: str = "video",
-        save_dir: Path = ASSETS_DIR
+        save_dir: Path = ASSETS_DIR,
+        orientation: Optional[str] = None
     ) -> Tuple[Optional[Path], Optional[Dict[str, Any]]]:
         """
         Search and download the best matching asset for a scene.

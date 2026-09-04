@@ -33,6 +33,10 @@ from config import (
     GROQ_API_KEY,
     GROQ_MODEL,
     LLM_PROVIDER,
+    VIDEO_FPS,
+    VIDEO_FORMATS,
+    resolve_video_format,
+    DEFAULT_VIDEO_FORMAT,
     sanitize_env_value
 )
 from ai.script_generator import ScriptGenerator
@@ -116,6 +120,16 @@ def parse_args():
         help="Target language for narration and subtitles: 'es' (Spanish), 'en' (English), 'zh' (Chinese) (default: es)"
     )
     parser.add_argument(
+        "--format",
+        type=str,
+        default=DEFAULT_VIDEO_FORMAT,
+        help="Video output format/aspect ratio:\n"
+             "  'vertical'   : 9:16 portrait (1080x1920) - YouTube Shorts, TikTok, Reels (default)\n"
+             "  'horizontal' : 16:9 landscape (1920x1080) - YouTube, standard video\n"
+             "  'square'     : 1:1 square (1080x1080) - Instagram Post, LinkedIn, Facebook\n"
+             "  or custom WIDTHxHEIGHT (e.g. '1280x720', '3840x2160')"
+    )
+    parser.add_argument(
         "--output",
         type=str,
         default=None,
@@ -166,10 +180,19 @@ def main():
     lang_info = SUPPORTED_LANGUAGES.get(args.language, {})
     lang_name = lang_info.get("name", args.language.upper())
 
+    # Resolve video format & dimensions
+    fmt_cfg = resolve_video_format(args.format)
+    vid_width = fmt_cfg["width"]
+    vid_height = fmt_cfg["height"]
+    vid_orientation = fmt_cfg["orientation"]
+    sub_margin = fmt_cfg["subtitle_margin_bottom"]
+    sub_font_size = fmt_cfg["subtitle_font_size"]
+
     print("=" * 65)
-    print("🌌  SHORTS GENERATOR  |  Vertical Video Automation Engine")
+    print("🌌  VIDEO GENERATOR  |  Multi-Format Automation Engine")
     print("=" * 65)
     print(f"🎯 Topic:        '{args.topic}'")
+    print(f"📐 Format:       {fmt_cfg['description']}")
     print(f"🌍 Language:     {lang_name} ({args.language})")
     print(f"⏱️  Duration:     ~{args.duration} seconds")
     print(f"🤖 LLM Provider: {args.llm.upper()}")
@@ -219,8 +242,13 @@ def main():
     tts_mgr = TTSManager(provider_type=TTS_PROVIDER, voice=args.voice, language=args.language)
     narration_audio, scene_timings, total_duration = tts_mgr.synthesize_script(script)
 
-    # 3. Generate Subtitles (SRT & ASS for vertical canvas)
-    sub_gen = SubtitleGenerator()
+    # 3. Generate Subtitles (SRT & ASS adapted to canvas)
+    sub_gen = SubtitleGenerator(
+        width=vid_width,
+        height=vid_height,
+        margin_bottom=sub_margin,
+        font_size=sub_font_size
+    )
     srt_path, ass_path = sub_gen.generate_subtitles(
         scene_timings,
         language=args.language,
@@ -257,13 +285,15 @@ def main():
             asset_file, meta = pexels.fetch_scene_asset(
                 scene_idx=idx,
                 keywords=keywords,
-                preferred_type=visual_type
+                preferred_type=visual_type,
+                orientation=vid_orientation
             )
         elif chosen_provider == "nasa":
             asset_file, meta = nasa.fetch_scene_asset(
                 scene_idx=idx,
                 keywords=keywords,
-                preferred_type=visual_type
+                preferred_type=visual_type,
+                orientation=vid_orientation
             )
         else:
             # Auto mode: route according to topic domain and available keys
@@ -271,27 +301,31 @@ def main():
                 asset_file, meta = nasa.fetch_scene_asset(
                     scene_idx=idx,
                     keywords=keywords,
-                    preferred_type=visual_type
+                    preferred_type=visual_type,
+                    orientation=vid_orientation
                 )
                 if not asset_file and pexels.is_configured():
                     print(f"    ↳ NASA visual not found for scene {idx}, querying Pexels...")
                     asset_file, meta = pexels.fetch_scene_asset(
                         scene_idx=idx,
                         keywords=keywords,
-                        preferred_type=visual_type
+                        preferred_type=visual_type,
+                        orientation=vid_orientation
                     )
             else:
                 asset_file, meta = pexels.fetch_scene_asset(
                     scene_idx=idx,
                     keywords=keywords,
-                    preferred_type=visual_type
+                    preferred_type=visual_type,
+                    orientation=vid_orientation
                 )
                 if not asset_file:
                     print(f"    ↳ Pexels visual not found for scene {idx}, querying NASA...")
                     asset_file, meta = nasa.fetch_scene_asset(
                         scene_idx=idx,
                         keywords=keywords,
-                        preferred_type=visual_type
+                        preferred_type=visual_type,
+                        orientation=vid_orientation
                     )
 
         if asset_file and meta:
@@ -317,8 +351,8 @@ def main():
     prepared_music = music_mgr.prepare_music(bg_track, target_duration=total_duration)
 
     # 6. Render Video Clips for Each Scene
-    renderer = VideoRenderer()
-    print("\n🎞️  Rendering scene clips (1080x1920 @ 30fps)...")
+    renderer = VideoRenderer(width=vid_width, height=vid_height, fps=VIDEO_FPS)
+    print(f"\n🎞️  Rendering scene clips ({vid_width}x{vid_height} @ {VIDEO_FPS}fps)...")
     scene_clips = []
 
     for item in scene_assets:
