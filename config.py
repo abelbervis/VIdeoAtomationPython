@@ -264,8 +264,36 @@ MIN_SCENE_DURATION = 3.5
 # Subtitle Styling
 SUBTITLE_FONT = "Arial"
 SUBTITLE_FONT_SIZE = int(clean_env("SUBTITLE_FONT_SIZE", str(_default_format_cfg["subtitle_font_size"])))
-SUBTITLE_PRIMARY_COLOR = "&H00FFFF"  # Yellow in BGR hex: &H00BBGGRR or &H00FFFFFF for white
-SUBTITLE_OUTLINE_COLOR = "&H000000"  # Black outline
-SUBTITLE_OUTLINE_WIDTH = 3.5
+SUBTITLE_PRIMARY_COLOR = "&H00FFFFFF"  # Crisp White in ASS &HAABBGGRR
+SUBTITLE_HIGHLIGHT_COLOR = clean_env("SUBTITLE_HIGHLIGHT_COLOR", "&H0000FFFF&")  # Vibrant Yellow/Gold active word highlight
+SUBTITLE_OUTLINE_COLOR = "&H00000000"  # Black outline
+SUBTITLE_OUTLINE_WIDTH = 4.0
 SUBTITLE_MARGIN_BOTTOM = int(clean_env("SUBTITLE_MARGIN_BOTTOM", str(_default_format_cfg["subtitle_margin_bottom"])))
+SUBTITLE_DYNAMIC = clean_env("SUBTITLE_DYNAMIC", "true").lower() in ("true", "1", "yes")
+
+# Visual Scene Transitions (FFmpeg xfade)
+ENABLE_TRANSITIONS = clean_env("ENABLE_TRANSITIONS", "true").lower() in ("true", "1", "yes")
+DEFAULT_TRANSITION = clean_env("TRANSITION_TYPE", "fade")
+TRANSITION_DURATION = float(clean_env("TRANSITION_DURATION", "0.45"))
+SUPPORTED_TRANSITIONS = [
+    "fade",
+    "dissolve",
+    "wipeleft",
+    "wiperight",
+    "slideleft",
+    "slideright",
+    "smoothleft",
+    "smoothright",
+    "circleopen",
+    "fadeblack",
+    "hblur",
+    "random",
+    "none",
+]
+
+# Audio Sound Effects (SFX)
+SFX_DIR = ASSETS_DIR / "sfx"
+ENABLE_SFX = clean_env("ENABLE_SFX", "true").lower() in ("true", "1", "yes")
+SFX_VOLUME = float(clean_env("SFX_VOLUME", "0.35"))
+
 

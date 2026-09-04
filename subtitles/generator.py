@@ -18,9 +18,11 @@ from config import (
     SUBTITLE_FONT,
     SUBTITLE_FONT_SIZE,
     SUBTITLE_PRIMARY_COLOR,
+    SUBTITLE_HIGHLIGHT_COLOR,
     SUBTITLE_OUTLINE_COLOR,
     SUBTITLE_OUTLINE_WIDTH,
     SUBTITLE_MARGIN_BOTTOM,
+    SUBTITLE_DYNAMIC,
     VIDEO_WIDTH,
     VIDEO_HEIGHT,
     SUPPORTED_LANGUAGES,
@@ -156,12 +158,16 @@ class SubtitleGenerator:
         height: int = VIDEO_HEIGHT,
         margin_bottom: int = SUBTITLE_MARGIN_BOTTOM,
         font_size: int = SUBTITLE_FONT_SIZE,
+        dynamic_highlight: bool = SUBTITLE_DYNAMIC,
+        highlight_color: str = SUBTITLE_HIGHLIGHT_COLOR,
     ):
         self.output_dir = Path(output_dir)
         self.width = width
         self.height = height
         self.margin_bottom = margin_bottom
         self.font_size = font_size
+        self.dynamic_highlight = dynamic_highlight
+        self.highlight_color = highlight_color
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
     def generate_subtitles(
@@ -179,11 +185,11 @@ class SubtitleGenerator:
 
         is_wide = self.width > self.height
         if max_words_per_line is None:
-            max_words = 7 if is_wide else 5
+            max_words = 6 if is_wide else 4
         else:
             max_words = max_words_per_line
 
-        max_cjk_chars = 12 if is_wide else 7
+        max_cjk_chars = 10 if is_wide else 6
 
         for scene in scene_timings:
             narration = scene.get("narration", "").strip()
@@ -201,7 +207,7 @@ class SubtitleGenerator:
                 if not words:
                     continue
                 total_words = len(words)
-                chunk_size = min(max_words, max(3, math.ceil(total_words / max(1, duration / 1.5))))
+                chunk_size = min(max_words, max(2, math.ceil(total_words / max(1, duration / 1.3))))
                 groups = [" ".join(words[i:i + chunk_size]) for i in range(0, total_words, chunk_size)]
 
             num_groups = len(groups)
@@ -226,11 +232,11 @@ class SubtitleGenerator:
         self._write_srt(subtitle_chunks, srt_path)
         self._write_ass(subtitle_chunks, ass_path, language=language, custom_font=custom_font)
 
-        print(f"  📝 Subtitles generated: {srt_path.name} & {ass_path.name} ({len(subtitle_chunks)} cues)")
+        print(f"  📝 Subtitles generated: {srt_path.name} & {ass_path.name} ({len(subtitle_chunks)} cues, dynamic={self.dynamic_highlight})")
         return srt_path, ass_path
 
     def _write_srt(self, chunks: List[Dict[str, Any]], file_path: Path) -> None:
-        """Write standard SRT format."""
+        """Write standard SRT format without formatting tags for maximum player compatibility."""
         with open(file_path, "w", encoding="utf-8") as f:
             for i, chunk in enumerate(chunks, 1):
                 start_str = format_timestamp_srt(chunk["start"])
@@ -247,7 +253,7 @@ class SubtitleGenerator:
         custom_font: Optional[str] = None
     ) -> None:
         """
-        Write ASS format with custom styling adapted to current canvas dimensions and safe zone.
+        Write ASS format with custom styling and dynamic word-by-word active highlight.
         """
         has_cjk = any(is_cjk(c.get("text", "")) for c in chunks)
         is_chinese = has_cjk or (language or "").lower().startswith("zh")
@@ -266,6 +272,13 @@ class SubtitleGenerator:
         if "," in font_family:
             font_family = font_family.split(",")[0].strip()
 
+        # Clean highlight color string (e.g. &H0000FFFF&)
+        hl_color = self.highlight_color.strip()
+        if not hl_color.startswith("&H"):
+            hl_color = f"&H{hl_color}"
+        if not hl_color.endswith("&"):
+            hl_color = f"{hl_color}&"
+
         header = f"""[Script Info]
 ScriptType: v4.00+
 PlayResX: {self.width}
@@ -275,7 +288,7 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: ShortsDefault,{font_family},{font_size},{SUBTITLE_PRIMARY_COLOR},&H000000FF,{SUBTITLE_OUTLINE_COLOR},&H80000000,{bold_val},0,0,0,100,100,1.2,0,1,{outline_val},2.0,2,80,80,{self.margin_bottom},1
+Style: ShortsDefault,{font_family},{font_size},{SUBTITLE_PRIMARY_COLOR},&H000000FF,{SUBTITLE_OUTLINE_COLOR},&H80000000,{bold_val},0,0,0,100,100,1.2,0,1,{outline_val},2.2,2,80,80,{self.margin_bottom},1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
@@ -283,8 +296,70 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(header)
             for chunk in chunks:
-                start_str = format_timestamp_ass(chunk["start"])
-                end_str = format_timestamp_ass(chunk["end"])
-                # Clean ASS text
-                text = chunk["text"].replace("\n", "\\N")
-                f.write(f"Dialogue: 0,{start_str},{end_str},ShortsDefault,,0,0,0,,{text}\n")
+                raw_text = chunk["text"].strip()
+                c_start = chunk["start"]
+                c_end = chunk["end"]
+                c_dur = max(0.2, c_end - c_start)
+
+                if not raw_text:
+                    continue
+
+                if not self.dynamic_highlight:
+                    # Static cue
+                    start_str = format_timestamp_ass(c_start)
+                    end_str = format_timestamp_ass(c_end)
+                    clean_text = raw_text.replace("\n", "\\N")
+                    f.write(f"Dialogue: 0,{start_str},{end_str},ShortsDefault,,0,0,0,,{clean_text}\n")
+                    continue
+
+                # Dynamic word-by-word active highlight
+                if is_cjk(raw_text):
+                    # For Chinese, break into 2-character subsegments
+                    chars = list(raw_text)
+                    step = 2
+                    segments = ["".join(chars[i:i + step]) for i in range(0, len(chars), step)]
+                    seg_count = len(segments)
+                    seg_dur = c_dur / max(1, seg_count)
+
+                    for s_idx, seg in enumerate(segments):
+                        w_start = c_start + (s_idx * seg_dur)
+                        w_end = min(c_end, w_start + seg_dur)
+                        # Highlight current segment
+                        parts = []
+                        for j_idx, other_seg in enumerate(segments):
+                            if j_idx == s_idx:
+                                parts.append(f"{{\\c{hl_color}\\b1}}{other_seg}{{\\rShortsDefault}}")
+                            else:
+                                parts.append(other_seg)
+                        line_text = "".join(parts)
+                        f.write(f"Dialogue: 0,{format_timestamp_ass(w_start)},{format_timestamp_ass(w_end)},ShortsDefault,,0,0,0,,{line_text}\n")
+                else:
+                    words = raw_text.split()
+                    word_count = len(words)
+                    if word_count <= 1:
+                        start_str = format_timestamp_ass(c_start)
+                        end_str = format_timestamp_ass(c_end)
+                        line_text = f"{{\\c{hl_color}\\b1}}{raw_text}{{\\rShortsDefault}}"
+                        f.write(f"Dialogue: 0,{start_str},{end_str},ShortsDefault,,0,0,0,,{line_text}\n")
+                    else:
+                        # Distribute duration by character weight
+                        weights = [max(2, len(w)) for w in words]
+                        tot_weight = sum(weights)
+                        cur_w_start = c_start
+
+                        for w_idx, word in enumerate(words):
+                            w_slice = (weights[w_idx] / tot_weight) * c_dur
+                            w_end = min(c_end, cur_w_start + w_slice)
+
+                            # Format phrase with current active word highlighted
+                            line_parts = []
+                            for j, w in enumerate(words):
+                                if j == w_idx:
+                                    line_parts.append(f"{{\\c{hl_color}\\b1}}{w}{{\\rShortsDefault}}")
+                                else:
+                                    line_parts.append(w)
+
+                            line_text = " ".join(line_parts)
+                            f.write(f"Dialogue: 0,{format_timestamp_ass(cur_w_start)},{format_timestamp_ass(w_end)},ShortsDefault,,0,0,0,,{line_text}\n")
+                            cur_w_start = w_end
+

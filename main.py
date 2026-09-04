@@ -37,13 +37,20 @@ from config import (
     VIDEO_FORMATS,
     resolve_video_format,
     DEFAULT_VIDEO_FORMAT,
-    sanitize_env_value
+    sanitize_env_value,
+    ENABLE_TRANSITIONS,
+    DEFAULT_TRANSITION,
+    TRANSITION_DURATION,
+    SUPPORTED_TRANSITIONS,
+    ENABLE_SFX,
+    SUBTITLE_DYNAMIC,
 )
 from ai.script_generator import ScriptGenerator
 from providers.nasa import NASAProvider
 from providers.pexels import PexelsProvider
 from audio.tts import TTSManager
 from audio.music import MusicManager
+from audio.sfx import SFXManager
 from subtitles.generator import SubtitleGenerator
 from video.render import VideoRenderer
 from utils.files import sanitize_filename, clean_temp_directory, check_ffmpeg, save_json
@@ -164,6 +171,43 @@ def parse_args():
         action="store_true",
         help="Keep intermediate scene clips and audio files in temp/ directory"
     )
+    # Transition options
+    parser.add_argument(
+        "--transition",
+        type=str,
+        default=DEFAULT_TRANSITION,
+        choices=SUPPORTED_TRANSITIONS,
+        help=f"Visual transition between scenes (default: '{DEFAULT_TRANSITION}'; choices: {', '.join(SUPPORTED_TRANSITIONS)})"
+    )
+    parser.add_argument(
+        "--no-transitions",
+        action="store_true",
+        help="Disable scene visual transitions (standard hard cuts)"
+    )
+    # Subtitle options
+    parser.add_argument(
+        "--dynamic-subtitles",
+        action="store_true",
+        default=SUBTITLE_DYNAMIC,
+        help="Enable word-by-word active highlight subtitles (default: True)"
+    )
+    parser.add_argument(
+        "--no-dynamic-subtitles",
+        action="store_true",
+        help="Disable word-by-word dynamic subtitles (use static cue lines)"
+    )
+    # SFX options
+    parser.add_argument(
+        "--sfx",
+        action="store_true",
+        default=ENABLE_SFX,
+        help="Enable automatic synchronized sound effects (whoosh on cuts, intro boom) (default: True)"
+    )
+    parser.add_argument(
+        "--no-sfx",
+        action="store_true",
+        help="Disable automatic sound effects"
+    )
     return parser.parse_args()
 
 
@@ -250,11 +294,13 @@ def main():
     narration_audio, scene_timings, total_duration = tts_mgr.synthesize_script(script)
 
     # 3. Generate Subtitles (SRT & ASS adapted to canvas)
+    dynamic_subs = args.dynamic_subtitles and not args.no_dynamic_subtitles
     sub_gen = SubtitleGenerator(
         width=vid_width,
         height=vid_height,
         margin_bottom=sub_margin,
-        font_size=sub_font_size
+        font_size=sub_font_size,
+        dynamic_highlight=dynamic_subs
     )
     srt_path, ass_path = sub_gen.generate_subtitles(
         scene_timings,
@@ -262,7 +308,14 @@ def main():
         custom_font=args.font
     )
 
-    # 4. Search and Download Visual Media Assets (NASA or Pexels)
+    # 4. Synthesize Sound Effects Track (SFX)
+    sfx_enabled = args.sfx and not args.no_sfx
+    sfx_track = None
+    if sfx_enabled:
+        sfx_mgr = SFXManager()
+        sfx_track = sfx_mgr.build_sfx_timeline(scene_timings, total_duration=total_duration)
+
+    # 5. Search and Download Visual Media Assets (NASA or Pexels)
     print(f"\n🔭 Fetching media assets (Mode: {chosen_provider.upper()})...")
     scene_assets = []
     assets_metadata = []
@@ -352,29 +405,37 @@ def main():
                 "duration": timing["duration"]
             })
 
-    # 5. Prepare Background Music (if available)
+    # 6. Prepare Background Music (if available)
     music_mgr = MusicManager()
     bg_track = music_mgr.get_background_track(args.music)
     prepared_music = music_mgr.prepare_music(bg_track, target_duration=total_duration)
 
-    # 6. Render Video Clips for Each Scene
+    # 7. Render Video Clips for Each Scene
     renderer = VideoRenderer(width=vid_width, height=vid_height, fps=VIDEO_FPS)
     print(f"\n🎞️  Rendering scene clips ({vid_width}x{vid_height} @ {VIDEO_FPS}fps)...")
     scene_clips = []
+    num_scenes = len(scene_assets)
+    scene_durations = [item["duration"] for item in scene_assets]
 
-    for item in scene_assets:
+    enable_trans = not args.no_transitions and (args.transition != "none")
+    trans_type = args.transition if enable_trans else "none"
+    trans_duration = TRANSITION_DURATION if enable_trans else 0.0
+
+    for i, item in enumerate(scene_assets):
         s_idx = item["scene_idx"]
         s_duration = item["duration"]
         asset_file = item["file"]
         is_video = item["is_video"]
+        # Add transition padding so visual crossfades don't shorten audio sync (last scene doesn't need pad)
+        pad = trans_duration if (enable_trans and i < num_scenes - 1) else 0.0
 
         if asset_file and asset_file.exists():
-            clip = renderer.render_scene_clip(asset_file, s_duration, s_idx, is_video=is_video)
+            clip = renderer.render_scene_clip(asset_file, s_duration, s_idx, is_video=is_video, transition_pad=pad)
         else:
-            clip = renderer.render_emergency_color_clip(s_duration, s_idx)
+            clip = renderer.render_emergency_color_clip(s_duration, s_idx, transition_pad=pad)
         scene_clips.append(clip)
 
-    # 7. Assemble Final Video Output into a single folder named after the video
+    # 8. Assemble Final Video Output into a single folder named after the video
     if args.output:
         out_candidate = Path(args.output)
         if len(out_candidate.parts) > 1:
@@ -401,9 +462,13 @@ def main():
         subtitles_file=ass_path,
         output_filename=output_filename,
         background_music=prepared_music,
+        sfx_track=sfx_track,
         assets_metadata=assets_metadata,
         output_dir=video_folder,
-        language=args.language
+        language=args.language,
+        scene_durations=scene_durations,
+        transition=trans_type,
+        transition_duration=trans_duration
     )
 
     # Save all associated deliverables inside the single video folder
@@ -425,9 +490,14 @@ def main():
     if narration_audio and Path(narration_audio).exists():
         shutil.copy2(narration_audio, audio_dest)
 
+    # 4. Sound effects track (.wav)
+    sfx_dest = video_folder / "sfx.wav"
+    if sfx_track and Path(sfx_track).exists():
+        shutil.copy2(sfx_track, sfx_dest)
+
     meta_dest = video_folder / "metadata.json"
 
-    # 8. Clean temporary files
+    # 9. Clean temporary files
     if not args.keep_temp:
         clean_temp_directory(TEMP_DIR)
 
@@ -441,6 +511,8 @@ def main():
         print(f"📝 Subtítulos (.srt):   {srt_dest.resolve()}")
     if audio_dest.exists():
         print(f"🎵 Narración (.mp3):    {audio_dest.resolve()}")
+    if sfx_dest.exists():
+        print(f"🔊 Efectos Sonido (.wav): {sfx_dest.resolve()}")
     if meta_dest.exists():
         print(f"📊 Metadatos (.json):   {meta_dest.resolve()}")
     print(f"⏱️  Duración Total:      {total_duration:.1f}s")

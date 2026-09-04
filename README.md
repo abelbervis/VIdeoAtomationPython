@@ -10,8 +10,10 @@ Generador minimalista de videos verticales automáticos (formato YouTube Shorts,
 - **Formato Vertical Óptimo**: Resolución 1080x1920 (9:16), 30 FPS, H.264 / AAC, renderizado rápido con FFmpeg.
 - **Contenido Oficial de la NASA**: Consulta en tiempo real la API oficial de la NASA (*NASA Image and Video Library*). Prioriza videos en movimiento y complementa con fotografías de alta resolución.
 - **Guiones Científicos Estructurados**: Generación mediante LLM (Gemini / OpenAI / motor científico local) con gancho inicial (hook), división por escenas y palabras clave en inglés para máxima precisión en la búsqueda astronómica.
-- **Narración y Subtítulos Sincronizados**: Módulo TTS con timestamps reales y subtítulos automáticos (`.srt` y `.ass`) adaptados a zonas seguras de pantalla vertical para smartphones.
-- **Música de Fondo Opcional**: Mezcla automática con *audio ducking* si existe un archivo en `assets/music/background.mp3`.
+- **Narración y Subtítulos Dinámicos**: Módulo TTS con timestamps reales y subtítulos automáticos (`.srt` y `.ass`) con estilo viral y resaltado activo palabra por palabra (`dynamic highlight`).
+- **Transiciones Cinemáticas Suaves**: Transiciones fluidas entre escenas con FFmpeg `xfade` (`fade`, `dissolve`, `slideleft`, `wipeleft`, `random`) y variedad en movimientos de cámara Ken Burns (zoom-in, zoom-out, paneos y tilts) para imágenes fijas.
+- **Efectos de Sonido Automáticos (SFX)**: Generador de efectos de audio procedurales sincronizados: impacto cinematográfico (*boom*) en la escena gancho y barridos (*whoosh*) en cada cambio de escena.
+- **Música de Fondo Opcional**: Mezcla automática de 3 pistas (voz, música, SFX) con *audio ducking* si existe un archivo en `assets/music/background.mp3`.
 - **Registro de Licencias y Fuentes**: Exporta `output/source_metadata.json` con todos los identificadores de NASA, autores y enlaces originales.
 - **Bajo Consumo de Hardware**: Optimizado para ejecutarse en computadoras estándar (Intel i5, 8GB RAM, sin GPU dedicada).
 
@@ -162,13 +164,33 @@ Por defecto (`auto`), el sistema enruta inteligentemente:
 - Si el tema es astronómico/espacio ("Marte", "agujeros negros", "Tierra"), consulta primero la **NASA**.
 - Si el tema es general o no se encuentra en la NASA, busca videos verticales en **Pexels**.
 
-### 6. Con Música de Fondo
+### 6. Transiciones, Subtítulos Dinámicos y Efectos de Sonido
+Por defecto, las transiciones suaves (`fade`), los subtítulos resaltados dinámicamente y los efectos de sonido (*whoosh* y *boom*) están **activados automáticamente**. Puedes personalizar su comportamiento:
+
+```bash
+# Elegir tipo de transición (fade, dissolve, wipeleft, slideleft, random, etc.):
+python main.py --topic "agujeros negros" --transition dissolve
+
+# Transiciones aleatorias variadas en cada corte:
+python main.py --topic "nebulosas" --transition random
+
+# Generar con cortes directos tradicionales sin transiciones:
+python main.py --topic "satélites" --no-transitions
+
+# Desactivar subtítulos dinámicos palabra por palabra (mostrar líneas estáticas):
+python main.py --topic "marte" --no-dynamic-subtitles
+
+# Desactivar efectos de sonido automáticos:
+python main.py --topic "el sol" --no-sfx
+```
+
+### 7. Con Música de Fondo
 Coloca un archivo en `assets/music/background.mp3` o pásalo como argumento:
 ```bash
 python main.py --topic "El Sistema Solar" --music "ruta/a/mi_musica.mp3"
 ```
 
-### 7. Ayuda de Comandos
+### 8. Ayuda de Comandos
 ```bash
 python main.py --help
 ```
