@@ -224,12 +224,7 @@ def main():
         groq_key=args.groq_key,
         preferred_provider=args.llm
     )
-    script = script_gen.generate(
-        args.topic,
-        target_duration=args.duration,
-        language=args.language,
-        video_format=args.format
-    )
+    script = script_gen.generate(args.topic, target_duration=args.duration, language=args.language)
 
     # STRICT CHECK: If script generation fails, stop immediately without proceeding to audio/video
     if not script or not script.get("scenes"):
