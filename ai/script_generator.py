@@ -9,9 +9,11 @@ import os
 import re
 import urllib.request
 import urllib.error
+from pathlib import Path
 from typing import Dict, Any, Optional, Tuple
 
 from config import (
+    BASE_DIR,
     GEMINI_API_KEY,
     OPENAI_API_KEY,
     GROQ_API_KEY,
@@ -19,11 +21,13 @@ from config import (
     GROQ_API_BASE,
     LLM_PROVIDER,
     LLM_API_BASE_URL,
+    SYSTEM_PROMPT_FILE,
+    SYSTEM_PROMPT_PATH,
     sanitize_env_value
 )
 
 
-SYSTEM_PROMPT = """You are an elite science communicator writing punchy, viral YouTube Shorts and TikTok documentary scripts.
+DEFAULT_SYSTEM_PROMPT = """You are an elite science communicator writing punchy, viral YouTube Shorts and TikTok documentary scripts.
 Target duration: 30 to 45 seconds.
 
 Rules:
@@ -50,6 +54,49 @@ Respond ONLY with valid JSON matching this schema:
   ]
 }
 """
+
+
+def load_system_prompt(custom_path: Optional[str] = None) -> Tuple[str, str]:
+    """
+    Load system prompt from an external file (ignored in git),
+    falling back to example files or embedded default prompt.
+    Returns (prompt_text, source_description).
+    """
+    candidates = []
+    if custom_path:
+        p = Path(custom_path)
+        candidates.append((p, f"custom path '{custom_path}'"))
+        if not p.is_absolute():
+            candidates.append((BASE_DIR / custom_path, f"custom path '{custom_path}'"))
+
+    # Configured path from env/config
+    if SYSTEM_PROMPT_PATH:
+        candidates.append((SYSTEM_PROMPT_PATH, f"'{SYSTEM_PROMPT_FILE}'"))
+
+    # Standard default paths (ignored in git)
+    candidates.extend([
+        (BASE_DIR / "system_prompt.txt", "system_prompt.txt"),
+        (BASE_DIR / "prompts" / "system_prompt.txt", "prompts/system_prompt.txt"),
+        (Path("system_prompt.txt"), "system_prompt.txt"),
+        # Fallbacks to examples if main file is absent
+        (BASE_DIR / "system_prompt.txt.example", "system_prompt.txt.example"),
+        (BASE_DIR / "prompts" / "system_prompt.txt.example", "prompts/system_prompt.txt.example"),
+    ])
+
+    for path, desc in candidates:
+        try:
+            if path.is_file() and path.stat().st_size > 0:
+                content = path.read_text(encoding="utf-8").strip()
+                if content:
+                    return content, desc
+        except Exception:
+            continue
+
+    return DEFAULT_SYSTEM_PROMPT.strip(), "embedded default"
+
+
+# Global default for convenience
+SYSTEM_PROMPT, DEFAULT_PROMPT_SOURCE = load_system_prompt()
 
 
 def get_language_instructions(language: str) -> Tuple[str, str]:
@@ -90,6 +137,8 @@ class ScriptGenerator:
         groq_api_base: str = GROQ_API_BASE,
         preferred_provider: str = LLM_PROVIDER,
         base_url: Optional[str] = None,
+        prompt_file: Optional[str] = None,
+        system_prompt: Optional[str] = None,
     ):
         raw_gemini = gemini_key if gemini_key is not None else GEMINI_API_KEY
         raw_openai = openai_key if openai_key is not None else OPENAI_API_KEY
@@ -106,6 +155,12 @@ class ScriptGenerator:
         raw_url = sanitize_env_value(base_url if base_url is not None else LLM_API_BASE_URL)
         self.base_url = raw_url if raw_url.startswith("http") else ""
 
+        if system_prompt and system_prompt.strip():
+            self.system_prompt = system_prompt.strip()
+            self.prompt_source = "explicit text"
+        else:
+            self.system_prompt, self.prompt_source = load_system_prompt(prompt_file)
+
     def _is_valid_api_key(self, key: str) -> bool:
         """Check if an API key looks like an actual valid key and not a dummy placeholder."""
         if not key or len(key) < 15:
@@ -119,7 +174,7 @@ class ScriptGenerator:
     def generate(self, topic: str, target_duration: int = 35, language: str = "es") -> Optional[Dict[str, Any]]:
         """Generate a structured script for the given topic using configured AI providers."""
         lang_label, _ = get_language_instructions(language)
-        print(f"\n🧠 Generating script for: '{topic}' (~{target_duration}s, Language: {lang_label})...")
+        print(f"\n🧠 Generating script for: '{topic}' (~{target_duration}s, Language: {lang_label}, System Prompt: {self.prompt_source})...")
 
         # Specific provider selected
         if self.provider == "groq":
@@ -197,7 +252,7 @@ class ScriptGenerator:
             payload = {
                 "model": model,
                 "messages": [
-                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "system", "content": self.system_prompt},
                     {
                         "role": "user",
                         "content": (
@@ -291,7 +346,7 @@ class ScriptGenerator:
         try:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={self.gemini_key}"
             prompt = (
-                f"{SYSTEM_PROMPT}\n\n"
+                f"{self.system_prompt}\n\n"
                 f"Topic: {topic}\n"
                 f"Target duration: {target_duration} seconds.\n"
                 f"Target Language: {lang_name}\n"
@@ -342,7 +397,7 @@ class ScriptGenerator:
             payload = {
                 "model": "gpt-4o-mini",
                 "messages": [
-                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "system", "content": self.system_prompt},
                     {
                         "role": "user",
                         "content": (

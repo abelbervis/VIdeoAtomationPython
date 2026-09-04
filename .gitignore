@@ -6,6 +6,10 @@ coverage/
 *.log
 .env*
 !.env.example
+system_prompt.txt
+!system_prompt.txt.example
+prompts/system_prompt.txt
+!prompts/system_prompt.txt.example
 output/
 temp/
 

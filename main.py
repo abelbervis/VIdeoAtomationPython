@@ -130,6 +130,12 @@ def parse_args():
              "  or custom WIDTHxHEIGHT (e.g. '1280x720', '3840x2160')"
     )
     parser.add_argument(
+        "--prompt-file",
+        type=str,
+        default=None,
+        help="Path to custom system prompt text file (default: loads system_prompt.txt if present, not tracked in git)"
+    )
+    parser.add_argument(
         "--output",
         type=str,
         default=None,
@@ -222,7 +228,8 @@ def main():
         gemini_key=args.gemini_key,
         openai_key=args.openai_key,
         groq_key=args.groq_key,
-        preferred_provider=args.llm
+        preferred_provider=args.llm,
+        prompt_file=args.prompt_file
     )
     script = script_gen.generate(args.topic, target_duration=args.duration, language=args.language)
 
