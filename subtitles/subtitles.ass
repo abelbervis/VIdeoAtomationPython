@@ -1,0 +1,92 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1080
+PlayResY: 1920
+WrapStyle: 0
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: ShortsDefault,Arial,46,&H00FFFFFF,&H000000FF,&H00000000,&H80000000,-1,0,0,0,100,100,1.2,0,1,4.0,2.2,2,80,80,280,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.00,0:00:00.18,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}A{\rShortsDefault} DOSCIENTOS MILLONES
+Dialogue: 0,0:00:00.18,0:00:01.07,ShortsDefault,,0,0,0,,A {\c&H0000FFFF&\b1}DOSCIENTOS{\rShortsDefault} MILLONES
+Dialogue: 0,0:00:01.07,0:00:01.79,ShortsDefault,,0,0,0,,A DOSCIENTOS {\c&H0000FFFF&\b1}MILLONES{\rShortsDefault}
+Dialogue: 0,0:00:01.79,0:00:02.15,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}DE{\rShortsDefault} AÑOS LUZ,
+Dialogue: 0,0:00:02.15,0:00:02.86,ShortsDefault,,0,0,0,,DE {\c&H0000FFFF&\b1}AÑOS{\rShortsDefault} LUZ,
+Dialogue: 0,0:00:02.86,0:00:03.58,ShortsDefault,,0,0,0,,DE AÑOS {\c&H0000FFFF&\b1}LUZ,{\rShortsDefault}
+Dialogue: 0,0:00:03.58,0:00:03.85,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}DOS{\rShortsDefault} GALAXIAS ESPIRALES
+Dialogue: 0,0:00:03.85,0:00:04.56,ShortsDefault,,0,0,0,,DOS {\c&H0000FFFF&\b1}GALAXIAS{\rShortsDefault} ESPIRALES
+Dialogue: 0,0:00:04.56,0:00:05.37,ShortsDefault,,0,0,0,,DOS GALAXIAS {\c&H0000FFFF&\b1}ESPIRALES{\rShortsDefault}
+Dialogue: 0,0:00:05.37,0:00:05.50,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}SE{\rShortsDefault} ATRAEN GRAVITACIONALMENTE;
+Dialogue: 0,0:00:05.50,0:00:05.90,ShortsDefault,,0,0,0,,SE {\c&H0000FFFF&\b1}ATRAEN{\rShortsDefault} GRAVITACIONALMENTE;
+Dialogue: 0,0:00:05.90,0:00:07.16,ShortsDefault,,0,0,0,,SE ATRAEN {\c&H0000FFFF&\b1}GRAVITACIONALMENTE;{\rShortsDefault}
+Dialogue: 0,0:00:07.16,0:00:07.40,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}UN{\rShortsDefault} ABRAZO MORTAL.
+Dialogue: 0,0:00:07.40,0:00:08.11,ShortsDefault,,0,0,0,,UN {\c&H0000FFFF&\b1}ABRAZO{\rShortsDefault} MORTAL.
+Dialogue: 0,0:00:08.11,0:00:08.95,ShortsDefault,,0,0,0,,UN ABRAZO {\c&H0000FFFF&\b1}MORTAL.{\rShortsDefault}
+Dialogue: 0,0:00:08.95,0:00:09.22,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}ESTA{\rShortsDefault} FUSIÓN, CAPTURADA
+Dialogue: 0,0:00:09.22,0:00:09.70,ShortsDefault,,0,0,0,,ESTA {\c&H0000FFFF&\b1}FUSIÓN,{\rShortsDefault} CAPTURADA
+Dialogue: 0,0:00:09.70,0:00:10.32,ShortsDefault,,0,0,0,,ESTA FUSIÓN, {\c&H0000FFFF&\b1}CAPTURADA{\rShortsDefault}
+Dialogue: 0,0:00:10.32,0:00:10.59,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}POR{\rShortsDefault} EL TELESCOPIO
+Dialogue: 0,0:00:10.59,0:00:10.77,ShortsDefault,,0,0,0,,POR {\c&H0000FFFF&\b1}EL{\rShortsDefault} TELESCOPIO
+Dialogue: 0,0:00:10.77,0:00:11.69,ShortsDefault,,0,0,0,,POR EL {\c&H0000FFFF&\b1}TELESCOPIO{\rShortsDefault}
+Dialogue: 0,0:00:11.69,0:00:12.27,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}GEMINI{\rShortsDefault} NORTH, ES
+Dialogue: 0,0:00:12.27,0:00:12.86,ShortsDefault,,0,0,0,,GEMINI {\c&H0000FFFF&\b1}NORTH,{\rShortsDefault} ES
+Dialogue: 0,0:00:12.86,0:00:13.05,ShortsDefault,,0,0,0,,GEMINI NORTH, {\c&H0000FFFF&\b1}ES{\rShortsDefault}
+Dialogue: 0,0:00:13.05,0:00:13.37,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}UNA{\rShortsDefault} VORÁGINE DE
+Dialogue: 0,0:00:13.37,0:00:14.21,ShortsDefault,,0,0,0,,UNA {\c&H0000FFFF&\b1}VORÁGINE{\rShortsDefault} DE
+Dialogue: 0,0:00:14.21,0:00:14.42,ShortsDefault,,0,0,0,,UNA VORÁGINE {\c&H0000FFFF&\b1}DE{\rShortsDefault}
+Dialogue: 0,0:00:14.42,0:00:14.83,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}GAS{\rShortsDefault} Y POLVO
+Dialogue: 0,0:00:14.83,0:00:15.11,ShortsDefault,,0,0,0,,GAS {\c&H0000FFFF&\b1}Y{\rShortsDefault} POLVO
+Dialogue: 0,0:00:15.11,0:00:15.79,ShortsDefault,,0,0,0,,GAS Y {\c&H0000FFFF&\b1}POLVO{\rShortsDefault}
+Dialogue: 0,0:00:15.79,0:00:17.16,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}ESTELAR.{\rShortsDefault}
+Dialogue: 0,0:00:17.16,0:00:17.37,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}LAS{\rShortsDefault} FUERZAS GRAVITACIONALES
+Dialogue: 0,0:00:17.37,0:00:17.87,ShortsDefault,,0,0,0,,LAS {\c&H0000FFFF&\b1}FUERZAS{\rShortsDefault} GRAVITACIONALES
+Dialogue: 0,0:00:17.87,0:00:18.95,ShortsDefault,,0,0,0,,LAS FUERZAS {\c&H0000FFFF&\b1}GRAVITACIONALES{\rShortsDefault}
+Dialogue: 0,0:00:18.95,0:00:19.84,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}DESENCADENAN{\rShortsDefault} UNA EXPLOSIÓN
+Dialogue: 0,0:00:19.84,0:00:20.06,ShortsDefault,,0,0,0,,DESENCADENAN {\c&H0000FFFF&\b1}UNA{\rShortsDefault} EXPLOSIÓN
+Dialogue: 0,0:00:20.06,0:00:20.73,ShortsDefault,,0,0,0,,DESENCADENAN UNA {\c&H0000FFFF&\b1}EXPLOSIÓN{\rShortsDefault}
+Dialogue: 0,0:00:20.73,0:00:21.01,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}DE{\rShortsDefault} FORMACIÓN DE
+Dialogue: 0,0:00:21.01,0:00:22.24,ShortsDefault,,0,0,0,,DE {\c&H0000FFFF&\b1}FORMACIÓN{\rShortsDefault} DE
+Dialogue: 0,0:00:22.24,0:00:22.52,ShortsDefault,,0,0,0,,DE FORMACIÓN {\c&H0000FFFF&\b1}DE{\rShortsDefault}
+Dialogue: 0,0:00:22.52,0:00:23.11,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}NUEVAS{\rShortsDefault} ESTRELLAS; UN
+Dialogue: 0,0:00:23.11,0:00:24.11,ShortsDefault,,0,0,0,,NUEVAS {\c&H0000FFFF&\b1}ESTRELLAS;{\rShortsDefault} UN
+Dialogue: 0,0:00:24.11,0:00:24.30,ShortsDefault,,0,0,0,,NUEVAS ESTRELLAS; {\c&H0000FFFF&\b1}UN{\rShortsDefault}
+Dialogue: 0,0:00:24.30,0:00:25.38,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}RENACIMIENTO{\rShortsDefault} CÓSMICO.
+Dialogue: 0,0:00:25.38,0:00:26.09,ShortsDefault,,0,0,0,,RENACIMIENTO {\c&H0000FFFF&\b1}CÓSMICO.{\rShortsDefault}
+Dialogue: 0,0:00:26.09,0:00:26.29,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}LOS{\rShortsDefault} ESTUDIANTES HAWAIANOS
+Dialogue: 0,0:00:26.29,0:00:27.00,ShortsDefault,,0,0,0,,LOS {\c&H0000FFFF&\b1}ESTUDIANTES{\rShortsDefault} HAWAIANOS
+Dialogue: 0,0:00:27.00,0:00:27.59,ShortsDefault,,0,0,0,,LOS ESTUDIANTES {\c&H0000FFFF&\b1}HAWAIANOS{\rShortsDefault}
+Dialogue: 0,0:00:27.59,0:00:27.80,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}LAS{\rShortsDefault} LLAMARON 'ESPÍRITUS
+Dialogue: 0,0:00:27.80,0:00:28.37,ShortsDefault,,0,0,0,,LAS {\c&H0000FFFF&\b1}LLAMARON{\rShortsDefault} 'ESPÍRITUS
+Dialogue: 0,0:00:28.37,0:00:29.08,ShortsDefault,,0,0,0,,LAS LLAMARON {\c&H0000FFFF&\b1}'ESPÍRITUS{\rShortsDefault}
+Dialogue: 0,0:00:29.08,0:00:29.83,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}GEMELOS{\rShortsDefault} QUE UNEN
+Dialogue: 0,0:00:29.83,0:00:30.15,ShortsDefault,,0,0,0,,GEMELOS {\c&H0000FFFF&\b1}QUE{\rShortsDefault} UNEN
+Dialogue: 0,0:00:30.15,0:00:30.58,ShortsDefault,,0,0,0,,GEMELOS QUE {\c&H0000FFFF&\b1}UNEN{\rShortsDefault}
+Dialogue: 0,0:00:30.58,0:00:30.87,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}LA{\rShortsDefault} VIDA'; UN
+Dialogue: 0,0:00:30.87,0:00:31.77,ShortsDefault,,0,0,0,,LA {\c&H0000FFFF&\b1}VIDA';{\rShortsDefault} UN
+Dialogue: 0,0:00:31.77,0:00:32.07,ShortsDefault,,0,0,0,,LA VIDA'; {\c&H0000FFFF&\b1}UN{\rShortsDefault}
+Dialogue: 0,0:00:32.07,0:00:32.57,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}NOMBRE{\rShortsDefault} PERFECTO PARA
+Dialogue: 0,0:00:32.57,0:00:33.23,ShortsDefault,,0,0,0,,NOMBRE {\c&H0000FFFF&\b1}PERFECTO{\rShortsDefault} PARA
+Dialogue: 0,0:00:33.23,0:00:33.56,ShortsDefault,,0,0,0,,NOMBRE PERFECTO {\c&H0000FFFF&\b1}PARA{\rShortsDefault}
+Dialogue: 0,0:00:33.56,0:00:34.23,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}ESTE{\rShortsDefault} CAOS.
+Dialogue: 0,0:00:34.23,0:00:35.06,ShortsDefault,,0,0,0,,ESTE {\c&H0000FFFF&\b1}CAOS.{\rShortsDefault}
+Dialogue: 0,0:00:35.06,0:00:35.61,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}NUESTRO{\rShortsDefault} PROPIO SOL
+Dialogue: 0,0:00:35.61,0:00:36.08,ShortsDefault,,0,0,0,,NUESTRO {\c&H0000FFFF&\b1}PROPIO{\rShortsDefault} SOL
+Dialogue: 0,0:00:36.08,0:00:36.31,ShortsDefault,,0,0,0,,NUESTRO PROPIO {\c&H0000FFFF&\b1}SOL{\rShortsDefault}
+Dialogue: 0,0:00:36.31,0:00:36.67,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}Y{\rShortsDefault} LA VÍA
+Dialogue: 0,0:00:36.67,0:00:37.03,ShortsDefault,,0,0,0,,Y {\c&H0000FFFF&\b1}LA{\rShortsDefault} VÍA
+Dialogue: 0,0:00:37.03,0:00:37.57,ShortsDefault,,0,0,0,,Y LA {\c&H0000FFFF&\b1}VÍA{\rShortsDefault}
+Dialogue: 0,0:00:37.57,0:00:38.04,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}LÁCTEA{\rShortsDefault} SE FORMARON
+Dialogue: 0,0:00:38.04,0:00:38.19,ShortsDefault,,0,0,0,,LÁCTEA {\c&H0000FFFF&\b1}SE{\rShortsDefault} FORMARON
+Dialogue: 0,0:00:38.19,0:00:38.82,ShortsDefault,,0,0,0,,LÁCTEA SE {\c&H0000FFFF&\b1}FORMARON{\rShortsDefault}
+Dialogue: 0,0:00:38.82,0:00:38.95,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}DE{\rShortsDefault} EVENTOS SIMILARES.
+Dialogue: 0,0:00:38.95,0:00:39.41,ShortsDefault,,0,0,0,,DE {\c&H0000FFFF&\b1}EVENTOS{\rShortsDefault} SIMILARES.
+Dialogue: 0,0:00:39.41,0:00:40.07,ShortsDefault,,0,0,0,,DE EVENTOS {\c&H0000FFFF&\b1}SIMILARES.{\rShortsDefault}
+Dialogue: 0,0:00:40.07,0:00:40.46,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}¿QUÉ{\rShortsDefault} NOS DEPARA
+Dialogue: 0,0:00:40.46,0:00:40.75,ShortsDefault,,0,0,0,,¿QUÉ {\c&H0000FFFF&\b1}NOS{\rShortsDefault} DEPARA
+Dialogue: 0,0:00:40.75,0:00:41.33,ShortsDefault,,0,0,0,,¿QUÉ NOS {\c&H0000FFFF&\b1}DEPARA{\rShortsDefault}
+Dialogue: 0,0:00:41.33,0:00:41.61,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}EL{\rShortsDefault} FUTURO?
+Dialogue: 0,0:00:41.61,0:00:42.58,ShortsDefault,,0,0,0,,EL {\c&H0000FFFF&\b1}FUTURO?{\rShortsDefault}

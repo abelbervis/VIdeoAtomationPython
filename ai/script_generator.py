@@ -191,10 +191,17 @@ class ScriptGenerator:
         ]
         return not any(p in key.lower() for p in placeholders)
 
-    def generate(self, topic: str, target_duration: int = 35, language: str = "es") -> Optional[Dict[str, Any]]:
+    def generate(
+        self,
+        topic: str,
+        target_duration: int = 35,
+        language: str = "es",
+        context_text: Optional[str] = None
+    ) -> Optional[Dict[str, Any]]:
         """Generate a structured script for the given topic using configured AI providers."""
         lang_label, _ = get_language_instructions(language)
-        print(f"\n🧠 Generating script for: '{topic}' (~{target_duration}s, Language: {lang_label}, System Prompt: {self.prompt_source})...")
+        context_note = " + Grounded NASA context" if context_text else ""
+        print(f"\n🧠 Generating script for: '{topic}' (~{target_duration}s, Language: {lang_label}, System Prompt: {self.prompt_source}{context_note})...")
 
         # Specific provider selected
         if self.provider == "groq":
@@ -202,7 +209,7 @@ class ScriptGenerator:
                 print("  ❌ Error: Se especificó el proveedor 'groq' pero no se configuró una GROQ_API_KEY válida.")
                 print("     👉 Obtén tu clave gratuita en https://console.groq.com/keys y agrégala a tu .env o usa --groq-key.")
                 return None
-            script = self._generate_groq(topic, target_duration, language)
+            script = self._generate_groq(topic, target_duration, language, context_text)
             if not script:
                 print("  ❌ Error: Falló la generación del guión con la API de Groq.")
             return script
@@ -212,7 +219,7 @@ class ScriptGenerator:
                 print("  ❌ Error: Se especificó el proveedor 'gemini' pero no se configuró una GEMINI_API_KEY válida.")
                 print("     👉 Obtén tu clave en https://aistudio.google.com/ y agrégala a tu .env o usa --gemini-key.")
                 return None
-            script = self._generate_gemini(topic, target_duration, language)
+            script = self._generate_gemini(topic, target_duration, language, context_text)
             if not script:
                 print("  ❌ Error: Falló la generación del guión con la API de Gemini.")
             return script
@@ -222,7 +229,7 @@ class ScriptGenerator:
                 print("  ❌ Error: Se especificó el proveedor 'openai' pero no se configuró una OPENAI_API_KEY válida.")
                 print("     👉 Obtén tu clave en https://platform.openai.com/ y agrégala a tu .env o usa --openai-key.")
                 return None
-            script = self._generate_openai(topic, target_duration, language)
+            script = self._generate_openai(topic, target_duration, language, context_text)
             if not script:
                 print("  ❌ Error: Falló la generación del guión con la API de OpenAI.")
             return script
@@ -247,28 +254,39 @@ class ScriptGenerator:
         for prov in configured_providers:
             if prov == "groq":
                 print("  ⚡ Solicitando guión ultrarrápido a Groq LPU...")
-                script = self._generate_groq(topic, target_duration, language)
+                script = self._generate_groq(topic, target_duration, language, context_text)
                 if script:
                     return script
             elif prov == "gemini":
                 print("  ⚡ Solicitando guión a Google Gemini...")
-                script = self._generate_gemini(topic, target_duration, language)
+                script = self._generate_gemini(topic, target_duration, language, context_text)
                 if script:
                     return script
             elif prov == "openai":
                 print("  ⚡ Solicitando guión a OpenAI...")
-                script = self._generate_openai(topic, target_duration, language)
+                script = self._generate_openai(topic, target_duration, language, context_text)
                 if script:
                     return script
 
         print(f"  ❌ Error: Todas las APIs de IA configuradas ({', '.join(configured_providers)}) fallaron al generar el guión.")
         return None
 
-    def _call_groq_api(self, model: str, topic: str, target_duration: int, language: str = "es") -> Tuple[Optional[Dict[str, Any]], Optional[int], str, str]:
+    def _call_groq_api(
+        self,
+        model: str,
+        topic: str,
+        target_duration: int,
+        language: str = "es",
+        context_text: Optional[str] = None
+    ) -> Tuple[Optional[Dict[str, Any]], Optional[int], str, str]:
         """Execute a single REST call to Groq API. Returns (script_dict, status_code, err_code, err_msg)."""
         lang_name, lang_guidance = get_language_instructions(language)
         try:
             endpoint = f"{self.groq_api_base}/chat/completions"
+            context_section = ""
+            if context_text and context_text.strip():
+                context_section = f"\nOFFICIAL SCIENTIFIC CONTEXT FROM NASA (Use as factual core):\n\"\"\"\n{context_text.strip()}\n\"\"\"\n"
+
             payload = {
                 "model": model,
                 "messages": [
@@ -280,6 +298,7 @@ class ScriptGenerator:
                             f"Target duration: {target_duration} seconds.\n"
                             f"Target Language: {lang_name}\n"
                             f"Language Requirements:\n{lang_guidance}\n"
+                            f"{context_section}"
                             f"Generate the JSON script following the schema:"
                         )
                     }
@@ -322,10 +341,16 @@ class ScriptGenerator:
         except Exception as e:
             return None, -1, "exception", str(e)
 
-    def _generate_groq(self, topic: str, target_duration: int, language: str = "es") -> Optional[Dict[str, Any]]:
+    def _generate_groq(
+        self,
+        topic: str,
+        target_duration: int,
+        language: str = "es",
+        context_text: Optional[str] = None
+    ) -> Optional[Dict[str, Any]]:
         """Call Groq API with automatic fallback to llama-3.3-70b-versatile if model is unavailable."""
         model = self.groq_model or "llama-3.3-70b-versatile"
-        script, status, err_code, err_msg = self._call_groq_api(model, topic, target_duration, language)
+        script, status, err_code, err_msg = self._call_groq_api(model, topic, target_duration, language, context_text)
         if script:
             return script
 
@@ -350,7 +375,7 @@ class ScriptGenerator:
         if is_model_unavailable and model != fallback_model:
             print(f"  ⚠️ Groq API: El modelo '{model}' no está disponible ({err_msg}).")
             print(f"  🔄 Cambiando automáticamente al modelo oficial activo: '{fallback_model}'...")
-            fb_script, fb_status, fb_code, fb_err = self._call_groq_api(fallback_model, topic, target_duration, language)
+            fb_script, fb_status, fb_code, fb_err = self._call_groq_api(fallback_model, topic, target_duration, language, context_text)
             if fb_script:
                 return fb_script
             print(f"  ❌ Falló también con el modelo '{fallback_model}': {fb_err}")
@@ -360,17 +385,28 @@ class ScriptGenerator:
         print(f"  ⚠️ Groq API HTTP Error {status}{detail}")
         return None
 
-    def _generate_gemini(self, topic: str, target_duration: int, language: str = "es") -> Optional[Dict[str, Any]]:
+    def _generate_gemini(
+        self,
+        topic: str,
+        target_duration: int,
+        language: str = "es",
+        context_text: Optional[str] = None
+    ) -> Optional[Dict[str, Any]]:
         """Call Gemini API via REST."""
         lang_name, lang_guidance = get_language_instructions(language)
         try:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={self.gemini_key}"
+            context_section = ""
+            if context_text and context_text.strip():
+                context_section = f"\nOFFICIAL SCIENTIFIC CONTEXT FROM NASA (Use as factual core):\n\"\"\"\n{context_text.strip()}\n\"\"\"\n"
+
             prompt = (
                 f"{self.system_prompt}\n\n"
                 f"Topic: {topic}\n"
                 f"Target duration: {target_duration} seconds.\n"
                 f"Target Language: {lang_name}\n"
                 f"Language Requirements:\n{lang_guidance}\n"
+                f"{context_section}"
                 f"Generate the JSON script:"
             )
 
@@ -378,7 +414,11 @@ class ScriptGenerator:
                 "contents": [{"parts": [{"text": prompt}]}],
                 "generationConfig": {
                     "temperature": 0.4,
-                    "responseMimeType": "application/json"
+                    "responseMimeType": "application/json",
+                    "maxOutputTokens": 2048,
+                    "thinkingConfig": {
+                        "thinkingBudget": 0
+                    }
                 }
             }
 
@@ -389,7 +429,7 @@ class ScriptGenerator:
                 method="POST"
             )
 
-            with urllib.request.urlopen(req, timeout=25) as response:
+            with urllib.request.urlopen(req, timeout=45) as response:
                 result = json.loads(response.read().decode("utf-8"))
                 text = result["candidates"][0]["content"]["parts"][0]["text"]
                 return self._parse_json_response(text, language)
@@ -409,11 +449,21 @@ class ScriptGenerator:
             print(f"  ⚠️ Gemini API request failed ({e})")
             return None
 
-    def _generate_openai(self, topic: str, target_duration: int, language: str = "es") -> Optional[Dict[str, Any]]:
+    def _generate_openai(
+        self,
+        topic: str,
+        target_duration: int,
+        language: str = "es",
+        context_text: Optional[str] = None
+    ) -> Optional[Dict[str, Any]]:
         """Call OpenAI API or custom endpoint."""
         lang_name, lang_guidance = get_language_instructions(language)
         try:
             endpoint = self.base_url if (self.base_url and self.base_url.startswith("http")) else "https://api.openai.com/v1/chat/completions"
+            context_section = ""
+            if context_text and context_text.strip():
+                context_section = f"\nOFFICIAL SCIENTIFIC CONTEXT FROM NASA (Use as factual core):\n\"\"\"\n{context_text.strip()}\n\"\"\"\n"
+
             payload = {
                 "model": "gpt-4o-mini",
                 "messages": [
@@ -425,6 +475,7 @@ class ScriptGenerator:
                             f"Target duration: {target_duration}s.\n"
                             f"Target Language: {lang_name}\n"
                             f"Language Requirements:\n{lang_guidance}\n"
+                            f"{context_section}"
                             f"Generate the JSON script:"
                         )
                     }

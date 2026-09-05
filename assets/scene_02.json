@@ -1,14 +1,14 @@
 {
   "scene_index": 2,
   "provider": "nasa",
-  "title": "NASA Astronaut Discusses Life In Space With International Space University Space Studies Program Participants – Thursday, July 24, 2025",
-  "nasa_id": "iss073m262051058_NASA_Astronaut_Discusses_Life_In_Space_With_International_Space_University_Space_Studies_Program_Participants_250724",
-  "media_type": "video",
-  "source_url": "https://images-assets.nasa.gov/video/iss073m262051058_NASA_Astronaut_Discusses_Life_In_Space_With_International_Space_University_Space_Studies_Program_Participants_250724/iss073m262051058_NASA_Astronaut_Discusses_Life_In_Space_With_International_Space_University_Space_Studies_Program_Participants_250724~medium.mp4",
-  "description": "Aboard the International Space Station, Expedition 73 flight engineer Jonny Kim of NASA discussed life and work aboard the orbital outpost during an in-flight interview July 24 with International Space University Space Studies Program participants in Seoul, South Korea. Kim is in the midst of a long",
-  "center": "JSC",
-  "photographer_or_credit": "JSC",
-  "date_created": "2025-07-24T00:00:00Z",
+  "title": "Jupiter's Bands",
+  "nasa_id": "PIA24818",
+  "media_type": "image",
+  "source_url": "https://images-assets.nasa.gov/image/PIA24818/PIA24818~orig.jpg",
+  "description": "Jupiter's banded appearance is created by the cloud-forming \"weather layer.\" In this composite image, the image on the left show's Jupiter's thermal energy being emitted in infrared light, with dark cloudy bands appearing as silhouettes against Jupiter's thermal glow. The image on the right shows Ju",
+  "center": "JPL",
+  "photographer_or_credit": "International Gemini Observatory/NOIRLab/NSF/AURA/NASA/ESA, M.H. Wong and I. de Pater (UC Berkeley) et al.",
+  "date_created": "2021-10-28T00:00:00Z",
   "license": "Public Domain - NASA Content Policy: NASA material is generally not copyrighted and may be used for educational or informational purposes without explicit permission.",
-  "local_file": "scene_02.mp4"
+  "local_file": "scene_02.jpg"
 }

@@ -46,7 +46,9 @@ from config import (
     SUBTITLE_DYNAMIC,
 )
 from ai.script_generator import ScriptGenerator
+from ai.trend_evaluator import ViralTrendEvaluator
 from providers.nasa import NASAProvider
+from providers.nasa_trends import NASATrendsProvider
 from providers.pexels import PexelsProvider
 from audio.tts import TTSManager
 from audio.music import MusicManager
@@ -64,8 +66,26 @@ def parse_args():
     parser.add_argument(
         "--topic",
         type=str,
-        required=True,
-        help="Topic for the video (e.g., 'agujeros negros', 'los secretos del océano', 'inteligencia artificial', 'Marte')"
+        default=None,
+        help="Topic for the video (e.g., 'agujeros negros', 'Marte'). If omitted or --trending is used, automatically hunts viral NASA discoveries."
+    )
+    parser.add_argument(
+        "--trending", "--auto-topic",
+        dest="trending",
+        action="store_true",
+        help="Autonomous viral topic hunter: pulls real-time NASA discoveries, ranks them with AI for viral potential, and creates the video automatically."
+    )
+    parser.add_argument(
+        "--discover", "--list-trending",
+        dest="discover",
+        action="store_true",
+        help="Discover mode: inspect and display available NASA trending discoveries with AI viral scores and hooks, without rendering a video."
+    )
+    parser.add_argument(
+        "--top-choice",
+        type=int,
+        default=1,
+        help="Which ranked viral topic to produce when using --trending (1 = highest viral score, 2 = second, etc.)"
     )
     parser.add_argument(
         "--duration",
@@ -238,6 +258,66 @@ def main():
     sub_margin = fmt_cfg["subtitle_margin_bottom"]
     sub_font_size = fmt_cfg["subtitle_font_size"]
 
+    trending_metadata = None
+    nasa_grounded_context = None
+
+    # Handle Discover Mode or Autonomous Trending Discovery
+    if args.discover or args.trending or not args.topic:
+        print("\n" + "=" * 65)
+        print("🔭 NASA VIRAL TREND HUNTER  |  Real-Time Discovery Engine")
+        print("=" * 65)
+        print("📡 Conectando con las APIs oficiales de la NASA (APOD & Mission Library)...")
+        trends_provider = NASATrendsProvider()
+        candidates = trends_provider.get_trending_candidates(limit=8)
+        print(f"✅ Se obtuvieron {len(candidates)} eventos y descubrimientos científicos oficiales.")
+
+        print("🧠 Evaluando potencial viral con IA (Curiosidad, Ganchabilidad, Espectáculo Visual)...")
+        evaluator = ViralTrendEvaluator(
+            gemini_key=args.gemini_key,
+            openai_key=args.openai_key,
+            groq_key=args.groq_key,
+            preferred_provider=args.llm
+        )
+        ranked_topics = evaluator.evaluate_candidates(candidates, language=args.language, top_n=5)
+
+        # IF DISCOVER MODE: Show rich CLI table and exit
+        if args.discover:
+            print("\n" + "=" * 65)
+            print("🌟 DESCUBRIMIENTOS DE LA NASA CLASIFICADOS POR POTENCIAL VIRAL")
+            print("=" * 65)
+            for i, item in enumerate(ranked_topics):
+                score = item.get("viral_score", 0.0)
+                stars = "🔥" if score >= 9.0 else "⭐"
+                print(f"\n[{i + 1}] {stars} Puntuación Viral: {score:.1f}/10  |  {item.get('adapted_title')}")
+                print(f"    📡 Fuente:       {item.get('source')} ({item.get('date', 'Reciente')})")
+                print(f"    🪝 Gancho Viral:  \"{item.get('suggested_hook')}\"")
+                print(f"    💡 Razón Viral:   {item.get('viral_reason')}")
+                print(f"    📖 Resumen NASA:  {item.get('scientific_summary')}")
+            print("\n" + "=" * 65)
+            print("💡 Para generar un video sobre cualquiera de ellos de forma 100% automática:")
+            print("   python main.py --trending --top-choice 1")
+            print("   o usa directamente: python main.py --topic \"<título deseado>\"")
+            print("=" * 65 + "\n")
+            return
+
+        if not ranked_topics:
+            print("\n❌ No se pudieron evaluar temas de la NASA en este momento.")
+            sys.exit(1)
+
+        # IF AUTO-TRENDING: Select winning topic
+        choice_idx = max(0, min(args.top_choice - 1, len(ranked_topics) - 1))
+        winning = ranked_topics[choice_idx]
+        trending_metadata = winning
+        args.topic = winning.get("adapted_title") or winning.get("title")
+        nasa_grounded_context = winning.get("scientific_text")
+
+        print("\n" + "─" * 65)
+        print(f"🏆 TEMA VIRAL SELECCIONADO POR IA (Opción #{choice_idx + 1} de {len(ranked_topics)}):")
+        print(f"   Título:    {args.topic}")
+        print(f"   Viralidad: {winning.get('viral_score', 0):.1f}/10  ({winning.get('viral_reason')})")
+        print(f"   Gancho:    \"{winning.get('suggested_hook')}\"")
+        print("─" * 65)
+
     print("=" * 65)
     print("🌌  VIDEO GENERATOR  |  Multi-Format Automation Engine")
     print("=" * 65)
@@ -275,7 +355,12 @@ def main():
         preferred_provider=args.llm,
         prompt_file=args.prompt_file
     )
-    script = script_gen.generate(args.topic, target_duration=args.duration, language=args.language)
+    script = script_gen.generate(
+        args.topic,
+        target_duration=args.duration,
+        language=args.language,
+        context_text=nasa_grounded_context
+    )
 
     # STRICT CHECK: If script generation fails, stop immediately without proceeding to audio/video
     if not script or not script.get("scenes"):
@@ -494,6 +579,11 @@ def main():
     sfx_dest = video_folder / "sfx.wav"
     if sfx_track and Path(sfx_track).exists():
         shutil.copy2(sfx_track, sfx_dest)
+
+    # 5. NASA Discovery metadata if generated from trending
+    nasa_dest = video_folder / "nasa_discovery.json"
+    if trending_metadata:
+        save_json(trending_metadata, nasa_dest)
 
     meta_dest = video_folder / "metadata.json"
 
