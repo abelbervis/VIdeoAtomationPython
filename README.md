@@ -77,14 +77,22 @@ docker build -t nasa_shorts .
 
 ### 2. Ejecutar y generar tu video:
 ```bash
+# Con docker-compose (el método más simple):
+docker compose run --rm nasa-shorts --discover
+docker compose run --rm nasa-shorts --top-choice 2
+
+# O con docker run:
 # En Linux / macOS:
-docker run --rm -v "$(pwd)/output:/app/output" --env-file .env nasa_shorts --topic "agujeros negros"
+docker run --rm -v "$(pwd)/output:/app/output" --env-file .env nasa_shorts --discover
+docker run --rm -v "$(pwd)/output:/app/output" --env-file .env nasa_shorts --top-choice 2
 
 # En Windows (PowerShell):
-docker run --rm -v "${PWD}/output:/app/output" --env-file .env nasa_shorts --topic "agujeros negros"
+docker run --rm -v "${PWD}/output:/app/output" --env-file .env nasa_shorts --discover
+docker run --rm -v "${PWD}/output:/app/output" --env-file .env nasa_shorts --top-choice 2
 
 # En Windows (CMD):
-docker run --rm -v "%cd%/output:/app/output" --env-file .env nasa_shorts --topic "agujeros negros"
+docker run --rm -v "%cd%/output:/app/output" --env-file .env nasa_shorts --discover
+docker run --rm -v "%cd%/output:/app/output" --env-file .env nasa_shorts --top-choice 2
 ```
 
 El video se guardará automáticamente en la carpeta local `output/` de tu máquina.

@@ -267,7 +267,26 @@ def main():
 
     trending_metadata = None
     nasa_grounded_context = None
-    trending_cache_file = BASE_DIR / ".trending_cache.json"
+
+    # Auto-detect if user passed a numeric topic (e.g. --topic 2 or --topic "2" meaning option #2)
+    if args.topic and args.topic.strip().isdigit() and 1 <= int(args.topic.strip()) <= 20:
+        args.top_choice = int(args.topic.strip())
+        args.trending = True
+        args.topic = None
+
+    # If --top-choice was explicitly passed in command line arguments, activate trending mode
+    if any(arg.startswith("--top-choice") for arg in sys.argv):
+        args.trending = True
+
+    # Cache file paths: prioritize OUTPUT_DIR because in Docker containers,
+    # /app/output is mounted to the host machine (e.g. -v ./output:/app/output or docker-compose)
+    # ensuring discovery results persist across container restarts.
+    cache_candidates = [
+        OUTPUT_DIR / ".trending_cache.json",
+        OUTPUT_DIR / "trending_cache.json",
+        BASE_DIR / ".trending_cache.json",
+    ]
+    primary_cache_file = OUTPUT_DIR / ".trending_cache.json"
 
     # Handle Discover Mode or Autonomous Trending Discovery
     if args.discover or args.trending or not args.topic:
@@ -279,27 +298,31 @@ def main():
         used_cache = False
 
         # Attempt to load from persistent cache if not forcing refresh
-        if not args.refresh_trends and trending_cache_file.exists():
-            cache_data = load_json(trending_cache_file)
-            if isinstance(cache_data, dict):
-                cache_lang = cache_data.get("language")
-                cache_time = cache_data.get("timestamp", 0)
-                cached_items = cache_data.get("ranked_topics", [])
+        if not args.refresh_trends:
+            for c_file in cache_candidates:
+                if c_file.exists():
+                    cache_data = load_json(c_file)
+                    if isinstance(cache_data, dict):
+                        cache_lang = cache_data.get("language")
+                        cache_time = cache_data.get("timestamp", 0)
+                        cached_items = cache_data.get("ranked_topics", [])
 
-                # Cache is valid if same language, not older than 24h, and non-empty
-                if (
-                    cache_lang == args.language
-                    and (time.time() - cache_time < 86400)
-                    and isinstance(cached_items, list)
-                    and len(cached_items) > 0
-                ):
-                    ranked_topics = cached_items
-                    used_cache = True
-                    mins_ago = int((time.time() - cache_time) / 60)
-                    time_str = f"hace {mins_ago} min" if mins_ago > 0 else "hace un momento"
-                    print(f"📦 Usando descubrimientos clasificados en caché ({time_str}, idioma: {args.language}).")
-                    if args.discover:
-                        print("💡 (Usa 'python main.py --discover --refresh' para forzar una nueva búsqueda en vivo)")
+                        # Cache is valid if same language, not older than 24h, and non-empty
+                        if (
+                            cache_lang == args.language
+                            and (time.time() - cache_time < 86400)
+                            and isinstance(cached_items, list)
+                            and len(cached_items) > 0
+                        ):
+                            ranked_topics = cached_items
+                            used_cache = True
+                            mins_ago = int((time.time() - cache_time) / 60)
+                            time_str = f"hace {mins_ago} min" if mins_ago > 0 else "hace un momento"
+                            print(f"📦 Usando descubrimientos clasificados en caché ({time_str}, idioma: {args.language}).")
+                            print(f"   📂 Archivo: {c_file.name} (persistente en Docker)")
+                            if args.discover:
+                                print("💡 (Usa '--refresh' para forzar una nueva búsqueda en vivo)")
+                            break
 
         # If cache was not used (or forced refresh), fetch fresh from NASA and evaluate with AI
         if not ranked_topics:
@@ -317,14 +340,22 @@ def main():
             )
             ranked_topics = evaluator.evaluate_candidates(candidates, language=args.language, top_n=5)
 
-            # Persist to cache so subsequent --trending --top-choice runs select the exact same items
+            # Persist to cache in OUTPUT_DIR (and BASE_DIR) so subsequent container runs select the exact same items
             if ranked_topics:
-                cache_payload = {
-                    "timestamp": time.time(),
-                    "language": args.language,
-                    "ranked_topics": ranked_topics
-                }
-                save_json(cache_payload, trending_cache_file)
+                cache_time = time.time()
+
+        # Always ensure the persistent cache in OUTPUT_DIR is written / kept in sync for Docker
+        if ranked_topics:
+            cache_payload = {
+                "timestamp": cache_time if ('cache_time' in locals() and cache_time) else time.time(),
+                "language": args.language,
+                "ranked_topics": ranked_topics
+            }
+            save_json(cache_payload, primary_cache_file)
+            try:
+                save_json(cache_payload, BASE_DIR / ".trending_cache.json")
+            except Exception:
+                pass
 
         # IF DISCOVER MODE: Show rich CLI table and exit
         if args.discover:
@@ -340,11 +371,13 @@ def main():
                 print(f"    💡 Razón Viral:   {item.get('viral_reason')}")
                 print(f"    📖 Resumen NASA:  {item.get('scientific_summary')}")
             print("\n" + "=" * 65)
-            print("💾 Lista de descubrimientos guardada en caché.")
+            print("💾 Lista de descubrimientos guardada en output/.trending_cache.json")
+            print("   (Persistente entre contenedores Docker gracias al volumen ./output)")
             print("💡 Para generar un video de cualquier opción de la lista con total precisión:")
             print("   python main.py --trending --top-choice 1")
             print("   python main.py --trending --top-choice 2")
-            print("   (o usa: python main.py --discover --refresh para consultar novedades frescas)")
+            print("   (En Docker: docker compose run nasa-shorts --trending --top-choice 2)")
+            print("   (o usa '--refresh' para forzar una nueva consulta en vivo a la NASA)")
             print("=" * 65 + "\n")
             return
 
