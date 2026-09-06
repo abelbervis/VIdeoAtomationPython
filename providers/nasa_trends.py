@@ -20,28 +20,100 @@ class NASATrendsProvider:
         self.api_key = api_key if api_key and api_key != "DEMO_KEY" else "DEMO_KEY"
         self.image_base_url = image_base_url.rstrip("/")
 
-    def fetch_apod_recent(self, count: int = 8) -> List[Dict[str, Any]]:
+    def fetch_apod_archive(
+        self,
+        target_date: Optional[str] = None,
+        days_back: Optional[int] = None,
+        random_archive: bool = False,
+        count: int = 8
+    ) -> List[Dict[str, Any]]:
         """
-        Fetch recent Astronomy Picture of the Day (APOD) entries.
-        Includes high-resolution official imagery/videos and explanations
-        written by professional astronomers.
+        Fetch Astronomy Picture of the Day (APOD) entries from NASA's archives.
+        Supports:
+        - Specific historical date (e.g. '2024-04-08', '2015-07-14') with surrounding window.
+        - Lookback by number of days (e.g. days_back=30, 180, 365).
+        - Random historical gems across 30 years of NASA archive (1995 - present).
+        - Recent discoveries (default).
         """
         candidates: List[Dict[str, Any]] = []
-        # Attempt 1: Fetch recent date range (last 7 days)
-        try:
-            today = datetime.utcnow().date()
-            start_date = today - timedelta(days=7)
-            url = f"https://api.nasa.gov/planetary/apod?api_key={self.api_key}&start_date={start_date}&end_date={today}"
-            req = urllib.request.Request(
-                url,
-                headers={"User-Agent": "NASA-Shorts-Generator/1.0 (Science Education)"}
-            )
-            with urllib.request.urlopen(req, timeout=6) as resp:
-                data = json.loads(resp.read().decode("utf-8"))
-        except Exception:
-            data = None
+        data = None
+        min_nasa_date = datetime(1995, 6, 16).date()
+        today = datetime.utcnow().date()
 
-        # Attempt 2: Fallback to random count if date range returns empty or fails
+        # 1. Target specific historical date
+        if target_date:
+            try:
+                clean_date = target_date.strip()[:10]
+                parsed_dt = datetime.strptime(clean_date, "%Y-%m-%d").date()
+                parsed_dt = max(min_nasa_date, min(today, parsed_dt))
+
+                # Fetch window of +/- 3 days around target date
+                start_w = max(min_nasa_date, parsed_dt - timedelta(days=3))
+                end_w = min(today, parsed_dt + timedelta(days=3))
+                url = f"https://api.nasa.gov/planetary/apod?api_key={self.api_key}&start_date={start_w}&end_date={end_w}"
+                req = urllib.request.Request(
+                    url,
+                    headers={"User-Agent": "NASA-Shorts-Generator/1.0 (Science Education)"}
+                )
+                with urllib.request.urlopen(req, timeout=7) as resp:
+                    data = json.loads(resp.read().decode("utf-8"))
+            except Exception:
+                # Fallback to single exact date
+                try:
+                    url = f"https://api.nasa.gov/planetary/apod?api_key={self.api_key}&date={target_date.strip()[:10]}"
+                    req = urllib.request.Request(url, headers={"User-Agent": "NASA-Shorts-Generator/1.0"})
+                    with urllib.request.urlopen(req, timeout=6) as resp:
+                        res = json.loads(resp.read().decode("utf-8"))
+                        data = [res] if isinstance(res, dict) else res
+                except Exception as e:
+                    print(f"  ⚠️ Error consultando fecha {target_date} en APOD ({e})")
+                    data = None
+
+        # 2. Days back in the past
+        elif days_back and days_back > 0:
+            try:
+                end_date = max(min_nasa_date, today - timedelta(days=days_back))
+                start_date = max(min_nasa_date, end_date - timedelta(days=7))
+                url = f"https://api.nasa.gov/planetary/apod?api_key={self.api_key}&start_date={start_date}&end_date={end_date}"
+                req = urllib.request.Request(
+                    url,
+                    headers={"User-Agent": "NASA-Shorts-Generator/1.0 (Science Education)"}
+                )
+                with urllib.request.urlopen(req, timeout=7) as resp:
+                    data = json.loads(resp.read().decode("utf-8"))
+            except Exception as e:
+                print(f"  ⚠️ Error consultando días pasados ({days_back}) en APOD ({e})")
+                data = None
+
+        # 3. Random historical discoveries from entire APOD archive (1995 to today)
+        elif random_archive:
+            try:
+                url = f"https://api.nasa.gov/planetary/apod?api_key={self.api_key}&count={count}"
+                req = urllib.request.Request(
+                    url,
+                    headers={"User-Agent": "NASA-Shorts-Generator/1.0 (Science Education)"}
+                )
+                with urllib.request.urlopen(req, timeout=8) as resp:
+                    data = json.loads(resp.read().decode("utf-8"))
+            except Exception as e:
+                print(f"  ⚠️ Error consultando archivo histórico aleatorio ({e})")
+                data = None
+
+        # 4. Default: Recent date range (last 7 days)
+        if data is None or not isinstance(data, list):
+            try:
+                start_date = today - timedelta(days=7)
+                url = f"https://api.nasa.gov/planetary/apod?api_key={self.api_key}&start_date={start_date}&end_date={today}"
+                req = urllib.request.Request(
+                    url,
+                    headers={"User-Agent": "NASA-Shorts-Generator/1.0 (Science Education)"}
+                )
+                with urllib.request.urlopen(req, timeout=6) as resp:
+                    data = json.loads(resp.read().decode("utf-8"))
+            except Exception:
+                data = None
+
+        # Fallback to random count if recent returns empty
         if not data or not isinstance(data, list):
             try:
                 url = f"https://api.nasa.gov/planetary/apod?api_key={self.api_key}&count={count}"
@@ -59,7 +131,7 @@ class NASATrendsProvider:
             for item in reversed(data):
                 title = (item.get("title") or "").strip()
                 explanation = (item.get("explanation") or "").strip()
-                if not title or len(explanation) < 40:
+                if not title or len(explanation) < 35:
                     continue
 
                 date_str = item.get("date", "")
@@ -82,18 +154,34 @@ class NASATrendsProvider:
 
         return candidates
 
-    def fetch_library_discoveries(self, query: str = "webb discovery", limit: int = 6) -> List[Dict[str, Any]]:
+    def fetch_apod_recent(self, count: int = 8) -> List[Dict[str, Any]]:
+        """Fetch recent Astronomy Picture of the Day (APOD) entries."""
+        return self.fetch_apod_archive(count=count)
+
+    def fetch_library_discoveries(
+        self,
+        query: str = "webb discovery",
+        limit: int = 6,
+        year_start: Optional[int] = None,
+        year_end: Optional[int] = None
+    ) -> List[Dict[str, Any]]:
         """
         Query NASA Image and Video Library for high-impact cosmic discoveries.
+        Supports optional historical year filtering.
         """
         candidates: List[Dict[str, Any]] = []
         try:
-            params = {
+            params: Dict[str, Any] = {
                 "q": query,
                 "media_type": "video,image",
                 "page": 1,
                 "page_size": limit
             }
+            if year_start:
+                params["year_start"] = str(year_start)
+            if year_end:
+                params["year_end"] = str(year_end)
+
             url = f"{self.image_base_url}/search?{urllib.parse.urlencode(params)}"
             req = urllib.request.Request(
                 url,
@@ -144,28 +232,75 @@ class NASATrendsProvider:
 
         return candidates
 
-    def get_trending_candidates(self, limit: int = 8) -> List[Dict[str, Any]]:
+    def get_trending_candidates(
+        self,
+        limit: int = 8,
+        target_date: Optional[str] = None,
+        days_back: Optional[int] = None,
+        random_archive: bool = False
+    ) -> List[Dict[str, Any]]:
         """
-        Combine multiple NASA feeds (APOD + latest missions & telescopes).
+        Combine multiple NASA feeds (APOD + latest or historical missions & telescopes).
         Returns a rich list of official discovery candidates with full scientific summaries.
+        Supports:
+        - Specific historical date (--date YYYY-MM-DD)
+        - Days in the past (--days-back N)
+        - Random historical archive exploration (--archive)
         """
         all_candidates: List[Dict[str, Any]] = []
         seen_titles = set()
 
-        # 1. Fetch APOD entries (high quality daily astronomy discoveries)
-        apod_items = self.fetch_apod_recent(count=min(limit, 8))
+        # 1. Fetch APOD entries (daily astronomy discoveries, recent or archive)
+        apod_items = self.fetch_apod_archive(
+            target_date=target_date,
+            days_back=days_back,
+            random_archive=random_archive,
+            count=min(limit, 8)
+        )
         for item in apod_items:
             key = item["title"].lower()
             if key not in seen_titles:
                 seen_titles.add(key)
                 all_candidates.append(item)
 
-        # 2. Query NASA Library for James Webb & high-impact mission discoveries
-        queries = ["James Webb telescope discovery", "solar flare storm aurora", "black hole event horizon"]
+        # 2. Query NASA Library (historical or modern depending on mode)
+        target_year = None
+        if target_date:
+            try:
+                target_year = int(target_date.strip()[:4])
+            except Exception:
+                target_year = None
+
+        if random_archive:
+            queries = [
+                "Apollo 11 moon landing",
+                "Hubble deep field original",
+                "Voyager golden record interstellar",
+                "Cassini Saturn rings closeup",
+                "Pluto New Horizons flyby"
+            ]
+        elif target_year and target_year < 2020:
+            queries = [
+                f"space exploration discovery {target_year}",
+                "Hubble Space Telescope discovery",
+                "Mars rover mission space"
+            ]
+        else:
+            queries = [
+                "James Webb telescope discovery",
+                "solar flare storm aurora",
+                "black hole event horizon"
+            ]
+
         for q in queries:
             if len(all_candidates) >= limit:
                 break
-            lib_items = self.fetch_library_discoveries(query=q, limit=4)
+            lib_items = self.fetch_library_discoveries(
+                query=q,
+                limit=3,
+                year_start=target_year,
+                year_end=target_year
+            )
             for item in lib_items:
                 key = item["title"].lower()
                 if key not in seen_titles:

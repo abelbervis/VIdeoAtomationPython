@@ -30,6 +30,45 @@ def sanitize_filename(name: str) -> str:
     return name or "video_output"
 
 
+def format_date_display(date_input: Optional[str], language: str = "es") -> Optional[str]:
+    """
+    Format raw date strings (e.g. '2024-04-08' or '2015-07-14T00:00:00Z')
+    into a clean, concise, elegant format for mobile video overlays:
+    - es: '8 Abr 2024' (or '2024' if only year)
+    - en: 'Apr 8, 2024'
+    - zh: '2024年4月8日'
+    """
+    if not date_input:
+        return None
+    raw = str(date_input).strip()
+    if not raw or raw.lower() in ["none", "unknown", "reciente", "n/a", "null"]:
+        return None
+
+    # Extract YYYY-MM-DD pattern
+    match = re.search(r'(\d{4})[-/](\d{1,2})[-/](\d{1,2})', raw)
+    if match:
+        year, month, day = int(match.group(1)), int(match.group(2)), int(match.group(3))
+        months_es = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
+        months_en = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+        lang = (language or "es").lower()
+        if lang.startswith("zh"):
+            return f"{year}年{month}月{day}日"
+        elif lang.startswith("en"):
+            m_name = months_en[month - 1] if 1 <= month <= 12 else str(month)
+            return f"{m_name} {day}, {year}"
+        else:
+            m_name = months_es[month - 1] if 1 <= month <= 12 else str(month)
+            return f"{day} {m_name} {year}"
+
+    # Year-only pattern e.g. '2024'
+    year_match = re.search(r'\b(19\d{2}|20\d{2})\b', raw)
+    if year_match:
+        return year_match.group(1)
+
+    return raw[:16]
+
+
 def save_json(data: Any, filepath: Path) -> None:
     """Save serializable data to a JSON file."""
     filepath = Path(filepath)

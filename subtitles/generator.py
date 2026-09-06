@@ -332,11 +332,12 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
                         continue
                     clean_attr_text = raw_attr_text.replace("\n", " ").strip()
                     clean_attr_text = clean_attr_text.replace("📡", "").strip()
-                    if not any(clean_attr_text.startswith(p) for p in ["NASA", "Fuente:", "Crédito:", "Source:"]):
+                    known_prefixes = ["NASA", "ESA", "JWST", "Hubble", "Fuente:", "Crédito:", "Source:"]
+                    if not any(clean_attr_text.startswith(p) for p in known_prefixes):
                         clean_attr_text = f"NASA | {clean_attr_text}"
 
                     attr_start = max(0.0, float(attr.get("start", 0.0)))
-                    attr_end = max(attr_start + 1.0, float(attr.get("end", attr_start + 5.0)))
+                    attr_end = max(attr_start + 1.0, float(attr.get("end", attr_start + 2.8)))
                     f.write(
                         f"Dialogue: 1,{format_timestamp_ass(attr_start)},{format_timestamp_ass(attr_end)},"
                         f"SourceBadge,,0,0,0,,{{\\fad(350,350)}}{clean_attr_text}\n"

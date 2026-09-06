@@ -56,7 +56,7 @@ from audio.music import MusicManager
 from audio.sfx import SFXManager
 from subtitles.generator import SubtitleGenerator
 from video.render import VideoRenderer
-from utils.files import sanitize_filename, clean_temp_directory, check_ffmpeg, save_json, load_json
+from utils.files import sanitize_filename, clean_temp_directory, check_ffmpeg, save_json, load_json, format_date_display
 
 
 def parse_args():
@@ -81,6 +81,29 @@ def parse_args():
         dest="discover",
         action="store_true",
         help="Discover mode: inspect and display available NASA trending discoveries with AI viral scores and hooks, without rendering a video."
+    )
+    parser.add_argument(
+        "--date",
+        type=str,
+        default=None,
+        help="Target historical date in NASA archive (format: YYYY-MM-DD, e.g. '2024-04-08', '2015-07-14', back to June 1995)."
+    )
+    parser.add_argument(
+        "--days-back",
+        type=int,
+        default=None,
+        help="Navigate N days into the past to discover NASA astronomy events from that time window (e.g. 30, 90, 365)."
+    )
+    parser.add_argument(
+        "--archive", "--random-date",
+        dest="archive",
+        action="store_true",
+        help="Explore legendary gems and historic discoveries randomly chosen from NASA's 30-year APOD archive (1995 to present)."
+    )
+    parser.add_argument(
+        "--no-badge-date",
+        action="store_true",
+        help="Disable displaying the capture/publication date on the video attribution badge."
     )
     parser.add_argument(
         "--top-choice",
@@ -278,6 +301,10 @@ def main():
     if any(arg.startswith("--top-choice") for arg in sys.argv):
         args.trending = True
 
+    # Auto-activate trending if historical date/days-back/archive is specified without a custom topic
+    if (args.date or args.days_back or args.archive) and not args.topic and not args.discover:
+        args.trending = True
+
     # Cache file paths: prioritize OUTPUT_DIR because in Docker containers,
     # /app/output is mounted to the host machine (e.g. -v ./output:/app/output or docker-compose)
     # ensuring discovery results persist across container restarts.
@@ -291,11 +318,12 @@ def main():
     # Handle Discover Mode or Autonomous Trending Discovery
     if args.discover or args.trending or not args.topic:
         print("\n" + "=" * 65)
-        print("🔭 NASA VIRAL TREND HUNTER  |  Real-Time Discovery Engine")
+        print("🔭 NASA VIRAL TREND HUNTER  |  Discovery & Archive Engine")
         print("=" * 65)
 
         ranked_topics = None
         used_cache = False
+        has_time_filter = bool(args.date or args.days_back or args.archive)
 
         # Attempt to load from persistent cache if not forcing refresh
         if not args.refresh_trends:
@@ -306,10 +334,24 @@ def main():
                         cache_lang = cache_data.get("language")
                         cache_time = cache_data.get("timestamp", 0)
                         cached_items = cache_data.get("ranked_topics", [])
+                        cache_target_date = cache_data.get("target_date")
+                        cache_days_back = cache_data.get("days_back")
+                        cache_archive = cache_data.get("archive", False)
 
-                        # Cache is valid if same language, not older than 24h, and non-empty
+                        # Validate filter match if specific historical argument was supplied
+                        filter_match = True
+                        if has_time_filter:
+                            if args.date and cache_target_date != args.date:
+                                filter_match = False
+                            if args.days_back and cache_days_back != args.days_back:
+                                filter_match = False
+                            if args.archive and not cache_archive:
+                                filter_match = False
+
+                        # Cache is valid if same language, filter match, not older than 24h, and non-empty
                         if (
-                            cache_lang == args.language
+                            filter_match
+                            and cache_lang == args.language
                             and (time.time() - cache_time < 86400)
                             and isinstance(cached_items, list)
                             and len(cached_items) > 0
@@ -319,6 +361,12 @@ def main():
                             mins_ago = int((time.time() - cache_time) / 60)
                             time_str = f"hace {mins_ago} min" if mins_ago > 0 else "hace un momento"
                             print(f"📦 Usando descubrimientos clasificados en caché ({time_str}, idioma: {args.language}).")
+                            if cache_target_date:
+                                print(f"   📅 Fecha objetivo archivada: {cache_target_date}")
+                            elif cache_days_back:
+                                print(f"   📅 Ventana archivada: hace {cache_days_back} días")
+                            elif cache_archive:
+                                print("   🏛️ Archivo histórico: gemas legendarias (1995-presente)")
                             print(f"   📂 Archivo: {c_file.name} (persistente en Docker)")
                             if args.discover:
                                 print("💡 (Usa '--refresh' para forzar una nueva búsqueda en vivo)")
@@ -326,9 +374,22 @@ def main():
 
         # If cache was not used (or forced refresh), fetch fresh from NASA and evaluate with AI
         if not ranked_topics:
-            print("📡 Conectando con las APIs oficiales de la NASA (APOD & Mission Library)...")
+            if args.date:
+                print(f"📡 Conectando con NASA APOD & Library (Archivo Histórico: fecha {args.date})...")
+            elif args.days_back:
+                print(f"📡 Conectando con NASA APOD & Library (Archivo Histórico: hace {args.days_back} días)...")
+            elif args.archive:
+                print("📡 Conectando con el Archivo Histórico de la NASA (1995 - presente: gemas legendarias)...")
+            else:
+                print("📡 Conectando con las APIs oficiales de la NASA (APOD & Mission Library)...")
+
             trends_provider = NASATrendsProvider()
-            candidates = trends_provider.get_trending_candidates(limit=8)
+            candidates = trends_provider.get_trending_candidates(
+                limit=8,
+                target_date=args.date,
+                days_back=args.days_back,
+                random_archive=args.archive
+            )
             print(f"✅ Se obtuvieron {len(candidates)} eventos y descubrimientos científicos oficiales.")
 
             print("🧠 Evaluando potencial viral con IA (Curiosidad, Ganchabilidad, Espectáculo Visual)...")
@@ -349,6 +410,9 @@ def main():
             cache_payload = {
                 "timestamp": cache_time if ('cache_time' in locals() and cache_time) else time.time(),
                 "language": args.language,
+                "target_date": getattr(args, "date", None),
+                "days_back": getattr(args, "days_back", None),
+                "archive": bool(getattr(args, "archive", False)),
                 "ranked_topics": ranked_topics
             }
             save_json(cache_payload, primary_cache_file)
@@ -360,13 +424,21 @@ def main():
         # IF DISCOVER MODE: Show rich CLI table and exit
         if args.discover:
             print("\n" + "=" * 65)
-            print("🌟 DESCUBRIMIENTOS DE LA NASA CLASIFICADOS POR POTENCIAL VIRAL")
+            header_title = "🌟 DESCUBRIMIENTOS DE LA NASA CLASIFICADOS POR POTENCIAL VIRAL"
+            if args.date:
+                header_title += f" [Fecha: {args.date}]"
+            elif args.days_back:
+                header_title += f" [Hace {args.days_back} días]"
+            elif args.archive:
+                header_title += " [Archivo Histórico 1995-Presente]"
+            print(header_title)
             print("=" * 65)
             for i, item in enumerate(ranked_topics):
                 score = item.get("viral_score", 0.0)
                 stars = "🔥" if score >= 9.0 else "⭐"
+                formatted_d = format_date_display(item.get("date"), language=args.language) or item.get("date", "Reciente")
                 print(f"\n[{i + 1}] {stars} Puntuación Viral: {score:.1f}/10  |  {item.get('adapted_title')}")
-                print(f"    📡 Fuente:       {item.get('source')} ({item.get('date', 'Reciente')})")
+                print(f"    📡 Fuente:       {item.get('source')} ({formatted_d})")
                 print(f"    🪝 Gancho Viral:  \"{item.get('suggested_hook')}\"")
                 print(f"    💡 Razón Viral:   {item.get('viral_reason')}")
                 print(f"    📖 Resumen NASA:  {item.get('scientific_summary')}")
@@ -374,9 +446,13 @@ def main():
             print("💾 Lista de descubrimientos guardada en output/.trending_cache.json")
             print("   (Persistente entre contenedores Docker gracias al volumen ./output)")
             print("💡 Para generar un video de cualquier opción de la lista con total precisión:")
-            print("   python main.py --trending --top-choice 1")
-            print("   python main.py --trending --top-choice 2")
-            print("   (En Docker: docker compose run nasa-shorts --trending --top-choice 2)")
+            print("   python main.py --top-choice 1")
+            print("   python main.py --top-choice 2")
+            print("   (En Docker: docker compose run nasa-shorts --top-choice 2)")
+            print("💡 Para explorar otras fechas pasadas del archivo:")
+            print("   python main.py --discover --date 2024-04-08")
+            print("   python main.py --discover --days-back 30")
+            print("   python main.py --discover --archive   (gemas aleatorias de 1995 a hoy)")
             print("   (o usa '--refresh' para forzar una nueva consulta en vivo a la NASA)")
             print("=" * 65 + "\n")
             return
@@ -602,15 +678,34 @@ def main():
                 "attribution_text": "NASA Science Archive" if is_space_topic else "Stock Visual"
             })
 
-    # 4. Build Source Attribution Badges for Overlay
+    # 4. Build Source Attribution Badges for Overlay (with date and entrance duration)
     source_attributions = []
     for timing, meta in zip(scene_timings, assets_metadata):
         if meta and meta.get("attribution_text"):
+            base_attr = meta.get("attribution_text")
+            date_raw = meta.get("date_created") or meta.get("date")
+            formatted_date = (
+                format_date_display(date_raw, language=args.language)
+                if (not getattr(args, "no_badge_date", False) and date_raw)
+                else None
+            )
+
+            if formatted_date:
+                badge_text = f"{base_attr} · {formatted_date}"
+            else:
+                badge_text = base_attr
+
+            scene_start = float(timing.get("start", 0.0))
+            scene_dur = float(timing.get("duration", 5.0))
+            display_dur = min(2.8, max(1.5, scene_dur - 0.3))
+
             source_attributions.append({
                 "scene_id": timing.get("scene_id"),
-                "start": timing.get("start", 0.0),
-                "end": timing.get("end", timing.get("start", 0.0) + 5.0),
-                "text": meta.get("attribution_text"),
+                "start": scene_start,
+                "end": scene_start + display_dur,
+                "duration": scene_dur,
+                "text": badge_text,
+                "date": formatted_date,
                 "is_primary": meta.get("is_primary_discovery", False)
             })
 

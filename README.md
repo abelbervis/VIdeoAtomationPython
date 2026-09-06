@@ -155,16 +155,45 @@ Puedes consultar en tiempo real las novedades astronómicas de la NASA evaluadas
 python main.py --discover
 
 # 2. Generar el video de la opción elegida (garantizando exactamente el tema de la lista):
-python main.py --trending --top-choice 1   # Genera la opción #1
-python main.py --trending --top-choice 2   # Genera la opción #2
+python main.py --top-choice 1   # Genera la opción #1
+python main.py --top-choice 2   # Genera la opción #2
 
 # 3. Si deseas forzar una nueva consulta en vivo a la NASA ignorando la caché previa:
 python main.py --discover --refresh
 # o directamente:
-python main.py --trending --top-choice 1 --refresh
+python main.py --top-choice 1 --refresh
 ```
 
-> **Sincronización de Sesión**: La lista generada con `--discover` se guarda en una caché local `.trending_cache.json`. Al ejecutar `python main.py --trending --top-choice <N>`, el sistema reutiliza la lista exacta de tu consulta previa para que la opción elegida coincida al 100%.
+> **Sincronización de Sesión**: La lista generada con `--discover` se guarda en `output/.trending_cache.json`. Al ejecutar `--top-choice <N>`, el sistema reutiliza la lista exacta de tu consulta previa para que la opción elegida coincida al 100% (incluso entre ejecuciones de contenedores en Docker).
+
+### 5. Navegación Histórica en el Archivo de la NASA (`--date`, `--days-back`, `--archive`)
+¿Te interesa hablar de eventos o descubrimientos astronómicos del pasado aunque no sean recientes? Puedes viajar en el tiempo a cualquier fecha desde **junio de 1995 hasta hoy**:
+
+```bash
+# 1. Explorar una fecha específica en el pasado (por ejemplo, el eclipse de abril de 2024 o el sobrevuelo de Plutón en 2015):
+python main.py --discover --date 2024-04-08
+python main.py --discover --date 2015-07-14
+
+# 2. Navegar N días hacia atrás en el pasado:
+python main.py --discover --days-back 30   # Descubrimientos de hace 1 mes
+python main.py --discover --days-back 180  # Descubrimientos de hace 6 meses
+python main.py --discover --days-back 365  # Descubrimientos de hace 1 año
+
+# 3. Explorar gemas aleatorias legendarias a lo largo de 30 años de archivo de la NASA:
+python main.py --discover --archive
+
+# 4. Generar el video directamente a partir del descubrimiento histórico elegido:
+python main.py --top-choice 2
+
+# En Docker (con docker compose):
+docker compose run --rm nasa-shorts --discover --date 2024-04-08
+docker compose run --rm nasa-shorts --top-choice 2
+```
+
+### 6. Atribución con Fecha en Pantalla
+Cada imagen o video de la NASA incluye automáticamente una elegante insignia semi-transparente en la esquina superior izquierda con la fuente y la **fecha exacta de captura o publicación** (por ejemplo: `NASA APOD · 8 Abr 2024` o `NASA Image & Video Library · 14 Jul 2015`).
+- La insignia aparece con un suave desvanecimiento (`fade-in`), permanece en pantalla durante **2.8 segundos** para brindar el crédito y contexto temporal, y luego se desvanece suavemente para no saturar la pantalla ni distraer al espectador de la narrativa.
+- Si prefieres desactivar la fecha en la insignia, puedes usar el argumento `--no-badge-date`.
 
 ### 5. Usar la API de Pexels (Stock Videos en 9:16 Vertical & Fotos HD)
 Puedes generar videos usando la biblioteca oficial de **Pexels** (ideal para temas de naturaleza, océanos, tecnología, ciudades, física, etc.):
