@@ -343,6 +343,8 @@ class PexelsProvider:
                     print(f"  ⬇️ Downloading Pexels video: '{item['title']}' by {item['photographer']}...")
                     success = download_file(best_url, dest_file)
                     if success:
+                        photog = (item.get('photographer') or '').strip()
+                        attr_text = f"Pexels | {photog}" if photog and len(photog) <= 22 else "Pexels"
                         meta = {
                             "scene_index": scene_idx,
                             "provider": "pexels",
@@ -354,6 +356,7 @@ class PexelsProvider:
                             "description": f"Video by {item['photographer']} on Pexels",
                             "photographer_or_credit": item["photographer"],
                             "photographer_url": item["photographer_url"],
+                            "attribution_text": attr_text,
                             "license": item["license"],
                             "local_file": str(dest_file.name)
                         }
@@ -373,6 +376,8 @@ class PexelsProvider:
                 print(f"  ⬇️ Downloading Pexels photo: '{item['title']}' by {item['photographer']}...")
                 success = download_file(best_url, dest_file)
                 if success:
+                    photog = (item.get('photographer') or '').strip()
+                    attr_text = f"Pexels | {photog}" if photog and len(photog) <= 22 else "Pexels"
                     meta = {
                         "scene_index": scene_idx,
                         "provider": "pexels",
@@ -384,6 +389,7 @@ class PexelsProvider:
                         "description": f"Photo by {item['photographer']} on Pexels",
                         "photographer_or_credit": item["photographer"],
                         "photographer_url": item["photographer_url"],
+                        "attribution_text": attr_text,
                         "license": item["license"],
                         "local_file": str(dest_file.name)
                     }

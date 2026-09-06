@@ -1,14 +1,15 @@
 {
   "scene_index": 2,
   "provider": "nasa",
-  "title": "Jupiter's Bands",
-  "nasa_id": "PIA24818",
+  "title": "Rho Ophiuchi Imaged by IRAS",
+  "nasa_id": "PIA26271",
   "media_type": "image",
-  "source_url": "https://images-assets.nasa.gov/image/PIA24818/PIA24818~orig.jpg",
-  "description": "Jupiter's banded appearance is created by the cloud-forming \"weather layer.\" In this composite image, the image on the left show's Jupiter's thermal energy being emitted in infrared light, with dark cloudy bands appearing as silhouettes against Jupiter's thermal glow. The image on the right shows Ju",
+  "source_url": "https://images-assets.nasa.gov/image/PIA26271/PIA26271~orig.jpg",
+  "description": "This image of the star-forming region Rho Ophiuchi was taken in 1983 by the Infrared Astronomical Satellite (IRAS), the first infrared telescope ever launched into Earth orbit. Infrared light refers to wavelengths slightly longer than what human eyes can see. Most infrared wavelengths are blocked by",
   "center": "JPL",
-  "photographer_or_credit": "International Gemini Observatory/NOIRLab/NSF/AURA/NASA/ESA, M.H. Wong and I. de Pater (UC Berkeley) et al.",
-  "date_created": "2021-10-28T00:00:00Z",
+  "photographer_or_credit": "NASA/JPL-Caltech",
+  "date_created": "2023-12-22T00:00:00Z",
+  "attribution_text": "NASA | NASA/JPL-Caltech",
   "license": "Public Domain - NASA Content Policy: NASA material is generally not copyrighted and may be used for educational or informational purposes without explicit permission.",
   "local_file": "scene_02.jpg"
 }

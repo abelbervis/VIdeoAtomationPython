@@ -65,6 +65,8 @@ class NASATrendsProvider:
                 date_str = item.get("date", "")
                 media_type = item.get("media_type", "image")
                 media_url = item.get("hdurl") or item.get("url")
+                copyright_val = (item.get("copyright") or "").strip().replace("\n", " ")
+                credit_val = copyright_val if copyright_val else "NASA / APOD"
 
                 candidates.append({
                     "id": f"apod_{date_str or title[:15]}",
@@ -74,6 +76,7 @@ class NASATrendsProvider:
                     "scientific_text": explanation,
                     "media_type": media_type,
                     "media_url": media_url,
+                    "credit": credit_val,
                     "keywords": [title.lower(), "space", "astronomy"]
                 })
 
@@ -114,6 +117,12 @@ class NASATrendsProvider:
 
                 media_type = d.get("media_type", "image")
                 date_created = d.get("date_created", "")[:10]
+                center = (d.get("center") or "NASA").strip()
+                photographer = (d.get("photographer") or d.get("secondary_creator") or "").strip()
+                credit_val = f"NASA / {center}" if center else "NASA"
+                if photographer and photographer.lower() != center.lower():
+                    credit_val = f"{credit_val} ({photographer})"
+
                 raw_keywords = d.get("keywords") or []
                 if isinstance(raw_keywords, str):
                     raw_keywords = [raw_keywords]
@@ -126,6 +135,8 @@ class NASATrendsProvider:
                     "scientific_text": desc,
                     "media_type": media_type,
                     "nasa_id": nasa_id,
+                    "center": center,
+                    "credit": credit_val,
                     "keywords": [k for k in raw_keywords if isinstance(k, str)][:5]
                 })
         except Exception as e:

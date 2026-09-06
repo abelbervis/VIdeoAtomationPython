@@ -18,6 +18,7 @@ from pathlib import Path
 
 from config import (
     BASE_DIR,
+    ASSETS_DIR,
     OUTPUT_DIR,
     TEMP_DIR,
     DEFAULT_DURATION,
@@ -316,6 +317,10 @@ def main():
         print(f"   Título:    {args.topic}")
         print(f"   Viralidad: {winning.get('viral_score', 0):.1f}/10  ({winning.get('viral_reason')})")
         print(f"   Gancho:    \"{winning.get('suggested_hook')}\"")
+        if winning.get("source"):
+            print(f"   Fuente:    {winning.get('source')}")
+        if winning.get("credit"):
+            print(f"   Crédito:   {winning.get('credit')}")
         print("─" * 65)
 
     print("=" * 65)
@@ -346,6 +351,31 @@ def main():
         print("👉 You can get a free API key in 30 seconds at: https://www.pexels.com/api/")
         print("👉 Add it to your .env file: PEXELS_API_KEY=\"your_key_here\" or pass --pexels-key.\n")
         sys.exit(1)
+
+    # 0.2 PRIORITIZED FLOW: Download real discovery media at the very beginning
+    primary_asset_file = None
+    primary_asset_meta = None
+    if trending_metadata:
+        primary_asset_file, primary_asset_meta = nasa.fetch_primary_discovery_asset(
+            discovery_meta=trending_metadata,
+            scene_idx=1,
+            save_dir=ASSETS_DIR,
+            orientation=vid_orientation
+        )
+        if primary_asset_meta:
+            # Inform ScriptGenerator that authentic NASA media is ready for Scene 1
+            p_type = primary_asset_meta.get("media_type", "visual")
+            p_title = primary_asset_meta.get("title", args.topic)
+            p_source = primary_asset_meta.get("source", "NASA")
+            grounding_note = (
+                f"\n[OFFICIAL NASA DISCOVERY VISUAL]: An authentic NASA {p_type} of '{p_title}' ({p_source}) "
+                f"has been obtained and will be displayed in Scene 1. Hook the audience immediately in Scene 1 "
+                f"by referencing what they are seeing in this official NASA observation."
+            )
+            if nasa_grounded_context:
+                nasa_grounded_context += grounding_note
+            else:
+                nasa_grounded_context = grounding_note
 
     # 1. Generate Structured AI Script
     script_gen = ScriptGenerator(
@@ -378,29 +408,7 @@ def main():
     tts_mgr = TTSManager(provider_type=TTS_PROVIDER, voice=args.voice, language=args.language)
     narration_audio, scene_timings, total_duration = tts_mgr.synthesize_script(script)
 
-    # 3. Generate Subtitles (SRT & ASS adapted to canvas)
-    dynamic_subs = args.dynamic_subtitles and not args.no_dynamic_subtitles
-    sub_gen = SubtitleGenerator(
-        width=vid_width,
-        height=vid_height,
-        margin_bottom=sub_margin,
-        font_size=sub_font_size,
-        dynamic_highlight=dynamic_subs
-    )
-    srt_path, ass_path = sub_gen.generate_subtitles(
-        scene_timings,
-        language=args.language,
-        custom_font=args.font
-    )
-
-    # 4. Synthesize Sound Effects Track (SFX)
-    sfx_enabled = args.sfx and not args.no_sfx
-    sfx_track = None
-    if sfx_enabled:
-        sfx_mgr = SFXManager()
-        sfx_track = sfx_mgr.build_sfx_timeline(scene_timings, total_duration=total_duration)
-
-    # 5. Search and Download Visual Media Assets (NASA or Pexels)
+    # 3. Search and Download Visual Media Assets (NASA or Pexels)
     print(f"\n🔭 Fetching media assets (Mode: {chosen_provider.upper()})...")
     scene_assets = []
     assets_metadata = []
@@ -426,7 +434,13 @@ def main():
         asset_file = None
         meta = None
 
-        if chosen_provider == "pexels":
+        # Check if Scene 1 was pre-downloaded with authentic NASA discovery media
+        if idx == 1 and primary_asset_file and primary_asset_file.exists() and primary_asset_meta:
+            print(f"  ✅ Escena 01 asignada con el medio oficial del descubrimiento: {primary_asset_file.name}")
+            print(f"     📡 Fuente / Atribución: {primary_asset_meta.get('attribution_text', 'NASA')}")
+            asset_file = primary_asset_file
+            meta = primary_asset_meta
+        elif chosen_provider == "pexels":
             asset_file, meta = pexels.fetch_scene_asset(
                 scene_idx=idx,
                 keywords=keywords,
@@ -489,6 +503,48 @@ def main():
                 "is_video": False,
                 "duration": timing["duration"]
             })
+            assets_metadata.append({
+                "scene_index": idx,
+                "provider": "synthetic",
+                "title": f"Scene {idx}",
+                "media_type": "image",
+                "attribution_text": "NASA Science Archive" if is_space_topic else "Stock Visual"
+            })
+
+    # 4. Build Source Attribution Badges for Overlay
+    source_attributions = []
+    for timing, meta in zip(scene_timings, assets_metadata):
+        if meta and meta.get("attribution_text"):
+            source_attributions.append({
+                "scene_id": timing.get("scene_id"),
+                "start": timing.get("start", 0.0),
+                "end": timing.get("end", timing.get("start", 0.0) + 5.0),
+                "text": meta.get("attribution_text"),
+                "is_primary": meta.get("is_primary_discovery", False)
+            })
+
+    # 5. Generate Subtitles (SRT & ASS adapted to canvas with Source Badges)
+    dynamic_subs = args.dynamic_subtitles and not args.no_dynamic_subtitles
+    sub_gen = SubtitleGenerator(
+        width=vid_width,
+        height=vid_height,
+        margin_bottom=sub_margin,
+        font_size=sub_font_size,
+        dynamic_highlight=dynamic_subs
+    )
+    srt_path, ass_path = sub_gen.generate_subtitles(
+        scene_timings,
+        language=args.language,
+        custom_font=args.font,
+        source_attributions=source_attributions
+    )
+
+    # 6. Synthesize Sound Effects Track (SFX)
+    sfx_enabled = args.sfx and not args.no_sfx
+    sfx_track = None
+    if sfx_enabled:
+        sfx_mgr = SFXManager()
+        sfx_track = sfx_mgr.build_sfx_timeline(scene_timings, total_duration=total_duration)
 
     # 6. Prepare Background Music (if available)
     music_mgr = MusicManager()

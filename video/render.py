@@ -362,7 +362,7 @@ class VideoRenderer:
             "-map", "[vout]",
             "-map", "[aout]",
             "-c:v", VIDEO_CODEC,
-            "-preset", "fast",
+            "-preset", "veryfast",
             "-b:v", VIDEO_BITRATE,
             "-pix_fmt", "yuv420p",
             "-c:a", AUDIO_CODEC,
@@ -374,8 +374,9 @@ class VideoRenderer:
 
         try:
             subprocess.run(final_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-        except subprocess.CalledProcessError:
-            print("  ⚠️ Subtitle filter warning, rendering fallback stream...")
+        except subprocess.CalledProcessError as e:
+            err_msg = e.stderr.decode("utf-8", errors="replace") if e.stderr else str(e)
+            print(f"  ⚠️ Subtitle filter warning ({err_msg[:120]}), rendering fallback stream...")
             fallback_cmd = [
                 "ffmpeg", "-y",
                 "-i", str(raw_video_path),

@@ -196,7 +196,12 @@ class ViralTrendEvaluator:
             req = urllib.request.Request(
                 url,
                 data=json.dumps(payload).encode("utf-8"),
-                headers={"Content-Type": "application/json"},
+                headers={
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                    "User-Agent": "NASA-Shorts-Generator/1.0",
+                    "Connection": "close"
+                },
                 method="POST"
             )
             with urllib.request.urlopen(req, timeout=35) as resp:

@@ -188,6 +188,12 @@ class NASAProvider:
                 success = download_file(best_url, dest_file)
 
                 if success:
+                    photographer = candidate.get("photographer") or candidate.get("center") or "NASA"
+                    if photographer and len(photographer) <= 24 and photographer.lower() != "nasa":
+                        attr_text = f"NASA | {photographer}"
+                    else:
+                        attr_text = "NASA Library"
+
                     meta = {
                         "scene_index": scene_idx,
                         "provider": "nasa",
@@ -199,6 +205,7 @@ class NASAProvider:
                         "center": candidate["center"],
                         "photographer_or_credit": candidate["photographer"],
                         "date_created": candidate["date_created"],
+                        "attribution_text": attr_text,
                         "license": candidate["license"],
                         "local_file": str(dest_file.name)
                     }
@@ -206,4 +213,160 @@ class NASAProvider:
                     return dest_file, meta
 
         print(f"  ❌ Could not retrieve NASA asset for scene {scene_idx}.")
+        return None, None
+
+    def fetch_primary_discovery_asset(
+        self,
+        discovery_meta: Dict[str, Any],
+        scene_idx: int = 1,
+        save_dir: Path = ASSETS_DIR,
+        orientation: Optional[str] = None
+    ) -> Tuple[Optional[Path], Optional[Dict[str, Any]]]:
+        """
+        Download the authentic official media asset from the NASA discovery/trending event
+        at the very beginning of the pipeline.
+        Tries:
+        1. Direct APOD / NASA media_url if available.
+        2. NASA Library manifest via nasa_id if available.
+        3. Search NASA Library using exact discovery title or keywords.
+        """
+        save_dir = Path(save_dir)
+        save_dir.mkdir(parents=True, exist_ok=True)
+
+        title = discovery_meta.get("title", "NASA Discovery")
+        media_type = discovery_meta.get("media_type", "image")
+        media_url = discovery_meta.get("media_url")
+        source = discovery_meta.get("source", "NASA")
+        date_str = discovery_meta.get("date", "")
+        credit = discovery_meta.get("credit") or discovery_meta.get("photographer") or "NASA"
+        nasa_id = discovery_meta.get("nasa_id")
+
+        print(f"\n🛰️  DESCARGANDO MEDIO OFICIAL DEL DESCUBRIMIENTO AL INICIO...")
+        print(f"   Título:   '{title}'")
+        print(f"   Tipo:     {media_type.upper()}")
+        print(f"   Fuente:   {source}")
+        if credit:
+            print(f"   Crédito:  {credit}")
+
+        # Determine attribution badge text (concise, <= 32 chars for mobile screen overlay)
+        if "apod" in source.lower():
+            if credit and credit.lower() not in ["nasa", "nasa / apod"] and len(credit) <= 24:
+                attribution_text = f"NASA APOD | {credit}"
+            else:
+                attribution_text = "NASA APOD"
+        elif "webb" in title.lower() or "webb" in source.lower():
+            attribution_text = "NASA / ESA Webb"
+        elif "hubble" in title.lower():
+            attribution_text = "NASA / ESA Hubble"
+        elif credit and len(credit) <= 24 and credit.lower() != "nasa":
+            attribution_text = f"NASA | {credit}"
+        else:
+            attribution_text = "NASA Oficial"
+
+        # Attempt 1: Direct media_url (APOD high-resolution image or direct mp4)
+        if media_url and not any(embed in media_url.lower() for embed in ["youtube.com", "youtu.be", "vimeo.com"]):
+            ext = ".mp4" if media_type == "video" else ".jpg"
+            dest_file = save_dir / f"scene_{scene_idx:02d}{ext}"
+            meta_file = save_dir / f"scene_{scene_idx:02d}.json"
+
+            print(f"  ⬇️ Descargando archivo multimedia original: {media_url[:75]}...")
+            if download_file(media_url, dest_file):
+                meta = {
+                    "scene_index": scene_idx,
+                    "provider": "nasa_official_discovery",
+                    "is_primary_discovery": True,
+                    "title": title,
+                    "nasa_id": nasa_id or f"apod_{date_str}",
+                    "media_type": media_type,
+                    "source_url": media_url,
+                    "source": source,
+                    "description": discovery_meta.get("scientific_text", "")[:300],
+                    "center": discovery_meta.get("center", "NASA"),
+                    "photographer_or_credit": credit,
+                    "date_created": date_str,
+                    "attribution_text": attribution_text,
+                    "license": NASA_PUBLIC_LICENSE_NOTE,
+                    "local_file": str(dest_file.name)
+                }
+                save_json(meta, meta_file)
+                print(f"  ✅ Recurso oficial descargado con éxito: {dest_file.name} [{attribution_text}]")
+                return dest_file, meta
+
+        # Attempt 2: Direct NASA Library asset via nasa_id
+        if nasa_id:
+            direct_urls = self.get_asset_direct_urls(nasa_id)
+            best_url = self.select_best_url(direct_urls, media_type)
+            if best_url:
+                ext = ".mp4" if media_type == "video" else ".jpg"
+                dest_file = save_dir / f"scene_{scene_idx:02d}{ext}"
+                meta_file = save_dir / f"scene_{scene_idx:02d}.json"
+
+                print(f"  ⬇️ Descargando activo oficial desde NASA Library (ID: {nasa_id})...")
+                if download_file(best_url, dest_file):
+                    meta = {
+                        "scene_index": scene_idx,
+                        "provider": "nasa_official_discovery",
+                        "is_primary_discovery": True,
+                        "title": title,
+                        "nasa_id": nasa_id,
+                        "media_type": media_type,
+                        "source_url": best_url,
+                        "source": source,
+                        "description": discovery_meta.get("scientific_text", "")[:300],
+                        "center": discovery_meta.get("center", "NASA"),
+                        "photographer_or_credit": credit,
+                        "date_created": date_str,
+                        "attribution_text": attribution_text,
+                        "license": NASA_PUBLIC_LICENSE_NOTE,
+                        "local_file": str(dest_file.name)
+                    }
+                    save_json(meta, meta_file)
+                    print(f"  ✅ Recurso oficial descargado con éxito: {dest_file.name} [{attribution_text}]")
+                    return dest_file, meta
+
+        # Attempt 3: Query NASA Library using discovery title and keywords
+        print(f"  🔍 Buscando en NASA Library por '{title}'...")
+        keywords = discovery_meta.get("keywords", [])
+        search_queries = [title]
+        if keywords:
+            search_queries.append(" ".join(keywords[:2]))
+
+        for q in search_queries:
+            items = self.search(q, media_types=[media_type], page_size=5)
+            if not items and media_type == "video":
+                items = self.search(q, media_types=["image"], page_size=5)
+            if items:
+                cand = items[0]
+                c_urls = self.get_asset_direct_urls(cand["nasa_id"])
+                best_url = self.select_best_url(c_urls, cand["media_type"])
+                if best_url:
+                    c_type = cand["media_type"]
+                    ext = ".mp4" if c_type == "video" else ".jpg"
+                    dest_file = save_dir / f"scene_{scene_idx:02d}{ext}"
+                    meta_file = save_dir / f"scene_{scene_idx:02d}.json"
+
+                    print(f"  ⬇️ Descargando recurso oficial encontrado: '{cand['title']}'...")
+                    if download_file(best_url, dest_file):
+                        meta = {
+                            "scene_index": scene_idx,
+                            "provider": "nasa_official_discovery",
+                            "is_primary_discovery": True,
+                            "title": cand["title"],
+                            "nasa_id": cand["nasa_id"],
+                            "media_type": c_type,
+                            "source_url": best_url,
+                            "source": source,
+                            "description": cand["description"][:300],
+                            "center": cand["center"],
+                            "photographer_or_credit": cand["photographer"] or credit,
+                            "date_created": cand["date_created"] or date_str,
+                            "attribution_text": attribution_text,
+                            "license": NASA_PUBLIC_LICENSE_NOTE,
+                            "local_file": str(dest_file.name)
+                        }
+                        save_json(meta, meta_file)
+                        print(f"  ✅ Recurso oficial descargado con éxito: {dest_file.name} [{attribution_text}]")
+                        return dest_file, meta
+
+        print("  ⚠️ No se pudo descargar el medio oficial específico al inicio; se buscará en el paso de escenas.")
         return None, None

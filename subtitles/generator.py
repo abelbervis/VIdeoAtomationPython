@@ -175,11 +175,13 @@ class SubtitleGenerator:
         scene_timings: List[Dict[str, Any]],
         max_words_per_line: Optional[int] = None,
         language: str = "es",
-        custom_font: Optional[str] = None
+        custom_font: Optional[str] = None,
+        source_attributions: Optional[List[Dict[str, Any]]] = None
     ) -> Tuple[Path, Path]:
         """
         Generate both SRT and styled ASS subtitle files.
         Splits scene narrations into short, rhythmic chunks adapted to canvas aspect ratio.
+        Optionally renders professional source attribution badges (e.g. NASA APOD, NASA Library).
         """
         subtitle_chunks: List[Dict[str, Any]] = []
 
@@ -230,7 +232,13 @@ class SubtitleGenerator:
         ass_path = self.output_dir / "subtitles.ass"
 
         self._write_srt(subtitle_chunks, srt_path)
-        self._write_ass(subtitle_chunks, ass_path, language=language, custom_font=custom_font)
+        self._write_ass(
+            subtitle_chunks,
+            ass_path,
+            language=language,
+            custom_font=custom_font,
+            source_attributions=source_attributions
+        )
 
         print(f"  📝 Subtitles generated: {srt_path.name} & {ass_path.name} ({len(subtitle_chunks)} cues, dynamic={self.dynamic_highlight})")
         return srt_path, ass_path
@@ -250,10 +258,12 @@ class SubtitleGenerator:
         chunks: List[Dict[str, Any]],
         file_path: Path,
         language: str = "es",
-        custom_font: Optional[str] = None
+        custom_font: Optional[str] = None,
+        source_attributions: Optional[List[Dict[str, Any]]] = None
     ) -> None:
         """
-        Write ASS format with custom styling and dynamic word-by-word active highlight.
+        Write ASS format with custom styling, dynamic word-by-word active highlight,
+        and high-visibility semi-transparent source attribution badges.
         """
         has_cjk = any(is_cjk(c.get("text", "")) for c in chunks)
         is_chinese = has_cjk or (language or "").lower().startswith("zh")
@@ -279,6 +289,23 @@ class SubtitleGenerator:
         if not hl_color.endswith("&"):
             hl_color = f"{hl_color}&"
 
+        # Determine dimensions for SourceBadge (top-left safe zone badge)
+        if self.width < self.height:
+            # Vertical (Shorts/TikTok/Reels)
+            badge_font_size = 28
+            badge_margin_x = 60
+            badge_margin_y = 110
+        elif self.width > self.height:
+            # Landscape
+            badge_font_size = 22
+            badge_margin_x = 50
+            badge_margin_y = 50
+        else:
+            # Square
+            badge_font_size = 24
+            badge_margin_x = 50
+            badge_margin_y = 60
+
         header = f"""[Script Info]
 ScriptType: v4.00+
 PlayResX: {self.width}
@@ -289,12 +316,33 @@ ScaledBorderAndShadow: yes
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
 Style: ShortsDefault,{font_family},{font_size},{SUBTITLE_PRIMARY_COLOR},&H000000FF,{SUBTITLE_OUTLINE_COLOR},&H80000000,{bold_val},0,0,0,100,100,1.2,0,1,{outline_val},2.2,2,80,80,{self.margin_bottom},1
+Style: SourceBadge,{font_family},{badge_font_size},&H00FFFFFF,&H000000FF,&H80000000,&H90101010,1,0,0,0,100,100,0.8,0,3,10,0,7,{badge_margin_x},{badge_margin_x},{badge_margin_y},1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 """
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(header)
+
+            # 1. Write Source Attribution Badges on Layer 1 (Top-Left overlay with smooth fade)
+            if source_attributions:
+                for attr in source_attributions:
+                    raw_attr_text = (attr.get("text") or "").strip()
+                    if not raw_attr_text:
+                        continue
+                    clean_attr_text = raw_attr_text.replace("\n", " ").strip()
+                    clean_attr_text = clean_attr_text.replace("📡", "").strip()
+                    if not any(clean_attr_text.startswith(p) for p in ["NASA", "Fuente:", "Crédito:", "Source:"]):
+                        clean_attr_text = f"NASA | {clean_attr_text}"
+
+                    attr_start = max(0.0, float(attr.get("start", 0.0)))
+                    attr_end = max(attr_start + 1.0, float(attr.get("end", attr_start + 5.0)))
+                    f.write(
+                        f"Dialogue: 1,{format_timestamp_ass(attr_start)},{format_timestamp_ass(attr_end)},"
+                        f"SourceBadge,,0,0,0,,{{\\fad(350,350)}}{clean_attr_text}\n"
+                    )
+
+            # 2. Write Spoken Narration Subtitles on Layer 0 (Bottom Center)
             for chunk in chunks:
                 raw_text = chunk["text"].strip()
                 c_start = chunk["start"]
