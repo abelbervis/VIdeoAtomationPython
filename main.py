@@ -56,7 +56,7 @@ from audio.music import MusicManager
 from audio.sfx import SFXManager
 from subtitles.generator import SubtitleGenerator
 from video.render import VideoRenderer
-from utils.files import sanitize_filename, clean_temp_directory, check_ffmpeg, save_json
+from utils.files import sanitize_filename, clean_temp_directory, check_ffmpeg, save_json, load_json
 
 
 def parse_args():
@@ -87,6 +87,12 @@ def parse_args():
         type=int,
         default=1,
         help="Which ranked viral topic to produce when using --trending (1 = highest viral score, 2 = second, etc.)"
+    )
+    parser.add_argument(
+        "--refresh", "--refresh-trends",
+        dest="refresh_trends",
+        action="store_true",
+        help="Force querying fresh NASA discoveries and re-evaluating with AI, bypassing cached discover results."
     )
     parser.add_argument(
         "--duration",
@@ -261,25 +267,64 @@ def main():
 
     trending_metadata = None
     nasa_grounded_context = None
+    trending_cache_file = BASE_DIR / ".trending_cache.json"
 
     # Handle Discover Mode or Autonomous Trending Discovery
     if args.discover or args.trending or not args.topic:
         print("\n" + "=" * 65)
         print("🔭 NASA VIRAL TREND HUNTER  |  Real-Time Discovery Engine")
         print("=" * 65)
-        print("📡 Conectando con las APIs oficiales de la NASA (APOD & Mission Library)...")
-        trends_provider = NASATrendsProvider()
-        candidates = trends_provider.get_trending_candidates(limit=8)
-        print(f"✅ Se obtuvieron {len(candidates)} eventos y descubrimientos científicos oficiales.")
 
-        print("🧠 Evaluando potencial viral con IA (Curiosidad, Ganchabilidad, Espectáculo Visual)...")
-        evaluator = ViralTrendEvaluator(
-            gemini_key=args.gemini_key,
-            openai_key=args.openai_key,
-            groq_key=args.groq_key,
-            preferred_provider=args.llm
-        )
-        ranked_topics = evaluator.evaluate_candidates(candidates, language=args.language, top_n=5)
+        ranked_topics = None
+        used_cache = False
+
+        # Attempt to load from persistent cache if not forcing refresh
+        if not args.refresh_trends and trending_cache_file.exists():
+            cache_data = load_json(trending_cache_file)
+            if isinstance(cache_data, dict):
+                cache_lang = cache_data.get("language")
+                cache_time = cache_data.get("timestamp", 0)
+                cached_items = cache_data.get("ranked_topics", [])
+
+                # Cache is valid if same language, not older than 24h, and non-empty
+                if (
+                    cache_lang == args.language
+                    and (time.time() - cache_time < 86400)
+                    and isinstance(cached_items, list)
+                    and len(cached_items) > 0
+                ):
+                    ranked_topics = cached_items
+                    used_cache = True
+                    mins_ago = int((time.time() - cache_time) / 60)
+                    time_str = f"hace {mins_ago} min" if mins_ago > 0 else "hace un momento"
+                    print(f"📦 Usando descubrimientos clasificados en caché ({time_str}, idioma: {args.language}).")
+                    if args.discover:
+                        print("💡 (Usa 'python main.py --discover --refresh' para forzar una nueva búsqueda en vivo)")
+
+        # If cache was not used (or forced refresh), fetch fresh from NASA and evaluate with AI
+        if not ranked_topics:
+            print("📡 Conectando con las APIs oficiales de la NASA (APOD & Mission Library)...")
+            trends_provider = NASATrendsProvider()
+            candidates = trends_provider.get_trending_candidates(limit=8)
+            print(f"✅ Se obtuvieron {len(candidates)} eventos y descubrimientos científicos oficiales.")
+
+            print("🧠 Evaluando potencial viral con IA (Curiosidad, Ganchabilidad, Espectáculo Visual)...")
+            evaluator = ViralTrendEvaluator(
+                gemini_key=args.gemini_key,
+                openai_key=args.openai_key,
+                groq_key=args.groq_key,
+                preferred_provider=args.llm
+            )
+            ranked_topics = evaluator.evaluate_candidates(candidates, language=args.language, top_n=5)
+
+            # Persist to cache so subsequent --trending --top-choice runs select the exact same items
+            if ranked_topics:
+                cache_payload = {
+                    "timestamp": time.time(),
+                    "language": args.language,
+                    "ranked_topics": ranked_topics
+                }
+                save_json(cache_payload, trending_cache_file)
 
         # IF DISCOVER MODE: Show rich CLI table and exit
         if args.discover:
@@ -295,9 +340,11 @@ def main():
                 print(f"    💡 Razón Viral:   {item.get('viral_reason')}")
                 print(f"    📖 Resumen NASA:  {item.get('scientific_summary')}")
             print("\n" + "=" * 65)
-            print("💡 Para generar un video sobre cualquiera de ellos de forma 100% automática:")
+            print("💾 Lista de descubrimientos guardada en caché.")
+            print("💡 Para generar un video de cualquier opción de la lista con total precisión:")
             print("   python main.py --trending --top-choice 1")
-            print("   o usa directamente: python main.py --topic \"<título deseado>\"")
+            print("   python main.py --trending --top-choice 2")
+            print("   (o usa: python main.py --discover --refresh para consultar novedades frescas)")
             print("=" * 65 + "\n")
             return
 
@@ -312,6 +359,14 @@ def main():
         args.topic = winning.get("adapted_title") or winning.get("title")
         nasa_grounded_context = winning.get("scientific_text")
 
+        # Display list of choices with clear pointer to the selected one
+        if len(ranked_topics) > 1:
+            print(f"\n📋 Opciones disponibles:")
+            for i, it in enumerate(ranked_topics):
+                mark = "👉 " if i == choice_idx else "   "
+                tag = " [SELECCIONADO]" if i == choice_idx else ""
+                print(f" {mark}[{i + 1}] {it.get('adapted_title')}{tag} ({it.get('viral_score', 0):.1f}/10)")
+
         print("\n" + "─" * 65)
         print(f"🏆 TEMA VIRAL SELECCIONADO POR IA (Opción #{choice_idx + 1} de {len(ranked_topics)}):")
         print(f"   Título:    {args.topic}")
@@ -321,6 +376,9 @@ def main():
             print(f"   Fuente:    {winning.get('source')}")
         if winning.get("credit"):
             print(f"   Crédito:   {winning.get('credit')}")
+        if used_cache:
+            print(f"   ℹ️  Seleccionado exactamente de la lista guardada en --discover")
+            print(f"   💡 (Añade '--refresh' para forzar una nueva consulta en vivo a la NASA)")
         print("─" * 65)
 
     print("=" * 65)

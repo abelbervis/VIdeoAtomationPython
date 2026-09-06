@@ -43,8 +43,11 @@ def load_json(filepath: Path) -> Optional[Any]:
     filepath = Path(filepath)
     if not filepath.exists():
         return None
-    with open(filepath, "r", encoding="utf-8") as f:
-        return json.load(f)
+    try:
+        with open(filepath, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return None
 
 
 def download_file(url: str, dest_path: Path, timeout: int = 30) -> bool:

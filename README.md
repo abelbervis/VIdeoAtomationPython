@@ -139,7 +139,26 @@ python main.py --topic "Marte" --duration 30
 python main.py --topic "James Webb" --duration 45
 ```
 
-### 4. Usar la API de Pexels (Stock Videos en 9:16 Vertical & Fotos HD)
+### 4. Modo Descubrimiento y Tendencias Virales de la NASA (`--discover` y `--trending`)
+Puedes consultar en tiempo real las novedades astronómicas de la NASA evaluadas con IA, o crear videos sobre ellas de forma 100% autónoma:
+
+```bash
+# 1. Explorar la lista clasificada por viralidad (sin renderizar video):
+python main.py --discover
+
+# 2. Generar el video de la opción elegida (garantizando exactamente el tema de la lista):
+python main.py --trending --top-choice 1   # Genera la opción #1
+python main.py --trending --top-choice 2   # Genera la opción #2
+
+# 3. Si deseas forzar una nueva consulta en vivo a la NASA ignorando la caché previa:
+python main.py --discover --refresh
+# o directamente:
+python main.py --trending --top-choice 1 --refresh
+```
+
+> **Sincronización de Sesión**: La lista generada con `--discover` se guarda en una caché local `.trending_cache.json`. Al ejecutar `python main.py --trending --top-choice <N>`, el sistema reutiliza la lista exacta de tu consulta previa para que la opción elegida coincida al 100%.
+
+### 5. Usar la API de Pexels (Stock Videos en 9:16 Vertical & Fotos HD)
 Puedes generar videos usando la biblioteca oficial de **Pexels** (ideal para temas de naturaleza, océanos, tecnología, ciudades, física, etc.):
 
 1. Obtén tu clave gratuita en [pexels.com/api](https://www.pexels.com/api/) (se genera al instante en 30 segundos).

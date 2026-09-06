@@ -12,6 +12,7 @@ prompts/system_prompt.txt
 !prompts/system_prompt.txt.example
 output/
 temp/
+.trending_cache.json
 
 # Python cache and bytecode
 __pycache__/
