@@ -14,6 +14,31 @@ output/
 temp/
 .trending_cache.json
 
+# Downloaded scene media and assets
+assets/scene_*
+assets/*.jpg
+assets/*.jpeg
+assets/*.png
+assets/*.mp4
+assets/*.json
+assets/fonts/*.ttc
+assets/fonts/*.ttf
+assets/music/*
+!assets/music/.gitkeep
+assets/sfx/*
+!assets/sfx/.gitkeep
+
+# Generated audio and video media files
+*.mp3
+*.wav
+*.mp4
+audio/*.mp3
+audio/*.wav
+
+# Generated subtitles
+subtitles/*.ass
+subtitles/*.srt
+
 # Python cache and bytecode
 __pycache__/
 *.py[cod]
