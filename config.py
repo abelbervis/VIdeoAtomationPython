@@ -121,13 +121,30 @@ SUPPORTED_LANGUAGES = {
 
 def get_language_voice(lang: str, custom_voice: str = "") -> str:
     """Return appropriate TTS voice based on selected language and optional override."""
-    if custom_voice and custom_voice.strip():
-        return custom_voice.strip()
-    code = (lang or "es").lower().strip()
+    if custom_voice and str(custom_voice).strip():
+        return str(custom_voice).strip()
+
+    code = (lang or DEFAULT_LANGUAGE or "es").lower().strip()
+
+    # If user configured a default voice in .env or environment via TTS_VOICE
+    env_voice = (DEFAULT_TTS_VOICE or "").strip()
+    if env_voice:
+        voice_lower = env_voice.lower()
+        # 1. Voice explicitly matches requested language code (e.g. "es-MX-JorgeNeural" for "es")
+        if voice_lower.startswith(f"{code}-"):
+            return env_voice
+
+        # 2. Voice without language prefix (e.g. OpenAI "alloy", "nova") or when target matches default language
+        other_lang_prefixes = [f"{c}-" for c in SUPPORTED_LANGUAGES if c != code]
+        has_other_lang = any(voice_lower.startswith(prefix) for prefix in other_lang_prefixes)
+        if not has_other_lang and (code == DEFAULT_LANGUAGE or env_voice != "es-ES-AlvaroNeural"):
+            return env_voice
+
+    # Fallback to language-specific standard voice from SUPPORTED_LANGUAGES
     if code in SUPPORTED_LANGUAGES:
         return SUPPORTED_LANGUAGES[code]["default_voice"]
-    # Fallback to Spanish or custom default voice
-    return DEFAULT_TTS_VOICE or "es-ES-AlvaroNeural"
+
+    return env_voice or "es-ES-AlvaroNeural"
 
 # Video Formats & Aspect Ratio Presets
 VIDEO_FORMATS = {
