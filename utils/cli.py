@@ -182,6 +182,12 @@ def parse_args() -> argparse.Namespace:
         help="Path to custom background MP3 music file (optional)"
     )
     parser.add_argument(
+        "--music-volume",
+        type=float,
+        default=None,
+        help="Background music volume ratio (0.0 to 1.0, default: 0.22 / 22%%)"
+    )
+    parser.add_argument(
         "--keep-temp",
         action="store_true",
         help="Keep intermediate scene clips and audio files in temp/ directory"

@@ -305,7 +305,7 @@ class VideoRenderer:
             transition_duration=transition_duration
         )
 
-        # 2. Prepare audio mixing (Voice 1.0, Music 0.12, SFX volume)
+        # 2. Prepare audio mixing (Voice 1.0, Music ducked, SFX balanced, normalize=0)
         cmd = ["ffmpeg", "-y", "-i", str(raw_video_path), "-i", str(narration_audio)]
         filter_complex = []
 
@@ -315,18 +315,21 @@ class VideoRenderer:
 
         if background_music and background_music.exists():
             cmd.extend(["-i", str(background_music)])
-            audio_parts.append(f"[{input_idx}:a]volume=0.12[bg]")
+            # background_music is already processed with volume ducking in MusicManager.prepare_music
+            audio_parts.append(f"[{input_idx}:a]volume=1.0[bg]")
             mix_inputs.append("[bg]")
             input_idx += 1
 
         if sfx_track and sfx_track.exists():
             cmd.extend(["-i", str(sfx_track)])
-            audio_parts.append(f"[{input_idx}:a]volume={SFX_VOLUME:.2f}[sfx]")
+            # sfx_track is already synthesized with SFX_VOLUME in SFXManager.build_sfx_timeline
+            audio_parts.append(f"[{input_idx}:a]volume=1.0[sfx]")
             mix_inputs.append("[sfx]")
             input_idx += 1
 
         if len(mix_inputs) > 1:
-            mix_chain = "".join(mix_inputs) + f"amix=inputs={len(mix_inputs)}:duration=first[aout]"
+            # normalize=0 prevents amix from cutting stream volumes by 1/N; alimiter prevents digital clipping
+            mix_chain = "".join(mix_inputs) + f"amix=inputs={len(mix_inputs)}:duration=first:dropout_transition=0:normalize=0,alimiter=limit=0.98[aout]"
             filter_complex.append(";".join(audio_parts) + ";" + mix_chain)
         else:
             filter_complex.append("[1:a]volume=1.0[aout]")

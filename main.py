@@ -21,6 +21,7 @@ from audio.music import MusicManager
 from audio.sfx import SFXManager
 from audio.tts import TTSManager
 from config import (
+    MUSIC_VOLUME,
     PEXELS_API_KEY,
     SUPPORTED_LANGUAGES,
     TEMP_DIR,
@@ -176,7 +177,8 @@ def main():
 
     music_mgr = MusicManager()
     bg_track = music_mgr.get_background_track(args.music)
-    prepared_music = music_mgr.prepare_music(bg_track, target_duration=total_duration)
+    m_vol = args.music_volume if args.music_volume is not None else MUSIC_VOLUME
+    prepared_music = music_mgr.prepare_music(bg_track, target_duration=total_duration, volume=m_vol)
 
     # 10. Render Visual Scene Clips
     renderer = VideoRenderer(width=vid_width, height=vid_height, fps=VIDEO_FPS)

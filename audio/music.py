@@ -8,7 +8,7 @@ import subprocess
 from pathlib import Path
 from typing import Optional
 
-from config import MUSIC_DIR, TEMP_DIR
+from config import MUSIC_DIR, TEMP_DIR, MUSIC_VOLUME
 from utils.files import get_media_duration
 
 
@@ -42,7 +42,7 @@ class MusicManager:
         self,
         music_path: Optional[Path],
         target_duration: float,
-        volume: float = 0.12,
+        volume: float = MUSIC_VOLUME,
         output_dir: Path = TEMP_DIR
     ) -> Optional[Path]:
         """

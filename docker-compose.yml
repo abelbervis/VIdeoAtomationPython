@@ -9,5 +9,14 @@ services:
     volumes:
       # Mount output folder to your local machine to get the generated MP4s
       - ./output:/app/output
-      # Optional: Mount assets/music to use your local background music
-      - ./assets/music:/app/assets/music
+      # Mount assets and music
+      - ./assets:/app/assets
+      # Live sync source files so edits take effect immediately without rebuilding image
+      - ./config.py:/app/config.py
+      - ./main.py:/app/main.py
+      - ./audio:/app/audio
+      - ./video:/app/video
+      - ./subtitles:/app/subtitles
+      - ./utils:/app/utils
+      - ./providers:/app/providers
+      - ./ai:/app/ai

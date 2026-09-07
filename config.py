@@ -291,9 +291,10 @@ SUPPORTED_TRANSITIONS = [
     "none",
 ]
 
-# Audio Sound Effects (SFX)
+# Audio Sound Effects (SFX) & Background Music
 SFX_DIR = ASSETS_DIR / "sfx"
 ENABLE_SFX = clean_env("ENABLE_SFX", "true").lower() in ("true", "1", "yes")
 SFX_VOLUME = float(clean_env("SFX_VOLUME", "0.35"))
+MUSIC_VOLUME = float(clean_env("MUSIC_VOLUME", "0.22"))
 
 
