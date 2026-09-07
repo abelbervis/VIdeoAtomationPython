@@ -137,9 +137,9 @@ VIDEO_FORMATS = {
         "height": 1920,
         "aspect_ratio": "9:16",
         "orientation": "portrait",
-        "subtitle_margin_bottom": 280,
-        "subtitle_font_size": 46,
-        "description": "Vertical 9:16 (1080x1920) - YouTube Shorts, TikTok, Instagram Reels",
+        "subtitle_margin_bottom": 540,
+        "subtitle_font_size": 44,
+        "description": "Vertical 9:16 (1080x1920) - YouTube Shorts, TikTok, Instagram Reels (Shorts Safe Zone)",
     },
     "horizontal": {
         "name": "horizontal",
@@ -222,8 +222,8 @@ def resolve_video_format(fmt_input: Optional[str] = None) -> Dict[str, Any]:
                 elif h > w:
                     orientation = "portrait"
                     aspect = f"{w}:{h}"
-                    margin_v = max(60, int(h * 0.15))
-                    font_size = max(24, int(h * 0.024))
+                    margin_v = max(100, int(h * 0.28))
+                    font_size = max(24, int(h * 0.023))
                 else:
                     orientation = "square"
                     aspect = "1:1"

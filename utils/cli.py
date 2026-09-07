@@ -201,6 +201,13 @@ def parse_args() -> argparse.Namespace:
     )
     # Subtitle options
     parser.add_argument(
+        "--subtitle-margin", "--sub-margin",
+        dest="subtitle_margin",
+        type=int,
+        default=None,
+        help="Custom bottom margin for subtitles in pixels (default: auto per format, e.g. 540 for vertical Shorts Safe Zone)"
+    )
+    parser.add_argument(
         "--dynamic-subtitles",
         action="store_true",
         default=SUBTITLE_DYNAMIC,

@@ -59,7 +59,7 @@ def main():
     vid_width = fmt_cfg["width"]
     vid_height = fmt_cfg["height"]
     vid_orientation = fmt_cfg["orientation"]
-    sub_margin = fmt_cfg["subtitle_margin_bottom"]
+    sub_margin = args.subtitle_margin if args.subtitle_margin is not None else fmt_cfg["subtitle_margin_bottom"]
     sub_font_size = fmt_cfg["subtitle_font_size"]
 
     lang_info = SUPPORTED_LANGUAGES.get(args.language, {})

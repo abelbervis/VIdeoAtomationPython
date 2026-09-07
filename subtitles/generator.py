@@ -289,16 +289,19 @@ class SubtitleGenerator:
         if not hl_color.endswith("&"):
             hl_color = f"{hl_color}&"
 
-        # Determine dimensions for SourceBadge (top-left safe zone badge)
+        # Determine dimensions for SourceBadge (top-left safe zone badge) and subtitle safe margins
         if self.width < self.height:
-            # Vertical (Shorts/TikTok/Reels)
+            # Vertical (Shorts/TikTok/Reels Safe Zones)
             badge_font_size = 26
             badge_sub_font_size = 19
-            badge_margin_x = 55
-            badge_margin_y = 95
-            badge_gap_y = 42
+            badge_margin_x = 60
+            badge_margin_y = 145  # Clears top status bar, camera notch/island, and top app header
+            badge_gap_y = 44
             badge_outline = 6
             badge_sub_outline = 5
+            # Subtitle horizontal margins: extra right margin for like/comment/share action stack
+            sub_margin_l = 80
+            sub_margin_r = 160
         elif self.width > self.height:
             # Landscape
             badge_font_size = 22
@@ -308,6 +311,8 @@ class SubtitleGenerator:
             badge_gap_y = 34
             badge_outline = 5
             badge_sub_outline = 4
+            sub_margin_l = 80
+            sub_margin_r = 80
         else:
             # Square
             badge_font_size = 22
@@ -317,6 +322,8 @@ class SubtitleGenerator:
             badge_gap_y = 34
             badge_outline = 5
             badge_sub_outline = 4
+            sub_margin_l = 80
+            sub_margin_r = 80
 
         header = f"""[Script Info]
 ScriptType: v4.00+
@@ -327,7 +334,7 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: ShortsDefault,{font_family},{font_size},{SUBTITLE_PRIMARY_COLOR},&H000000FF,{SUBTITLE_OUTLINE_COLOR},&H80000000,{bold_val},0,0,0,100,100,1.2,0,1,{outline_val},2.2,2,80,80,{self.margin_bottom},1
+Style: ShortsDefault,{font_family},{font_size},{SUBTITLE_PRIMARY_COLOR},&H000000FF,{SUBTITLE_OUTLINE_COLOR},&H80000000,{bold_val},0,0,0,100,100,1.2,0,1,{outline_val},2.2,2,{sub_margin_l},{sub_margin_r},{self.margin_bottom},1
 Style: SourceTitle,{font_family},{badge_font_size},&H00FFFFFF,&H000000FF,&H80000000,&H90101010,1,0,0,0,100,100,0.8,0,3,{badge_outline},0,7,{badge_margin_x},{badge_margin_x},{badge_margin_y},1
 Style: SourceSub,{font_family},{badge_sub_font_size},&H00E0E0E0,&H000000FF,&H80000000,&H90101010,0,0,0,0,100,100,0.5,0,3,{badge_sub_outline},0,7,{badge_margin_x},{badge_margin_x},{badge_margin_y + badge_gap_y},1
 Style: SourceSingle,{font_family},{badge_font_size - 2},&H00FFFFFF,&H000000FF,&H80000000,&H90101010,1,0,0,0,100,100,0.8,0,3,{badge_outline},0,7,{badge_margin_x},{badge_margin_x},{badge_margin_y},1
