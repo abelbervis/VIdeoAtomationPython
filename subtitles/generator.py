@@ -293,18 +293,21 @@ class SubtitleGenerator:
         if self.width < self.height:
             # Vertical (Shorts/TikTok/Reels)
             badge_font_size = 28
-            badge_margin_x = 60
-            badge_margin_y = 110
+            badge_sub_font_size = 20
+            badge_margin_x = 55
+            badge_margin_y = 95
         elif self.width > self.height:
             # Landscape
-            badge_font_size = 22
-            badge_margin_x = 50
-            badge_margin_y = 50
+            badge_font_size = 24
+            badge_sub_font_size = 18
+            badge_margin_x = 45
+            badge_margin_y = 45
         else:
             # Square
             badge_font_size = 24
-            badge_margin_x = 50
-            badge_margin_y = 60
+            badge_sub_font_size = 18
+            badge_margin_x = 45
+            badge_margin_y = 50
 
         header = f"""[Script Info]
 ScriptType: v4.00+
@@ -328,19 +331,23 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             if source_attributions:
                 for attr in source_attributions:
                     raw_attr_text = (attr.get("text") or "").strip()
-                    if not raw_attr_text:
+                    clean_subject = (attr.get("subject") or "").strip()
+                    clean_source = (attr.get("source") or raw_attr_text).strip()
+
+                    if clean_subject and clean_source:
+                        badge_content = f"{{\\b1\\fs{badge_font_size}}}{clean_subject}\\N{{\\b0\\fs{badge_sub_font_size}\\c&HE0E0E0&}}{clean_source}"
+                    elif clean_subject:
+                        badge_content = f"{{\\b1\\fs{badge_font_size}}}{clean_subject}"
+                    elif clean_source:
+                        badge_content = f"{{\\b1\\fs{badge_font_size}}}{clean_source}"
+                    else:
                         continue
-                    clean_attr_text = raw_attr_text.replace("\n", " ").strip()
-                    clean_attr_text = clean_attr_text.replace("📡", "").strip()
-                    known_prefixes = ["NASA", "ESA", "JWST", "Hubble", "Fuente:", "Crédito:", "Source:"]
-                    if not any(clean_attr_text.startswith(p) for p in known_prefixes):
-                        clean_attr_text = f"NASA | {clean_attr_text}"
 
                     attr_start = max(0.0, float(attr.get("start", 0.0)))
                     attr_end = max(attr_start + 1.0, float(attr.get("end", attr_start + 2.8)))
                     f.write(
                         f"Dialogue: 1,{format_timestamp_ass(attr_start)},{format_timestamp_ass(attr_end)},"
-                        f"SourceBadge,,0,0,0,,{{\\fad(350,350)}}{clean_attr_text}\n"
+                        f"SourceBadge,,0,0,0,,{{\\fad(350,350)}}{badge_content}\n"
                     )
 
             # 2. Write Spoken Narration Subtitles on Layer 0 (Bottom Center)

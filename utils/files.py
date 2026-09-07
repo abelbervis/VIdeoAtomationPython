@@ -69,6 +69,70 @@ def format_date_display(date_input: Optional[str], language: str = "es") -> Opti
     return raw[:16]
 
 
+def clean_visual_subject(title_input: Optional[str], fallback_topic: str = "", max_chars: int = 34) -> str:
+    """
+    Cleans and formats a visual media title or topic into a concise, elegant subject label
+    for video display (e.g. 'Cometa Pons-Brooks', 'Corona Solar', 'Nebulosa de la Tarántula').
+    Removes bureaucratic prefixes, camera/telescope IDs, date tags, and trailing disclaimers.
+    """
+    raw = (title_input or fallback_topic or "").strip()
+    if not raw:
+        return "🔭 Observación Espacial"
+
+    t = raw.replace('"', '').replace("'", '').replace("`", '').strip()
+
+    # Remove agency and telescope prefixes
+    t = re.sub(r'^(NASA[\'’]s|Hubble[\'’]s|ESA[\'’]s|Webb[\'’]s|JWST[\'’]s)\s+', '', t, flags=re.I)
+    t = re.sub(r'^(Hubble|Webb|NASA|Chandra|Spitzer|SOHO|SDO|Curiosity|Perseverance)\s+(Observes|Captures|Views|Reveals|Inspects|Studies)\s+', '', t, flags=re.I)
+    t = re.sub(r'^(A|An|The)\s+(Panoramic\s+|Close-up\s+|Detailed\s+|Incredible\s+)?(View|Look|Image|Perspective|Photo|Mosaic)\s+of\s+', '', t, flags=re.I)
+    t = re.sub(r'^(Unwinding|Revealing|Exploring|Observing)\s+', '', t, flags=re.I)
+    t = re.sub(r'^(A|An|The)\s+', '', t, flags=re.I)
+
+    # Remove parentheticals and date stamps
+    t = re.sub(r'\s*\([^)]*\)', '', t)
+    t = re.sub(r'\s*-\s*(19|20)\d{2}.*$', '', t)
+    t = re.sub(r'^[:\-\s,]+|[:\-\s,]+$', '', t).strip()
+
+    # If title still starts with generic Scene fallback
+    if re.match(r'^Scene\s*\d+', t, flags=re.I):
+        t = fallback_topic or "Observación Espacial"
+
+    # Truncate nicely if still too long
+    if len(t) > max_chars:
+        words = t.split()
+        shortened = []
+        cur_len = 0
+        for w in words:
+            if cur_len + len(w) + 1 > max_chars:
+                break
+            shortened.append(w)
+            cur_len += len(w) + 1
+        t = " ".join(shortened) if shortened else t[:max_chars]
+
+    # Prepend appropriate celestial icon
+    t_lower = t.lower()
+    symbol = "🔭 "
+    if any(k in t_lower for k in ["comet", "cometa", "12p", "asteroid", "asteroide", "meteor"]):
+        symbol = "☄️ "
+    elif any(k in t_lower for k in ["galaxy", "galaxia", "milky way", "vía láctea", "spiral"]):
+        symbol = "🌌 "
+    elif any(k in t_lower for k in ["sun", "sol", "solar", "corona", "eclipse", "flare"]):
+        symbol = "☀️ "
+    elif any(k in t_lower for k in ["planet", "planeta", "mars", "marte", "jupiter", "saturn", "saturno", "venus"]):
+        symbol = "🪐 "
+    elif any(k in t_lower for k in ["moon", "luna"]):
+        symbol = "🌑 "
+    elif any(k in t_lower for k in ["black hole", "agujero negro", "event horizon"]):
+        symbol = "🕳️ "
+    elif any(k in t_lower for k in ["earth", "tierra"]):
+        symbol = "🌍 "
+    elif any(k in t_lower for k in ["nebula", "nebulosa", "star", "estrella", "cluster"]):
+        symbol = "✨ "
+
+    return f"{symbol}{t.strip()}"
+
+
+
 def save_json(data: Any, filepath: Path) -> None:
     """Save serializable data to a JSON file."""
     filepath = Path(filepath)

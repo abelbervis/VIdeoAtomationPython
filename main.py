@@ -56,7 +56,7 @@ from audio.music import MusicManager
 from audio.sfx import SFXManager
 from subtitles.generator import SubtitleGenerator
 from video.render import VideoRenderer
-from utils.files import sanitize_filename, clean_temp_directory, check_ffmpeg, save_json, load_json, format_date_display
+from utils.files import sanitize_filename, clean_temp_directory, check_ffmpeg, save_json, load_json, format_date_display, clean_visual_subject
 
 
 def parse_args():
@@ -257,6 +257,12 @@ def parse_args():
         "--no-sfx",
         action="store_true",
         help="Disable automatic sound effects"
+    )
+    # Attribution badge display options
+    parser.add_argument(
+        "--no-badge-label",
+        action="store_true",
+        help="Disable displaying the visual subject label in attribution badges"
     )
     return parser.parse_args()
 
@@ -619,7 +625,11 @@ def main():
                 scene_idx=idx,
                 keywords=keywords,
                 preferred_type=visual_type,
-                orientation=vid_orientation
+                orientation=vid_orientation,
+                topic_anchor=args.topic,
+                visual_subject=scene.get("visual_subject"),
+                primary_asset_file=primary_asset_file,
+                primary_asset_meta=primary_asset_meta
             )
         else:
             # Auto mode: route according to topic domain and available keys
@@ -628,7 +638,11 @@ def main():
                     scene_idx=idx,
                     keywords=keywords,
                     preferred_type=visual_type,
-                    orientation=vid_orientation
+                    orientation=vid_orientation,
+                    topic_anchor=args.topic,
+                    visual_subject=scene.get("visual_subject"),
+                    primary_asset_file=primary_asset_file,
+                    primary_asset_meta=primary_asset_meta
                 )
                 if not asset_file and pexels.is_configured():
                     print(f"    ↳ NASA visual not found for scene {idx}, querying Pexels...")
@@ -651,7 +665,11 @@ def main():
                         scene_idx=idx,
                         keywords=keywords,
                         preferred_type=visual_type,
-                        orientation=vid_orientation
+                        orientation=vid_orientation,
+                        topic_anchor=args.topic,
+                        visual_subject=scene.get("visual_subject"),
+                        primary_asset_file=primary_asset_file,
+                        primary_asset_meta=primary_asset_meta
                     )
 
         if asset_file and meta:
@@ -678,9 +696,9 @@ def main():
                 "attribution_text": "NASA Science Archive" if is_space_topic else "Stock Visual"
             })
 
-    # 4. Build Source Attribution Badges for Overlay (with date and entrance duration)
+    # 4. Build Source Attribution Badges for Overlay (with visual subject label, source, and date)
     source_attributions = []
-    for timing, meta in zip(scene_timings, assets_metadata):
+    for scene, timing, meta in zip(scenes, scene_timings, assets_metadata):
         if meta and meta.get("attribution_text"):
             base_attr = meta.get("attribution_text")
             date_raw = meta.get("date_created") or meta.get("date")
@@ -690,10 +708,19 @@ def main():
                 else None
             )
 
+            # Determine what is being shown on screen:
+            # 1. AI scene visual_subject (in target language)
+            # 2. Cleaned official NASA media title
+            # 3. Cleaned topic name
+            visual_subject_label = None
+            if not getattr(args, "no_badge_label", False):
+                visual_label_raw = scene.get("visual_subject") or meta.get("title") or args.topic
+                visual_subject_label = clean_visual_subject(visual_label_raw, fallback_topic=args.topic)
+
             if formatted_date:
-                badge_text = f"{base_attr} · {formatted_date}"
+                source_line = f"{base_attr} · {formatted_date}"
             else:
-                badge_text = base_attr
+                source_line = base_attr
 
             scene_start = float(timing.get("start", 0.0))
             scene_dur = float(timing.get("duration", 5.0))
@@ -704,7 +731,9 @@ def main():
                 "start": scene_start,
                 "end": scene_start + display_dur,
                 "duration": scene_dur,
-                "text": badge_text,
+                "subject": visual_subject_label,
+                "source": source_line,
+                "text": f"{visual_subject_label} | {source_line}" if visual_subject_label else source_line,
                 "date": formatted_date,
                 "is_primary": meta.get("is_primary_discovery", False)
             })

@@ -45,12 +45,13 @@ CRITICAL NARRATIVE RULES:
    - Use natural spoken equivalents: say "eyección solar" instead of "CME", "telescopio espacial" instead of "JWST", "nave espacial" or "satélites de navegación".
    - Write numbers and units in simple natural form (e.g. "mil seiscientos kilómetros por hora", "millones de grados") so text-to-speech speaks them with flawless human cadence.
 
-4. MEDIA SEARCH KEYWORDS (High-Stock Hit Rate):
+4. MEDIA SEARCH KEYWORDS & VISUAL CONTINUITY:
    - Provide 2 to 3 visual search keywords per scene ALWAYS IN ENGLISH.
-   - Keywords MUST describe literal, concrete, cinematic actions that real media libraries (NASA, Pexels) actually have in abundance.
-   - BANNED KEYWORDS: DO NOT use abstract words like "glitch", "concept art", "infographic", "artist impression", "future illustration", "3d model".
-   - RECOMMENDED KEYWORDS: Use concrete nouns and motion verbs (e.g. "satellite orbiting earth", "solar flare eruption", "city blackout night", "aurora borealis timelapse", "telescope space", "deep space galaxy").
+   - SCENE CONTINUITY (CRITICAL): All visual search keywords MUST be directly anchored to the specific celestial object or phenomenon being discussed (e.g. if the topic is Comet Pons-Brooks, search "Comet Pons-Brooks nucleus", "comet ion tail space", "comet telescope". If an eclipse, search "solar eclipse totality", "solar corona telescope").
+   - BANNED KEYWORDS (STRICTLY FORBIDDEN): NEVER search corporate, bureaucratic, or human office words like "nasa", "agency", "space agency", "headquarters", "scientist", "laboratory", "meeting", "briefing", "logo", "meatball", "hallway", "auditorium", "conference". These cause real space footage to be replaced by boring office or logo photos.
+   - CLOSING SCENE: Never search "nasa" or "future" for the final scene. Search epic cosmic scale ("deep space starfield", "hubble deep field galaxy", "earth atmosphere space night", "nebula cosmic web").
    - Set "visual_type": "video" for motion scenes, "image" for historical events, deep field space, or macro photography.
+   - Add "visual_subject": In each scene, provide a concise 2-4 word title in the target language describing exactly what celestial object or event is being shown on screen (e.g. "Cometa Pons-Brooks", "Cola de Iones Cósmica", "Corona Solar Total", "Galaxia M51", "Espacio Profundo"). This will be displayed in the cinematic visual badge so viewers know what they are looking at.
 
 5. DRAMATIC 5-STEP ARC:
    - Scene 1 (Visual Setup): Cosmic scale or sudden tension.
@@ -66,6 +67,7 @@ Respond ONLY with valid JSON matching this schema:
   "scenes": [
     {
       "scene_id": 1,
+      "visual_subject": "Concise name of what is shown in target language (e.g. Cometa Pons-Brooks)",
       "narration": "Short, punchy narration in target language (14-18 words max)",
       "keywords": ["concrete english keyword 1", "concrete english keyword 2"],
       "visual_type": "video",
@@ -600,26 +602,29 @@ class ScriptGenerator:
         scenes = [
             {
                 "scene_id": 1,
+                "visual_subject": title[:30],
                 "narration": f"{hook} {c1_narr}",
                 "on_screen_text": on_screen_1,
                 "visual_type": "video",
-                "keywords": [title.lower(), "deep space observation", "nasa telescope"],
+                "keywords": [title.lower(), "deep space observation", "space telescope"],
                 "audio_cue": "whoosh"
             },
             {
                 "scene_id": 2,
+                "visual_subject": on_screen_2 if not on_screen_2.startswith("¿") else title[:30],
                 "narration": c2_narr,
                 "on_screen_text": on_screen_2,
                 "visual_type": "video",
-                "keywords": ["cosmic phenomenon", "astrophysics", "galaxy"],
+                "keywords": ["cosmic phenomenon", "astrophysics", "deep space galaxy"],
                 "audio_cue": "subtle_boom"
             },
             {
                 "scene_id": 3,
+                "visual_subject": "Espacio Profundo",
                 "narration": f"{c3_narr} {c4_narr}",
                 "on_screen_text": on_screen_4,
                 "visual_type": "video",
-                "keywords": ["universe stars", "nebula", "space exploration"],
+                "keywords": ["deep space universe stars", "astronomy nebula", "cosmic web"],
                 "audio_cue": "laser"
             }
         ]

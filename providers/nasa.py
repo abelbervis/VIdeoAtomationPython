@@ -5,6 +5,8 @@ Downloads high-resolution videos and images with complete metadata and license t
 """
 
 import json
+import re
+import shutil
 import urllib.request
 import urllib.parse
 from pathlib import Path
@@ -16,6 +18,21 @@ from utils.files import download_file, save_json
 NASA_PUBLIC_LICENSE_NOTE = (
     "Public Domain - NASA Content Policy: NASA material is generally not copyrighted "
     "and may be used for educational or informational purposes without explicit permission."
+)
+
+
+BANNED_PR_PATTERNS = (
+    "logo", "meatball", "worm logo", "headquarters", "press conference",
+    "briefing", "administrator", "signing ceremony", "building", "center director",
+    "auditorium", "award", "portrait", "swearing-in", "anniversary logo",
+    "exhibit", "podium", "office", "patch", "reception", "panel discussion",
+    "crew arrives", "standing at", "pose for a photo", "ribbon cutting",
+    "keynote", "hallway", "personnel", "meeting room", "insignia",
+    "seal of", "exterior of building", "hq", "conference", "symposium",
+    "group photo", "group portrait", "stands with", "shakes hands", "certificate",
+    "facility", "presentation ceremony", "speaks to", "speaks at",
+    "official seal", "nasa seal", "nasa logo", "director", "ribbon-cutting",
+    "signing of", "commemorative", "astronaut candidate class", "swearing in"
 )
 
 
@@ -33,7 +50,8 @@ class NASAProvider:
     ) -> List[Dict[str, Any]]:
         """
         Query the NASA Image and Video Library.
-        Returns a list of parsed resource metadata objects.
+        Returns a list of parsed resource metadata objects, strictly filtering out
+        institutional PR, logos, press conferences, and office photos.
         """
         media_type_str = ",".join(media_types)
         params = {
@@ -68,6 +86,14 @@ class NASAProvider:
                 center = data.get("center", "NASA")
                 date_created = data.get("date_created", "")
                 photographer = data.get("photographer") or data.get("secondary_creator") or center
+
+                # Institutional / Logo / PR filtering
+                title_lower = title.lower()
+                desc_lower = (description or "").lower()
+                if any(p in title_lower for p in BANNED_PR_PATTERNS):
+                    continue
+                if any(p in desc_lower[:250] for p in ["meatball logo", "worm logo", "press conference", "ribbon cutting", "podium", "signing ceremony"]):
+                    continue
 
                 # Thumbnail link if available
                 thumb_url = None
@@ -143,22 +169,63 @@ class NASAProvider:
         keywords: List[str],
         preferred_type: str = "video",
         save_dir: Path = ASSETS_DIR,
-        orientation: Optional[str] = None
+        orientation: Optional[str] = None,
+        topic_anchor: Optional[str] = None,
+        visual_subject: Optional[str] = None,
+        primary_asset_file: Optional[Path] = None,
+        primary_asset_meta: Optional[Dict[str, Any]] = None
     ) -> Tuple[Optional[Path], Optional[Dict[str, Any]]]:
         """
-        Search and download the best matching asset for a scene.
-        Fallbacks to alternative keywords and image types automatically.
+        Search and download the best matching asset for a scene with strict topic relevance.
+        Anchors candidate queries to the core celestial topic and filters out corporate/office assets.
         """
         save_dir = Path(save_dir)
         save_dir.mkdir(parents=True, exist_ok=True)
 
-        # Build candidate search queries: combinations and individual keywords
+        # 1. Clean keywords: eliminate corporate/office words
+        banned_kws = {
+            "nasa", "agency", "space agency", "headquarters", "scientist", "scientists",
+            "laboratory", "meeting", "briefing", "logo", "meatball", "hallway", "office",
+            "future", "concept", "illustration", "3d"
+        }
+        clean_kws = [k.strip() for k in keywords if k.strip() and not any(b in k.lower().split() for b in banned_kws)]
+
+        # 2. Derive topic anchor
+        anchor = None
+        if primary_asset_meta and primary_asset_meta.get("title"):
+            p_title = primary_asset_meta.get("title", "")
+            p_clean = re.sub(r'^(A|An|The)\s+', '', p_title, flags=re.I)
+            p_clean = re.sub(r'\s*\([^)]*\)', '', p_clean)
+            p_clean = re.sub(r'\s*-\s*(19|20)\d{2}.*$', '', p_clean)
+            anchor = re.split(r'[:\-—]', p_clean)[0].strip()
+            if len(anchor) > 28:
+                anchor = " ".join(anchor.split()[:4])
+        elif visual_subject:
+            v_clean = re.sub(r'[^\w\s]', '', visual_subject).strip()
+            if v_clean:
+                anchor = v_clean
+        elif topic_anchor:
+            t_clean = re.sub(r'[¡!¿?]', '', topic_anchor).strip()
+            anchor = t_clean
+
+        # Build candidate search queries: anchored queries first, then clean keywords, then deep cosmic fallbacks
         queries = []
-        if len(keywords) > 1:
-            queries.append(" ".join(keywords[:2]))
-        queries.extend(keywords)
-        # Broad astronomy fallbacks
-        queries.extend(["space universe", "galaxy nebula", "solar system nasa", "earth orbit"])
+        if anchor:
+            for kw in clean_kws[:2]:
+                queries.append(f"{anchor} {kw}")
+            queries.append(anchor)
+
+        if len(clean_kws) > 1:
+            queries.append(" ".join(clean_kws[:2]))
+        queries.extend(clean_kws)
+
+        # High-impact cosmic astronomy fallbacks (NEVER search bare "nasa" or "solar system nasa")
+        queries.extend([
+            "deep space galaxy telescope",
+            "astronomy nebula telescope",
+            "cosmic stars astronomy",
+            "earth orbit space night"
+        ])
 
         for query in queries:
             print(f"  🔍 Querying NASA library for '{query}'...")
@@ -191,6 +258,8 @@ class NASAProvider:
                     photographer = candidate.get("photographer") or candidate.get("center") or "NASA"
                     if photographer and len(photographer) <= 24 and photographer.lower() != "nasa":
                         attr_text = f"NASA | {photographer}"
+                    elif candidate.get("center") and len(candidate.get("center")) <= 12 and candidate.get("center").lower() != "nasa":
+                        attr_text = f"NASA {candidate.get('center')}"
                     else:
                         attr_text = "NASA Library"
 
@@ -211,6 +280,18 @@ class NASAProvider:
                     }
                     save_json(meta, meta_file)
                     return dest_file, meta
+
+        # 3. If all searches fail and we have an authentic primary discovery asset, reuse it
+        if primary_asset_file and primary_asset_file.exists() and primary_asset_meta:
+            print(f"  ✨ Reusing verified authentic discovery visual for scene {scene_idx}: '{primary_asset_meta.get('title')}'")
+            dest_file = save_dir / f"scene_{scene_idx:02d}{primary_asset_file.suffix}"
+            shutil.copy2(primary_asset_file, dest_file)
+            meta = dict(primary_asset_meta)
+            meta["scene_index"] = scene_idx
+            meta["local_file"] = str(dest_file.name)
+            meta_file = save_dir / f"scene_{scene_idx:02d}.json"
+            save_json(meta, meta_file)
+            return dest_file, meta
 
         print(f"  ❌ Could not retrieve NASA asset for scene {scene_idx}.")
         return None, None
