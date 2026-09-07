@@ -73,13 +73,15 @@ def clean_visual_subject(title_input: Optional[str], fallback_topic: str = "", m
     """
     Cleans and formats a visual media title or topic into a concise, elegant subject label
     for video display (e.g. 'Cometa Pons-Brooks', 'Corona Solar', 'Nebulosa de la Tarántula').
-    Removes bureaucratic prefixes, camera/telescope IDs, date tags, and trailing disclaimers.
+    Removes bureaucratic prefixes, camera/telescope IDs, date tags, disclaimers, and all emojis.
     """
     raw = (title_input or fallback_topic or "").strip()
     if not raw:
-        return "🔭 Observación Espacial"
+        return "Observación Espacial"
 
-    t = raw.replace('"', '').replace("'", '').replace("`", '').strip()
+    # Remove any existing emoji characters
+    t = re.sub(r'[\U00010000-\U0010ffff\u200d\u2600-\u26ff\u2700-\u27bf\ufe0f]', '', raw)
+    t = t.replace('"', '').replace("'", '').replace("`", '').strip()
 
     # Remove agency and telescope prefixes
     t = re.sub(r'^(NASA[\'’]s|Hubble[\'’]s|ESA[\'’]s|Webb[\'’]s|JWST[\'’]s)\s+', '', t, flags=re.I)
@@ -97,6 +99,9 @@ def clean_visual_subject(title_input: Optional[str], fallback_topic: str = "", m
     if re.match(r'^Scene\s*\d+', t, flags=re.I):
         t = fallback_topic or "Observación Espacial"
 
+    # Clean fallback topic as well if it had emojis
+    t = re.sub(r'[\U00010000-\U0010ffff\u200d\u2600-\u26ff\u2700-\u27bf\ufe0f]', '', t).strip()
+
     # Truncate nicely if still too long
     if len(t) > max_chars:
         words = t.split()
@@ -109,27 +114,7 @@ def clean_visual_subject(title_input: Optional[str], fallback_topic: str = "", m
             cur_len += len(w) + 1
         t = " ".join(shortened) if shortened else t[:max_chars]
 
-    # Prepend appropriate celestial icon
-    t_lower = t.lower()
-    symbol = "🔭 "
-    if any(k in t_lower for k in ["comet", "cometa", "12p", "asteroid", "asteroide", "meteor"]):
-        symbol = "☄️ "
-    elif any(k in t_lower for k in ["galaxy", "galaxia", "milky way", "vía láctea", "spiral"]):
-        symbol = "🌌 "
-    elif any(k in t_lower for k in ["sun", "sol", "solar", "corona", "eclipse", "flare"]):
-        symbol = "☀️ "
-    elif any(k in t_lower for k in ["planet", "planeta", "mars", "marte", "jupiter", "saturn", "saturno", "venus"]):
-        symbol = "🪐 "
-    elif any(k in t_lower for k in ["moon", "luna"]):
-        symbol = "🌑 "
-    elif any(k in t_lower for k in ["black hole", "agujero negro", "event horizon"]):
-        symbol = "🕳️ "
-    elif any(k in t_lower for k in ["earth", "tierra"]):
-        symbol = "🌍 "
-    elif any(k in t_lower for k in ["nebula", "nebulosa", "star", "estrella", "cluster"]):
-        symbol = "✨ "
-
-    return f"{symbol}{t.strip()}"
+    return t.strip() or "Observación Espacial"
 
 
 

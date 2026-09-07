@@ -1,15 +1,15 @@
 {
   "scene_index": 2,
   "provider": "nasa",
-  "title": "Rho Ophiuchi Imaged by IRAS",
-  "nasa_id": "PIA26271",
+  "title": "Hubble’s View of a Changing Fan",
+  "nasa_id": "GSFC_20171208_Archive_e001513",
   "media_type": "image",
-  "source_url": "https://images-assets.nasa.gov/image/PIA26271/PIA26271~orig.jpg",
-  "description": "This image of the star-forming region Rho Ophiuchi was taken in 1983 by the Infrared Astronomical Satellite (IRAS), the first infrared telescope ever launched into Earth orbit. Infrared light refers to wavelengths slightly longer than what human eyes can see. Most infrared wavelengths are blocked by",
-  "center": "JPL",
-  "photographer_or_credit": "NASA/JPL-Caltech",
-  "date_created": "2023-12-22T00:00:00Z",
-  "attribution_text": "NASA | NASA/JPL-Caltech",
+  "source_url": "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e001513/GSFC_20171208_Archive_e001513~orig.jpg",
+  "description": "The Universe is rarely static, although the timescales involved can be very long. Since modern astronomical observations began we have been observing the birthplaces of new stars and planets, searching for and studying the subtle changes that help us to figure out what is happening within.  The brig",
+  "center": "GSFC",
+  "photographer_or_credit": "GSFC",
+  "date_created": "2017-12-08T00:00:00Z",
+  "attribution_text": "NASA | GSFC",
   "license": "Public Domain - NASA Content Policy: NASA material is generally not copyrighted and may be used for educational or informational purposes without explicit permission.",
   "local_file": "scene_02.jpg"
 }

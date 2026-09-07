@@ -240,7 +240,7 @@ python main.py --topic "marte" --no-dynamic-subtitles
 python main.py --topic "el sol" --no-sfx
 
 # Opciones de Badges de Atribución y Etiquetas Visuales:
-# Por defecto se muestra qué objeto se observa (ej. ☄️ Cometa Pons-Brooks) y la fuente con fecha.
+# Por defecto se muestra qué objeto se observa (ej. Cometa Pons-Brooks) y la fuente con fecha.
 # Puedes ocultar la etiqueta del objeto visual o la fecha si prefieres un diseño más minimalista:
 python main.py --topic "cometas" --no-badge-label
 python main.py --topic "galaxias" --no-badge-date
@@ -250,7 +250,7 @@ python main.py --topic "galaxias" --no-badge-date
 El motor de búsqueda de medios integra un filtro de calidad estricto:
 - **Exclusión Institucional**: Descarta automáticamente imágenes con logos institucionales (meatball, worm), conferencias de prensa, salas de reuniones, directores en podios o fotos corporativas.
 - **Anclaje Temático**: Todas las escenas intermedias mantienen continuidad visual ancladas al objeto astronómico real del descubrimiento en lugar de fotos genéricas o disconexas.
-- **Etiqueta Visual Cinematográfica**: Cada escena muestra durante los primeros 2.8 segundos una elegante insignia semitransparente indicando exactamente qué se está observando en pantalla (ej. `☄️ Cometa Pons-Brooks`, `☀️ Corona Solar Total`, `🌌 Galaxia M51`) junto a su fuente y fecha oficial (`NASA APOD · 8 Abr 2024`).
+- **Etiqueta Visual Cinematográfica**: Cada escena muestra durante los primeros 2.8 segundos dos elegantes insignias semitransparentes apiladas y perfectamente espaciadas: la superior indica qué se está observando en pantalla (ej. `Cometa Pons-Brooks`, `Corona Solar Total`, `Galaxia M51`) y la inferior muestra su fuente y fecha oficial (`NASA APOD · 8 Abr 2024`), sin interferir entre sí.
 
 ### 8. Con Música de Fondo
 Coloca un archivo en `assets/music/background.mp3` o pásalo como argumento:

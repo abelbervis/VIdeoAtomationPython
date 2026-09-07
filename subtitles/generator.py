@@ -292,22 +292,31 @@ class SubtitleGenerator:
         # Determine dimensions for SourceBadge (top-left safe zone badge)
         if self.width < self.height:
             # Vertical (Shorts/TikTok/Reels)
-            badge_font_size = 28
-            badge_sub_font_size = 20
+            badge_font_size = 26
+            badge_sub_font_size = 19
             badge_margin_x = 55
             badge_margin_y = 95
+            badge_gap_y = 42
+            badge_outline = 6
+            badge_sub_outline = 5
         elif self.width > self.height:
             # Landscape
-            badge_font_size = 24
-            badge_sub_font_size = 18
+            badge_font_size = 22
+            badge_sub_font_size = 16
             badge_margin_x = 45
             badge_margin_y = 45
+            badge_gap_y = 34
+            badge_outline = 5
+            badge_sub_outline = 4
         else:
             # Square
-            badge_font_size = 24
-            badge_sub_font_size = 18
+            badge_font_size = 22
+            badge_sub_font_size = 16
             badge_margin_x = 45
             badge_margin_y = 50
+            badge_gap_y = 34
+            badge_outline = 5
+            badge_sub_outline = 4
 
         header = f"""[Script Info]
 ScriptType: v4.00+
@@ -319,7 +328,9 @@ ScaledBorderAndShadow: yes
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
 Style: ShortsDefault,{font_family},{font_size},{SUBTITLE_PRIMARY_COLOR},&H000000FF,{SUBTITLE_OUTLINE_COLOR},&H80000000,{bold_val},0,0,0,100,100,1.2,0,1,{outline_val},2.2,2,80,80,{self.margin_bottom},1
-Style: SourceBadge,{font_family},{badge_font_size},&H00FFFFFF,&H000000FF,&H80000000,&H90101010,1,0,0,0,100,100,0.8,0,3,10,0,7,{badge_margin_x},{badge_margin_x},{badge_margin_y},1
+Style: SourceTitle,{font_family},{badge_font_size},&H00FFFFFF,&H000000FF,&H80000000,&H90101010,1,0,0,0,100,100,0.8,0,3,{badge_outline},0,7,{badge_margin_x},{badge_margin_x},{badge_margin_y},1
+Style: SourceSub,{font_family},{badge_sub_font_size},&H00E0E0E0,&H000000FF,&H80000000,&H90101010,0,0,0,0,100,100,0.5,0,3,{badge_sub_outline},0,7,{badge_margin_x},{badge_margin_x},{badge_margin_y + badge_gap_y},1
+Style: SourceSingle,{font_family},{badge_font_size - 2},&H00FFFFFF,&H000000FF,&H80000000,&H90101010,1,0,0,0,100,100,0.8,0,3,{badge_outline},0,7,{badge_margin_x},{badge_margin_x},{badge_margin_y},1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
@@ -327,28 +338,39 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(header)
 
-            # 1. Write Source Attribution Badges on Layer 1 (Top-Left overlay with smooth fade)
+            # 1. Write Source Attribution Badges on Layer 1 (Top-Left overlay with smooth fade and zero overlap)
             if source_attributions:
+                emoji_cleaner = re.compile(r'[\U00010000-\U0010ffff\u200d\u2600-\u26ff\u2700-\u27bf\ufe0f]')
                 for attr in source_attributions:
                     raw_attr_text = (attr.get("text") or "").strip()
                     clean_subject = (attr.get("subject") or "").strip()
                     clean_source = (attr.get("source") or raw_attr_text).strip()
 
-                    if clean_subject and clean_source:
-                        badge_content = f"{{\\b1\\fs{badge_font_size}}}{clean_subject}\\N{{\\b0\\fs{badge_sub_font_size}\\c&HE0E0E0&}}{clean_source}"
-                    elif clean_subject:
-                        badge_content = f"{{\\b1\\fs{badge_font_size}}}{clean_subject}"
-                    elif clean_source:
-                        badge_content = f"{{\\b1\\fs{badge_font_size}}}{clean_source}"
-                    else:
-                        continue
+                    # Strictly strip any emojis
+                    clean_subject = emoji_cleaner.sub('', clean_subject).strip()
+                    clean_source = emoji_cleaner.sub('', clean_source).strip()
 
                     attr_start = max(0.0, float(attr.get("start", 0.0)))
                     attr_end = max(attr_start + 1.0, float(attr.get("end", attr_start + 2.8)))
-                    f.write(
-                        f"Dialogue: 1,{format_timestamp_ass(attr_start)},{format_timestamp_ass(attr_end)},"
-                        f"SourceBadge,,0,0,0,,{{\\fad(350,350)}}{badge_content}\n"
-                    )
+                    start_str = format_timestamp_ass(attr_start)
+                    end_str = format_timestamp_ass(attr_end)
+
+                    if clean_subject and clean_source:
+                        # Stacked distinct chips: upper chip for visual subject, lower chip for official source and date
+                        f.write(
+                            f"Dialogue: 1,{start_str},{end_str},SourceTitle,,0,0,0,,{{\\fad(300,300)}}{clean_subject}\n"
+                        )
+                        f.write(
+                            f"Dialogue: 1,{start_str},{end_str},SourceSub,,0,0,0,,{{\\fad(300,300)}}{clean_source}\n"
+                        )
+                    elif clean_subject:
+                        f.write(
+                            f"Dialogue: 1,{start_str},{end_str},SourceSingle,,0,0,0,,{{\\fad(300,300)}}{clean_subject}\n"
+                        )
+                    elif clean_source:
+                        f.write(
+                            f"Dialogue: 1,{start_str},{end_str},SourceSingle,,0,0,0,,{{\\fad(300,300)}}{clean_source}\n"
+                        )
 
             # 2. Write Spoken Narration Subtitles on Layer 0 (Bottom Center)
             for chunk in chunks:

@@ -8,54 +8,69 @@ ScaledBorderAndShadow: yes
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
 Style: ShortsDefault,Arial,46,&H00FFFFFF,&H000000FF,&H00000000,&H80000000,-1,0,0,0,100,100,1.2,0,1,4.0,2.2,2,80,80,280,1
-Style: SourceBadge,Arial,28,&H00FFFFFF,&H000000FF,&H80000000,&H90101010,1,0,0,0,100,100,0.8,0,3,10,0,7,60,60,110,1
+Style: SourceBadge,Arial,28,&H00FFFFFF,&H000000FF,&H80000000,&H90101010,1,0,0,0,100,100,0.8,0,3,10,0,7,55,55,95,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
-Dialogue: 1,0:00:00.00,0:00:07.97,SourceBadge,,0,0,0,,{\fad(350,350)}NASA APOD
-Dialogue: 1,0:00:07.97,0:00:14.83,SourceBadge,,0,0,0,,{\fad(350,350)}NASA | NASA/JPL-Caltech
-Dialogue: 1,0:00:14.83,0:00:22.56,SourceBadge,,0,0,0,,{\fad(350,350)}NASA | Scott Wiessinger
-Dialogue: 0,0:00:00.00,0:00:00.40,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}MIRA{\rShortsDefault} ESTE DESPEGUE
-Dialogue: 0,0:00:00.40,0:00:00.80,ShortsDefault,,0,0,0,,MIRA {\c&H0000FFFF&\b1}ESTE{\rShortsDefault} DESPEGUE
-Dialogue: 0,0:00:00.80,0:00:01.59,ShortsDefault,,0,0,0,,MIRA ESTE {\c&H0000FFFF&\b1}DESPEGUE{\rShortsDefault}
-Dialogue: 0,0:00:01.59,0:00:02.43,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}HISTÓRICO.{\rShortsDefault} ESTE NUEVO
-Dialogue: 0,0:00:02.43,0:00:02.77,ShortsDefault,,0,0,0,,HISTÓRICO. {\c&H0000FFFF&\b1}ESTE{\rShortsDefault} NUEVO
-Dialogue: 0,0:00:02.77,0:00:03.19,ShortsDefault,,0,0,0,,HISTÓRICO. ESTE {\c&H0000FFFF&\b1}NUEVO{\rShortsDefault}
-Dialogue: 0,0:00:03.19,0:00:03.87,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}OBSERVATORIO{\rShortsDefault} ESPACIAL CAMBIARÁ
-Dialogue: 0,0:00:03.87,0:00:04.33,ShortsDefault,,0,0,0,,OBSERVATORIO {\c&H0000FFFF&\b1}ESPACIAL{\rShortsDefault} CAMBIARÁ
-Dialogue: 0,0:00:04.33,0:00:04.78,ShortsDefault,,0,0,0,,OBSERVATORIO ESPACIAL {\c&H0000FFFF&\b1}CAMBIARÁ{\rShortsDefault}
-Dialogue: 0,0:00:04.78,0:00:05.21,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}PARA{\rShortsDefault} SIEMPRE CÓMO
-Dialogue: 0,0:00:05.21,0:00:05.95,ShortsDefault,,0,0,0,,PARA {\c&H0000FFFF&\b1}SIEMPRE{\rShortsDefault} CÓMO
-Dialogue: 0,0:00:05.95,0:00:06.38,ShortsDefault,,0,0,0,,PARA SIEMPRE {\c&H0000FFFF&\b1}CÓMO{\rShortsDefault}
-Dialogue: 0,0:00:06.38,0:00:06.95,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}VEMOS{\rShortsDefault} EL COSMOS.
-Dialogue: 0,0:00:06.95,0:00:07.17,ShortsDefault,,0,0,0,,VEMOS {\c&H0000FFFF&\b1}EL{\rShortsDefault} COSMOS.
-Dialogue: 0,0:00:07.17,0:00:07.97,ShortsDefault,,0,0,0,,VEMOS EL {\c&H0000FFFF&\b1}COSMOS.{\rShortsDefault}
-Dialogue: 0,0:00:07.97,0:00:08.56,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}AUNQUE{\rShortsDefault} SU ESPEJO
-Dialogue: 0,0:00:08.56,0:00:08.75,ShortsDefault,,0,0,0,,AUNQUE {\c&H0000FFFF&\b1}SU{\rShortsDefault} ESPEJO
-Dialogue: 0,0:00:08.75,0:00:09.34,ShortsDefault,,0,0,0,,AUNQUE SU {\c&H0000FFFF&\b1}ESPEJO{\rShortsDefault}
-Dialogue: 0,0:00:09.34,0:00:09.80,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}MIDE{\rShortsDefault} IGUAL QUE
-Dialogue: 0,0:00:09.80,0:00:10.37,ShortsDefault,,0,0,0,,MIDE {\c&H0000FFFF&\b1}IGUAL{\rShortsDefault} QUE
-Dialogue: 0,0:00:10.37,0:00:10.71,ShortsDefault,,0,0,0,,MIDE IGUAL {\c&H0000FFFF&\b1}QUE{\rShortsDefault}
-Dialogue: 0,0:00:10.71,0:00:11.25,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}HUBBLE,{\rShortsDefault} CAPTURA CIEN
-Dialogue: 0,0:00:11.25,0:00:11.78,ShortsDefault,,0,0,0,,HUBBLE, {\c&H0000FFFF&\b1}CAPTURA{\rShortsDefault} CIEN
-Dialogue: 0,0:00:11.78,0:00:12.09,ShortsDefault,,0,0,0,,HUBBLE, CAPTURA {\c&H0000FFFF&\b1}CIEN{\rShortsDefault}
-Dialogue: 0,0:00:12.09,0:00:12.61,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}VECES{\rShortsDefault} MÁS CIELO
-Dialogue: 0,0:00:12.61,0:00:12.93,ShortsDefault,,0,0,0,,VECES {\c&H0000FFFF&\b1}MÁS{\rShortsDefault} CIELO
-Dialogue: 0,0:00:12.93,0:00:13.46,ShortsDefault,,0,0,0,,VECES MÁS {\c&H0000FFFF&\b1}CIELO{\rShortsDefault}
-Dialogue: 0,0:00:13.46,0:00:13.71,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}EN{\rShortsDefault} CADA FOTO.
-Dialogue: 0,0:00:13.71,0:00:14.21,ShortsDefault,,0,0,0,,EN {\c&H0000FFFF&\b1}CADA{\rShortsDefault} FOTO.
-Dialogue: 0,0:00:14.21,0:00:14.83,ShortsDefault,,0,0,0,,EN CADA {\c&H0000FFFF&\b1}FOTO.{\rShortsDefault}
-Dialogue: 0,0:00:14.83,0:00:15.78,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}ORBITARÁ{\rShortsDefault} AL SOL
-Dialogue: 0,0:00:15.78,0:00:16.02,ShortsDefault,,0,0,0,,ORBITARÁ {\c&H0000FFFF&\b1}AL{\rShortsDefault} SOL
-Dialogue: 0,0:00:16.02,0:00:16.38,ShortsDefault,,0,0,0,,ORBITARÁ AL {\c&H0000FFFF&\b1}SOL{\rShortsDefault}
-Dialogue: 0,0:00:16.38,0:00:17.15,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}CAZANDO{\rShortsDefault} MILES DE
-Dialogue: 0,0:00:17.15,0:00:17.70,ShortsDefault,,0,0,0,,CAZANDO {\c&H0000FFFF&\b1}MILES{\rShortsDefault} DE
-Dialogue: 0,0:00:17.70,0:00:17.92,ShortsDefault,,0,0,0,,CAZANDO MILES {\c&H0000FFFF&\b1}DE{\rShortsDefault}
-Dialogue: 0,0:00:17.92,0:00:18.78,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}SUPERNOVAS{\rShortsDefault} Y NUEVOS
-Dialogue: 0,0:00:18.78,0:00:18.95,ShortsDefault,,0,0,0,,SUPERNOVAS {\c&H0000FFFF&\b1}Y{\rShortsDefault} NUEVOS
-Dialogue: 0,0:00:18.95,0:00:19.47,ShortsDefault,,0,0,0,,SUPERNOVAS Y {\c&H0000FFFF&\b1}NUEVOS{\rShortsDefault}
-Dialogue: 0,0:00:19.47,0:00:19.84,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}MUNDOS{\rShortsDefault} HABITABLES. ¿ESTAMOS
-Dialogue: 0,0:00:19.84,0:00:20.52,ShortsDefault,,0,0,0,,MUNDOS {\c&H0000FFFF&\b1}HABITABLES.{\rShortsDefault} ¿ESTAMOS
-Dialogue: 0,0:00:20.52,0:00:21.01,ShortsDefault,,0,0,0,,MUNDOS HABITABLES. {\c&H0000FFFF&\b1}¿ESTAMOS{\rShortsDefault}
-Dialogue: 0,0:00:21.01,0:00:21.94,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}REALMENTE{\rShortsDefault} SOLOS?
-Dialogue: 0,0:00:21.94,0:00:22.56,ShortsDefault,,0,0,0,,REALMENTE {\c&H0000FFFF&\b1}SOLOS?{\rShortsDefault}
+Dialogue: 1,0:00:00.00,0:00:02.80,SourceBadge,,0,0,0,,{\fad(350,350)}{\b1\fs28}☄️ Cometa Pons-Brooks\N{\b0\fs20\c&HE0E0E0&}NASA KSC · 14 Dic 2004
+Dialogue: 1,0:00:11.69,0:00:14.49,SourceBadge,,0,0,0,,{\fad(350,350)}{\b1\fs28}🔭 DESCUBRIMIENTO OFICIAL\N{\b0\fs20\c&HE0E0E0&}NASA | GSFC · 8 Dic 2017
+Dialogue: 1,0:00:18.65,0:00:21.45,SourceBadge,,0,0,0,,{\fad(350,350)}{\b1\fs28}🔭 Espacio Profundo\N{\b0\fs20\c&HE0E0E0&}NASA | GSFC · 22 Dic 2023
+Dialogue: 0,0:00:00.00,0:00:00.85,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}¿SABÍAS{\rShortsDefault} LO QUE
+Dialogue: 0,0:00:00.85,0:00:01.10,ShortsDefault,,0,0,0,,¿SABÍAS {\c&H0000FFFF&\b1}LO{\rShortsDefault} QUE
+Dialogue: 0,0:00:01.10,0:00:01.46,ShortsDefault,,0,0,0,,¿SABÍAS LO {\c&H0000FFFF&\b1}QUE{\rShortsDefault}
+Dialogue: 0,0:00:01.46,0:00:01.98,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}ACABA{\rShortsDefault} DE REVELAR
+Dialogue: 0,0:00:01.98,0:00:02.19,ShortsDefault,,0,0,0,,ACABA {\c&H0000FFFF&\b1}DE{\rShortsDefault} REVELAR
+Dialogue: 0,0:00:02.19,0:00:02.92,ShortsDefault,,0,0,0,,ACABA DE {\c&H0000FFFF&\b1}REVELAR{\rShortsDefault}
+Dialogue: 0,0:00:02.92,0:00:03.19,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}LA{\rShortsDefault} NASA SOBRE
+Dialogue: 0,0:00:03.19,0:00:03.72,ShortsDefault,,0,0,0,,LA {\c&H0000FFFF&\b1}NASA{\rShortsDefault} SOBRE
+Dialogue: 0,0:00:03.72,0:00:04.38,ShortsDefault,,0,0,0,,LA NASA {\c&H0000FFFF&\b1}SOBRE{\rShortsDefault}
+Dialogue: 0,0:00:04.38,0:00:04.82,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}COMETA{\rShortsDefault} PONS-BROOKS? LA
+Dialogue: 0,0:00:04.82,0:00:05.70,ShortsDefault,,0,0,0,,COMETA {\c&H0000FFFF&\b1}PONS-BROOKS?{\rShortsDefault} LA
+Dialogue: 0,0:00:05.70,0:00:05.84,ShortsDefault,,0,0,0,,COMETA PONS-BROOKS? {\c&H0000FFFF&\b1}LA{\rShortsDefault}
+Dialogue: 0,0:00:05.84,0:00:06.38,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}NASA{\rShortsDefault} ACABA DE
+Dialogue: 0,0:00:06.38,0:00:07.04,ShortsDefault,,0,0,0,,NASA {\c&H0000FFFF&\b1}ACABA{\rShortsDefault} DE
+Dialogue: 0,0:00:07.04,0:00:07.31,ShortsDefault,,0,0,0,,NASA ACABA {\c&H0000FFFF&\b1}DE{\rShortsDefault}
+Dialogue: 0,0:00:07.31,0:00:07.88,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}REGISTRAR{\rShortsDefault} UNA OBSERVACIÓN
+Dialogue: 0,0:00:07.88,0:00:08.07,ShortsDefault,,0,0,0,,REGISTRAR {\c&H0000FFFF&\b1}UNA{\rShortsDefault} OBSERVACIÓN
+Dialogue: 0,0:00:08.07,0:00:08.77,ShortsDefault,,0,0,0,,REGISTRAR UNA {\c&H0000FFFF&\b1}OBSERVACIÓN{\rShortsDefault}
+Dialogue: 0,0:00:08.77,0:00:09.43,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}HISTÓRICA{\rShortsDefault} SOBRE COMETA
+Dialogue: 0,0:00:09.43,0:00:09.79,ShortsDefault,,0,0,0,,HISTÓRICA {\c&H0000FFFF&\b1}SOBRE{\rShortsDefault} COMETA
+Dialogue: 0,0:00:09.79,0:00:10.23,ShortsDefault,,0,0,0,,HISTÓRICA SOBRE {\c&H0000FFFF&\b1}COMETA{\rShortsDefault}
+Dialogue: 0,0:00:10.23,0:00:11.69,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}PONS-BROOKS.{\rShortsDefault}
+Dialogue: 0,0:00:11.69,0:00:11.91,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}LOS{\rShortsDefault} CIENTÍFICOS ESPACIALES
+Dialogue: 0,0:00:11.91,0:00:12.70,ShortsDefault,,0,0,0,,LOS {\c&H0000FFFF&\b1}CIENTÍFICOS{\rShortsDefault} ESPACIALES
+Dialogue: 0,0:00:12.70,0:00:13.43,ShortsDefault,,0,0,0,,LOS CIENTÍFICOS {\c&H0000FFFF&\b1}ESPACIALES{\rShortsDefault}
+Dialogue: 0,0:00:13.43,0:00:13.70,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}HAN{\rShortsDefault} DETECTADO SEÑALES
+Dialogue: 0,0:00:13.70,0:00:14.53,ShortsDefault,,0,0,0,,HAN {\c&H0000FFFF&\b1}DETECTADO{\rShortsDefault} SEÑALES
+Dialogue: 0,0:00:14.53,0:00:15.17,ShortsDefault,,0,0,0,,HAN DETECTADO {\c&H0000FFFF&\b1}SEÑALES{\rShortsDefault}
+Dialogue: 0,0:00:15.17,0:00:16.04,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}ASOMBROSAS{\rShortsDefault} QUE CAMBIAN
+Dialogue: 0,0:00:16.04,0:00:16.30,ShortsDefault,,0,0,0,,ASOMBROSAS {\c&H0000FFFF&\b1}QUE{\rShortsDefault} CAMBIAN
+Dialogue: 0,0:00:16.30,0:00:16.91,ShortsDefault,,0,0,0,,ASOMBROSAS QUE {\c&H0000FFFF&\b1}CAMBIAN{\rShortsDefault}
+Dialogue: 0,0:00:16.91,0:00:17.16,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}LO{\rShortsDefault} QUE SABÍAMOS.
+Dialogue: 0,0:00:17.16,0:00:17.53,ShortsDefault,,0,0,0,,LO {\c&H0000FFFF&\b1}QUE{\rShortsDefault} SABÍAMOS.
+Dialogue: 0,0:00:17.53,0:00:18.65,ShortsDefault,,0,0,0,,LO QUE {\c&H0000FFFF&\b1}SABÍAMOS.{\rShortsDefault}
+Dialogue: 0,0:00:18.65,0:00:18.95,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}ESTE{\rShortsDefault} FENÓMENO CÓSMICO
+Dialogue: 0,0:00:18.95,0:00:19.54,ShortsDefault,,0,0,0,,ESTE {\c&H0000FFFF&\b1}FENÓMENO{\rShortsDefault} CÓSMICO
+Dialogue: 0,0:00:19.54,0:00:20.06,ShortsDefault,,0,0,0,,ESTE FENÓMENO {\c&H0000FFFF&\b1}CÓSMICO{\rShortsDefault}
+Dialogue: 0,0:00:20.06,0:00:20.53,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}ABRE{\rShortsDefault} UNA NUEVA
+Dialogue: 0,0:00:20.53,0:00:20.89,ShortsDefault,,0,0,0,,ABRE {\c&H0000FFFF&\b1}UNA{\rShortsDefault} NUEVA
+Dialogue: 0,0:00:20.89,0:00:21.48,ShortsDefault,,0,0,0,,ABRE UNA {\c&H0000FFFF&\b1}NUEVA{\rShortsDefault}
+Dialogue: 0,0:00:21.48,0:00:21.73,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}ERA{\rShortsDefault} PARA COMPRENDER
+Dialogue: 0,0:00:21.73,0:00:22.06,ShortsDefault,,0,0,0,,ERA {\c&H0000FFFF&\b1}PARA{\rShortsDefault} COMPRENDER
+Dialogue: 0,0:00:22.06,0:00:22.89,ShortsDefault,,0,0,0,,ERA PARA {\c&H0000FFFF&\b1}COMPRENDER{\rShortsDefault}
+Dialogue: 0,0:00:22.89,0:00:23.17,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}LOS{\rShortsDefault} MISTERIOS DEL
+Dialogue: 0,0:00:23.17,0:00:24.02,ShortsDefault,,0,0,0,,LOS {\c&H0000FFFF&\b1}MISTERIOS{\rShortsDefault} DEL
+Dialogue: 0,0:00:24.02,0:00:24.30,ShortsDefault,,0,0,0,,LOS MISTERIOS {\c&H0000FFFF&\b1}DEL{\rShortsDefault}
+Dialogue: 0,0:00:24.30,0:00:25.05,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}UNIVERSO.{\rShortsDefault} EL COSMOS
+Dialogue: 0,0:00:25.05,0:00:25.22,ShortsDefault,,0,0,0,,UNIVERSO. {\c&H0000FFFF&\b1}EL{\rShortsDefault} COSMOS
+Dialogue: 0,0:00:25.22,0:00:25.72,ShortsDefault,,0,0,0,,UNIVERSO. EL {\c&H0000FFFF&\b1}COSMOS{\rShortsDefault}
+Dialogue: 0,0:00:25.72,0:00:26.27,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}ESCONDE{\rShortsDefault} SECRETOS QUE
+Dialogue: 0,0:00:26.27,0:00:26.89,ShortsDefault,,0,0,0,,ESCONDE {\c&H0000FFFF&\b1}SECRETOS{\rShortsDefault} QUE
+Dialogue: 0,0:00:26.89,0:00:27.13,ShortsDefault,,0,0,0,,ESCONDE SECRETOS {\c&H0000FFFF&\b1}QUE{\rShortsDefault}
+Dialogue: 0,0:00:27.13,0:00:27.60,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}APENAS{\rShortsDefault} COMENZAMOS A
+Dialogue: 0,0:00:27.60,0:00:28.39,ShortsDefault,,0,0,0,,APENAS {\c&H0000FFFF&\b1}COMENZAMOS{\rShortsDefault} A
+Dialogue: 0,0:00:28.39,0:00:28.54,ShortsDefault,,0,0,0,,APENAS COMENZAMOS {\c&H0000FFFF&\b1}A{\rShortsDefault}
+Dialogue: 0,0:00:28.54,0:00:29.25,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}DESCUBRIR.{\rShortsDefault} ¿QUÉ OPINAS
+Dialogue: 0,0:00:29.25,0:00:29.53,ShortsDefault,,0,0,0,,DESCUBRIR. {\c&H0000FFFF&\b1}¿QUÉ{\rShortsDefault} OPINAS
+Dialogue: 0,0:00:29.53,0:00:29.96,ShortsDefault,,0,0,0,,DESCUBRIR. ¿QUÉ {\c&H0000FFFF&\b1}OPINAS{\rShortsDefault}
+Dialogue: 0,0:00:29.96,0:00:31.37,ShortsDefault,,0,0,0,,{\c&H0000FFFF&\b1}TÚ?{\rShortsDefault}
