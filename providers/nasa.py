@@ -1,167 +1,136 @@
 """
 NASA Official Media Provider.
-Queries the official NASA Image and Video Library API (images-api.nasa.gov).
-Downloads high-resolution videos and images with complete metadata and license tracking.
+Coordinates NASA API queries, authentic observational filtering, and media downloads.
+Decoupled into:
+  - NASAClient: Network and HTTP requests
+  - NASAFilterRanker: Content filtering, PR exclusion, and scientific center ranking
+  - NASADownloader: Asset downloading and attribution metadata packaging
 """
 
-import json
 import re
 import shutil
-import urllib.request
-import urllib.parse
+import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Any, Dict, List, Optional, Tuple
 
-from config import NASA_IMAGE_API_BASE, ASSETS_DIR
+from config import ASSETS_DIR, NASA_IMAGE_API_BASE
+from providers.nasa_client import NASAClient
+from providers.nasa_downloader import NASA_PUBLIC_LICENSE_NOTE, NASADownloader
+from providers.nasa_filter import NASAFilterRanker
 from utils.files import download_file, save_json
 
-NASA_PUBLIC_LICENSE_NOTE = (
-    "Public Domain - NASA Content Policy: NASA material is generally not copyrighted "
-    "and may be used for educational or informational purposes without explicit permission."
-)
+SPANISH_TO_ENGLISH_ASTRONOMY = {
+    "nebulosa": "nebula",
+    "agujero negro": "black hole",
+    "agujeros negros": "black holes",
+    "marte": "mars",
+    "tierra": "earth",
+    "luna": "moon",
+    "sol": "sun",
+    "estrella": "star",
+    "estrellas": "stars",
+    "galaxia": "galaxy",
+    "galaxias": "galaxies",
+    "universo": "universe",
+    "jupiter": "jupiter",
+    "saturno": "saturn",
+    "espacio": "space",
+    "astronauta": "astronaut",
+    "telescopio": "telescope",
+    "cometa": "comet",
+    "asteroide": "asteroid",
+    "eclipse": "eclipse"
+}
 
 
-BANNED_PR_PATTERNS = (
-    "logo", "meatball", "worm logo", "headquarters", "press conference",
-    "briefing", "administrator", "signing ceremony", "building", "center director",
-    "auditorium", "award", "portrait", "swearing-in", "anniversary logo",
-    "exhibit", "podium", "office", "patch", "reception", "panel discussion",
-    "crew arrives", "standing at", "pose for a photo", "ribbon cutting",
-    "keynote", "hallway", "personnel", "meeting room", "insignia",
-    "seal of", "exterior of building", "hq", "conference", "symposium",
-    "group photo", "group portrait", "stands with", "shakes hands", "certificate",
-    "facility", "presentation ceremony", "speaks to", "speaks at",
-    "official seal", "nasa seal", "nasa logo", "director", "ribbon-cutting",
-    "signing of", "commemorative", "astronaut candidate class", "swearing in"
-)
+def normalize_search_term(term: str) -> str:
+    """Translate basic Spanish astronomy terms if needed for official NASA library queries."""
+    term_clean = term.strip().lower()
+    return SPANISH_TO_ENGLISH_ASTRONOMY.get(term_clean, term)
 
 
 class NASAProvider:
-    """Official NASA Image & Video Library Client."""
+    """Official NASA Image & Video Library Service."""
 
     def __init__(self, base_url: str = NASA_IMAGE_API_BASE):
-        self.base_url = base_url.rstrip("/")
+        self.client = NASAClient(base_url=base_url)
+        self.ranker = NASAFilterRanker()
+        self.downloader = NASADownloader(client=self.client)
 
     def search(
         self,
         query: str,
-        media_types: List[str] = ["video", "image"],
+        media_types: Optional[List[str]] = None,
         page_size: int = 15
     ) -> List[Dict[str, Any]]:
         """
-        Query the NASA Image and Video Library.
-        Returns a list of parsed resource metadata objects, strictly filtering out
-        institutional PR, logos, press conferences, and office photos.
+        Query the NASA Library and return filtered, science-ranked candidates as dictionaries.
+        Excludes PR, logos, and low-quality concepts.
         """
-        media_type_str = ",".join(media_types)
-        params = {
-            "q": query,
-            "media_type": media_type_str,
-            "page": 1,
-            "page_size": page_size
-        }
-        url = f"{self.base_url}/search?{urllib.parse.urlencode(params)}"
-
-        try:
-            req = urllib.request.Request(
-                url,
-                headers={"User-Agent": "NASA-Shorts-Generator/1.0 (Science Education)"}
-            )
-            with urllib.request.urlopen(req, timeout=20) as response:
-                payload = json.loads(response.read().decode("utf-8"))
-
-            items = payload.get("collection", {}).get("items", [])
-            results = []
-
-            for item in items:
-                data_list = item.get("data", [])
-                if not data_list:
-                    continue
-                data = data_list[0]
-
-                nasa_id = data.get("nasa_id")
-                media_type = data.get("media_type")
-                title = data.get("title", "NASA Space Visual")
-                description = data.get("description", "")
-                center = data.get("center", "NASA")
-                date_created = data.get("date_created", "")
-                photographer = data.get("photographer") or data.get("secondary_creator") or center
-
-                # Institutional / Logo / PR filtering
-                title_lower = title.lower()
-                desc_lower = (description or "").lower()
-                if any(p in title_lower for p in BANNED_PR_PATTERNS):
-                    continue
-                if any(p in desc_lower[:250] for p in ["meatball logo", "worm logo", "press conference", "ribbon cutting", "podium", "signing ceremony"]):
-                    continue
-
-                # Thumbnail link if available
-                thumb_url = None
-                for link in item.get("links", []):
-                    if link.get("rel") == "preview":
-                        thumb_url = link.get("href")
-                        break
-
-                results.append({
-                    "nasa_id": nasa_id,
-                    "media_type": media_type,
-                    "title": title,
-                    "description": description[:300],
-                    "center": center,
-                    "photographer": photographer,
-                    "date_created": date_created,
-                    "manifest_url": item.get("href"),
-                    "thumb_url": thumb_url,
-                    "license": NASA_PUBLIC_LICENSE_NOTE
-                })
-
-            return results
-        except Exception as e:
-            print(f"  ⚠️ Error searching NASA API for '{query}': {e}")
-            return []
+        effective_query = normalize_search_term(query)
+        raw_items = self.client.raw_search(effective_query, media_types=media_types, page_size=page_size)
+        candidates = self.ranker.filter_and_rank(raw_items, topic_anchor=effective_query)
+        return [c.to_dict() for c in candidates]
 
     def get_asset_direct_urls(self, nasa_id: str) -> List[str]:
         """Fetch direct download links for an asset via manifest URL."""
-        url = f"{self.base_url}/asset/{nasa_id}"
-        try:
-            req = urllib.request.Request(
-                url,
-                headers={"User-Agent": "NASA-Shorts-Generator/1.0"}
-            )
-            with urllib.request.urlopen(req, timeout=15) as response:
-                payload = json.loads(response.read().decode("utf-8"))
-
-            items = payload.get("collection", {}).get("items", [])
-            urls = [item.get("href") for item in items if item.get("href")]
-            return urls
-        except Exception as e:
-            print(f"  ⚠️ Error fetching asset manifest for '{nasa_id}': {e}")
-            return []
+        return self.client.get_asset_manifest_urls(nasa_id)
 
     def select_best_url(self, urls: List[str], media_type: str) -> Optional[str]:
-        """Pick optimal resolution file (preferring 1080p/720p MP4 or high-res JPG)."""
-        if not urls:
-            return None
+        """Pick optimal resolution file for video rendering."""
+        return self.client.select_best_resolution_url(urls, media_type)
 
-        # Ensure HTTPS urls
-        urls = [u.replace("http://", "https://") for u in urls]
+    def _build_search_queries(
+        self,
+        keywords: List[str],
+        topic_anchor: Optional[str],
+        visual_subject: Optional[str],
+        primary_title: Optional[str]
+    ) -> List[str]:
+        """Constructs prioritized search queries anchored to the celestial subject."""
+        # 1. Clean keywords
+        banned_words = {
+            "nasa", "agency", "space agency", "headquarters", "scientist", "scientists",
+            "laboratory", "meeting", "briefing", "logo", "meatball", "hallway", "office",
+            "future", "concept", "illustration", "3d"
+        }
+        clean_kws = [k.strip() for k in keywords if k.strip() and not any(b in k.lower().split() for b in banned_words)]
 
-        if media_type == "video":
-            mp4_urls = [u for u in urls if u.lower().endswith(".mp4")]
-            # Priority: medium or large (good balance of quality vs file size for shorts)
-            for priority in ["~medium.mp4", "~orig.mp4", "~large.mp4", "~mobile.mp4", ".mp4"]:
-                for u in mp4_urls:
-                    if priority in u.lower():
-                        return u
-            return mp4_urls[0] if mp4_urls else None
+        # 2. Derive topic anchor
+        anchor = None
+        if primary_title:
+            p_clean = re.sub(r'^(A|An|The)\s+', '', primary_title, flags=re.I)
+            p_clean = re.sub(r'\s*\([^)]*\)', '', p_clean)
+            p_clean = re.sub(r'\s*-\s*(19|20)\d{2}.*$', '', p_clean)
+            anchor = re.split(r'[:\-—]', p_clean)[0].strip()
+            if len(anchor) > 28:
+                anchor = " ".join(anchor.split()[:4])
+        elif visual_subject:
+            v_clean = re.sub(r'[^\w\s]', '', visual_subject).strip()
+            if v_clean:
+                anchor = v_clean
+        elif topic_anchor:
+            anchor = re.sub(r'[¡!¿?]', '', topic_anchor).strip()
 
-        else:
-            img_urls = [u for u in urls if u.lower().endswith((".jpg", ".jpeg", ".png"))]
-            for priority in ["~large.jpg", "~orig.jpg", "~medium.jpg", ".jpg", ".png"]:
-                for u in img_urls:
-                    if priority in u.lower():
-                        return u
-            return img_urls[0] if img_urls else None
+        # Build query priority list
+        queries = []
+        if anchor:
+            for kw in clean_kws[:2]:
+                queries.append(f"{anchor} {kw}")
+            queries.append(anchor)
+
+        if len(clean_kws) > 1:
+            queries.append(" ".join(clean_kws[:2]))
+        queries.extend(clean_kws)
+
+        # Cosmic astronomy fallback queries
+        queries.extend([
+            "deep space galaxy telescope",
+            "astronomy nebula telescope",
+            "cosmic stars astronomy",
+            "earth orbit space night"
+        ])
+        return queries
 
     def fetch_scene_asset(
         self,
@@ -176,112 +145,37 @@ class NASAProvider:
         primary_asset_meta: Optional[Dict[str, Any]] = None
     ) -> Tuple[Optional[Path], Optional[Dict[str, Any]]]:
         """
-        Search and download the best matching asset for a scene with strict topic relevance.
-        Anchors candidate queries to the core celestial topic and filters out corporate/office assets.
+        Search and download the highest-ranking scientific asset for a scene.
         """
         save_dir = Path(save_dir)
         save_dir.mkdir(parents=True, exist_ok=True)
 
-        # 1. Clean keywords: eliminate corporate/office words
-        banned_kws = {
-            "nasa", "agency", "space agency", "headquarters", "scientist", "scientists",
-            "laboratory", "meeting", "briefing", "logo", "meatball", "hallway", "office",
-            "future", "concept", "illustration", "3d"
-        }
-        clean_kws = [k.strip() for k in keywords if k.strip() and not any(b in k.lower().split() for b in banned_kws)]
-
-        # 2. Derive topic anchor
-        anchor = None
-        if primary_asset_meta and primary_asset_meta.get("title"):
-            p_title = primary_asset_meta.get("title", "")
-            p_clean = re.sub(r'^(A|An|The)\s+', '', p_title, flags=re.I)
-            p_clean = re.sub(r'\s*\([^)]*\)', '', p_clean)
-            p_clean = re.sub(r'\s*-\s*(19|20)\d{2}.*$', '', p_clean)
-            anchor = re.split(r'[:\-—]', p_clean)[0].strip()
-            if len(anchor) > 28:
-                anchor = " ".join(anchor.split()[:4])
-        elif visual_subject:
-            v_clean = re.sub(r'[^\w\s]', '', visual_subject).strip()
-            if v_clean:
-                anchor = v_clean
-        elif topic_anchor:
-            t_clean = re.sub(r'[¡!¿?]', '', topic_anchor).strip()
-            anchor = t_clean
-
-        # Build candidate search queries: anchored queries first, then clean keywords, then deep cosmic fallbacks
-        queries = []
-        if anchor:
-            for kw in clean_kws[:2]:
-                queries.append(f"{anchor} {kw}")
-            queries.append(anchor)
-
-        if len(clean_kws) > 1:
-            queries.append(" ".join(clean_kws[:2]))
-        queries.extend(clean_kws)
-
-        # High-impact cosmic astronomy fallbacks (NEVER search bare "nasa" or "solar system nasa")
-        queries.extend([
-            "deep space galaxy telescope",
-            "astronomy nebula telescope",
-            "cosmic stars astronomy",
-            "earth orbit space night"
-        ])
+        primary_title = primary_asset_meta.get("title") if primary_asset_meta else None
+        queries = self._build_search_queries(keywords, topic_anchor, visual_subject, primary_title)
 
         for query in queries:
             print(f"  🔍 Querying NASA library for '{query}'...")
-            
-            # 1. Try preferred type first
-            items = self.search(query, media_types=[preferred_type], page_size=8)
-            
-            # 2. If no preferred type (e.g. video), fallback to image
-            if not items and preferred_type == "video":
-                print(f"    ↳ No video found for '{query}', falling back to images...")
-                items = self.search(query, media_types=["image"], page_size=8)
 
-            for candidate in items:
-                nasa_id = candidate["nasa_id"]
-                cand_type = candidate["media_type"]
-                direct_urls = self.get_asset_direct_urls(nasa_id)
-                best_url = self.select_best_url(direct_urls, cand_type)
+            # 1. Try preferred type (video/image)
+            raw_items = self.client.raw_search(query, media_types=[preferred_type], page_size=10)
+            candidates = self.ranker.filter_and_rank(raw_items, topic_anchor=topic_anchor or query)
 
-                if not best_url:
-                    continue
+            # 2. If no video found, fallback to high-res images
+            if not candidates and preferred_type == "video":
+                print(f"    ↳ No video found for '{query}', searching scientific images...")
+                raw_items = self.client.raw_search(query, media_types=["image"], page_size=10)
+                candidates = self.ranker.filter_and_rank(raw_items, topic_anchor=topic_anchor or query)
 
-                ext = ".mp4" if cand_type == "video" else ".jpg"
-                dest_file = save_dir / f"scene_{scene_idx:02d}{ext}"
-                meta_file = save_dir / f"scene_{scene_idx:02d}.json"
+            # If candidates were filtered out due to illustration ban, allow fallback only if no items found
+            if not candidates and raw_items:
+                candidates = self.ranker.filter_and_rank(raw_items, topic_anchor=topic_anchor or query, allow_illustrations=True)
 
-                print(f"  ⬇️ Downloading NASA {cand_type}: '{candidate['title']}'...")
-                success = download_file(best_url, dest_file)
-
-                if success:
-                    photographer = candidate.get("photographer") or candidate.get("center") or "NASA"
-                    if photographer and len(photographer) <= 24 and photographer.lower() != "nasa":
-                        attr_text = f"NASA | {photographer}"
-                    elif candidate.get("center") and len(candidate.get("center")) <= 12 and candidate.get("center").lower() != "nasa":
-                        attr_text = f"NASA {candidate.get('center')}"
-                    else:
-                        attr_text = "NASA Library"
-
-                    meta = {
-                        "scene_index": scene_idx,
-                        "provider": "nasa",
-                        "title": candidate["title"],
-                        "nasa_id": nasa_id,
-                        "media_type": cand_type,
-                        "source_url": best_url,
-                        "description": candidate["description"],
-                        "center": candidate["center"],
-                        "photographer_or_credit": candidate["photographer"],
-                        "date_created": candidate["date_created"],
-                        "attribution_text": attr_text,
-                        "license": candidate["license"],
-                        "local_file": str(dest_file.name)
-                    }
-                    save_json(meta, meta_file)
+            for cand in candidates:
+                dest_file, meta = self.downloader.download_candidate(cand, scene_idx, save_dir)
+                if dest_file and meta:
                     return dest_file, meta
 
-        # 3. If all searches fail and we have an authentic primary discovery asset, reuse it
+        # 3. If all searches fail and we have an authentic primary discovery visual, reuse it
         if primary_asset_file and primary_asset_file.exists() and primary_asset_meta:
             print(f"  ✨ Reusing verified authentic discovery visual for scene {scene_idx}: '{primary_asset_meta.get('title')}'")
             dest_file = save_dir / f"scene_{scene_idx:02d}{primary_asset_file.suffix}"
@@ -304,12 +198,7 @@ class NASAProvider:
         orientation: Optional[str] = None
     ) -> Tuple[Optional[Path], Optional[Dict[str, Any]]]:
         """
-        Download the authentic official media asset from the NASA discovery/trending event
-        at the very beginning of the pipeline.
-        Tries:
-        1. Direct APOD / NASA media_url if available.
-        2. NASA Library manifest via nasa_id if available.
-        3. Search NASA Library using exact discovery title or keywords.
+        Download authentic official media asset from the NASA discovery event for Scene 1.
         """
         save_dir = Path(save_dir)
         save_dir.mkdir(parents=True, exist_ok=True)
@@ -320,6 +209,7 @@ class NASAProvider:
         source = discovery_meta.get("source", "NASA")
         date_str = discovery_meta.get("date", "")
         credit = discovery_meta.get("credit") or discovery_meta.get("photographer") or "NASA"
+        center = discovery_meta.get("center", "NASA")
         nasa_id = discovery_meta.get("nasa_id")
 
         print(f"\n🛰️  DESCARGANDO MEDIO OFICIAL DEL DESCUBRIMIENTO AL INICIO...")
@@ -329,20 +219,7 @@ class NASAProvider:
         if credit:
             print(f"   Crédito:  {credit}")
 
-        # Determine attribution badge text (concise, <= 32 chars for mobile screen overlay)
-        if "apod" in source.lower():
-            if credit and credit.lower() not in ["nasa", "nasa / apod"] and len(credit) <= 24:
-                attribution_text = f"NASA APOD | {credit}"
-            else:
-                attribution_text = "NASA APOD"
-        elif "webb" in title.lower() or "webb" in source.lower():
-            attribution_text = "NASA / ESA Webb"
-        elif "hubble" in title.lower():
-            attribution_text = "NASA / ESA Hubble"
-        elif credit and len(credit) <= 24 and credit.lower() != "nasa":
-            attribution_text = f"NASA | {credit}"
-        else:
-            attribution_text = "NASA Oficial"
+        attribution_text = self.downloader.format_attribution(credit, center=center, source=source)
 
         # Attempt 1: Direct media_url (APOD high-resolution image or direct mp4)
         if media_url and not any(embed in media_url.lower() for embed in ["youtube.com", "youtu.be", "vimeo.com"]):
@@ -362,7 +239,7 @@ class NASAProvider:
                     "source_url": media_url,
                     "source": source,
                     "description": discovery_meta.get("scientific_text", "")[:300],
-                    "center": discovery_meta.get("center", "NASA"),
+                    "center": center,
                     "photographer_or_credit": credit,
                     "date_created": date_str,
                     "attribution_text": attribution_text,
@@ -375,8 +252,8 @@ class NASAProvider:
 
         # Attempt 2: Direct NASA Library asset via nasa_id
         if nasa_id:
-            direct_urls = self.get_asset_direct_urls(nasa_id)
-            best_url = self.select_best_url(direct_urls, media_type)
+            direct_urls = self.client.get_asset_manifest_urls(nasa_id)
+            best_url = self.client.select_best_resolution_url(direct_urls, media_type)
             if best_url:
                 ext = ".mp4" if media_type == "video" else ".jpg"
                 dest_file = save_dir / f"scene_{scene_idx:02d}{ext}"
@@ -394,7 +271,7 @@ class NASAProvider:
                         "source_url": best_url,
                         "source": source,
                         "description": discovery_meta.get("scientific_text", "")[:300],
-                        "center": discovery_meta.get("center", "NASA"),
+                        "center": center,
                         "photographer_or_credit": credit,
                         "date_created": date_str,
                         "attribution_text": attribution_text,
@@ -405,49 +282,40 @@ class NASAProvider:
                     print(f"  ✅ Recurso oficial descargado con éxito: {dest_file.name} [{attribution_text}]")
                     return dest_file, meta
 
-        # Attempt 3: Query NASA Library using discovery title and keywords
+        # Attempt 3: Query NASA Library using discovery title
         print(f"  🔍 Buscando en NASA Library por '{title}'...")
-        keywords = discovery_meta.get("keywords", [])
-        search_queries = [title]
-        if keywords:
-            search_queries.append(" ".join(keywords[:2]))
+        raw_items = self.client.raw_search(title, media_types=[media_type], page_size=6)
+        candidates = self.ranker.filter_and_rank(raw_items, topic_anchor=title)
 
-        for q in search_queries:
-            items = self.search(q, media_types=[media_type], page_size=5)
-            if not items and media_type == "video":
-                items = self.search(q, media_types=["image"], page_size=5)
-            if items:
-                cand = items[0]
-                c_urls = self.get_asset_direct_urls(cand["nasa_id"])
-                best_url = self.select_best_url(c_urls, cand["media_type"])
-                if best_url:
-                    c_type = cand["media_type"]
-                    ext = ".mp4" if c_type == "video" else ".jpg"
-                    dest_file = save_dir / f"scene_{scene_idx:02d}{ext}"
-                    meta_file = save_dir / f"scene_{scene_idx:02d}.json"
+        if not candidates and media_type == "video":
+            raw_items = self.client.raw_search(title, media_types=["image"], page_size=6)
+            candidates = self.ranker.filter_and_rank(raw_items, topic_anchor=title)
 
-                    print(f"  ⬇️ Descargando recurso oficial encontrado: '{cand['title']}'...")
-                    if download_file(best_url, dest_file):
-                        meta = {
-                            "scene_index": scene_idx,
-                            "provider": "nasa_official_discovery",
-                            "is_primary_discovery": True,
-                            "title": cand["title"],
-                            "nasa_id": cand["nasa_id"],
-                            "media_type": c_type,
-                            "source_url": best_url,
-                            "source": source,
-                            "description": cand["description"][:300],
-                            "center": cand["center"],
-                            "photographer_or_credit": cand["photographer"] or credit,
-                            "date_created": cand["date_created"] or date_str,
-                            "attribution_text": attribution_text,
-                            "license": NASA_PUBLIC_LICENSE_NOTE,
-                            "local_file": str(dest_file.name)
-                        }
-                        save_json(meta, meta_file)
-                        print(f"  ✅ Recurso oficial descargado con éxito: {dest_file.name} [{attribution_text}]")
-                        return dest_file, meta
+        if candidates:
+            cand = candidates[0]
+            dest_file, meta = self.downloader.download_candidate(cand, scene_idx, save_dir)
+            if dest_file and meta:
+                meta["provider"] = "nasa_official_discovery"
+                meta["is_primary_discovery"] = True
+                meta["source"] = source
+                meta_file = save_dir / f"scene_{scene_idx:02d}.json"
+                save_json(meta, meta_file)
+                print(f"  ✅ Recurso oficial descargado con éxito: {dest_file.name} [{attribution_text}]")
+                return dest_file, meta
 
         print("  ⚠️ No se pudo descargar el medio oficial específico al inicio; se buscará en el paso de escenas.")
         return None, None
+
+
+if __name__ == "__main__":
+    # Test runner for quick terminal debugging without rendering videos
+    query_term = sys.argv[1] if len(sys.argv) > 1 else "nebulosa"
+    print(f"\n🔬 Probando búsqueda en NASA para: '{query_term}'")
+    provider = NASAProvider()
+    results = provider.search(query_term, media_types=["image", "video"], page_size=10)
+
+    print(f"Encontrados {len(results)} candidatos clasificados por calidad científica:")
+    for i, r in enumerate(results[:5], 1):
+        print(f"  [{i}] {r['title']}")
+        print(f"      Centro: {r['center']} | Fecha: {r['date_created'][:10]} | Puntuación: {r.get('quality_score', 0):.1f}")
+        print(f"      Tipo: {r['media_type']} | NASA ID: {r['nasa_id']}")
