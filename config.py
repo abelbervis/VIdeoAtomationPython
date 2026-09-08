@@ -106,6 +106,90 @@ HOOK_STYLES = {
     "random": "Randomized selection across all viral archetypes"
 }
 
+# Multi-Topic Content Categories & Domains
+DEFAULT_CATEGORY = clean_env("CATEGORY", "auto").lower()
+CONTENT_CATEGORIES = {
+    "auto": "Automatic intelligent domain detection based on topic keywords",
+    "space": "Space & Astrophysics: cosmos, planets, black holes, NASA, deep space telescopes",
+    "nature": "Extreme Nature & Abyss: deep ocean, extreme habitats, dangerous fauna, volcanoes, evolution",
+    "tech": "Frontier Technology & AI: artificial intelligence, quantum computing, robotics, futuristic innovation",
+    "history": "Ancient Mysteries & Archaeology: lost civilizations, monuments, archaeological secrets, historic events",
+    "science": "Science Curiosities & Human Body: neuroscience, medicine, biology, optical illusions, physics trivia"
+}
+
+CATEGORY_KEYWORDS = {
+    "space": [
+        "espacio", "space", "tierra", "marte", "agujero", "nasa", "galaxia", "hubble", "webb",
+        "universo", "planeta", "estrella", "jupiter", "luna", "saturno", "cosmos", "astronauta",
+        "sol", "solar", "orbita", "meteorito", "asteroide", "cometa", "jwst", "supernova",
+        "pulsar", "quasar", "nebulosa", "apod", "astronomia", "telescopio", "vía láctea", "milky way",
+        "black hole", "galaxy", "universe", "planet", "star", "moon", "asteroid", "comet",
+        "nebula", "astronaut", "orbit", "solar system", "astro", "venus", "mercurio", "urano", "neptuno",
+        "pluton", "exoplaneta", "exoplanet", "andromeda", "andrómeda", "interestelar", "interstellar",
+        "月球", "火星", "黑洞", "宇宙", "银河", "恒星", "行星", "地球", "太空", "太阳", "韦伯", "航天"
+    ],
+    "nature": [
+        "oceano", "ocean", "mar", "marina", "marinas", "marino", "abisal", "abismo", "marianas",
+        "fosa", "tiburón", "tiburon", "shark", "ballena", "whale", "animal", "animales", "criatura",
+        "criaturas", "depredador", "predator", "selva", "jungla", "jungle", "volcan", "volcán",
+        "volcano", "tsunami", "terremoto", "earthquake", "dinosaurio", "dinosaur", "insecto",
+        "hongo", "parasito", "parásito", "planta", "especie", "evolucion", "evolución", "fauna",
+        "bosque", "deep sea", "underwater", "nature", "wildlife", "marine", "creature", "reptil",
+        "abyss", "pulpo", "calamar", "squid", "veneno", "venenoso", "anaconda", "leon", "león",
+        "selva amazonica", "glaciar", "glacier", "coral", "arrecife", "biodiversidad"
+    ],
+    "tech": [
+        "inteligencia artificial", "artificial intelligence", "ia", "ai", "robot", "robotica",
+        "robótica", "robotics", "computacion", "computación", "cuantica", "cuántica", "quantum",
+        "chip", "semiconductor", "algoritmo", "algorithm", "software", "ciber", "cyber", "hacker",
+        "internet", "futuro", "futurista", "tecnologia", "tecnología", "technology", "nanotecnologia",
+        "nanotecnología", "biotecnologia", "biotecnología", "neuralink", "automatizacion",
+        "automatización", "transistor", "supercomputadora", "supercomputer", "dron", "drone",
+        "automovil autonomo", "metaverso", "computadora", "ordenador", "redes neuronales"
+    ],
+    "history": [
+        "historia", "history", "antiguo", "antigua", "ancient", "arqueologia", "arqueología",
+        "archaeology", "piramide", "pirámide", "pyramid", "egipto", "egypt", "roma", "romano",
+        "rome", "imperio", "empire", "civilizacion", "civilización", "civilization", "mayas",
+        "aztecas", "incas", "momia", "mummy", "faraon", "faraón", "tumba", "tomb", "ruinas",
+        "ruins", "atlantida", "atlántida", "atlantis", "tesoro", "treasure", "milenario",
+        "siglo", "edad media", "medieval", "gladiador", "esparta", "vikingo", "vikingos",
+        "templario", "castillo", "manuscrito", "arqueologico", "arqueológico", "prehistoria",
+        "alejandria", "alejandría", "grecia", "griego", "griegos", "babilonia", "mesopotamia",
+        "coliseo", "monumento", "antiguedad", "antigüedad", "filosofo", "filósofo"
+    ],
+    "science": [
+        "cerebro", "brain", "mente", "mind", "neurona", "neuronas", "neuron", "neurons", "cuerpo", "humano", "human body", "genetica",
+        "genética", "adn", "dna", "celula", "célula", "cell", "celulas", "células", "virus", "bacteria", "medicina",
+        "medicine", "ojo", "optica", "óptica", "ilusion", "ilusión", "psicologia", "psicología",
+        "quimica", "química", "chemistry", "fisica", "física", "physics", "atomo", "átomo",
+        "atom", "curiosidad", "curiosidades", "enfermedad", "neurologia", "neurología", "neurociencia", "neuroscience",
+        "inmune", "hormona", "sueno", "sueño", "memoria", "molecula", "molécula", "laboratorio", "biologia", "biología"
+    ]
+}
+
+
+def detect_topic_category(topic: str, fallback: str = "space") -> str:
+    """Intelligently detects the content category of a topic string."""
+    if not topic or not topic.strip():
+        return fallback
+
+    text = topic.lower()
+    scores = {cat: 0 for cat in CATEGORY_KEYWORDS}
+
+    for cat, keywords in CATEGORY_KEYWORDS.items():
+        for kw in keywords:
+            if kw in text:
+                # Longer keywords have higher weight
+                scores[cat] += len(kw.split()) * 2
+
+    # Find highest scoring category
+    best_cat = max(scores, key=scores.get)
+    if scores[best_cat] > 0:
+        return best_cat
+
+    return fallback
+
 # TTS Settings
 TTS_PROVIDER = clean_env("TTS_PROVIDER", "edge").lower()
 TTS_API_KEY = clean_env("TTS_API_KEY", "")

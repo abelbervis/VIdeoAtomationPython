@@ -8,7 +8,9 @@ import sys
 from typing import Any
 
 from config import (
+    CONTENT_CATEGORIES,
     CURATED_SUBTITLE_COLORS,
+    DEFAULT_CATEGORY,
     DEFAULT_DURATION,
     DEFAULT_LANGUAGE,
     DEFAULT_TRANSITION,
@@ -148,6 +150,20 @@ def parse_args() -> argparse.Namespace:
         default=DEFAULT_LANGUAGE,
         choices=["es", "en", "zh"],
         help="Target language for narration and subtitles: 'es' (Spanish), 'en' (English), 'zh' (Chinese) (default: es)"
+    )
+    parser.add_argument(
+        "--category", "--genre",
+        dest="category",
+        type=str,
+        default=DEFAULT_CATEGORY,
+        choices=list(CONTENT_CATEGORIES.keys()),
+        help=f"Content category/domain (default: '{DEFAULT_CATEGORY}'):\n"
+             "  'auto'    : Automatically detects category from topic keywords\n"
+             "  'nature'  : Wildlife, deep ocean, extreme habitats, biology\n"
+             "  'tech'    : Artificial intelligence, quantum computing, robotics, cyber\n"
+             "  'history' : Ancient civilizations, archaeology, lost monuments, enigmas\n"
+             "  'science' : Human biology, neuroscience, physics, chemistry\n"
+             "  'space'   : NASA astrophysics, cosmos, planets, deep universe"
     )
     parser.add_argument(
         "--format",
@@ -325,6 +341,7 @@ def parse_args() -> argparse.Namespace:
 
     # Sanitize inputs (strip surrounding quotes or comments if passed from shell, env, or docker)
     args.language = (args.language or DEFAULT_LANGUAGE).lower().strip()
+    args.category = (args.category or DEFAULT_CATEGORY).lower().strip()
     args.voice = get_language_voice(args.language, sanitize_env_value(args.voice) if args.voice else None)
     if args.pexels_key:
         args.pexels_key = sanitize_env_value(args.pexels_key)

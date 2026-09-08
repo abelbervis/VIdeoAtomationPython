@@ -6,7 +6,7 @@ Orchestrates downloading and allocating visual media assets from NASA and Pexels
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-from config import ASSETS_DIR
+from config import ASSETS_DIR, CONTENT_CATEGORIES, DEFAULT_CATEGORY, detect_topic_category
 from providers.nasa import NASAProvider
 from providers.pexels import PexelsProvider
 
@@ -72,16 +72,23 @@ def collect_scene_assets(
     pexels: PexelsProvider,
     orientation: str,
     primary_asset_file: Optional[Path] = None,
-    primary_asset_meta: Optional[Dict[str, Any]] = None
+    primary_asset_meta: Optional[Dict[str, Any]] = None,
+    category: Optional[str] = None
 ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
     """
     Collects visual media assets for all scenes according to chosen provider or auto intelligent routing.
     """
-    print(f"\n🔭 Fetching media assets (Mode: {chosen_provider.upper()})...")
+    cat = (category or DEFAULT_CATEGORY or "auto").lower().strip()
+    if cat == "auto":
+        resolved_category = detect_topic_category(topic)
+    else:
+        resolved_category = cat
+
+    is_space_topic = (resolved_category == "space") or any(t in topic.lower() for t in SPACE_TRIGGERS)
+
+    print(f"\n🔭 Fetching media assets (Mode: {chosen_provider.upper()}, Domain: {resolved_category.upper()})...")
     scene_assets = []
     assets_metadata = []
-
-    is_space_topic = any(t in topic.lower() for t in SPACE_TRIGGERS)
 
     for idx, (scene, timing) in enumerate(zip(scenes, scene_timings), start=1):
         keywords = scene.get("keywords", [topic])

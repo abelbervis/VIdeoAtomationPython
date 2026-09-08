@@ -113,7 +113,8 @@ def main():
         language=args.language,
         context_text=nasa_grounded_context,
         hook_style=args.hook_style,
-        custom_hook=args.hook
+        custom_hook=args.hook,
+        category=args.category
     )
 
     # Strict check: If script generation fails, abort before creating media
@@ -142,7 +143,8 @@ def main():
         pexels=pexels,
         orientation=vid_orientation,
         primary_asset_file=primary_asset_file,
-        primary_asset_meta=primary_asset_meta
+        primary_asset_meta=primary_asset_meta,
+        category=args.category
     )
 
     # 8. Build Source Attribution Badges & Generate Subtitles
