@@ -26,6 +26,7 @@ from config import (
     VIDEO_WIDTH,
     VIDEO_HEIGHT,
     SUPPORTED_LANGUAGES,
+    resolve_highlight_color,
 )
 
 
@@ -167,8 +168,12 @@ class SubtitleGenerator:
         self.margin_bottom = margin_bottom
         self.font_size = font_size
         self.dynamic_highlight = dynamic_highlight
-        self.highlight_color = highlight_color
+        resolved_color, color_name = resolve_highlight_color(highlight_color)
+        self.highlight_color = resolved_color
+        self.highlight_color_name = color_name
         self.output_dir.mkdir(parents=True, exist_ok=True)
+        if self.dynamic_highlight:
+            print(f"  🎨 Subtitle highlight color: {self.highlight_color_name} ({self.highlight_color})")
 
     def generate_subtitles(
         self,

@@ -4,9 +4,10 @@ Loads environment variables and sets defaults for paths, video, audio, and APIs.
 """
 
 import os
+import random
 import sys
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Tuple
 
 # Base Paths
 BASE_DIR = Path(__file__).resolve().parent
@@ -284,11 +285,57 @@ MIN_SCENE_DURATION = 3.5
 SUBTITLE_FONT = "Arial"
 SUBTITLE_FONT_SIZE = int(clean_env("SUBTITLE_FONT_SIZE", str(_default_format_cfg["subtitle_font_size"])))
 SUBTITLE_PRIMARY_COLOR = "&H00FFFFFF"  # Crisp White in ASS &HAABBGGRR
-SUBTITLE_HIGHLIGHT_COLOR = clean_env("SUBTITLE_HIGHLIGHT_COLOR", "&H0000FFFF&")  # Vibrant Yellow/Gold active word highlight
+SUBTITLE_HIGHLIGHT_COLOR = clean_env("SUBTITLE_HIGHLIGHT_COLOR", "random")  # Default or random
 SUBTITLE_OUTLINE_COLOR = "&H00000000"  # Black outline
 SUBTITLE_OUTLINE_WIDTH = 4.0
 SUBTITLE_MARGIN_BOTTOM = int(clean_env("SUBTITLE_MARGIN_BOTTOM", str(_default_format_cfg["subtitle_margin_bottom"])))
 SUBTITLE_DYNAMIC = clean_env("SUBTITLE_DYNAMIC", "true").lower() in ("true", "1", "yes")
+
+# Curated High-Contrast Highlight Colors for Shorts/TikTok (ASS &HAABBGGRR& format)
+CURATED_SUBTITLE_COLORS: Dict[str, Tuple[str, str]] = {
+    "yellow": ("&H0000FFFF&", "Gold Yellow"),
+    "cyan": ("&H00FFFF00&", "Electric Cyan"),
+    "green": ("&H0000FF00&", "Neon Lime"),
+    "orange": ("&H00008CFF&", "Blaze Orange"),
+    "pink": ("&H00FF00FF&", "Cosmic Magenta"),
+    "amber": ("&H0000D7FF&", "Solar Amber"),
+}
+
+
+def resolve_highlight_color(color_spec: Optional[str] = None, force_random: bool = False) -> Tuple[str, str]:
+    """
+    Resolve ASS subtitle highlight color from preset name, custom hex, or random selection.
+    Returns: (ass_color_code, color_display_name)
+    """
+    spec = (color_spec if color_spec is not None else SUBTITLE_HIGHLIGHT_COLOR).strip().lower()
+
+    if force_random or spec in ("random", "rand", "any", "auto"):
+        chosen_key = random.choice(list(CURATED_SUBTITLE_COLORS.keys()))
+        code, name = CURATED_SUBTITLE_COLORS[chosen_key]
+        return code, f"{name} (randomized)"
+
+    if spec in CURATED_SUBTITLE_COLORS:
+        return CURATED_SUBTITLE_COLORS[spec]
+
+    raw = (color_spec if color_spec is not None else SUBTITLE_HIGHLIGHT_COLOR).strip()
+    # Support standard web hex (#RRGGBB) converted to ASS (&H00BBGGRR&)
+    if raw.startswith("#") and len(raw) == 7:
+        try:
+            r, g, b = raw[1:3], raw[3:5], raw[5:7]
+            return f"&H00{b}{g}{r}&", f"Custom ({raw})"
+        except Exception:
+            pass
+
+    if not raw.startswith("&H"):
+        raw = f"&H{raw}"
+    if not raw.endswith("&"):
+        raw = f"{raw}&"
+    return raw, "Custom ASS Hex"
+
+
+# Dynamic Style Variation & Shuffling
+RANDOM_STYLE = clean_env("RANDOM_STYLE", "false").lower() in ("true", "1", "yes")
+SHUFFLE_MUSIC = clean_env("SHUFFLE_MUSIC", "true").lower() in ("true", "1", "yes")
 
 # Visual Scene Transitions (FFmpeg xfade)
 ENABLE_TRANSITIONS = clean_env("ENABLE_TRANSITIONS", "true").lower() in ("true", "1", "yes")

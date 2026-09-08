@@ -14,8 +14,15 @@ from typing import Dict, List, Optional, Tuple, Any
 from config import SFX_DIR, TEMP_DIR, ENABLE_SFX, SFX_VOLUME
 
 
-def synthesize_procedural_whoosh(output_path: Path, duration: float = 0.55, sample_rate: int = 44100) -> Path:
-    """Synthesize a smooth cinematic whoosh transition sound effect."""
+def synthesize_procedural_whoosh(
+    output_path: Path,
+    duration: float = 0.55,
+    sample_rate: int = 44100,
+    center_freq: float = 280.0,
+    sweep_range: float = 1600.0,
+    sub_freq: float = 85.0
+) -> Path:
+    """Synthesize a smooth cinematic whoosh transition sound effect with customizable acoustics."""
     output_path.parent.mkdir(parents=True, exist_ok=True)
     total_samples = int(duration * sample_rate)
     samples = []
@@ -27,11 +34,11 @@ def synthesize_procedural_whoosh(output_path: Path, duration: float = 0.55, samp
         env = math.exp(-((t - 0.52) ** 2) / (2 * (0.15 ** 2)))
 
         # Sweeping frequencies: low -> high mid -> low
-        freq = 280 + 1600 * math.sin(t * math.pi)
+        freq = center_freq + sweep_range * math.sin(t * math.pi)
         raw_noise = random.uniform(-1.0, 1.0)
 
         # Low-frequency sub-rumble
-        sub_rumble = 0.35 * math.sin(2.0 * math.pi * 85 * (1.0 - 0.4 * t) * (i / sample_rate))
+        sub_rumble = 0.35 * math.sin(2.0 * math.pi * sub_freq * (1.0 - 0.4 * t) * (i / sample_rate))
 
         val = (raw_noise * 0.65 + sub_rumble) * env
         val = max(-1.0, min(1.0, val * 0.85))
@@ -47,7 +54,14 @@ def synthesize_procedural_whoosh(output_path: Path, duration: float = 0.55, samp
     return output_path
 
 
-def synthesize_procedural_boom(output_path: Path, duration: float = 1.1, sample_rate: int = 44100) -> Path:
+def synthesize_procedural_boom(
+    output_path: Path,
+    duration: float = 1.1,
+    sample_rate: int = 44100,
+    start_freq: float = 110.0,
+    end_freq: float = 42.0,
+    punch_intensity: float = 0.35
+) -> Path:
     """Synthesize a cinematic sub-bass impact for the opening hook."""
     output_path.parent.mkdir(parents=True, exist_ok=True)
     total_samples = int(duration * sample_rate)
@@ -60,8 +74,8 @@ def synthesize_procedural_boom(output_path: Path, duration: float = 1.1, sample_
         # Smooth exponential decay
         env = math.exp(-norm_t * 4.2)
 
-        # Pitch drops quickly from 110Hz to 42Hz
-        freq = 42.0 + 70.0 * math.exp(-norm_t * 7.0)
+        # Pitch drops quickly from start_freq to end_freq
+        freq = end_freq + (start_freq - end_freq) * math.exp(-norm_t * 7.0)
         phase = 2.0 * math.pi * freq * t
 
         # Sub sine wave with warm 2nd harmonic
@@ -70,7 +84,7 @@ def synthesize_procedural_boom(output_path: Path, duration: float = 1.1, sample_
         # Short punchy transient click at t=0
         punch = math.exp(-norm_t * 45.0) * random.uniform(-0.5, 0.5)
 
-        val = (sub * 0.78 + punch * 0.35) * env
+        val = (sub * 0.78 + punch * punch_intensity) * env
         val = max(-1.0, min(1.0, val * 0.85))
         sample_int = int(val * 32767)
         samples.append(struct.pack("<hh", sample_int, sample_int))
@@ -87,9 +101,15 @@ def synthesize_procedural_boom(output_path: Path, duration: float = 1.1, sample_
 class SFXManager:
     """Manages sound effect assets and timeline synchronization."""
 
-    def __init__(self, sfx_dir: Path = SFX_DIR, output_dir: Optional[Path] = None):
+    def __init__(
+        self,
+        sfx_dir: Path = SFX_DIR,
+        output_dir: Optional[Path] = None,
+        randomize: bool = True
+    ):
         self.sfx_dir = Path(sfx_dir)
         self.output_dir = Path(output_dir) if output_dir else TEMP_DIR
+        self.randomize = randomize
         self.sfx_dir.mkdir(parents=True, exist_ok=True)
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self._ensure_default_assets()
@@ -155,38 +175,70 @@ class SFXManager:
         left_buf = [0.0] * total_frames
         right_buf = [0.0] * total_frames
 
-        whoosh_file = self.sfx_dir / "whoosh.wav"
-        boom_file = self.sfx_dir / "boom.wav"
-
-        whoosh_samples = self._load_wav_samples(whoosh_file, sample_rate) if whoosh_file.exists() else []
-        boom_samples = self._load_wav_samples(boom_file, sample_rate) if boom_file.exists() else []
-
         # 1. Opening hook impact at t=0.05s
+        boom_files = [f for f in self.sfx_dir.glob("*.wav") if any(k in f.name.lower() for k in ("boom", "impact", "hit"))]
+        boom_samples = []
+        if boom_files:
+            chosen_boom_file = random.choice(boom_files) if self.randomize else boom_files[0]
+            boom_samples = self._load_wav_samples(chosen_boom_file, sample_rate)
+        elif (self.sfx_dir / "boom.wav").exists():
+            boom_samples = self._load_wav_samples(self.sfx_dir / "boom.wav", sample_rate)
+
         if boom_samples:
             start_frame = int(0.05 * sample_rate)
-            boom_vol = volume * 0.85
+            boom_vol = volume * (random.uniform(0.80, 0.95) if self.randomize else 0.85)
             for idx, (l_val, r_val) in enumerate(boom_samples):
                 pos = start_frame + idx
                 if pos < total_frames:
                     left_buf[pos] += l_val * boom_vol
                     right_buf[pos] += r_val * boom_vol
 
-        # 2. Whoosh transition for every subsequent scene
-        if whoosh_samples and len(scene_timings) > 1:
-            whoosh_vol = volume
+        # 2. Collect pool of whoosh transitions (custom WAVs + procedural variants)
+        whoosh_pool: List[List[Tuple[float, float]]] = []
+        custom_whooshes = [f for f in self.sfx_dir.glob("*.wav") if any(k in f.name.lower() for k in ("whoosh", "sweep", "cut", "transition"))]
+        for wf in custom_whooshes:
+            s = self._load_wav_samples(wf, sample_rate)
+            if s:
+                whoosh_pool.append(s)
+
+        if self.randomize and len(whoosh_pool) < 3:
+            variants = [
+                (0.48, 330.0, 1850.0, 95.0),  # Snappy energetic whoosh
+                (0.55, 280.0, 1600.0, 85.0),  # Balanced cinematic whoosh
+                (0.64, 210.0, 1300.0, 72.0),  # Deep atmospheric cosmic sweep
+            ]
+            for dur, cf, sr_f, sub_f in variants:
+                temp_w = self.output_dir / f"var_whoosh_{int(cf)}.wav"
+                synthesize_procedural_whoosh(temp_w, duration=dur, sample_rate=sample_rate, center_freq=cf, sweep_range=sr_f, sub_freq=sub_f)
+                s = self._load_wav_samples(temp_w, sample_rate)
+                if s:
+                    whoosh_pool.append(s)
+
+        if not whoosh_pool:
+            default_w = self.sfx_dir / "whoosh.wav"
+            if default_w.exists():
+                s = self._load_wav_samples(default_w, sample_rate)
+                if s:
+                    whoosh_pool.append(s)
+
+        # 3. Whoosh transition for every subsequent scene cut
+        if whoosh_pool and len(scene_timings) > 1:
             for scene in scene_timings[1:]:
-                # Lead into the cut by 0.22s (whoosh peaks at 0.27s)
+                chosen_whoosh = random.choice(whoosh_pool) if self.randomize else whoosh_pool[0]
+                cut_vol = volume * (random.uniform(0.90, 1.05) if self.randomize else 1.0)
+                lead_time = random.uniform(0.20, 0.24) if self.randomize else 0.22
+
                 cut_time = scene.get("start", 0.0)
-                sfx_start = max(0.0, cut_time - 0.22)
+                sfx_start = max(0.0, cut_time - lead_time)
                 start_frame = int(sfx_start * sample_rate)
 
-                for idx, (l_val, r_val) in enumerate(whoosh_samples):
+                for idx, (l_val, r_val) in enumerate(chosen_whoosh):
                     pos = start_frame + idx
                     if pos < total_frames:
-                        left_buf[pos] += l_val * whoosh_vol
-                        right_buf[pos] += r_val * whoosh_vol
+                        left_buf[pos] += l_val * cut_vol
+                        right_buf[pos] += r_val * cut_vol
 
-        # 3. Write out combined WAV with soft clipping limiter
+        # 4. Write out combined WAV with soft clipping limiter
         packed_frames = []
         for i in range(total_frames):
             l = max(-1.0, min(1.0, left_buf[i]))

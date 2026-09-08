@@ -159,7 +159,8 @@ def main():
         height=vid_height,
         margin_bottom=sub_margin,
         font_size=sub_font_size,
-        dynamic_highlight=dynamic_subs
+        dynamic_highlight=dynamic_subs,
+        highlight_color=args.subtitle_color
     )
     srt_path, ass_path = sub_gen.generate_subtitles(
         scene_timings,
@@ -172,11 +173,11 @@ def main():
     sfx_enabled = args.sfx and not args.no_sfx
     sfx_track = None
     if sfx_enabled:
-        sfx_mgr = SFXManager()
+        sfx_mgr = SFXManager(randomize=args.random_sfx)
         sfx_track = sfx_mgr.build_sfx_timeline(scene_timings, total_duration=total_duration)
 
     music_mgr = MusicManager()
-    bg_track = music_mgr.get_background_track(args.music)
+    bg_track = music_mgr.get_background_track(args.music, shuffle=args.shuffle_music)
     m_vol = args.music_volume if args.music_volume is not None else MUSIC_VOLUME
     prepared_music = music_mgr.prepare_music(bg_track, target_duration=total_duration, volume=m_vol)
 

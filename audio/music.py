@@ -4,11 +4,12 @@ Handles background ambient/documentary music mixing with audio ducking and loop 
 Does NOT download unverified music from the internet.
 """
 
+import random
 import subprocess
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 
-from config import MUSIC_DIR, TEMP_DIR, MUSIC_VOLUME
+from config import MUSIC_DIR, TEMP_DIR, MUSIC_VOLUME, SHUFFLE_MUSIC
 from utils.files import get_media_duration
 
 
@@ -18,25 +19,40 @@ class MusicManager:
     def __init__(self, default_music_dir: Path = MUSIC_DIR):
         self.music_dir = Path(default_music_dir)
 
-    def get_background_track(self, custom_path: Optional[str] = None) -> Optional[Path]:
-        """Check for user-provided background music."""
+    def get_background_track(
+        self,
+        custom_path: Optional[str] = None,
+        shuffle: bool = SHUFFLE_MUSIC
+    ) -> Optional[Path]:
+        """Check for user-provided background music or select from library."""
         if custom_path:
             p = Path(custom_path)
             if p.exists() and p.is_file():
                 return p
 
-        # Check default asset music location
+        # Gather all valid audio tracks in assets/music/
+        audio_files: List[Path] = []
+        if self.music_dir.exists():
+            for ext in ("*.mp3", "*.wav", "*.m4a", "*.ogg", "*.flac"):
+                audio_files.extend([f for f in self.music_dir.glob(ext) if f.stat().st_size > 0])
+
+        if not audio_files:
+            return None
+
+        # Sort for deterministic baseline
+        audio_files.sort()
+
+        if shuffle and len(audio_files) > 1:
+            chosen = random.choice(audio_files)
+            print(f"  🎶 Background music shuffled ({len(audio_files)} tracks available): {chosen.name}")
+            return chosen
+
+        # If background.mp3 exists and shuffle not active or only 1 track
         default_file = self.music_dir / "background.mp3"
-        if default_file.exists() and default_file.stat().st_size > 0:
+        if default_file in audio_files:
             return default_file
 
-        # Check for any .mp3 or .wav in music dir
-        if self.music_dir.exists():
-            for f in self.music_dir.glob("*.mp3"):
-                if f.stat().st_size > 0:
-                    return f
-
-        return None
+        return audio_files[0]
 
     def prepare_music(
         self,

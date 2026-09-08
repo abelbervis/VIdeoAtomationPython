@@ -8,6 +8,7 @@ import sys
 from typing import Any
 
 from config import (
+    CURATED_SUBTITLE_COLORS,
     DEFAULT_DURATION,
     DEFAULT_LANGUAGE,
     DEFAULT_TRANSITION,
@@ -15,7 +16,10 @@ from config import (
     ENABLE_SFX,
     LLM_PROVIDER,
     MEDIA_PROVIDER,
+    RANDOM_STYLE,
+    SHUFFLE_MUSIC,
     SUBTITLE_DYNAMIC,
+    SUBTITLE_HIGHLIGHT_COLOR,
     SUPPORTED_LANGUAGES,
     SUPPORTED_TRANSITIONS,
     VIDEO_CRF,
@@ -229,6 +233,12 @@ def parse_args() -> argparse.Namespace:
         help="Custom bottom margin for subtitles in pixels (default: auto per format, e.g. 540 for vertical Shorts Safe Zone)"
     )
     parser.add_argument(
+        "--subtitle-color", "--color",
+        type=str,
+        default=SUBTITLE_HIGHLIGHT_COLOR,
+        help=f"Active subtitle highlight color ('random', {', '.join(repr(k) for k in CURATED_SUBTITLE_COLORS.keys())}, or custom hex; default: '{SUBTITLE_HIGHLIGHT_COLOR}')"
+    )
+    parser.add_argument(
         "--dynamic-subtitles",
         action="store_true",
         default=SUBTITLE_DYNAMIC,
@@ -250,6 +260,35 @@ def parse_args() -> argparse.Namespace:
         "--no-sfx",
         action="store_true",
         help="Disable automatic sound effects"
+    )
+    parser.add_argument(
+        "--random-sfx",
+        action="store_true",
+        default=True,
+        help="Enable dynamic acoustic variations for sound effects (default: True)"
+    )
+    parser.add_argument(
+        "--no-random-sfx",
+        action="store_true",
+        help="Disable SFX acoustic variations (use fixed static waveforms)"
+    )
+    # Variety and Randomization options
+    parser.add_argument(
+        "--random-style", "--variety",
+        action="store_true",
+        default=RANDOM_STYLE,
+        help="Enable full style randomization (random curated subtitle highlight color, randomized transitions, varied SFX, and shuffled music)"
+    )
+    parser.add_argument(
+        "--shuffle-music",
+        action="store_true",
+        default=SHUFFLE_MUSIC,
+        help="Randomly select background music from assets/music/ if multiple tracks exist (default: True)"
+    )
+    parser.add_argument(
+        "--no-shuffle-music",
+        action="store_true",
+        help="Disable music shuffling and use standard background.mp3"
     )
     # Attribution badge display options
     parser.add_argument(
@@ -285,5 +324,20 @@ def parse_args() -> argparse.Namespace:
     # Auto-activate trending if historical date/days-back/archive is specified without a custom topic
     if (args.date or args.days_back or args.archive) and not args.topic and not args.discover:
         args.trending = True
+
+    # Handle Variety / Randomization overrides
+    if args.random_style:
+        if not args.no_transitions and args.transition == DEFAULT_TRANSITION:
+            args.transition = "random"
+        if args.subtitle_color == SUBTITLE_HIGHLIGHT_COLOR:
+            args.subtitle_color = "random"
+        args.shuffle_music = True
+        args.random_sfx = True
+
+    if args.no_shuffle_music:
+        args.shuffle_music = False
+
+    if args.no_random_sfx:
+        args.random_sfx = False
 
     return args
