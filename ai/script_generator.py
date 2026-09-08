@@ -7,10 +7,11 @@ Supports Google Gemini, OpenAI, and a reliable factual scientific generator fall
 import json
 import os
 import re
+import random
 import urllib.request
 import urllib.error
 from pathlib import Path
-from typing import Dict, Any, Optional, Tuple
+from typing import Dict, Any, Optional, Tuple, List
 
 from config import (
     BASE_DIR,
@@ -19,6 +20,8 @@ from config import (
     GROQ_API_KEY,
     GROQ_MODEL,
     GROQ_API_BASE,
+    HOOK_STYLE,
+    HOOK_STYLES,
     LLM_PROVIDER,
     LLM_API_BASE_URL,
     SYSTEM_PROMPT_FILE,
@@ -31,13 +34,22 @@ DEFAULT_SYSTEM_PROMPT = """You are a world-class science documentary director an
 Target duration: 30 to 45 seconds (approx. 70-95 total spoken words).
 
 CRITICAL NARRATIVE RULES:
-1. THE 3-SECOND HOOK:
-   - Start immediately with a provocative contradiction, high-stakes question, or shocking fact.
-   - Absolutely NO pleasantries or generic filler (NEVER say "Hola amigos", "En este video", "Bienvenidos", "Alguna vez te has preguntado", "Hello guys"). Jump directly into the core mystery.
+1. THE 2.5-SECOND VIRAL HOOK (Maximum Retention Engine for TikTok & Shorts):
+   - Scene 1 narration MUST be the explosive hook. STRICT LIMIT: 10 to 14 words maximum.
+   - The first 4 words MUST grab attention before the viewer can swipe away.
+   - CHOOSE ONE OF THESE 4 BATTLE-TESTED VIRAL HOOK FORMULAS:
+     a) THE VISUAL PARADOX / CONTRADICTION: "Esto que parece una simple estrella, en realidad desafía las leyes de la física." / "Lo que estás viendo ahora mismo no debería existir en el universo."
+     b) THE COSMIC THREAT / COLOSSAL SCALE: "Si este monstruo cósmico estuviera a un año luz de nosotros, el cielo ardería en segundos." / "Esta explosión espacial liberó más energía que mil millones de soles juntos."
+     c) THE UNSETTLING REVELATION / SECRET: "La ciencia creía que esto era imposible, hasta que los telescopios apuntaron aquí." / "Existe un rincón del cosmos donde el tiempo literalmente se detiene."
+     d) THE SUDDEN UNEXPLAINED ANOMALY: "Los astrónomos acaban de detectar una señal espacial que nadie logra explicar." / "Algo gigantesco se está moviendo en los confines del sistema solar."
+   - STRICTLY FORBIDDEN IN THE OPENING HOOK (INSTANT SWIPE-AWAY TRIGGERS):
+     * NEVER use question clichés: "¿Sabías que...?", "¿Alguna vez te has preguntado...?", "¿Te imaginas si...?", "Did you know...", "Have you ever wondered...".
+     * NEVER use conversational greetings: "Hola amigos", "Bienvenidos", "En este video", "Hey guys", "Welcome back".
+     * NEVER use slow journalistic introductions: "La NASA acaba de anunciar...", "Hoy exploraremos...", "Los científicos han descubierto...". Jump directly into the raw cosmic tension.
 
 2. RHYTHM & SCENE BREVITY (Shorts & Subtitles Optimized):
    - Divide the script into 4 to 5 distinct visual scenes.
-   - STRICT LIMIT: 14 to 18 words maximum per scene. Use short, punchy, active sentences.
+   - STRICT LIMIT: 14 to 18 words maximum per scene (Scene 1 hook must be 10-14 words). Use short, punchy, active sentences.
    - Avoid complex subordinate clauses. Insert punctuation (. and ;) so the voice synthesizer takes natural pauses.
 
 3. TTS & PHONETIC CLARITY (Spoken Natural Voice):
@@ -54,7 +66,7 @@ CRITICAL NARRATIVE RULES:
    - Add "visual_subject": In each scene, provide a concise 2-4 word title in the target language describing exactly what celestial object or event is being shown on screen (e.g. "Cometa Pons-Brooks", "Cola de Iones Cósmica", "Corona Solar Total", "Galaxia M51", "Espacio Profundo"). This will be displayed in the cinematic visual badge so viewers know what they are looking at.
 
 5. DRAMATIC 5-STEP ARC:
-   - Scene 1 (Visual Setup): Cosmic scale or sudden tension.
+   - Scene 1 (Explosive Hook): Immediate mystery, visual paradox, or cosmic danger.
    - Scene 2 (The Mechanism): The invisible physical trigger in action.
    - Scene 3 (The Impact): Direct clash with Earth, technology, or human perception.
    - Scene 4 (Historical Proof / Scale): A tangible historical precedent, experiment, or mind-blowing comparison.
@@ -63,12 +75,12 @@ CRITICAL NARRATIVE RULES:
 Respond ONLY with valid JSON matching this schema:
 {
   "title": "Short punchy title",
-  "hook": "Opening hook sentence",
+  "hook": "Opening hook sentence (matches Scene 1 narration)",
   "scenes": [
     {
       "scene_id": 1,
       "visual_subject": "Concise name of what is shown in target language (e.g. Cometa Pons-Brooks)",
-      "narration": "Short, punchy narration in target language (14-18 words max)",
+      "narration": "Explosive opening hook (10-14 words max)",
       "keywords": ["concrete english keyword 1", "concrete english keyword 2"],
       "visual_type": "video",
       "estimated_duration": 7
@@ -76,6 +88,46 @@ Respond ONLY with valid JSON matching this schema:
   ]
 }
 """
+
+
+def get_hook_guidance(hook_style: Optional[str] = None, custom_hook: Optional[str] = None) -> str:
+    """Build specific hook directives to steer the LLM towards high retention."""
+    if custom_hook and custom_hook.strip():
+        return (
+            f"\nCRITICAL MANDATORY HOOK INSTRUCTION:\n"
+            f"The script MUST use this exact opening hook provided by the user for Scene 1 narration:\n"
+            f"\"{custom_hook.strip()}\"\n"
+        )
+
+    style = (hook_style or HOOK_STYLE or "auto").lower().strip()
+    if style == "random":
+        style = random.choice(["paradox", "threat", "mystery", "secret"])
+
+    if style == "paradox":
+        return (
+            "\nHSS HOOK STYLE DIRECTIVE (THE VISUAL PARADOX):\n"
+            "Scene 1 narration MUST open with an impossible visual contradiction or paradox that challenges physics "
+            "(e.g. 'Esto que parece una simple estrella en realidad no debería existir en nuestro universo...').\n"
+        )
+    elif style == "threat":
+        return (
+            "\nHSS HOOK STYLE DIRECTIVE (COSMIC THREAT / COLOSSAL SCALE):\n"
+            "Scene 1 narration MUST open with intense cosmic danger, destructive energy, or terrifying scale "
+            "(e.g. 'Si este monstruo cósmico estuviera a un año luz de nosotros, el cielo ardería en segundos...').\n"
+        )
+    elif style == "mystery":
+        return (
+            "\nHSS HOOK STYLE DIRECTIVE (UNEXPLAINED COSMIC ANOMALY / MYSTERY):\n"
+            "Scene 1 narration MUST open with a sudden shocking anomaly detected in deep space that baffles astronomers "
+            "(e.g. 'Los telescopios acaban de captar una señal desconcertante en los confines de...').\n"
+        )
+    elif style == "secret":
+        return (
+            "\nHSS HOOK STYLE DIRECTIVE (SHATTERING BELIEFS / HIDDEN SECRET):\n"
+            "Scene 1 narration MUST open by shattering a widespread misconception with an unsettling cosmic truth "
+            "(e.g. 'La ciencia creía que esto era imposible, hasta que apuntaron los telescopios hacia...').\n"
+        )
+    return ""
 
 
 def load_system_prompt(custom_path: Optional[str] = None) -> Tuple[str, str]:
@@ -198,12 +250,15 @@ class ScriptGenerator:
         topic: str,
         target_duration: int = 35,
         language: str = "es",
-        context_text: Optional[str] = None
+        context_text: Optional[str] = None,
+        hook_style: Optional[str] = None,
+        custom_hook: Optional[str] = None
     ) -> Optional[Dict[str, Any]]:
         """Generate a structured script for the given topic using configured AI providers."""
         lang_label, _ = get_language_instructions(language)
         context_note = " + Grounded NASA context" if context_text else ""
-        print(f"\n🧠 Generating script for: '{topic}' (~{target_duration}s, Language: {lang_label}, System Prompt: {self.prompt_source}{context_note})...")
+        hook_note = f", Hook: {hook_style or 'auto'}" if not custom_hook else ", Hook: Custom"
+        print(f"\n🧠 Generating script for: '{topic}' (~{target_duration}s, Language: {lang_label}{hook_note}, System Prompt: {self.prompt_source}{context_note})...")
 
         # Specific provider selected
         if self.provider == "groq":
@@ -211,7 +266,7 @@ class ScriptGenerator:
                 print("  ❌ Error: Se especificó el proveedor 'groq' pero no se configuró una GROQ_API_KEY válida.")
                 print("     👉 Obtén tu clave gratuita en https://console.groq.com/keys y agrégala a tu .env o usa --groq-key.")
                 return None
-            script = self._generate_groq(topic, target_duration, language, context_text)
+            script = self._generate_groq(topic, target_duration, language, context_text, hook_style, custom_hook)
             if not script:
                 print("  ❌ Error: Falló la generación del guión con la API de Groq.")
             return script
@@ -221,7 +276,7 @@ class ScriptGenerator:
                 print("  ❌ Error: Se especificó el proveedor 'gemini' pero no se configuró una GEMINI_API_KEY válida.")
                 print("     👉 Obtén tu clave en https://aistudio.google.com/ y agrégala a tu .env o usa --gemini-key.")
                 return None
-            script = self._generate_gemini(topic, target_duration, language, context_text)
+            script = self._generate_gemini(topic, target_duration, language, context_text, hook_style, custom_hook)
             if not script:
                 print("  ❌ Error: Falló la generación del guión con la API de Gemini.")
             return script
@@ -231,7 +286,7 @@ class ScriptGenerator:
                 print("  ❌ Error: Se especificó el proveedor 'openai' pero no se configuró una OPENAI_API_KEY válida.")
                 print("     👉 Obtén tu clave en https://platform.openai.com/ y agrégala a tu .env o usa --openai-key.")
                 return None
-            script = self._generate_openai(topic, target_duration, language, context_text)
+            script = self._generate_openai(topic, target_duration, language, context_text, hook_style, custom_hook)
             if not script:
                 print("  ❌ Error: Falló la generación del guión con la API de OpenAI.")
             return script
@@ -256,24 +311,24 @@ class ScriptGenerator:
         for prov in configured_providers:
             if prov == "groq":
                 print("  ⚡ Solicitando guión ultrarrápido a Groq LPU...")
-                script = self._generate_groq(topic, target_duration, language, context_text)
+                script = self._generate_groq(topic, target_duration, language, context_text, hook_style, custom_hook)
                 if script:
                     return script
             elif prov == "gemini":
                 print("  ⚡ Solicitando guión a Google Gemini...")
-                script = self._generate_gemini(topic, target_duration, language, context_text)
+                script = self._generate_gemini(topic, target_duration, language, context_text, hook_style, custom_hook)
                 if script:
                     return script
             elif prov == "openai":
                 print("  ⚡ Solicitando guión a OpenAI...")
-                script = self._generate_openai(topic, target_duration, language, context_text)
+                script = self._generate_openai(topic, target_duration, language, context_text, hook_style, custom_hook)
                 if script:
                     return script
 
         print(f"  ⚠️ Advertencia: Las APIs externas ({', '.join(configured_providers)}) no respondieron a tiempo.")
         if context_text or topic:
             print("  🛰️ Generando guión estructurado de alta fidelidad basado en los datos científicos oficiales de la NASA...")
-            fallback_script = self._generate_scientific_fallback(topic, target_duration, language, context_text)
+            fallback_script = self._generate_scientific_fallback(topic, target_duration, language, context_text, hook_style, custom_hook)
             if fallback_script:
                 return fallback_script
 
@@ -286,10 +341,13 @@ class ScriptGenerator:
         topic: str,
         target_duration: int,
         language: str = "es",
-        context_text: Optional[str] = None
+        context_text: Optional[str] = None,
+        hook_style: Optional[str] = None,
+        custom_hook: Optional[str] = None
     ) -> Tuple[Optional[Dict[str, Any]], Optional[int], str, str]:
         """Execute a single REST call to Groq API. Returns (script_dict, status_code, err_code, err_msg)."""
         lang_name, lang_guidance = get_language_instructions(language)
+        hook_directive = get_hook_guidance(hook_style, custom_hook)
         try:
             endpoint = f"{self.groq_api_base}/chat/completions"
             context_section = ""
@@ -307,6 +365,7 @@ class ScriptGenerator:
                             f"Target duration: {target_duration} seconds.\n"
                             f"Target Language: {lang_name}\n"
                             f"Language Requirements:\n{lang_guidance}\n"
+                            f"{hook_directive}"
                             f"{context_section}"
                             f"Generate the JSON script following the schema:"
                         )
@@ -355,11 +414,13 @@ class ScriptGenerator:
         topic: str,
         target_duration: int,
         language: str = "es",
-        context_text: Optional[str] = None
+        context_text: Optional[str] = None,
+        hook_style: Optional[str] = None,
+        custom_hook: Optional[str] = None
     ) -> Optional[Dict[str, Any]]:
         """Call Groq API with automatic fallback to llama-3.3-70b-versatile if model is unavailable."""
         model = self.groq_model or "llama-3.3-70b-versatile"
-        script, status, err_code, err_msg = self._call_groq_api(model, topic, target_duration, language, context_text)
+        script, status, err_code, err_msg = self._call_groq_api(model, topic, target_duration, language, context_text, hook_style, custom_hook)
         if script:
             return script
 
@@ -384,7 +445,7 @@ class ScriptGenerator:
         if is_model_unavailable and model != fallback_model:
             print(f"  ⚠️ Groq API: El modelo '{model}' no está disponible ({err_msg}).")
             print(f"  🔄 Cambiando automáticamente al modelo oficial activo: '{fallback_model}'...")
-            fb_script, fb_status, fb_code, fb_err = self._call_groq_api(fallback_model, topic, target_duration, language, context_text)
+            fb_script, fb_status, fb_code, fb_err = self._call_groq_api(fallback_model, topic, target_duration, language, context_text, hook_style, custom_hook)
             if fb_script:
                 return fb_script
             print(f"  ❌ Falló también con el modelo '{fallback_model}': {fb_err}")
@@ -399,10 +460,13 @@ class ScriptGenerator:
         topic: str,
         target_duration: int,
         language: str = "es",
-        context_text: Optional[str] = None
+        context_text: Optional[str] = None,
+        hook_style: Optional[str] = None,
+        custom_hook: Optional[str] = None
     ) -> Optional[Dict[str, Any]]:
         """Call Gemini API via REST with connection close and model fallbacks."""
         lang_name, lang_guidance = get_language_instructions(language)
+        hook_directive = get_hook_guidance(hook_style, custom_hook)
         context_section = ""
         if context_text and context_text.strip():
             context_section = f"\nOFFICIAL SCIENTIFIC CONTEXT FROM NASA (Use as factual core):\n\"\"\"\n{context_text.strip()}\n\"\"\"\n"
@@ -413,6 +477,7 @@ class ScriptGenerator:
             f"Target duration: {target_duration} seconds.\n"
             f"Target Language: {lang_name}\n"
             f"Language Requirements:\n{lang_guidance}\n"
+            f"{hook_directive}"
             f"{context_section}"
             f"Generate the JSON script:"
         )
@@ -433,7 +498,7 @@ class ScriptGenerator:
                     "generationConfig": {
                         "temperature": 0.4,
                         "responseMimeType": "application/json",
-                        "maxOutputTokens": 2048,
+                        "maxOutputTokens": 4096,
                     }
                 }
 
@@ -471,10 +536,13 @@ class ScriptGenerator:
         topic: str,
         target_duration: int,
         language: str = "es",
-        context_text: Optional[str] = None
+        context_text: Optional[str] = None,
+        hook_style: Optional[str] = None,
+        custom_hook: Optional[str] = None
     ) -> Optional[Dict[str, Any]]:
         """Call OpenAI API or custom endpoint."""
         lang_name, lang_guidance = get_language_instructions(language)
+        hook_directive = get_hook_guidance(hook_style, custom_hook)
         try:
             endpoint = self.base_url if (self.base_url and self.base_url.startswith("http")) else "https://api.openai.com/v1/chat/completions"
             context_section = ""
@@ -492,6 +560,7 @@ class ScriptGenerator:
                             f"Target duration: {target_duration}s.\n"
                             f"Target Language: {lang_name}\n"
                             f"Language Requirements:\n{lang_guidance}\n"
+                            f"{hook_directive}"
                             f"{context_section}"
                             f"Generate the JSON script:"
                         )
@@ -539,8 +608,20 @@ class ScriptGenerator:
             if "scenes" in data and isinstance(data["scenes"], list) and len(data["scenes"]) > 0:
                 data["language"] = language
                 return data
-        except Exception as e:
-            print(f"  ⚠️ JSON parse error: {e}")
+        except Exception:
+            # Fallback: attempt to find matching outermost JSON brackets
+            first_brace = text.find("{")
+            last_brace = text.rfind("}")
+            if first_brace != -1 and last_brace > first_brace:
+                try:
+                    data = json.loads(text[first_brace:last_brace + 1])
+                    if "scenes" in data and isinstance(data["scenes"], list) and len(data["scenes"]) > 0:
+                        data["language"] = language
+                        return data
+                except Exception as e:
+                    print(f"  ⚠️ JSON parse error: {e}")
+            else:
+                print("  ⚠️ JSON parse error: No valid JSON object found in response")
         return None
 
     def _generate_scientific_fallback(
@@ -548,7 +629,9 @@ class ScriptGenerator:
         topic: str,
         target_duration: int,
         language: str = "es",
-        context_text: Optional[str] = None
+        context_text: Optional[str] = None,
+        hook_style: Optional[str] = None,
+        custom_hook: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Build a high-retention structured science video script directly from NASA grounded context.
@@ -563,65 +646,87 @@ class ScriptGenerator:
         lang = (language or "es").lower()
         is_es = lang.startswith("es")
         is_en = lang.startswith("en")
-
         title = topic.strip()
+
+        style = (hook_style or "auto").lower()
+        if style in ("auto", "random"):
+            style = random.choice(["paradox", "threat", "mystery", "secret"])
+
         if is_es:
-            hook = f"¿Sabías lo que acaba de revelar la NASA sobre {title}?"
-            c1_narr = f"La NASA acaba de registrar una observación histórica sobre {title}."
-            c2_narr = sentences[0] if len(sentences) > 0 else f"Los científicos espaciales han detectado señales asombrosas que cambian lo que sabíamos."
-            c3_narr = sentences[1] if len(sentences) > 1 else f"Este fenómeno cósmico abre una nueva era para comprender los misterios del universo."
-            c4_narr = f"El cosmos esconde secretos que apenas comenzamos a descubrir. ¿Qué opinas tú?"
-            on_screen_1 = title[:30].upper()
-            on_screen_2 = "DESCUBRIMIENTO OFICIAL"
-            on_screen_3 = "DATOS CÓSMICOS"
+            if custom_hook and custom_hook.strip():
+                hook = custom_hook.strip()
+            elif style == "paradox":
+                hook = f"Lo que estás viendo sobre {title} desafía las leyes conocidas de la física."
+            elif style == "threat":
+                hook = f"Si este colosal fenómeno en {title} ocurriera cerca, la atmósfera terrestre desaparecería."
+            elif style == "secret":
+                hook = f"Los astrónomos creían que {title} era imposible, hasta que observaron este punto exacto."
+            else:  # mystery
+                hook = f"Los telescopios espaciales acaban de registrar una anomalía desconcertante en {title}."
+
+            c1_narr = sentences[0] if len(sentences) > 0 else f"Los sensores de la NASA han detectado emisiones cósmicas jamás vistas."
+            c2_narr = sentences[1] if len(sentences) > 1 else f"Este cataclismo estelar libera una energía colosal que remodela galaxias enteras."
+            c3_narr = f"El cosmos oculta verdades que desafían nuestra ciencia. ¿Qué opinas tú?"
+            on_screen_1 = title[:28].upper()
+            on_screen_2 = "ANOMALÍA DETECTADA"
+            on_screen_3 = "ENERGÍA COLOSAL"
             on_screen_4 = "¿QUÉ OPINAS TÚ?"
         elif is_en:
-            hook = f"Did you know what NASA just discovered about {title}?"
-            c1_narr = f"NASA has just captured a groundbreaking observation of {title}."
-            c2_narr = sentences[0] if len(sentences) > 0 else f"Astrophysicists detected astonishing data that challenges our models."
-            c3_narr = sentences[1] if len(sentences) > 1 else f"This cosmic phenomenon marks a major leap in understanding deep space."
-            c4_narr = f"The universe holds infinite secrets waiting to be unlocked. What do you think?"
-            on_screen_1 = title[:30].upper()
-            on_screen_2 = "OFFICIAL DISCOVERY"
-            on_screen_3 = "COSMIC DATA"
+            if custom_hook and custom_hook.strip():
+                hook = custom_hook.strip()
+            elif style == "paradox":
+                hook = f"What you are seeing in {title} defies the known laws of physics."
+            elif style == "threat":
+                hook = f"If this cosmic titan inside {title} were any closer, it would vaporize our planet."
+            elif style == "secret":
+                hook = f"Astronomers believed {title} was impossible, until they looked right here."
+            else:  # mystery
+                hook = f"Space telescopes just captured an unsettling cosmic anomaly inside {title}."
+
+            c1_narr = sentences[0] if len(sentences) > 0 else f"NASA sensors detected groundbreaking signals challenging modern astrophysics."
+            c2_narr = sentences[1] if len(sentences) > 1 else f"This cosmic engine discharges colossal energy across vast regions of space."
+            c3_narr = f"The universe holds dark mysteries waiting to be decoded. What do you think?"
+            on_screen_1 = title[:28].upper()
+            on_screen_2 = "ANOMALY DETECTED"
+            on_screen_3 = "COLOSSAL FORCES"
             on_screen_4 = "WHAT DO YOU THINK?"
         else:
-            # Default / Chinese or other
-            hook = f"关于 {title}，NASA刚刚公布了惊人发现！"
-            c1_narr = f"NASA官方最新公布了关于 {title} 的前沿探测数据。"
-            c2_narr = sentences[0] if len(sentences) > 0 else f"科学家们捕获到了令人震撼的深空信号。"
-            c3_narr = sentences[1] if len(sentences) > 1 else f"这项天文发现正在改写我们对宇宙奥秘的认知。"
-            c4_narr = f"浩瀚星空还有多少未知？留下你的想法！"
+            if custom_hook and custom_hook.strip():
+                hook = custom_hook.strip()
+            else:
+                hook = f"关于 {title}，深空望远镜刚刚捕捉到了违背物理常理的惊人现象！"
+            c1_narr = sentences[0] if len(sentences) > 0 else f"NASA前沿探测器捕获到了令人震撼的深空能量信号。"
+            c2_narr = sentences[1] if len(sentences) > 1 else f"这项天文发现正在彻底颠覆我们对宇宙极限的认知。"
+            c3_narr = f"浩瀚星空还有多少未知？留下你的想法！"
             on_screen_1 = title[:20]
-            on_screen_2 = "NASA官方发现"
-            on_screen_3 = "宇宙前沿数据"
+            on_screen_2 = "宇宙异常"
+            on_screen_3 = "极限能量"
             on_screen_4 = "你怎么看？"
 
         # Construct scenes adapted to target duration
-        # Target duration ~ 15s -> 3 scenes; > 25s -> 4 scenes
         scenes = [
             {
                 "scene_id": 1,
                 "visual_subject": title[:30],
-                "narration": f"{hook} {c1_narr}",
+                "narration": hook,
                 "on_screen_text": on_screen_1,
                 "visual_type": "video",
-                "keywords": [title.lower(), "deep space observation", "space telescope"],
+                "keywords": [title.lower(), "deep space observation", "space telescope anomaly"],
                 "audio_cue": "whoosh"
             },
             {
                 "scene_id": 2,
-                "visual_subject": on_screen_2 if not on_screen_2.startswith("¿") else title[:30],
-                "narration": c2_narr,
+                "visual_subject": on_screen_2,
+                "narration": c1_narr,
                 "on_screen_text": on_screen_2,
                 "visual_type": "video",
-                "keywords": ["cosmic phenomenon", "astrophysics", "deep space galaxy"],
+                "keywords": ["cosmic phenomenon", "astrophysics discovery", "deep space galaxy"],
                 "audio_cue": "subtle_boom"
             },
             {
                 "scene_id": 3,
                 "visual_subject": "Espacio Profundo",
-                "narration": f"{c3_narr} {c4_narr}",
+                "narration": f"{c2_narr} {c3_narr}",
                 "on_screen_text": on_screen_4,
                 "visual_type": "video",
                 "keywords": ["deep space universe stars", "astronomy nebula", "cosmic web"],

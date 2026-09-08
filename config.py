@@ -95,6 +95,17 @@ LLM_API_BASE_URL = clean_env("LLM_API_BASE_URL", "")
 SYSTEM_PROMPT_FILE = clean_env("SYSTEM_PROMPT_FILE", "system_prompt.txt")
 SYSTEM_PROMPT_PATH = BASE_DIR / SYSTEM_PROMPT_FILE
 
+# Viral Hook Styles for TikTok & Shorts Retention
+HOOK_STYLE = clean_env("HOOK_STYLE", "auto").lower()
+HOOK_STYLES = {
+    "auto": "Balanced selection of viral hooks",
+    "paradox": "Visual contradiction or impossible physics (Lo que estás viendo desafía la física...)",
+    "threat": "Cosmic danger, destructive energy, or terrifying scale (Si este monstruo estuviera a un año luz...)",
+    "mystery": "Unexplained cosmic anomaly or sudden discovery (Los telescopios acaban de captar algo desconcertante...)",
+    "secret": "Shattering common belief with uncomfortable truth (La ciencia creía que esto era imposible...)",
+    "random": "Randomized selection across all viral archetypes"
+}
+
 # TTS Settings
 TTS_PROVIDER = clean_env("TTS_PROVIDER", "edge").lower()
 TTS_API_KEY = clean_env("TTS_API_KEY", "")

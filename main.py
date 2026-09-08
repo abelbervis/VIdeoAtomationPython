@@ -73,6 +73,7 @@ def main():
     print(f"📐 Format:       {fmt_cfg['description']}")
     print(f"🌍 Language:     {lang_name} ({args.language})")
     print(f"⏱️  Duration:     ~{args.duration} seconds")
+    print(f"🪝 Hook Style:   {args.hook_style.upper() if not args.hook else 'CUSTOM'}")
     print(f"🤖 LLM Provider: {args.llm.upper()}")
     print(f"🗣️  Voice:        {args.voice}")
     print(f"🌐 Media:        {args.provider.upper()}")
@@ -110,7 +111,9 @@ def main():
         args.topic,
         target_duration=args.duration,
         language=args.language,
-        context_text=nasa_grounded_context
+        context_text=nasa_grounded_context,
+        hook_style=args.hook_style,
+        custom_hook=args.hook
     )
 
     # Strict check: If script generation fails, abort before creating media
