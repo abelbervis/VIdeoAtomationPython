@@ -23,6 +23,8 @@ from config import (
     VIDEO_CODEC,
     AUDIO_CODEC,
     VIDEO_BITRATE,
+    VIDEO_CRF,
+    VIDEO_PRESET,
     AUDIO_BITRATE,
     OUTPUT_DIR,
     TEMP_DIR,
@@ -45,13 +47,17 @@ class VideoRenderer:
         temp_dir: Path = TEMP_DIR,
         width: int = VIDEO_WIDTH,
         height: int = VIDEO_HEIGHT,
-        fps: int = VIDEO_FPS
+        fps: int = VIDEO_FPS,
+        crf: int = VIDEO_CRF,
+        preset: str = VIDEO_PRESET
     ):
         self.output_dir = Path(output_dir)
         self.temp_dir = Path(temp_dir)
         self.width = width
         self.height = height
         self.fps = fps
+        self.crf = crf
+        self.preset = preset
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.temp_dir.mkdir(parents=True, exist_ok=True)
 
@@ -85,8 +91,8 @@ class VideoRenderer:
                 "-t", f"{clip_duration:.2f}",
                 "-vf", filter_chain,
                 "-c:v", VIDEO_CODEC,
-                "-preset", "veryfast",
-                "-b:v", VIDEO_BITRATE,
+                "-preset", "fast",
+                "-crf", "17",
                 "-pix_fmt", "yuv420p",
                 "-an",
                 str(output_clip)
@@ -124,8 +130,8 @@ class VideoRenderer:
                 "-t", f"{clip_duration:.2f}",
                 "-vf", filter_chain,
                 "-c:v", VIDEO_CODEC,
-                "-preset", "veryfast",
-                "-b:v", VIDEO_BITRATE,
+                "-preset", "fast",
+                "-crf", "17",
                 "-pix_fmt", "yuv420p",
                 "-an",
                 str(output_clip)
@@ -239,8 +245,8 @@ class VideoRenderer:
             "-filter_complex", filter_complex_str,
             "-map", "[vout]",
             "-c:v", VIDEO_CODEC,
-            "-preset", "veryfast",
-            "-b:v", VIDEO_BITRATE,
+            "-preset", "fast",
+            "-crf", "17",
             "-pix_fmt", "yuv420p",
             "-an",
             str(raw_video_path)
@@ -365,9 +371,19 @@ class VideoRenderer:
             "-map", "[vout]",
             "-map", "[aout]",
             "-c:v", VIDEO_CODEC,
-            "-preset", "veryfast",
+            "-preset", self.preset,
+            "-crf", str(self.crf),
             "-b:v", VIDEO_BITRATE,
+            "-maxrate", "16000k",
+            "-bufsize", "24000k",
+            "-profile:v", "high",
+            "-level", "4.2",
             "-pix_fmt", "yuv420p",
+            "-colorspace", "bt709",
+            "-color_primaries", "bt709",
+            "-color_trc", "bt709",
+            "-g", "60",
+            "-keyint_min", "30",
             "-c:a", AUDIO_CODEC,
             "-b:a", AUDIO_BITRATE,
             "-shortest",

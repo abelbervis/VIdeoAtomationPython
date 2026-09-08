@@ -181,7 +181,13 @@ def main():
     prepared_music = music_mgr.prepare_music(bg_track, target_duration=total_duration, volume=m_vol)
 
     # 10. Render Visual Scene Clips
-    renderer = VideoRenderer(width=vid_width, height=vid_height, fps=VIDEO_FPS)
+    renderer = VideoRenderer(
+        width=vid_width,
+        height=vid_height,
+        fps=VIDEO_FPS,
+        crf=args.crf,
+        preset=args.preset
+    )
     print(f"\n🎞️  Rendering scene clips ({vid_width}x{vid_height} @ {VIDEO_FPS}fps)...")
     scene_clips = []
     num_scenes = len(scene_assets)

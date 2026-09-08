@@ -272,7 +272,9 @@ VIDEO_FPS = int(clean_env("VIDEO_FPS", "30"))
 VIDEO_CODEC = "libx264"
 AUDIO_CODEC = "aac"
 AUDIO_BITRATE = "192k"
-VIDEO_BITRATE = "5000k"
+VIDEO_BITRATE = clean_env("VIDEO_BITRATE", "12000k")
+VIDEO_CRF = int(clean_env("VIDEO_CRF", "18"))
+VIDEO_PRESET = clean_env("VIDEO_PRESET", "fast")
 
 # Default Target Duration for Shorts (in seconds)
 DEFAULT_DURATION = 35

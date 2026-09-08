@@ -18,6 +18,8 @@ from config import (
     SUBTITLE_DYNAMIC,
     SUPPORTED_LANGUAGES,
     SUPPORTED_TRANSITIONS,
+    VIDEO_CRF,
+    VIDEO_PRESET,
     get_language_voice,
     sanitize_env_value,
 )
@@ -191,6 +193,19 @@ def parse_args() -> argparse.Namespace:
         "--keep-temp",
         action="store_true",
         help="Keep intermediate scene clips and audio files in temp/ directory"
+    )
+    parser.add_argument(
+        "--crf",
+        type=int,
+        default=VIDEO_CRF,
+        help=f"Video quality Constant Rate Factor (16-23, default: {VIDEO_CRF}; lower means higher quality)"
+    )
+    parser.add_argument(
+        "--preset",
+        type=str,
+        default=VIDEO_PRESET,
+        choices=["ultrafast", "superfast", "veryfast", "faster", "fast", "medium", "slow"],
+        help=f"FFmpeg compression preset (default: '{VIDEO_PRESET}')"
     )
     # Transition options
     parser.add_argument(
