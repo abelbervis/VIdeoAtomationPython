@@ -6,6 +6,7 @@ the AI-generated script for high-retention vertical video shorts.
 
 import json
 import re
+import time
 import urllib.error
 import urllib.request
 from typing import Any, Dict, List, Optional, Tuple
@@ -121,6 +122,9 @@ class ScriptReviewer:
         print("\n🔍 Activando Agente Revisor (Editor & Director de Arte)...")
         print("   ↳ Auditando gancho inicial, cadencia de palabras y concordancia audiovisual...")
 
+        # Brief pause to respect burst rate limits between initial script call and review call
+        time.sleep(1.2)
+
         for prov in configured:
             try:
                 reviewed = None
@@ -177,28 +181,50 @@ class ScriptReviewer:
     ) -> Optional[Dict[str, Any]]:
         endpoint = f"{self.groq_api_base}/chat/completions"
         user_content = self._build_review_prompt(draft, topic, duration, language, context_text)
-        payload = {
-            "model": self.groq_model,
-            "messages": [
-                {"role": "system", "content": CRITIC_SYSTEM_PROMPT},
-                {"role": "user", "content": user_content}
-            ],
-            "response_format": {"type": "json_object"},
-            "temperature": 0.3
-        }
-        req = urllib.request.Request(
-            endpoint,
-            data=json.dumps(payload).encode("utf-8"),
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {self.groq_key}"
-            },
-            method="POST"
-        )
-        with urllib.request.urlopen(req, timeout=20) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
-            content = data["choices"][0]["message"]["content"]
-            return self._normalize_reviewed_script(content, draft, language)
+        models_to_try = [self.groq_model]
+        if "llama-3.1-8b-instant" not in models_to_try:
+            models_to_try.append("llama-3.1-8b-instant")
+
+        for idx, model in enumerate(models_to_try):
+            payload = {
+                "model": model,
+                "messages": [
+                    {"role": "system", "content": CRITIC_SYSTEM_PROMPT},
+                    {"role": "user", "content": user_content}
+                ],
+                "response_format": {"type": "json_object"},
+                "temperature": 0.3
+            }
+            req = urllib.request.Request(
+                endpoint,
+                data=json.dumps(payload).encode("utf-8"),
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {self.groq_key}",
+                    "User-Agent": "NASA-Shorts-Generator/1.0"
+                },
+                method="POST"
+            )
+            try:
+                with urllib.request.urlopen(req, timeout=25) as resp:
+                    data = json.loads(resp.read().decode("utf-8"))
+                    content = data["choices"][0]["message"]["content"]
+                    return self._normalize_reviewed_script(content, draft, language)
+            except urllib.error.HTTPError as e:
+                err_detail = ""
+                try:
+                    err_json = json.loads(e.read().decode("utf-8"))
+                    err_detail = err_json.get("error", {}).get("message", "")
+                except Exception:
+                    pass
+                if idx < len(models_to_try) - 1:
+                    time.sleep(1.5)
+                    continue
+                if err_detail:
+                    raise RuntimeError(f"Groq {e.code}: {err_detail}") from e
+                raise e
+
+        return None
 
     def _review_gemini(
         self,
@@ -224,7 +250,10 @@ class ScriptReviewer:
         req = urllib.request.Request(
             endpoint,
             data=json.dumps(payload).encode("utf-8"),
-            headers={"Content-Type": "application/json"},
+            headers={
+                "Content-Type": "application/json",
+                "User-Agent": "NASA-Shorts-Generator/1.0"
+            },
             method="POST"
         )
         with urllib.request.urlopen(req, timeout=20) as resp:
@@ -259,7 +288,8 @@ class ScriptReviewer:
             data=json.dumps(payload).encode("utf-8"),
             headers={
                 "Content-Type": "application/json",
-                "Authorization": f"Bearer {self.openai_key}"
+                "Authorization": f"Bearer {self.openai_key}",
+                "User-Agent": "NASA-Shorts-Generator/1.0"
             },
             method="POST"
         )
