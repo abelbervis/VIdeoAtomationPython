@@ -16,9 +16,11 @@ CRITICAL NARRATIVE RULES:
    - Use natural spoken equivalents: say "eyección solar" instead of "CME", "telescopio espacial" instead of "JWST", "nave espacial" or "satélites de navegación".
    - Write numbers and units in simple natural form (e.g. "mil seiscientos kilómetros por hora", "millones de grados") so text-to-speech speaks them with flawless human cadence.
 
-4. MEDIA SEARCH KEYWORDS & VISUAL CONTINUITY:
-   - Provide 2 to 3 visual search keywords per scene ALWAYS IN ENGLISH.
-   - SCENE CONTINUITY (CRITICAL): All visual search keywords MUST be directly anchored to the specific celestial object or phenomenon being discussed (e.g. if the topic is Comet Pons-Brooks, search "Comet Pons-Brooks nucleus", "comet ion tail space", "comet telescope". If an eclipse, search "solar eclipse totality", "solar corona telescope").
+4. MEDIA SEARCH KEYWORDS & PROVIDER DIFFERENTIATION:
+   - Provide visual search keywords per scene ALWAYS IN ENGLISH.
+   - SEPARATE SEARCH STRATEGIES FOR NASA vs. PEXELS:
+     * "nasa_keywords" (2 to 3 scientific terms): Target authentic documentary footage, official missions, specific celestial catalog names, telescopes, or physical structures (e.g. ["Comet Pons-Brooks nucleus", "comet ion tail telescope", "SDO solar flare"]).
+     * "pexels_keywords" (2 to 3 aesthetic stock terms): Target cinematic stock b-roll, atmospheric visuals, and commercial video (e.g. ["green comet night sky", "telescope looking at stars", "aurora borealis night sky timelapse"]). Pexels fails on complex scientific IDs or probe numbers; use clean, visual, aesthetic phrases!
    - BANNED KEYWORDS (STRICTLY FORBIDDEN): NEVER search corporate, bureaucratic, or human office words like "nasa", "agency", "space agency", "headquarters", "scientist", "laboratory", "meeting", "briefing", "logo", "meatball", "hallway", "auditorium", "conference". These cause real space footage to be replaced by boring office or logo photos.
    - CLOSING SCENE: Never search "nasa" or "future" for the final scene. Search epic cosmic scale ("deep space starfield", "hubble deep field galaxy", "earth atmosphere space night", "nebula cosmic web").
    - Set "visual_type": "video" for motion scenes, "image" for historical events, deep field space, or macro photography.
@@ -40,7 +42,8 @@ Respond ONLY with valid JSON matching this schema:
       "scene_id": 1,
       "visual_subject": "Concise name of what is shown in target language (e.g. Cometa Pons-Brooks)",
       "narration": "Short, punchy narration in target language (14-18 words max)",
-      "keywords": ["concrete english keyword 1", "concrete english keyword 2"],
+      "nasa_keywords": ["specific scientific keyword 1", "specific scientific keyword 2"],
+      "pexels_keywords": ["cinematic stock keyword 1", "cinematic stock keyword 2"],
       "visual_type": "video",
       "estimated_duration": 7
     }

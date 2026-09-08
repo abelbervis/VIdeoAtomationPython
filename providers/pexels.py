@@ -322,9 +322,14 @@ class PexelsProvider:
 
         # Build candidate search queries
         queries: List[str] = []
+        for kw in keywords:
+            cleaned = str(kw).strip()
+            if cleaned and cleaned not in queries:
+                queries.append(cleaned)
         if len(keywords) > 1:
-            queries.append(" ".join(keywords[:2]))
-        queries.extend(keywords)
+            combined = f"{keywords[0].strip()} {keywords[1].strip()}".strip()
+            if combined and combined not in queries and len(combined.split()) <= 4:
+                queries.append(combined)
 
         for query in queries:
             print(f"  🔍 Querying Pexels library for '{query}'...")

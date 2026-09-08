@@ -45,9 +45,11 @@ CRITICAL NARRATIVE RULES:
    - Use natural spoken equivalents: say "eyección solar" instead of "CME", "telescopio espacial" instead of "JWST", "nave espacial" or "satélites de navegación".
    - Write numbers and units in simple natural form (e.g. "mil seiscientos kilómetros por hora", "millones de grados") so text-to-speech speaks them with flawless human cadence.
 
-4. MEDIA SEARCH KEYWORDS & VISUAL CONTINUITY:
-   - Provide 2 to 3 visual search keywords per scene ALWAYS IN ENGLISH.
-   - SCENE CONTINUITY (CRITICAL): All visual search keywords MUST be directly anchored to the specific celestial object or phenomenon being discussed (e.g. if the topic is Comet Pons-Brooks, search "Comet Pons-Brooks nucleus", "comet ion tail space", "comet telescope". If an eclipse, search "solar eclipse totality", "solar corona telescope").
+4. MEDIA SEARCH KEYWORDS & PROVIDER DIFFERENTIATION:
+   - Provide visual search keywords per scene ALWAYS IN ENGLISH.
+   - SEPARATE SEARCH STRATEGIES FOR NASA vs. PEXELS:
+     * "nasa_keywords" (2 to 3 scientific terms): Target authentic documentary footage, official missions, specific celestial catalog names, telescopes, or physical structures (e.g. ["Comet Pons-Brooks nucleus", "comet ion tail telescope", "SDO solar flare"]).
+     * "pexels_keywords" (2 to 3 aesthetic stock terms): Target cinematic stock b-roll, atmospheric visuals, and commercial video (e.g. ["green comet night sky", "telescope looking at stars", "aurora borealis night sky timelapse"]). Pexels fails on complex scientific IDs or probe numbers; use clean, visual, aesthetic phrases!
    - BANNED KEYWORDS (STRICTLY FORBIDDEN): NEVER search corporate, bureaucratic, or human office words like "nasa", "agency", "space agency", "headquarters", "scientist", "laboratory", "meeting", "briefing", "logo", "meatball", "hallway", "auditorium", "conference". These cause real space footage to be replaced by boring office or logo photos.
    - CLOSING SCENE: Never search "nasa" or "future" for the final scene. Search epic cosmic scale ("deep space starfield", "hubble deep field galaxy", "earth atmosphere space night", "nebula cosmic web").
    - Set "visual_type": "video" for motion scenes, "image" for historical events, deep field space, or macro photography.
@@ -69,7 +71,8 @@ Respond ONLY with valid JSON matching this schema:
       "scene_id": 1,
       "visual_subject": "Concise name of what is shown in target language (e.g. Cometa Pons-Brooks)",
       "narration": "Short, punchy narration in target language (14-18 words max)",
-      "keywords": ["concrete english keyword 1", "concrete english keyword 2"],
+      "nasa_keywords": ["specific scientific keyword 1", "specific scientific keyword 2"],
+      "pexels_keywords": ["cinematic stock keyword 1", "cinematic stock keyword 2"],
       "visual_type": "video",
       "estimated_duration": 7
     }
@@ -128,22 +131,22 @@ def get_language_instructions(language: str) -> Tuple[str, str]:
         return (
             "English",
             "The narration and title MUST be written in natural, punchy, fluent English for viral shorts.\n"
-            "Visual search keywords MUST also be in English."
+            "Visual search keywords ('nasa_keywords' and 'pexels_keywords') MUST also be in English."
         )
     elif lang in ("zh", "zh-cn", "chinese"):
         return (
             "Simplified Chinese (Mandarin / 中文简体)",
             "The entire narration and title MUST be written in natural, fluent Simplified Chinese (中文简体), "
             "crafted for high-retention viral short videos.\n"
-            "CRITICAL: The visual search 'keywords' for NASA and Pexels MUST ALWAYS BE IN ENGLISH "
-            "(e.g. ['deep space nebula', 'mars surface', 'black hole event horizon']) so the media search succeeds!"
+            "CRITICAL: The visual search keywords ('nasa_keywords' and 'pexels_keywords') MUST ALWAYS BE IN ENGLISH "
+            "(e.g. nasa_keywords: ['deep space nebula', 'mars curiosity'], pexels_keywords: ['space galaxy cinematic', 'night sky stars']) so media search succeeds!"
         )
     else:
         return (
             "Spanish (Español)",
             "The entire narration and title MUST be written in natural, fluent Spanish (Español).\n"
-            "The visual search 'keywords' for NASA and Pexels MUST ALWAYS BE IN ENGLISH "
-            "(e.g. ['saturn rings', 'supernova explosion']) so the media search succeeds!"
+            "The visual search keywords ('nasa_keywords' and 'pexels_keywords') MUST ALWAYS BE IN ENGLISH "
+            "(e.g. nasa_keywords: ['saturn rings cassini', 'supernova remnant chandra'], pexels_keywords: ['space planet cinematic', 'starry night sky']) so media search succeeds!"
         )
 
 
@@ -528,7 +531,7 @@ class ScriptGenerator:
             return None
 
     def _parse_json_response(self, text: str, language: str = "es") -> Optional[Dict[str, Any]]:
-        """Clean markdown wrapping and validate JSON structure."""
+        """Clean markdown wrapping, validate and normalize JSON structure with separate provider keywords."""
         text = text.strip()
         if text.startswith("```"):
             text = re.sub(r"^```(?:json)?\n?", "", text)
@@ -538,6 +541,31 @@ class ScriptGenerator:
             data = json.loads(text)
             if "scenes" in data and isinstance(data["scenes"], list) and len(data["scenes"]) > 0:
                 data["language"] = language
+
+                # Normalize keywords across all scenes
+                for sc in data["scenes"]:
+                    # Convert string to list if LLM returned a single string
+                    for key_field in ("nasa_keywords", "pexels_keywords", "keywords"):
+                        if isinstance(sc.get(key_field), str):
+                            sc[key_field] = [sc[key_field].strip()]
+                        elif not isinstance(sc.get(key_field), list):
+                            sc[key_field] = []
+
+                    nasa_kws = [str(k).strip() for k in sc.get("nasa_keywords", []) if str(k).strip()]
+                    pexels_kws = [str(k).strip() for k in sc.get("pexels_keywords", []) if str(k).strip()]
+                    legacy_kws = [str(k).strip() for k in sc.get("keywords", []) if str(k).strip()]
+
+                    # Cross-fill if either provider-specific list is empty
+                    if not nasa_kws:
+                        nasa_kws = legacy_kws[:] if legacy_kws else pexels_kws[:]
+                    if not pexels_kws:
+                        pexels_kws = legacy_kws[:] if legacy_kws else nasa_kws[:]
+
+                    sc["nasa_keywords"] = nasa_kws
+                    sc["pexels_keywords"] = pexels_kws
+                    # Ensure legacy keywords field is populated for backwards compatibility
+                    sc["keywords"] = nasa_kws if nasa_kws else pexels_kws
+
                 return data
         except Exception as e:
             print(f"  ⚠️ JSON parse error: {e}")
@@ -597,8 +625,7 @@ class ScriptGenerator:
             on_screen_3 = "宇宙前沿数据"
             on_screen_4 = "你怎么看？"
 
-        # Construct scenes adapted to target duration
-        # Target duration ~ 15s -> 3 scenes; > 25s -> 4 scenes
+        # Construct scenes adapted to target duration with differentiated NASA and Pexels keywords
         scenes = [
             {
                 "scene_id": 1,
@@ -606,6 +633,8 @@ class ScriptGenerator:
                 "narration": f"{hook} {c1_narr}",
                 "on_screen_text": on_screen_1,
                 "visual_type": "video",
+                "nasa_keywords": [title.lower(), "deep space observation", "space telescope"],
+                "pexels_keywords": ["telescope starry sky", "night sky astronomy", "deep space galaxy"],
                 "keywords": [title.lower(), "deep space observation", "space telescope"],
                 "audio_cue": "whoosh"
             },
@@ -615,6 +644,8 @@ class ScriptGenerator:
                 "narration": c2_narr,
                 "on_screen_text": on_screen_2,
                 "visual_type": "video",
+                "nasa_keywords": ["cosmic phenomenon", "astrophysics", "deep space galaxy"],
+                "pexels_keywords": ["galaxy space motion", "nebula stars cinematic", "cosmos animation"],
                 "keywords": ["cosmic phenomenon", "astrophysics", "deep space galaxy"],
                 "audio_cue": "subtle_boom"
             },
@@ -624,6 +655,8 @@ class ScriptGenerator:
                 "narration": f"{c3_narr} {c4_narr}",
                 "on_screen_text": on_screen_4,
                 "visual_type": "video",
+                "nasa_keywords": ["deep space universe stars", "astronomy nebula telescope", "cosmic web"],
+                "pexels_keywords": ["starfield night sky", "milky way timelapse", "deep space stars"],
                 "keywords": ["deep space universe stars", "astronomy nebula", "cosmic web"],
                 "audio_cue": "laser"
             }

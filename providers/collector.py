@@ -84,7 +84,8 @@ def collect_scene_assets(
     is_space_topic = any(t in topic.lower() for t in SPACE_TRIGGERS)
 
     for idx, (scene, timing) in enumerate(zip(scenes, scene_timings), start=1):
-        keywords = scene.get("keywords", [topic])
+        nasa_keywords = scene.get("nasa_keywords") or scene.get("keywords") or [topic]
+        pexels_keywords = scene.get("pexels_keywords") or scene.get("keywords") or [topic]
         visual_type = scene.get("visual_type", "video")
         asset_file = None
         meta = None
@@ -98,14 +99,14 @@ def collect_scene_assets(
         elif chosen_provider == "pexels":
             asset_file, meta = pexels.fetch_scene_asset(
                 scene_idx=idx,
-                keywords=keywords,
+                keywords=pexels_keywords,
                 preferred_type=visual_type,
                 orientation=orientation
             )
         elif chosen_provider == "nasa":
             asset_file, meta = nasa.fetch_scene_asset(
                 scene_idx=idx,
-                keywords=keywords,
+                keywords=nasa_keywords,
                 preferred_type=visual_type,
                 orientation=orientation,
                 topic_anchor=topic,
@@ -118,7 +119,7 @@ def collect_scene_assets(
             if is_space_topic or not pexels.is_configured():
                 asset_file, meta = nasa.fetch_scene_asset(
                     scene_idx=idx,
-                    keywords=keywords,
+                    keywords=nasa_keywords,
                     preferred_type=visual_type,
                     orientation=orientation,
                     topic_anchor=topic,
@@ -127,25 +128,25 @@ def collect_scene_assets(
                     primary_asset_meta=primary_asset_meta
                 )
                 if not asset_file and pexels.is_configured():
-                    print(f"    ↳ NASA visual not found for scene {idx}, querying Pexels...")
+                    print(f"    ↳ NASA visual not found for scene {idx}, querying Pexels with stock keywords...")
                     asset_file, meta = pexels.fetch_scene_asset(
                         scene_idx=idx,
-                        keywords=keywords,
+                        keywords=pexels_keywords,
                         preferred_type=visual_type,
                         orientation=orientation
                     )
             else:
                 asset_file, meta = pexels.fetch_scene_asset(
                     scene_idx=idx,
-                    keywords=keywords,
+                    keywords=pexels_keywords,
                     preferred_type=visual_type,
                     orientation=orientation
                 )
                 if not asset_file:
-                    print(f"    ↳ Pexels visual not found for scene {idx}, querying NASA...")
+                    print(f"    ↳ Pexels visual not found for scene {idx}, querying NASA with scientific keywords...")
                     asset_file, meta = nasa.fetch_scene_asset(
                         scene_idx=idx,
-                        keywords=keywords,
+                        keywords=nasa_keywords,
                         preferred_type=visual_type,
                         orientation=orientation,
                         topic_anchor=topic,
