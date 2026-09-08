@@ -215,12 +215,30 @@ Puedes generar videos usando la biblioteca oficial de **Pexels** (ideal para tem
    python main.py --topic "volcanes" --provider pexels --pexels-key "tu_clave"
    ```
 
-### 5. Modo Inteligente Automático (`--provider auto`)
-Por defecto (`auto`), el sistema enruta inteligentemente:
-- Si el tema es astronómico/espacio ("Marte", "agujeros negros", "Tierra"), consulta primero la **NASA**.
-- Si el tema es general o no se encuentra en la NASA, busca videos verticales en **Pexels**.
+### 5. Proveedor Pixabay para Animaciones y Simulaciones 3D (`--provider pixabay`)
+Pixabay destaca por sus animaciones 3D/CGI de física cuántica, bucles cósmicos, órbitas y nebulosas en movimiento:
 
-### 6. Transiciones, Subtítulos Dinámicos y Efectos de Sonido
+1. Obtén tu clave gratuita en [pixabay.com/api/docs](https://pixabay.com/api/docs/) (hasta 5.000 peticiones/hora).
+2. Agrégala en tu `.env`:
+   ```env
+   PIXABAY_API_KEY="tu_clave_de_pixabay_aqui"
+   ```
+3. Ejecuta indicando `--provider pixabay`:
+   ```bash
+   python main.py --topic "colisión de galaxias" --provider pixabay
+   python main.py --topic "simulación de agujero negro" --provider pixabay --pixabay-key "tu_clave"
+   ```
+
+### 6. Cascada Inteligente de 3 Niveles (`--provider auto`)
+Por defecto (`auto`), el sistema ejecuta un enrutamiento en cascada de 3 niveles:
+- **Temas Espaciales:**
+  1. **NASA:** Tomas reales y documentales oficiales (`nasa_keywords`).
+  2. **Pexels:** Videos cinematográficos de archivo y timelapses de cielo nocturno (`stock_keywords`).
+  3. **Pixabay:** Animaciones 3D, CGI y simulaciones espaciales (`stock_keywords`).
+- **Temas Generales / Terrestres:**
+  1. **Pexels** → 2. **Pixabay** → 3. **NASA**.
+
+### 7. Transiciones, Subtítulos Dinámicos y Efectos de Sonido
 Por defecto, las transiciones suaves (`fade`), los subtítulos resaltados dinámicamente y los efectos de sonido (*whoosh* y *boom*) están **activados automáticamente**. Puedes personalizar su comportamiento:
 
 ```bash

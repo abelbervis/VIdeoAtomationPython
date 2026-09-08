@@ -545,26 +545,30 @@ class ScriptGenerator:
                 # Normalize keywords across all scenes
                 for sc in data["scenes"]:
                     # Convert string to list if LLM returned a single string
-                    for key_field in ("nasa_keywords", "pexels_keywords", "keywords"):
+                    for key_field in ("nasa_keywords", "pexels_keywords", "stock_keywords", "keywords"):
                         if isinstance(sc.get(key_field), str):
                             sc[key_field] = [sc[key_field].strip()]
                         elif not isinstance(sc.get(key_field), list):
                             sc[key_field] = []
 
                     nasa_kws = [str(k).strip() for k in sc.get("nasa_keywords", []) if str(k).strip()]
-                    pexels_kws = [str(k).strip() for k in sc.get("pexels_keywords", []) if str(k).strip()]
+                    stock_kws = [
+                        str(k).strip() for k in (sc.get("pexels_keywords") or sc.get("stock_keywords") or [])
+                        if str(k).strip()
+                    ]
                     legacy_kws = [str(k).strip() for k in sc.get("keywords", []) if str(k).strip()]
 
                     # Cross-fill if either provider-specific list is empty
                     if not nasa_kws:
-                        nasa_kws = legacy_kws[:] if legacy_kws else pexels_kws[:]
-                    if not pexels_kws:
-                        pexels_kws = legacy_kws[:] if legacy_kws else nasa_kws[:]
+                        nasa_kws = legacy_kws[:] if legacy_kws else stock_kws[:]
+                    if not stock_kws:
+                        stock_kws = legacy_kws[:] if legacy_kws else nasa_kws[:]
 
                     sc["nasa_keywords"] = nasa_kws
-                    sc["pexels_keywords"] = pexels_kws
+                    sc["pexels_keywords"] = stock_kws
+                    sc["stock_keywords"] = stock_kws
                     # Ensure legacy keywords field is populated for backwards compatibility
-                    sc["keywords"] = nasa_kws if nasa_kws else pexels_kws
+                    sc["keywords"] = nasa_kws if nasa_kws else stock_kws
 
                 return data
         except Exception as e:

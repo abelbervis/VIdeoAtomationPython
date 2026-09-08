@@ -98,17 +98,24 @@ def parse_args() -> argparse.Namespace:
         "--provider",
         type=str,
         default=MEDIA_PROVIDER,
-        choices=["auto", "nasa", "pexels"],
+        choices=["auto", "nasa", "pexels", "pixabay"],
         help="Media source provider:\n"
-             "  'auto'   : Intelligent routing (NASA for space, Pexels for nature/tech/curiosities)\n"
-             "  'nasa'   : Official NASA Image & Video Library (public domain space media)\n"
-             "  'pexels' : Pexels API (high-definition vertical 9:16 stock videos & photos)"
+             "  'auto'    : Intelligent 3-tier cascade (NASA -> Pexels -> Pixabay)\n"
+             "  'nasa'    : Official NASA Image & Video Library (public domain space media)\n"
+             "  'pexels'  : Pexels API (high-definition vertical 9:16 stock videos & photos)\n"
+             "  'pixabay' : Pixabay API (space animations, 3D CGI simulations & stock footage)"
     )
     parser.add_argument(
         "--pexels-key",
         type=str,
         default=None,
         help="Custom Pexels API key (or set PEXELS_API_KEY in .env file)"
+    )
+    parser.add_argument(
+        "--pixabay-key",
+        type=str,
+        default=None,
+        help="Custom Pixabay API key (or set PIXABAY_API_KEY in .env file)"
     )
     parser.add_argument(
         "--llm",
@@ -304,6 +311,8 @@ def parse_args() -> argparse.Namespace:
     args.voice = get_language_voice(args.language, sanitize_env_value(args.voice) if args.voice else None)
     if args.pexels_key:
         args.pexels_key = sanitize_env_value(args.pexels_key)
+    if args.pixabay_key:
+        args.pixabay_key = sanitize_env_value(args.pixabay_key)
     if args.groq_key:
         args.groq_key = sanitize_env_value(args.groq_key)
     if args.gemini_key:

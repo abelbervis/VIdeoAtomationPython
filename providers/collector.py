@@ -1,6 +1,6 @@
 """
 Media Collector & Provider Router.
-Orchestrates downloading and allocating visual media assets from NASA and Pexels.
+Orchestrates downloading and allocating visual media assets from NASA, Pexels, and Pixabay.
 """
 
 from pathlib import Path
@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from config import ASSETS_DIR
 from providers.nasa import NASAProvider
 from providers.pexels import PexelsProvider
+from providers.pixabay import PixabayProvider
 
 # Detect if topic is space-specific for auto mode (Spanish, English, Chinese triggers)
 SPACE_TRIGGERS = [
@@ -72,20 +73,29 @@ def collect_scene_assets(
     pexels: PexelsProvider,
     orientation: str,
     primary_asset_file: Optional[Path] = None,
-    primary_asset_meta: Optional[Dict[str, Any]] = None
+    primary_asset_meta: Optional[Dict[str, Any]] = None,
+    pixabay: Optional[PixabayProvider] = None
 ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
     """
     Collects visual media assets for all scenes according to chosen provider or auto intelligent routing.
+    Supports a resilient 3-tier cascade across NASA, Pexels, and Pixabay.
     """
     print(f"\n🔭 Fetching media assets (Mode: {chosen_provider.upper()})...")
     scene_assets = []
     assets_metadata = []
 
     is_space_topic = any(t in topic.lower() for t in SPACE_TRIGGERS)
+    has_pexels = pexels.is_configured()
+    has_pixabay = pixabay is not None and pixabay.is_configured()
 
     for idx, (scene, timing) in enumerate(zip(scenes, scene_timings), start=1):
         nasa_keywords = scene.get("nasa_keywords") or scene.get("keywords") or [topic]
-        pexels_keywords = scene.get("pexels_keywords") or scene.get("keywords") or [topic]
+        stock_keywords = (
+            scene.get("pexels_keywords")
+            or scene.get("stock_keywords")
+            or scene.get("keywords")
+            or [topic]
+        )
         visual_type = scene.get("visual_type", "video")
         asset_file = None
         meta = None
@@ -96,13 +106,31 @@ def collect_scene_assets(
             print(f"     📡 Fuente / Atribución: {primary_asset_meta.get('attribution_text', 'NASA')}")
             asset_file = primary_asset_file
             meta = primary_asset_meta
+        elif chosen_provider == "pixabay":
+            if has_pixabay and pixabay:
+                asset_file, meta = pixabay.fetch_scene_asset(
+                    scene_idx=idx,
+                    keywords=stock_keywords,
+                    preferred_type=visual_type,
+                    orientation=orientation
+                )
+            else:
+                print("  ⚠️ Pixabay provider requested, but PIXABAY_API_KEY is not configured.")
         elif chosen_provider == "pexels":
             asset_file, meta = pexels.fetch_scene_asset(
                 scene_idx=idx,
-                keywords=pexels_keywords,
+                keywords=stock_keywords,
                 preferred_type=visual_type,
                 orientation=orientation
             )
+            if not asset_file and has_pixabay and pixabay:
+                print(f"    ↳ Pexels visual not found for scene {idx}, falling back to Pixabay...")
+                asset_file, meta = pixabay.fetch_scene_asset(
+                    scene_idx=idx,
+                    keywords=stock_keywords,
+                    preferred_type=visual_type,
+                    orientation=orientation
+                )
         elif chosen_provider == "nasa":
             asset_file, meta = nasa.fetch_scene_asset(
                 scene_idx=idx,
@@ -114,9 +142,27 @@ def collect_scene_assets(
                 primary_asset_file=primary_asset_file,
                 primary_asset_meta=primary_asset_meta
             )
+            if not asset_file and has_pexels:
+                print(f"    ↳ NASA visual not found for scene {idx}, trying Pexels...")
+                asset_file, meta = pexels.fetch_scene_asset(
+                    scene_idx=idx,
+                    keywords=stock_keywords,
+                    preferred_type=visual_type,
+                    orientation=orientation
+                )
+            if not asset_file and has_pixabay and pixabay:
+                print(f"    ↳ Trying Pixabay as secondary fallback for scene {idx}...")
+                asset_file, meta = pixabay.fetch_scene_asset(
+                    scene_idx=idx,
+                    keywords=stock_keywords,
+                    preferred_type=visual_type,
+                    orientation=orientation
+                )
         else:
-            # Auto mode: route according to topic domain and available keys
-            if is_space_topic or not pexels.is_configured():
+            # Auto mode: 3-tier intelligent cascade
+            # Space topics: 1. NASA -> 2. Pexels -> 3. Pixabay
+            # General topics: 1. Pexels -> 2. Pixabay -> 3. NASA
+            if is_space_topic or (not has_pexels and not has_pixabay):
                 asset_file, meta = nasa.fetch_scene_asset(
                     scene_idx=idx,
                     keywords=nasa_keywords,
@@ -127,23 +173,40 @@ def collect_scene_assets(
                     primary_asset_file=primary_asset_file,
                     primary_asset_meta=primary_asset_meta
                 )
-                if not asset_file and pexels.is_configured():
+                if not asset_file and has_pexels:
                     print(f"    ↳ NASA visual not found for scene {idx}, querying Pexels with stock keywords...")
                     asset_file, meta = pexels.fetch_scene_asset(
                         scene_idx=idx,
-                        keywords=pexels_keywords,
+                        keywords=stock_keywords,
+                        preferred_type=visual_type,
+                        orientation=orientation
+                    )
+                if not asset_file and has_pixabay and pixabay:
+                    print(f"    ↳ Pexels visual not found for scene {idx}, querying Pixabay simulations/stock...")
+                    asset_file, meta = pixabay.fetch_scene_asset(
+                        scene_idx=idx,
+                        keywords=stock_keywords,
                         preferred_type=visual_type,
                         orientation=orientation
                     )
             else:
-                asset_file, meta = pexels.fetch_scene_asset(
-                    scene_idx=idx,
-                    keywords=pexels_keywords,
-                    preferred_type=visual_type,
-                    orientation=orientation
-                )
+                if has_pexels:
+                    asset_file, meta = pexels.fetch_scene_asset(
+                        scene_idx=idx,
+                        keywords=stock_keywords,
+                        preferred_type=visual_type,
+                        orientation=orientation
+                    )
+                if not asset_file and has_pixabay and pixabay:
+                    print(f"    ↳ Querying Pixabay for scene {idx}...")
+                    asset_file, meta = pixabay.fetch_scene_asset(
+                        scene_idx=idx,
+                        keywords=stock_keywords,
+                        preferred_type=visual_type,
+                        orientation=orientation
+                    )
                 if not asset_file:
-                    print(f"    ↳ Pexels visual not found for scene {idx}, querying NASA with scientific keywords...")
+                    print(f"    ↳ Querying NASA library for scene {idx}...")
                     asset_file, meta = nasa.fetch_scene_asset(
                         scene_idx=idx,
                         keywords=nasa_keywords,

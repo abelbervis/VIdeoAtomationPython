@@ -23,6 +23,7 @@ from audio.tts import TTSManager
 from config import (
     MUSIC_VOLUME,
     PEXELS_API_KEY,
+    PIXABAY_API_KEY,
     SUPPORTED_LANGUAGES,
     TEMP_DIR,
     TRANSITION_DURATION,
@@ -33,6 +34,7 @@ from config import (
 from providers.collector import collect_scene_assets, prepare_primary_discovery_asset
 from providers.nasa import NASAProvider
 from providers.pexels import PexelsProvider
+from providers.pixabay import PixabayProvider
 from subtitles.attribution import build_source_attributions
 from subtitles.generator import SubtitleGenerator
 from utils.cli import parse_args
@@ -81,12 +83,19 @@ def main():
     nasa = NASAProvider()
     pexels_key = args.pexels_key or PEXELS_API_KEY
     pexels = PexelsProvider(api_key=pexels_key)
+    pixabay_key = args.pixabay_key or PIXABAY_API_KEY
+    pixabay = PixabayProvider(api_key=pixabay_key)
 
     chosen_provider = args.provider.lower()
     if chosen_provider == "pexels" and not pexels.is_configured():
         print("\n❌ Error: PEXELS_API_KEY is required when using '--provider pexels'.")
         print("👉 You can get a free API key in 30 seconds at: https://www.pexels.com/api/")
         print("👉 Add it to your .env file: PEXELS_API_KEY=\"your_key_here\" or pass --pexels-key.\n")
+        sys.exit(1)
+    elif chosen_provider == "pixabay" and not pixabay.is_configured():
+        print("\n❌ Error: PIXABAY_API_KEY is required when using '--provider pixabay'.")
+        print("👉 You can get a free API key in 30 seconds at: https://pixabay.com/api/docs/")
+        print("👉 Add it to your .env file: PIXABAY_API_KEY=\"your_key_here\" or pass --pixabay-key.\n")
         sys.exit(1)
 
     # 4. Download Authentic NASA Primary Discovery Asset (Scene 1) if Running Trending Topic
@@ -129,7 +138,7 @@ def main():
     tts_mgr = TTSManager(provider_type=TTS_PROVIDER, voice=args.voice, language=args.language)
     narration_audio, scene_timings, total_duration = tts_mgr.synthesize_script(script)
 
-    # 7. Collect Scene Visual Media (NASA or Pexels)
+    # 7. Collect Scene Visual Media (NASA, Pexels, or Pixabay)
     scene_assets, assets_metadata = collect_scene_assets(
         scenes=scenes,
         scene_timings=scene_timings,
@@ -139,7 +148,8 @@ def main():
         pexels=pexels,
         orientation=vid_orientation,
         primary_asset_file=primary_asset_file,
-        primary_asset_meta=primary_asset_meta
+        primary_asset_meta=primary_asset_meta,
+        pixabay=pixabay
     )
 
     # 8. Build Source Attribution Badges & Generate Subtitles

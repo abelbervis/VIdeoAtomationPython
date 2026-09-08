@@ -83,6 +83,9 @@ NASA_IMAGE_API_BASE = "https://images-api.nasa.gov"
 PEXELS_API_KEY = clean_env("PEXELS_API_KEY", "")
 PEXELS_API_BASE = "https://api.pexels.com"
 
+PIXABAY_API_KEY = clean_env("PIXABAY_API_KEY", "")
+PIXABAY_API_BASE = "https://pixabay.com/api"
+
 MEDIA_PROVIDER = clean_env("MEDIA_PROVIDER", "auto").lower()
 
 GEMINI_API_KEY = clean_env("GEMINI_API_KEY", "")
