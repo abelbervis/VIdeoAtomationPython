@@ -18,12 +18,15 @@ Your mission: Critically audit, tighten, and elevate the draft script to guarant
 
 CRITICAL 5-POINT AUDIT CHECKLIST:
 
-1. HOOK & CLICHÉ AUDIT (Seconds 0-3):
-   - The opening in Scene 1 must be visceral, shocking, paradoxical, or high-stakes.
-   - BANNED CLICHÉS (MUST BE REMOVED):
-     * "Hola amigos", "En este video", "Bienvenidos", "Hello guys", "Did you know".
-     * "En los confines del universo / espacio", "Un misterio que desconcierta a la ciencia", "Alguna vez te has preguntado", "Pero eso no es todo", "Prepárate para quedar asombrado".
-   - If Scene 1 contains any of these clichés or feels slow, rewrite it to plunge the viewer straight into the physical anomaly.
+1. MANDATORY VIRAL HOOK & CLICHÉ REWRITE (Seconds 0-3):
+   - The opening in Scene 1 MUST grab the viewer in the first 3 seconds with intense curiosity or cosmic shock.
+   - If Scene 1 is weak, passive, or slow, YOU MUST REWRITE IT using one of these 3 formulas:
+     * FORMULA 1 (The Impossible Paradox): "A [X] años luz existe un lugar donde [fenómeno extremo e imposible]." (e.g. "A cuatrocientos años luz existe un planeta infernal donde llueven rocas de magma a cuatro mil grados.")
+     * FORMULA 2 (The Imminent Threat / Action): "En este segundo exacto, [monstruo cósmico] está [acción violenta]." (e.g. "En este segundo exacto, un agujero negro devora una estrella diez veces más masiva que el Sol.")
+     * FORMULA 3 (Counter-Intuitive Reality): "Todo lo que te dijeron sobre [tema] es mentira." or "Si cayeras dentro de [objeto], esto le ocurriría a tu cuerpo."
+   - BANNED CLICHÉS (MUST BE PERMANENTLY REMOVED):
+     * "Hola amigos", "En este video", "Bienvenidos", "Hello guys", "Did you know", "¿Sabías que?".
+     * "En los confines del universo / espacio", "Un misterio que desconcierta a la ciencia", "¿Alguna vez te has preguntado?", "Pero eso no es todo", "Prepárate para quedar asombrado".
 
 2. WORD BUDGET & SPOKEN CADENCE:
    - Spoken speech tempo: ~2.2 to 2.5 words per second.
@@ -42,9 +45,10 @@ CRITICAL 5-POINT AUDIT CHECKLIST:
    - 3D CGI / Simulation keywords for Pixabay: If the concept is abstract, microscopic, or extreme physics (inside event horizon, quantum entanglement, planetary mantle), ensure stock keywords include 3D CGI search terms (e.g. ["black hole event horizon 3d simulation", "magnetic field lines animation loop", "supernova explosion cgi"]).
    - BANNED KEYWORDS: Strictly remove any search terms related to bureaucracy or offices ("nasa", "agency", "headquarters", "scientist", "laboratory", "meeting", "briefing", "logo").
 
-5. PHONETIC & TTS FLOW:
+5. PHONETIC FLOW & MANDATORY COMMENT-BAIT CLOSING:
    - Ensure NO acronyms appear in parentheses (e.g., replace "(CME)" with spoken words).
    - Ensure numbers are written out naturally for seamless text-to-speech pronunciation.
+   - Scene 5 CLOSING MUST END with an open, debate-sparking question or dilemma that compels viewers to comment (e.g. "¿Crees que la humanidad llegará a colonizarlo, o nos extinguiremos antes?", "¿Te atreverías a explorarlo sabiendo que no hay retorno?").
 
 Output ONLY valid JSON matching this exact schema:
 {
@@ -318,7 +322,23 @@ class ScriptReviewer:
             data["language"] = language
 
             # Sanitize each scene
-            for sc in data["scenes"]:
+            for idx, sc in enumerate(data["scenes"]):
+                # Clean banned opening clichés if any LLM slipped them into Scene 1
+                if idx == 0 and sc.get("narration"):
+                    cleaned_narr = re.sub(
+                        r"^(hola(\s+(amigos|a todos|chicos))?|bienvenidos(\s+de nuevo)?|en este video|sab[ií]as que|"
+                        r"te has preguntado(\s+alguna vez)?|alguna vez te has preguntado|"
+                        r"en los confines del? (universo|espacio)|un misterio que desconcierta a la ciencia|"
+                        r"prep[aá]rate para quedar asombrado|did you know|have you ever wondered|hello guys|welcome back)[:,\s-]*",
+                        "",
+                        sc["narration"],
+                        flags=re.IGNORECASE
+                    ).strip()
+                    if cleaned_narr:
+                        cleaned_narr = cleaned_narr[0].upper() + cleaned_narr[1:]
+                        sc["narration"] = cleaned_narr
+                        data["hook"] = cleaned_narr
+
                 for kf in ("nasa_keywords", "pexels_keywords", "stock_keywords", "keywords"):
                     if isinstance(sc.get(kf), str):
                         sc[kf] = [sc[kf].strip()]
