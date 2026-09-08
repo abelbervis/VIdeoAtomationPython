@@ -8,16 +8,12 @@ import sys
 from typing import Any
 
 from config import (
-    CONTENT_CATEGORIES,
     CURATED_SUBTITLE_COLORS,
-    DEFAULT_CATEGORY,
     DEFAULT_DURATION,
     DEFAULT_LANGUAGE,
     DEFAULT_TRANSITION,
     DEFAULT_VIDEO_FORMAT,
     ENABLE_SFX,
-    HOOK_STYLE,
-    HOOK_STYLES,
     LLM_PROVIDER,
     MEDIA_PROVIDER,
     RANDOM_STYLE,
@@ -152,20 +148,6 @@ def parse_args() -> argparse.Namespace:
         help="Target language for narration and subtitles: 'es' (Spanish), 'en' (English), 'zh' (Chinese) (default: es)"
     )
     parser.add_argument(
-        "--category", "--genre",
-        dest="category",
-        type=str,
-        default=DEFAULT_CATEGORY,
-        choices=list(CONTENT_CATEGORIES.keys()),
-        help=f"Content category/domain (default: '{DEFAULT_CATEGORY}'):\n"
-             "  'auto'    : Automatically detects category from topic keywords\n"
-             "  'nature'  : Wildlife, deep ocean, extreme habitats, biology\n"
-             "  'tech'    : Artificial intelligence, quantum computing, robotics, cyber\n"
-             "  'history' : Ancient civilizations, archaeology, lost monuments, enigmas\n"
-             "  'science' : Human biology, neuroscience, physics, chemistry\n"
-             "  'space'   : NASA astrophysics, cosmos, planets, deep universe"
-    )
-    parser.add_argument(
         "--format",
         type=str,
         default=DEFAULT_VIDEO_FORMAT,
@@ -180,28 +162,6 @@ def parse_args() -> argparse.Namespace:
         type=str,
         default=None,
         help="Path to custom system prompt text file (default: loads system_prompt.txt if present, not tracked in git)"
-    )
-    # Viral Hook Options
-    parser.add_argument(
-        "--hook-style", "--hook-type",
-        dest="hook_style",
-        type=str,
-        default=HOOK_STYLE,
-        choices=list(HOOK_STYLES.keys()),
-        help=f"Viral hook formula archetype (default: '{HOOK_STYLE}'):\n"
-             "  'auto'     : Balanced high-retention selection\n"
-             "  'paradox'  : Visual contradiction / impossible physics ('Lo que estás viendo desafía la física...')\n"
-             "  'threat'   : Cosmic danger / terrifying scale ('Si esto estuviera cerca, la Tierra ardería...')\n"
-             "  'mystery'  : Unexplained anomaly ('Los telescopios acaban de captar algo desconcertante...')\n"
-             "  'secret'   : Shattering common belief ('La ciencia creía que esto era imposible...')\n"
-             "  'random'   : Randomizes hook archetype across videos"
-    )
-    parser.add_argument(
-        "--hook", "--custom-hook",
-        dest="hook",
-        type=str,
-        default=None,
-        help="Custom text for the opening hook (Scene 1 narration override, max 10-14 words)"
     )
     parser.add_argument(
         "--output",
@@ -341,7 +301,6 @@ def parse_args() -> argparse.Namespace:
 
     # Sanitize inputs (strip surrounding quotes or comments if passed from shell, env, or docker)
     args.language = (args.language or DEFAULT_LANGUAGE).lower().strip()
-    args.category = (args.category or DEFAULT_CATEGORY).lower().strip()
     args.voice = get_language_voice(args.language, sanitize_env_value(args.voice) if args.voice else None)
     if args.pexels_key:
         args.pexels_key = sanitize_env_value(args.pexels_key)
@@ -372,8 +331,6 @@ def parse_args() -> argparse.Namespace:
             args.transition = "random"
         if args.subtitle_color == SUBTITLE_HIGHLIGHT_COLOR:
             args.subtitle_color = "random"
-        if args.hook_style == HOOK_STYLE:
-            args.hook_style = "random"
         args.shuffle_music = True
         args.random_sfx = True
 

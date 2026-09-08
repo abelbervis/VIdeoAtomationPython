@@ -73,7 +73,6 @@ def main():
     print(f"📐 Format:       {fmt_cfg['description']}")
     print(f"🌍 Language:     {lang_name} ({args.language})")
     print(f"⏱️  Duration:     ~{args.duration} seconds")
-    print(f"🪝 Hook Style:   {args.hook_style.upper() if not args.hook else 'CUSTOM'}")
     print(f"🤖 LLM Provider: {args.llm.upper()}")
     print(f"🗣️  Voice:        {args.voice}")
     print(f"🌐 Media:        {args.provider.upper()}")
@@ -111,10 +110,7 @@ def main():
         args.topic,
         target_duration=args.duration,
         language=args.language,
-        context_text=nasa_grounded_context,
-        hook_style=args.hook_style,
-        custom_hook=args.hook,
-        category=args.category
+        context_text=nasa_grounded_context
     )
 
     # Strict check: If script generation fails, abort before creating media
@@ -143,8 +139,7 @@ def main():
         pexels=pexels,
         orientation=vid_orientation,
         primary_asset_file=primary_asset_file,
-        primary_asset_meta=primary_asset_meta,
-        category=args.category
+        primary_asset_meta=primary_asset_meta
     )
 
     # 8. Build Source Attribution Badges & Generate Subtitles
