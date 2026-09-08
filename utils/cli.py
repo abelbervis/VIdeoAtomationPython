@@ -13,6 +13,7 @@ from config import (
     DEFAULT_LANGUAGE,
     DEFAULT_TRANSITION,
     DEFAULT_VIDEO_FORMAT,
+    ENABLE_SCRIPT_REVIEW,
     ENABLE_SFX,
     LLM_PROVIDER,
     MEDIA_PROVIDER,
@@ -145,6 +146,19 @@ def parse_args() -> argparse.Namespace:
         type=str,
         default=None,
         help="Custom OpenAI API key (or set OPENAI_API_KEY in .env file)"
+    )
+    parser.add_argument(
+        "--review",
+        dest="review",
+        action="store_true",
+        default=ENABLE_SCRIPT_REVIEW,
+        help="Enable secondary LLM Critic/Reviewer Agent to audit and polish hook, pacing, and visual keywords (default: True)"
+    )
+    parser.add_argument(
+        "--no-review",
+        dest="review",
+        action="store_false",
+        help="Disable secondary script review agent for maximum generation speed"
     )
     parser.add_argument(
         "--language", "--lang",

@@ -14,52 +14,57 @@ from typing import Dict, Any, Optional, Tuple
 
 from config import (
     BASE_DIR,
+    ENABLE_SCRIPT_REVIEW,
     GEMINI_API_KEY,
-    OPENAI_API_KEY,
+    GROQ_API_BASE,
     GROQ_API_KEY,
     GROQ_MODEL,
-    GROQ_API_BASE,
-    LLM_PROVIDER,
     LLM_API_BASE_URL,
+    LLM_PROVIDER,
+    OPENAI_API_KEY,
     SYSTEM_PROMPT_FILE,
     SYSTEM_PROMPT_PATH,
-    sanitize_env_value
+    sanitize_env_value,
 )
+from ai.script_reviewer import ScriptReviewer
 
 
-DEFAULT_SYSTEM_PROMPT = """You are a world-class science documentary director and viral storyteller crafting premium scripts for YouTube Shorts and TikTok.
-Target duration: 30 to 45 seconds (approx. 70-95 total spoken words).
+DEFAULT_SYSTEM_PROMPT = """You are an elite science documentary director and viral storyteller crafting premium scripts for YouTube Shorts, TikTok, and Instagram Reels.
+Target duration: 30 to 45 seconds (approx. 70-95 total spoken words, calibrated at ~2.3 words/second).
 
-CRITICAL NARRATIVE RULES:
-1. THE 3-SECOND HOOK:
-   - Start immediately with a provocative contradiction, high-stakes question, or shocking fact.
-   - Absolutely NO pleasantries or generic filler (NEVER say "Hola amigos", "En este video", "Bienvenidos", "Alguna vez te has preguntado", "Hello guys"). Jump directly into the core mystery.
+CRITICAL NARRATIVE & DIRECTION RULES:
+1. THE 3-SECOND HOOK (Zero-Tolerance for Clichés):
+   - Start immediately with a shocking paradox, high-stakes question, or counter-intuitive physical anomaly.
+   - STRICTLY FORBIDDEN OPENERS & GENERIC FILLER:
+     * Never say: "Hola amigos", "En este video", "Bienvenidos", "Hello guys", "Did you know", "¿Alguna vez te has preguntado?".
+     * Never use worn-out documentary clichés: "En los confines del universo", "Un misterio que desconcierta a la ciencia", "Pero eso no es todo", "Prepárate para quedar asombrado".
+   - Jump directly into the raw phenomenon. Example: "A 400 años luz existe un planeta infernal donde el cielo llueve rocas de magma hirviente a cuatro mil grados."
 
-2. RHYTHM & SCENE BREVITY (Shorts & Subtitles Optimized):
+2. RHYTHM, CADENCE & WORD DENSITY (Subtitles & Retention Calibrated):
    - Divide the script into 4 to 5 distinct visual scenes.
-   - STRICT LIMIT: 14 to 18 words maximum per scene. Use short, punchy, active sentences.
-   - Avoid complex subordinate clauses. Insert punctuation (. and ;) so the voice synthesizer takes natural pauses.
+   - TEMPO RULE: 1 second of speech ≈ 2.2 to 2.5 spoken words.
+   - STRICT LIMIT: 12 to 16 spoken words maximum per scene (never exceed 18 words).
+   - Use short, punchy active sentences. Insert clear punctuation (. and ;) to guide the voice synthesizer to take natural breathing pauses.
 
-3. TTS & PHONETIC CLARITY (Spoken Natural Voice):
-   - NEVER use acronyms or abbreviations in parentheses (e.g. NEVER write "(CME)", "(JWST)", "(GPS)", "(NASA)").
-   - Use natural spoken equivalents: say "eyección solar" instead of "CME", "telescopio espacial" instead of "JWST", "nave espacial" or "satélites de navegación".
-   - Write numbers and units in simple natural form (e.g. "mil seiscientos kilómetros por hora", "millones de grados") so text-to-speech speaks them with flawless human cadence.
+3. AUDIO-VISUAL SEMANTIC CONCORDANCE:
+   - What the viewer SEES must directly match what the voice NARRATES in that exact scene.
+   - If the voice narrates an explosive coronal eruption, the visuals must show a solar flare or coronal mass ejection, not a generic astronaut or city.
 
-4. MEDIA SEARCH KEYWORDS & PROVIDER DIFFERENTIATION:
+4. 3-TIER MEDIA SEARCH KEYWORDS (ALWAYS IN ENGLISH):
    - Provide visual search keywords per scene ALWAYS IN ENGLISH.
-   - SEPARATE SEARCH STRATEGIES FOR NASA vs. PEXELS:
-     * "nasa_keywords" (2 to 3 scientific terms): Target authentic documentary footage, official missions, specific celestial catalog names, telescopes, or physical structures (e.g. ["Comet Pons-Brooks nucleus", "comet ion tail telescope", "SDO solar flare"]).
-     * "pexels_keywords" (2 to 3 aesthetic stock terms): Target cinematic stock b-roll, atmospheric visuals, and commercial video (e.g. ["green comet night sky", "telescope looking at stars", "aurora borealis night sky timelapse"]). Pexels fails on complex scientific IDs or probe numbers; use clean, visual, aesthetic phrases!
-   - BANNED KEYWORDS (STRICTLY FORBIDDEN): NEVER search corporate, bureaucratic, or human office words like "nasa", "agency", "space agency", "headquarters", "scientist", "laboratory", "meeting", "briefing", "logo", "meatball", "hallway", "auditorium", "conference". These cause real space footage to be replaced by boring office or logo photos.
-   - CLOSING SCENE: Never search "nasa" or "future" for the final scene. Search epic cosmic scale ("deep space starfield", "hubble deep field galaxy", "earth atmosphere space night", "nebula cosmic web").
+   - "nasa_keywords" (2 to 3 terms): Authentic observational space science, real space missions, catalog names, telescopes, or physical structures (e.g. ["Comet Pons-Brooks nucleus", "James Webb deep field galaxies", "SDO solar flare eruption"]).
+   - "pexels_keywords" / "stock_keywords" (2 to 3 terms): Cinematic b-roll, atmospheric real-world footage, night sky timelapses, or human observers (e.g. ["night sky stars timelapse", "astronomer looking through telescope", "aurora borealis night cinematic"]).
+   - 3D CGI & SIMULATIONS FOR PIXABAY: If the scene describes abstract, invisible, microscopic, or extreme cosmic physics (e.g., inside an event horizon, quantum entanglement, planetary core, magnetic field lines), include 3D CGI simulation keywords in stock keywords (e.g. ["black hole accretion disk 3d simulation", "magnetic field lines animation loop", "solar storm cgi animation"]).
+   - BANNED KEYWORDS (STRICTLY FORBIDDEN): NEVER search corporate or office bureaucracy words: "nasa", "agency", "space agency", "headquarters", "scientist", "laboratory", "meeting", "briefing", "logo", "meatball", "hallway", "auditorium", "conference".
+   - CLOSING SCENE: Never search "nasa" or "future". Search epic cosmic scale ("deep space starfield", "hubble deep field galaxy", "earth atmosphere space night", "nebula cosmic web").
    - Set "visual_type": "video" for motion scenes, "image" for historical events, deep field space, or macro photography.
-   - Add "visual_subject": In each scene, provide a concise 2-4 word title in the target language describing exactly what celestial object or event is being shown on screen (e.g. "Cometa Pons-Brooks", "Cola de Iones Cósmica", "Corona Solar Total", "Galaxia M51", "Espacio Profundo"). This will be displayed in the cinematic visual badge so viewers know what they are looking at.
+   - Add "visual_subject": In each scene, provide a concise 2-4 word title in the target language describing exactly what celestial object or event is being shown on screen (e.g. "Cometa Pons-Brooks", "Disco de Acreción", "Corona Solar Total", "Espacio Profundo").
 
 5. DRAMATIC 5-STEP ARC:
    - Scene 1 (Visual Setup): Cosmic scale or sudden tension.
    - Scene 2 (The Mechanism): The invisible physical trigger in action.
    - Scene 3 (The Impact): Direct clash with Earth, technology, or human perception.
-   - Scene 4 (Historical Proof / Scale): A tangible historical precedent, experiment, or mind-blowing comparison.
+   - Scene 4 (Historical Proof / Scale): A tangible historical precedent, mission result, or mind-blowing comparison.
    - Scene 5 (Climactic Closing Thought): A striking punchline or lingering thought that prompts comments and shares.
 
 Respond ONLY with valid JSON matching this schema:
@@ -70,9 +75,10 @@ Respond ONLY with valid JSON matching this schema:
     {
       "scene_id": 1,
       "visual_subject": "Concise name of what is shown in target language (e.g. Cometa Pons-Brooks)",
-      "narration": "Short, punchy narration in target language (14-18 words max)",
+      "narration": "Short, punchy narration in target language (12-16 words max)",
       "nasa_keywords": ["specific scientific keyword 1", "specific scientific keyword 2"],
       "pexels_keywords": ["cinematic stock keyword 1", "cinematic stock keyword 2"],
+      "stock_keywords": ["cinematic stock or 3d simulation keyword 1", "keyword 2"],
       "visual_type": "video",
       "estimated_duration": 7
     }
@@ -164,6 +170,7 @@ class ScriptGenerator:
         base_url: Optional[str] = None,
         prompt_file: Optional[str] = None,
         system_prompt: Optional[str] = None,
+        enable_review: bool = ENABLE_SCRIPT_REVIEW,
     ):
         raw_gemini = gemini_key if gemini_key is not None else GEMINI_API_KEY
         raw_openai = openai_key if openai_key is not None else OPENAI_API_KEY
@@ -176,6 +183,16 @@ class ScriptGenerator:
         self.groq_model = raw_model if raw_model else "llama-3.3-70b-versatile"
         self.groq_api_base = (sanitize_env_value(groq_api_base) or "https://api.groq.com/openai/v1").rstrip("/")
         self.provider = (sanitize_env_value(preferred_provider) or "auto").lower()
+        self.enable_review = enable_review
+
+        self.reviewer = ScriptReviewer(
+            gemini_key=self.gemini_key,
+            openai_key=self.openai_key,
+            groq_key=self.groq_key,
+            groq_api_base=self.groq_api_base,
+            groq_model=self.groq_model,
+            preferred_provider=self.provider
+        )
 
         raw_url = sanitize_env_value(base_url if base_url is not None else LLM_API_BASE_URL)
         self.base_url = raw_url if raw_url.startswith("http") else ""
@@ -195,6 +212,25 @@ class ScriptGenerator:
             "sk-...", "placeholder", "xxx", "your_groq_key", "your_openai_key"
         ]
         return not any(p in key.lower() for p in placeholders)
+
+    def _apply_review_if_enabled(
+        self,
+        script: Optional[Dict[str, Any]],
+        topic: str,
+        target_duration: int,
+        language: str,
+        context_text: Optional[str] = None
+    ) -> Optional[Dict[str, Any]]:
+        """Passes generated script through the secondary Critic Agent if enabled."""
+        if not script or not self.enable_review:
+            return script
+        return self.reviewer.review(
+            draft_script=script,
+            topic=topic,
+            target_duration=target_duration,
+            language=language,
+            context_text=context_text
+        )
 
     def generate(
         self,
@@ -217,7 +253,7 @@ class ScriptGenerator:
             script = self._generate_groq(topic, target_duration, language, context_text)
             if not script:
                 print("  ❌ Error: Falló la generación del guión con la API de Groq.")
-            return script
+            return self._apply_review_if_enabled(script, topic, target_duration, language, context_text)
 
         if self.provider == "gemini":
             if not self._is_valid_api_key(self.gemini_key):
@@ -227,7 +263,7 @@ class ScriptGenerator:
             script = self._generate_gemini(topic, target_duration, language, context_text)
             if not script:
                 print("  ❌ Error: Falló la generación del guión con la API de Gemini.")
-            return script
+            return self._apply_review_if_enabled(script, topic, target_duration, language, context_text)
 
         if self.provider == "openai":
             if not self._is_valid_api_key(self.openai_key):
@@ -237,7 +273,7 @@ class ScriptGenerator:
             script = self._generate_openai(topic, target_duration, language, context_text)
             if not script:
                 print("  ❌ Error: Falló la generación del guión con la API de OpenAI.")
-            return script
+            return self._apply_review_if_enabled(script, topic, target_duration, language, context_text)
 
         # Auto mode: try configured providers in priority order (Groq -> Gemini -> OpenAI)
         configured_providers = []
@@ -261,17 +297,17 @@ class ScriptGenerator:
                 print("  ⚡ Solicitando guión ultrarrápido a Groq LPU...")
                 script = self._generate_groq(topic, target_duration, language, context_text)
                 if script:
-                    return script
+                    return self._apply_review_if_enabled(script, topic, target_duration, language, context_text)
             elif prov == "gemini":
                 print("  ⚡ Solicitando guión a Google Gemini...")
                 script = self._generate_gemini(topic, target_duration, language, context_text)
                 if script:
-                    return script
+                    return self._apply_review_if_enabled(script, topic, target_duration, language, context_text)
             elif prov == "openai":
                 print("  ⚡ Solicitando guión a OpenAI...")
                 script = self._generate_openai(topic, target_duration, language, context_text)
                 if script:
-                    return script
+                    return self._apply_review_if_enabled(script, topic, target_duration, language, context_text)
 
         print(f"  ⚠️ Advertencia: Las APIs externas ({', '.join(configured_providers)}) no respondieron a tiempo.")
         if context_text or topic:

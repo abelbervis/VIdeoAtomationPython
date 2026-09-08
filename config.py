@@ -95,6 +95,7 @@ GROQ_MODEL = clean_env("GROQ_MODEL", "llama-3.3-70b-versatile")
 GROQ_API_BASE = clean_env("GROQ_API_BASE", "https://api.groq.com/openai/v1")
 LLM_PROVIDER = clean_env("LLM_PROVIDER", "auto").lower()
 LLM_API_BASE_URL = clean_env("LLM_API_BASE_URL", "")
+ENABLE_SCRIPT_REVIEW = clean_env("ENABLE_SCRIPT_REVIEW", "true").lower() in ("true", "1", "yes")
 SYSTEM_PROMPT_FILE = clean_env("SYSTEM_PROMPT_FILE", "system_prompt.txt")
 SYSTEM_PROMPT_PATH = BASE_DIR / SYSTEM_PROMPT_FILE
 

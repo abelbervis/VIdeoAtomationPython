@@ -238,7 +238,21 @@ Por defecto (`auto`), el sistema ejecuta un enrutamiento en cascada de 3 niveles
 - **Temas Generales / Terrestres:**
   1. **Pexels** → 2. **Pixabay** → 3. **NASA**.
 
-### 7. Transiciones, Subtítulos Dinámicos y Efectos de Sonido
+### 7. Agente Revisor y Editor de Guión (Control de Calidad en 2da Pasada)
+Por defecto, el sistema activa automáticamente un **Agente Revisor (Critic)** que audita el borrador antes de descargar los medios:
+- **Eliminación de clichés:** Reescribe ganchos trillados (*"En los confines del universo..."*) para comenzar con contradicciones y hechos de alto impacto.
+- **Cadencia y densidad de palabras:** Ajusta las escenas para respetar el ritmo del habla humana (~2.3 palabras/segundo) y evitar subtítulos amontonados.
+- **Sincronización audiovisual:** Garantiza que lo que se narra concuerde con lo que se busca visualmente en NASA, Pexels o Pixabay.
+
+```bash
+# La revisión está activada por defecto (--review)
+python main.py --topic "materia oscura"
+
+# Para desactivarla y priorizar la máxima velocidad:
+python main.py --topic "materia oscura" --no-review
+```
+
+### 8. Transiciones, Subtítulos Dinámicos y Efectos de Sonido
 Por defecto, las transiciones suaves (`fade`), los subtítulos resaltados dinámicamente y los efectos de sonido (*whoosh* y *boom*) están **activados automáticamente**. Puedes personalizar su comportamiento:
 
 ```bash

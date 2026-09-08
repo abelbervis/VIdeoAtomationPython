@@ -113,7 +113,8 @@ def main():
         openai_key=args.openai_key,
         groq_key=args.groq_key,
         preferred_provider=args.llm,
-        prompt_file=args.prompt_file
+        prompt_file=args.prompt_file,
+        enable_review=getattr(args, "review", True)
     )
     script = script_gen.generate(
         args.topic,
