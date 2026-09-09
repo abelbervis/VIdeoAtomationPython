@@ -126,6 +126,9 @@ def load_system_prompt(custom_path: Optional[str] = None) -> Tuple[str, str]:
                 content = path.read_text(encoding="utf-8").strip()
                 if content:
                     return content, desc
+                    # Render placeholders using environment variables
+                    rendered = content.replace("{{PROVIDER}}", MEDIA_PROVIDER.upper())
+                    return rendered, desc
         except Exception:
             continue
 
