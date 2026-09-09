@@ -7,6 +7,7 @@ Includes procedural synthesis if external SFX files are not present.
 import math
 import random
 import struct
+import subprocess
 import wave
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Any
@@ -115,9 +116,9 @@ class SFXManager:
         self._ensure_default_assets()
 
     def _ensure_default_assets(self) -> None:
-        """Ensure standard whoosh and boom sound effects exist on disk."""
-        whoosh_path = self.sfx_dir / "whoosh.wav"
-        boom_path = self.sfx_dir / "boom.wav"
+        """Ensure procedural whoosh and boom sound effects exist in temp output directory as fallbacks."""
+        whoosh_path = self.output_dir / "procedural_whoosh.wav"
+        boom_path = self.output_dir / "procedural_boom.wav"
 
         if not whoosh_path.exists() or whoosh_path.stat().st_size == 0:
             synthesize_procedural_whoosh(whoosh_path)
@@ -125,30 +126,55 @@ class SFXManager:
         if not boom_path.exists() or boom_path.stat().st_size == 0:
             synthesize_procedural_boom(boom_path)
 
-    def _load_wav_samples(self, filepath: Path, target_sr: int = 44100) -> List[Tuple[float, float]]:
-        """Load 16-bit stereo/mono WAV samples normalized to floats [-1.0, 1.0]."""
-        samples: List[Tuple[float, float]] = []
+    def _load_audio_samples(self, filepath: Path, target_sr: int = 44100) -> List[Tuple[float, float]]:
+        """
+        Load audio samples normalized to floats [-1.0, 1.0].
+        Supports any audio format: MP3, WAV, M4A, OGG, FLAC, AAC using FFmpeg with wave fallback.
+        """
+        if not filepath or not filepath.exists() or filepath.stat().st_size == 0:
+            return []
+
+        # 1. First attempt: Use FFmpeg to decode any format directly to raw 16-bit PCM stereo stream
+        try:
+            cmd = [
+                "ffmpeg", "-y", "-v", "quiet",
+                "-i", str(filepath.resolve()),
+                "-f", "s16le",
+                "-ac", "2",
+                "-ar", str(target_sr),
+                "-"
+            ]
+            res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+            raw_bytes = res.stdout
+            if raw_bytes and len(raw_bytes) >= 4:
+                num_ints = len(raw_bytes) // 2
+                fmt = f"<{num_ints}h"
+                ints = struct.unpack(fmt, raw_bytes[:num_ints * 2])
+                return [(ints[i] / 32768.0, ints[i + 1] / 32768.0) for i in range(0, len(ints) - 1, 2)]
+        except Exception:
+            pass
+
+        # 2. Fallback attempt for standard PCM WAV files
         try:
             with wave.open(str(filepath), "rb") as w:
                 nchannels = w.getnchannels()
                 sampwidth = w.getsampwidth()
-                framerate = w.getframerate()
                 nframes = w.getnframes()
                 raw_data = w.readframes(nframes)
-
-                if sampwidth != 2:
-                    return []
-
-                fmt = f"<{nframes * nchannels}h"
-                ints = struct.unpack(fmt, raw_data)
-
-                if nchannels == 1:
-                    samples = [(v / 32768.0, v / 32768.0) for v in ints]
-                else:
-                    samples = [(ints[i] / 32768.0, ints[i + 1] / 32768.0) for i in range(0, len(ints), 2)]
+                if sampwidth == 2:
+                    fmt = f"<{nframes * nchannels}h"
+                    ints = struct.unpack(fmt, raw_data)
+                    if nchannels == 1:
+                        return [(v / 32768.0, v / 32768.0) for v in ints]
+                    return [(ints[i] / 32768.0, ints[i + 1] / 32768.0) for i in range(0, len(ints), 2)]
         except Exception as e:
             print(f"  ⚠️ Warning loading SFX {filepath.name}: {e}")
-        return samples
+
+        return []
+
+    def _load_wav_samples(self, filepath: Path, target_sr: int = 44100) -> List[Tuple[float, float]]:
+        """Backward-compatible alias for _load_audio_samples."""
+        return self._load_audio_samples(filepath, target_sr)
 
     def build_sfx_timeline(
         self,
@@ -175,14 +201,31 @@ class SFXManager:
         left_buf = [0.0] * total_frames
         right_buf = [0.0] * total_frames
 
+        # Scan assets/sfx/ for all user audio files (MP3, WAV, M4A, OGG, FLAC, AAC)
+        user_sfx_files: List[Path] = []
+        if self.sfx_dir.exists():
+            for ext in ("*.mp3", "*.wav", "*.m4a", "*.ogg", "*.flac", "*.aac", "*.MP3", "*.WAV"):
+                user_sfx_files.extend([f for f in self.sfx_dir.glob(ext) if f.is_file() and f.stat().st_size > 0])
+        user_sfx_files.sort()
+
         # 1. Opening hook impact at t=0.05s
-        boom_files = [f for f in self.sfx_dir.glob("*.wav") if any(k in f.name.lower() for k in ("boom", "impact", "hit"))]
-        boom_samples = []
-        if boom_files:
-            chosen_boom_file = random.choice(boom_files) if self.randomize else boom_files[0]
-            boom_samples = self._load_wav_samples(chosen_boom_file, sample_rate)
-        elif (self.sfx_dir / "boom.wav").exists():
-            boom_samples = self._load_wav_samples(self.sfx_dir / "boom.wav", sample_rate)
+        boom_candidates = [
+            f for f in user_sfx_files
+            if any(k in f.name.lower() for k in ("boom", "impact", "hit", "bass", "hook", "intro", "start"))
+        ]
+        boom_samples: List[Tuple[float, float]] = []
+
+        if boom_candidates:
+            chosen_boom = random.choice(boom_candidates) if self.randomize else boom_candidates[0]
+            boom_samples = self._load_audio_samples(chosen_boom, sample_rate)
+            if boom_samples:
+                print(f"  🔊 Impacto de gancho inicial personalizado: {chosen_boom.name}")
+        
+        if not boom_samples:
+            procedural_boom = self.output_dir / "procedural_boom.wav"
+            if not procedural_boom.exists():
+                synthesize_procedural_boom(procedural_boom)
+            boom_samples = self._load_audio_samples(procedural_boom, sample_rate)
 
         if boom_samples:
             start_frame = int(0.05 * sample_rate)
@@ -193,14 +236,27 @@ class SFXManager:
                     left_buf[pos] += l_val * boom_vol
                     right_buf[pos] += r_val * boom_vol
 
-        # 2. Collect pool of whoosh transitions (custom WAVs + procedural variants)
+        # 2. Collect pool of whoosh transitions (custom files in assets/sfx/ + procedural fallbacks)
         whoosh_pool: List[List[Tuple[float, float]]] = []
-        custom_whooshes = [f for f in self.sfx_dir.glob("*.wav") if any(k in f.name.lower() for k in ("whoosh", "sweep", "cut", "transition"))]
-        for wf in custom_whooshes:
-            s = self._load_wav_samples(wf, sample_rate)
+        whoosh_candidates = [
+            f for f in user_sfx_files
+            if any(k in f.name.lower() for k in ("whoosh", "sweep", "cut", "transition", "swish", "swoosh", "pass"))
+        ]
+        # If user provided generic audio files not matching 'boom', treat them as potential transitions
+        if not whoosh_candidates and user_sfx_files:
+            whoosh_candidates = [f for f in user_sfx_files if f not in boom_candidates]
+
+        custom_loaded = []
+        for wf in whoosh_candidates:
+            s = self._load_audio_samples(wf, sample_rate)
             if s:
                 whoosh_pool.append(s)
+                custom_loaded.append(wf.name)
 
+        if custom_loaded:
+            print(f"  🔊 Transiciones cinemáticas personalizadas ({len(custom_loaded)} archivo(s)): {', '.join(custom_loaded)}")
+
+        # Procedural variants if no custom files or to enrich variety
         if self.randomize and len(whoosh_pool) < 3:
             variants = [
                 (0.48, 330.0, 1850.0, 95.0),  # Snappy energetic whoosh
@@ -210,16 +266,17 @@ class SFXManager:
             for dur, cf, sr_f, sub_f in variants:
                 temp_w = self.output_dir / f"var_whoosh_{int(cf)}.wav"
                 synthesize_procedural_whoosh(temp_w, duration=dur, sample_rate=sample_rate, center_freq=cf, sweep_range=sr_f, sub_freq=sub_f)
-                s = self._load_wav_samples(temp_w, sample_rate)
+                s = self._load_audio_samples(temp_w, sample_rate)
                 if s:
                     whoosh_pool.append(s)
 
         if not whoosh_pool:
-            default_w = self.sfx_dir / "whoosh.wav"
-            if default_w.exists():
-                s = self._load_wav_samples(default_w, sample_rate)
-                if s:
-                    whoosh_pool.append(s)
+            default_w = self.output_dir / "procedural_whoosh.wav"
+            if not default_w.exists():
+                synthesize_procedural_whoosh(default_w)
+            s = self._load_audio_samples(default_w, sample_rate)
+            if s:
+                whoosh_pool.append(s)
 
         # 3. Whoosh transition for every subsequent scene cut
         if whoosh_pool and len(scene_timings) > 1:
