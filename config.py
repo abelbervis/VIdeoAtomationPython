@@ -370,6 +370,13 @@ SUPPORTED_TRANSITIONS = [
 SFX_DIR = ASSETS_DIR / "sfx"
 ENABLE_SFX = clean_env("ENABLE_SFX", "true").lower() in ("true", "1", "yes")
 SFX_VOLUME = float(clean_env("SFX_VOLUME", "0.35"))
-MUSIC_VOLUME = float(clean_env("MUSIC_VOLUME", "0.22"))
+MUSIC_VOLUME = float(clean_env("MUSIC_VOLUME", "0.30"))
+
+# Dynamic Auto-Ducking (Sidechain Compression between Voice & Music)
+ENABLE_AUTO_DUCKING = clean_env("AUTO_DUCKING", "true").lower() in ("true", "1", "yes")
+DUCKING_THRESHOLD = float(clean_env("DUCKING_THRESHOLD", "0.08"))
+DUCKING_RATIO = float(clean_env("DUCKING_RATIO", "4.5"))
+DUCKING_ATTACK = int(clean_env("DUCKING_ATTACK", "35"))
+DUCKING_RELEASE = int(clean_env("DUCKING_RELEASE", "280"))
 
 

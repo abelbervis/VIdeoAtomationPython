@@ -278,6 +278,11 @@ python main.py --topic "nebulosas" --subtitle-animation none
 # Desactivar efectos de sonido automáticos:
 python main.py --topic "el sol" --no-sfx
 
+# Mezcla de Audio Dinámica (Auto-Ducking Sidechain):
+# Viene activo por defecto: la música se atenúa cuando la voz habla y sube suavemente en pausas.
+# Si prefieres una mezcla de volumen de música plano sin compresión sidechain:
+python main.py --topic "marte" --no-auto-ducking
+
 # Opciones de Badges de Atribución y Etiquetas Visuales:
 # Por defecto se muestra qué objeto se observa (ej. Cometa Pons-Brooks) y la fuente con fecha.
 # Puedes ocultar la etiqueta del objeto visual o la fecha si prefieres un diseño más minimalista:

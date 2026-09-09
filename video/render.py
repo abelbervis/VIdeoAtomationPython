@@ -34,6 +34,11 @@ from config import (
     SUPPORTED_TRANSITIONS,
     ENABLE_SFX,
     SFX_VOLUME,
+    ENABLE_AUTO_DUCKING,
+    DUCKING_THRESHOLD,
+    DUCKING_RATIO,
+    DUCKING_ATTACK,
+    DUCKING_RELEASE,
 )
 from utils.files import save_json, check_ffmpeg
 
@@ -296,11 +301,12 @@ class VideoRenderer:
         language: str = "es",
         scene_durations: Optional[List[float]] = None,
         transition: str = DEFAULT_TRANSITION,
-        transition_duration: float = TRANSITION_DURATION
+        transition_duration: float = TRANSITION_DURATION,
+        auto_ducking: bool = ENABLE_AUTO_DUCKING
     ) -> Path:
         """
         Concatenate visual scene clips with transitions, mix audio tracks (voice, music, SFX),
-        burn styled subtitles, and render final production-ready MP4.
+        apply dynamic sidechain auto-ducking, burn styled subtitles, and render final production-ready MP4.
         """
         if not check_ffmpeg():
             raise RuntimeError("FFmpeg is not installed or not found in system PATH.")
@@ -319,34 +325,62 @@ class VideoRenderer:
             transition_duration=transition_duration
         )
 
-        # 2. Prepare audio mixing (Voice 1.0, Music ducked, SFX balanced, normalize=0)
+        # 2. Prepare audio mixing with dynamic Sidechain Auto-Ducking
         cmd = ["ffmpeg", "-y", "-i", str(raw_video_path), "-i", str(narration_audio)]
         filter_complex = []
 
-        audio_parts = ["[1:a]volume=1.0[voice]"]
-        mix_inputs = ["[voice]"]
-        input_idx = 2
+        has_music = bool(background_music and background_music.exists())
+        has_sfx = bool(sfx_track and sfx_track.exists())
 
-        if background_music and background_music.exists():
+        bg_input_idx = None
+        sfx_input_idx = None
+        curr_idx = 2
+
+        if has_music:
             cmd.extend(["-i", str(background_music)])
-            # background_music is already processed with volume ducking in MusicManager.prepare_music
-            audio_parts.append(f"[{input_idx}:a]volume=1.0[bg]")
-            mix_inputs.append("[bg]")
-            input_idx += 1
+            bg_input_idx = curr_idx
+            curr_idx += 1
 
-        if sfx_track and sfx_track.exists():
+        if has_sfx:
             cmd.extend(["-i", str(sfx_track)])
-            # sfx_track is already synthesized with SFX_VOLUME in SFXManager.build_sfx_timeline
-            audio_parts.append(f"[{input_idx}:a]volume=1.0[sfx]")
-            mix_inputs.append("[sfx]")
-            input_idx += 1
+            sfx_input_idx = curr_idx
+            curr_idx += 1
 
-        if len(mix_inputs) > 1:
-            # normalize=0 prevents amix from cutting stream volumes by 1/N; alimiter prevents digital clipping
+        if has_music and auto_ducking:
+            # Dynamic Studio-Grade Sidechain Ducking:
+            # - Voice is split into [voice_main] (mix) and [voice_sc] (sidechain trigger)
+            # - Music gets subtle EQ mid-scoop (1.8kHz) so it never clashes with vocal articulation
+            # - Sidechain compressor dips music whenever voice speaks and smoothly swells back up during pauses
+            filter_parts = [
+                "[1:a]aformat=channel_layouts=stereo,asplit=2[voice_main][voice_sc]",
+                f"[{bg_input_idx}:a]aformat=channel_layouts=stereo,equalizer=f=1800:t=q:w=1.5:g=-4.0[bg_eq]",
+                f"[bg_eq][voice_sc]sidechaincompress=threshold={DUCKING_THRESHOLD}:ratio={DUCKING_RATIO}:attack={DUCKING_ATTACK}:release={DUCKING_RELEASE}[bg_ducked]"
+            ]
+            mix_list = ["[voice_main]", "[bg_ducked]"]
+
+            if has_sfx:
+                filter_parts.append(f"[{sfx_input_idx}:a]aformat=channel_layouts=stereo,volume=1.0[sfx]")
+                mix_list.append("[sfx]")
+
+            mix_chain = "".join(mix_list) + f"amix=inputs={len(mix_list)}:duration=first:dropout_transition=0:normalize=0,alimiter=limit=0.98[aout]"
+            filter_complex.append(";".join(filter_parts) + ";" + mix_chain)
+            print(f"  🎙️ Dynamic Auto-Ducking active (threshold: {DUCKING_THRESHOLD}, ratio: {DUCKING_RATIO}:1, release: {DUCKING_RELEASE}ms)")
+        elif has_music or has_sfx:
+            # Standard mixing (no sidechain ducking fallback)
+            audio_parts = ["[1:a]aformat=channel_layouts=stereo,volume=1.0[voice]"]
+            mix_inputs = ["[voice]"]
+            if has_music:
+                audio_parts.append(f"[{bg_input_idx}:a]aformat=channel_layouts=stereo,volume=1.0[bg]")
+                mix_inputs.append("[bg]")
+            if has_sfx:
+                audio_parts.append(f"[{sfx_input_idx}:a]aformat=channel_layouts=stereo,volume=1.0[sfx]")
+                mix_inputs.append("[sfx]")
+
             mix_chain = "".join(mix_inputs) + f"amix=inputs={len(mix_inputs)}:duration=first:dropout_transition=0:normalize=0,alimiter=limit=0.98[aout]"
             filter_complex.append(";".join(audio_parts) + ";" + mix_chain)
         else:
-            filter_complex.append("[1:a]volume=1.0[aout]")
+            # Voice only
+            filter_complex.append("[1:a]aformat=channel_layouts=stereo,volume=1.0[aout]")
 
         # 3. Subtitles burning
         subtitle_filter = ""

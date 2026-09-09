@@ -15,6 +15,7 @@ from config import (
     DEFAULT_VIDEO_FORMAT,
     ENABLE_SCRIPT_REVIEW,
     ENABLE_SFX,
+    ENABLE_AUTO_DUCKING,
     LLM_PROVIDER,
     MEDIA_PROVIDER,
     RANDOM_STYLE,
@@ -326,6 +327,17 @@ def parse_args() -> argparse.Namespace:
         "--no-shuffle-music",
         action="store_true",
         help="Disable music shuffling and use standard background.mp3"
+    )
+    parser.add_argument(
+        "--auto-ducking",
+        action="store_true",
+        default=ENABLE_AUTO_DUCKING,
+        help="Enable dynamic sidechain auto-ducking (music automatically ducks when voice speaks and swells in pauses) (default: True)"
+    )
+    parser.add_argument(
+        "--no-auto-ducking",
+        action="store_true",
+        help="Disable dynamic sidechain auto-ducking (use static flat music volume)"
     )
     # Attribution badge display options
     parser.add_argument(

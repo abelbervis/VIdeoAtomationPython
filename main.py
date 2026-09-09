@@ -230,6 +230,8 @@ def main():
     # 11. Assemble Final Video Output
     video_folder, output_filename = resolve_video_output_folder(args.output, args.topic)
 
+    enable_ducking = args.auto_ducking and not args.no_auto_ducking
+
     final_video = renderer.assemble_final_video(
         scene_clips=scene_clips,
         narration_audio=narration_audio,
@@ -242,7 +244,8 @@ def main():
         language=args.language,
         scene_durations=scene_durations,
         transition=trans_type,
-        transition_duration=trans_duration
+        transition_duration=trans_duration,
+        auto_ducking=enable_ducking
     )
 
     # 12. Package Deliverables inside Video Folder
