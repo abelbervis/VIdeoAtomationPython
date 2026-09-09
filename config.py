@@ -294,9 +294,11 @@ SUBTITLE_FONT_SIZE = int(clean_env("SUBTITLE_FONT_SIZE", str(_default_format_cfg
 SUBTITLE_PRIMARY_COLOR = "&H00FFFFFF"  # Crisp White in ASS &HAABBGGRR
 SUBTITLE_HIGHLIGHT_COLOR = clean_env("SUBTITLE_HIGHLIGHT_COLOR", "random")  # Default or random
 SUBTITLE_OUTLINE_COLOR = "&H00000000"  # Black outline
-SUBTITLE_OUTLINE_WIDTH = 4.0
+SUBTITLE_OUTLINE_WIDTH = 4.2
 SUBTITLE_MARGIN_BOTTOM = int(clean_env("SUBTITLE_MARGIN_BOTTOM", str(_default_format_cfg["subtitle_margin_bottom"])))
 SUBTITLE_DYNAMIC = clean_env("SUBTITLE_DYNAMIC", "true").lower() in ("true", "1", "yes")
+SUBTITLE_ANIMATION = clean_env("SUBTITLE_ANIMATION", "pop").lower()  # "pop" (energetic bounce) or "none"
+SUBTITLE_MAX_WORDS = int(clean_env("SUBTITLE_MAX_WORDS", "3"))  # 2-3 words per chunk for vertical retention
 
 # Curated High-Contrast Highlight Colors for Shorts/TikTok (ASS &HAABBGGRR& format)
 CURATED_SUBTITLE_COLORS: Dict[str, Tuple[str, str]] = {

@@ -165,16 +165,20 @@ def main():
     )
 
     dynamic_subs = args.dynamic_subtitles and not args.no_dynamic_subtitles
+    sub_anim = getattr(args, "subtitle_animation", "pop")
+    sub_words = getattr(args, "subtitle_words", None)
     sub_gen = SubtitleGenerator(
         width=vid_width,
         height=vid_height,
         margin_bottom=sub_margin,
         font_size=sub_font_size,
         dynamic_highlight=dynamic_subs,
-        highlight_color=args.subtitle_color
+        highlight_color=args.subtitle_color,
+        animation=sub_anim
     )
     srt_path, ass_path = sub_gen.generate_subtitles(
         scene_timings,
+        max_words_per_line=sub_words,
         language=args.language,
         custom_font=args.font,
         source_attributions=source_attributions

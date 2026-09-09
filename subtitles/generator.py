@@ -23,6 +23,8 @@ from config import (
     SUBTITLE_OUTLINE_WIDTH,
     SUBTITLE_MARGIN_BOTTOM,
     SUBTITLE_DYNAMIC,
+    SUBTITLE_ANIMATION,
+    SUBTITLE_MAX_WORDS,
     VIDEO_WIDTH,
     VIDEO_HEIGHT,
     SUPPORTED_LANGUAGES,
@@ -161,6 +163,7 @@ class SubtitleGenerator:
         font_size: int = SUBTITLE_FONT_SIZE,
         dynamic_highlight: bool = SUBTITLE_DYNAMIC,
         highlight_color: str = SUBTITLE_HIGHLIGHT_COLOR,
+        animation: str = SUBTITLE_ANIMATION,
     ):
         self.output_dir = Path(output_dir)
         self.width = width
@@ -168,12 +171,13 @@ class SubtitleGenerator:
         self.margin_bottom = margin_bottom
         self.font_size = font_size
         self.dynamic_highlight = dynamic_highlight
+        self.animation = (animation or "pop").lower().strip()
         resolved_color, color_name = resolve_highlight_color(highlight_color)
         self.highlight_color = resolved_color
         self.highlight_color_name = color_name
         self.output_dir.mkdir(parents=True, exist_ok=True)
         if self.dynamic_highlight:
-            print(f"  🎨 Subtitle highlight color: {self.highlight_color_name} ({self.highlight_color})")
+            print(f"  🎨 Subtitle highlight: {self.highlight_color_name} ({self.highlight_color}) [animation: {self.animation}]")
 
     def generate_subtitles(
         self,
@@ -192,7 +196,7 @@ class SubtitleGenerator:
 
         is_wide = self.width > self.height
         if max_words_per_line is None:
-            max_words = 6 if is_wide else 4
+            max_words = 5 if is_wide else SUBTITLE_MAX_WORDS
         else:
             max_words = max_words_per_line
 
@@ -214,7 +218,8 @@ class SubtitleGenerator:
                 if not words:
                     continue
                 total_words = len(words)
-                chunk_size = min(max_words, max(2, math.ceil(total_words / max(1, duration / 1.3))))
+                # Punchy chunk sizing (1 to 3 words for vertical mobile retention)
+                chunk_size = min(max_words, max(1, math.ceil(total_words / max(1, duration / 1.0))))
                 groups = [" ".join(words[i:i + chunk_size]) for i in range(0, total_words, chunk_size)]
 
             num_groups = len(groups)
@@ -245,7 +250,7 @@ class SubtitleGenerator:
             source_attributions=source_attributions
         )
 
-        print(f"  📝 Subtitles generated: {srt_path.name} & {ass_path.name} ({len(subtitle_chunks)} cues, dynamic={self.dynamic_highlight})")
+        print(f"  📝 Subtitles generated: {srt_path.name} & {ass_path.name} ({len(subtitle_chunks)} cues, dynamic={self.dynamic_highlight}, anim={self.animation})")
         return srt_path, ass_path
 
     def _write_srt(self, chunks: List[Dict[str, Any]], file_path: Path) -> None:
@@ -395,14 +400,15 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
                     continue
 
                 if not self.dynamic_highlight:
-                    # Static cue
+                    # Static cue with optional pop-in entry
                     start_str = format_timestamp_ass(c_start)
                     end_str = format_timestamp_ass(c_end)
                     clean_text = raw_text.replace("\n", "\\N")
-                    f.write(f"Dialogue: 0,{start_str},{end_str},ShortsDefault,,0,0,0,,{clean_text}\n")
+                    pop_tag = r"{\fscx90\fscy90\t(0,70,\fscx112\fscy112)\t(70,140,\fscx100\fscy100)}" if self.animation == "pop" else ""
+                    f.write(f"Dialogue: 0,{start_str},{end_str},ShortsDefault,,0,0,0,,{pop_tag}{clean_text}\n")
                     continue
 
-                # Dynamic word-by-word active highlight
+                # Dynamic word-by-word active highlight (Karaoke with Pop-in)
                 if is_cjk(raw_text):
                     # For Chinese, break into 2-character subsegments
                     chars = list(raw_text)
@@ -414,14 +420,16 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
                     for s_idx, seg in enumerate(segments):
                         w_start = c_start + (s_idx * seg_dur)
                         w_end = min(c_end, w_start + seg_dur)
-                        # Highlight current segment
+                        pop_tag = r"{\fscx90\fscy90\t(0,70,\fscx114\fscy114)\t(70,140,\fscx100\fscy100)}" if (self.animation == "pop" and s_idx == 0) else ""
+
                         parts = []
                         for j_idx, other_seg in enumerate(segments):
                             if j_idx == s_idx:
-                                parts.append(f"{{\\c{hl_color}\\b1}}{other_seg}{{\\rShortsDefault}}")
+                                active_accent = r"\fscx108\fscy108" if self.animation == "pop" else ""
+                                parts.append(f"{{\\c{hl_color}\\b1{active_accent}}}{other_seg}{{\\rShortsDefault}}")
                             else:
                                 parts.append(other_seg)
-                        line_text = "".join(parts)
+                        line_text = f"{pop_tag}{''.join(parts)}"
                         f.write(f"Dialogue: 0,{format_timestamp_ass(w_start)},{format_timestamp_ass(w_end)},ShortsDefault,,0,0,0,,{line_text}\n")
                 else:
                     words = raw_text.split()
@@ -429,7 +437,8 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
                     if word_count <= 1:
                         start_str = format_timestamp_ass(c_start)
                         end_str = format_timestamp_ass(c_end)
-                        line_text = f"{{\\c{hl_color}\\b1}}{raw_text}{{\\rShortsDefault}}"
+                        pop_tag = r"{\fscx88\fscy88\t(0,70,\fscx116\fscy116)\t(70,140,\fscx100\fscy100)}" if self.animation == "pop" else ""
+                        line_text = f"{pop_tag}{{\\c{hl_color}\\b1}}{raw_text}{{\\rShortsDefault}}"
                         f.write(f"Dialogue: 0,{start_str},{end_str},ShortsDefault,,0,0,0,,{line_text}\n")
                     else:
                         # Distribute duration by character weight
@@ -441,15 +450,19 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
                             w_slice = (weights[w_idx] / tot_weight) * c_dur
                             w_end = min(c_end, cur_w_start + w_slice)
 
-                            # Format phrase with current active word highlighted
+                            # First word of each visual chunk gets the energetic pop-in entrance
+                            pop_tag = r"{\fscx90\fscy90\t(0,70,\fscx114\fscy114)\t(70,140,\fscx100\fscy100)}" if (self.animation == "pop" and w_idx == 0) else ""
+
+                            # Format phrase with current active word highlighted & accented
                             line_parts = []
                             for j, w in enumerate(words):
                                 if j == w_idx:
-                                    line_parts.append(f"{{\\c{hl_color}\\b1}}{w}{{\\rShortsDefault}}")
+                                    active_accent = r"\fscx108\fscy108" if self.animation == "pop" else ""
+                                    line_parts.append(f"{{\\c{hl_color}\\b1{active_accent}}}{w}{{\\rShortsDefault}}")
                                 else:
                                     line_parts.append(w)
 
-                            line_text = " ".join(line_parts)
+                            line_text = f"{pop_tag}{' '.join(line_parts)}"
                             f.write(f"Dialogue: 0,{format_timestamp_ass(cur_w_start)},{format_timestamp_ass(w_end)},ShortsDefault,,0,0,0,,{line_text}\n")
                             cur_w_start = w_end
 

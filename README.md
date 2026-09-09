@@ -268,6 +268,13 @@ python main.py --topic "satélites" --no-transitions
 # Desactivar subtítulos dinámicos palabra por palabra (mostrar líneas estáticas):
 python main.py --topic "marte" --no-dynamic-subtitles
 
+# Subtítulos Karaoke con animación Pop-In y ajuste de palabras por pantalla:
+# Por defecto viene activo el efecto 'pop' con 3 palabras por pantalla (ritmo viral para Shorts/Reels):
+python main.py --topic "agujeros negros" --color yellow --subtitle-animation pop --subtitle-words 3
+
+# Desactivar animación de rebote y usar corte instantáneo:
+python main.py --topic "nebulosas" --subtitle-animation none
+
 # Desactivar efectos de sonido automáticos:
 python main.py --topic "el sol" --no-sfx
 

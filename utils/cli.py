@@ -21,6 +21,8 @@ from config import (
     SHUFFLE_MUSIC,
     SUBTITLE_DYNAMIC,
     SUBTITLE_HIGHLIGHT_COLOR,
+    SUBTITLE_ANIMATION,
+    SUBTITLE_MAX_WORDS,
     SUPPORTED_LANGUAGES,
     SUPPORTED_TRANSITIONS,
     VIDEO_CRF,
@@ -269,6 +271,20 @@ def parse_args() -> argparse.Namespace:
         "--no-dynamic-subtitles",
         action="store_true",
         help="Disable word-by-word dynamic subtitles (use static cue lines)"
+    )
+    parser.add_argument(
+        "--subtitle-animation", "--sub-anim",
+        dest="subtitle_animation",
+        choices=["pop", "none"],
+        default=SUBTITLE_ANIMATION,
+        help=f"Subtitle animation entrance style ('pop' for energetic bounce, 'none' for instant cut; default: '{SUBTITLE_ANIMATION}')"
+    )
+    parser.add_argument(
+        "--subtitle-words", "--sub-words",
+        dest="subtitle_words",
+        type=int,
+        default=None,
+        help=f"Target words per subtitle line (default: {SUBTITLE_MAX_WORDS} for vertical mobile video, 5 for horizontal)"
     )
     # SFX options
     parser.add_argument(
