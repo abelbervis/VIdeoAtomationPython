@@ -27,6 +27,14 @@ assets/music/*
 !assets/music/.gitkeep
 assets/sfx/*
 !assets/sfx/.gitkeep
+!assets/sfx/intro/
+!assets/sfx/intro/.gitkeep
+!assets/sfx/swoosh/
+!assets/sfx/swoosh/.gitkeep
+assets/sfx/intro/*
+!assets/sfx/intro/.gitkeep
+assets/sfx/swoosh/*
+!assets/sfx/swoosh/.gitkeep
 
 # Generated audio and video media files
 *.mp3

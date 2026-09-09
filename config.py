@@ -13,13 +13,16 @@ from typing import Optional, Dict, Any, Tuple
 BASE_DIR = Path(__file__).resolve().parent
 ASSETS_DIR = BASE_DIR / "assets"
 MUSIC_DIR = ASSETS_DIR / "music"
+SFX_DIR = ASSETS_DIR / "sfx"
+SFX_INTRO_DIR = SFX_DIR / "intro"
+SFX_SWOOSH_DIR = SFX_DIR / "swoosh"
 TEMP_DIR = BASE_DIR / "temp"
 AUDIO_DIR = TEMP_DIR / "audio"
 SUBTITLES_DIR = TEMP_DIR / "subtitles"
 OUTPUT_DIR = BASE_DIR / "output"
 
 # Ensure essential directories exist
-for directory in [ASSETS_DIR, MUSIC_DIR, AUDIO_DIR, SUBTITLES_DIR, OUTPUT_DIR, TEMP_DIR]:
+for directory in [ASSETS_DIR, MUSIC_DIR, SFX_DIR, SFX_INTRO_DIR, SFX_SWOOSH_DIR, AUDIO_DIR, SUBTITLES_DIR, OUTPUT_DIR, TEMP_DIR]:
     directory.mkdir(parents=True, exist_ok=True)
 
 

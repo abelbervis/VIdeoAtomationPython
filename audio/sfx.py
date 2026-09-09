@@ -12,7 +12,7 @@ import wave
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Any
 
-from config import SFX_DIR, TEMP_DIR, ENABLE_SFX, SFX_VOLUME
+from config import SFX_DIR, SFX_INTRO_DIR, SFX_SWOOSH_DIR, TEMP_DIR, ENABLE_SFX, SFX_VOLUME
 
 
 def synthesize_procedural_whoosh(
@@ -105,13 +105,20 @@ class SFXManager:
     def __init__(
         self,
         sfx_dir: Path = SFX_DIR,
+        intro_dir: Optional[Path] = None,
+        swoosh_dir: Optional[Path] = None,
         output_dir: Optional[Path] = None,
         randomize: bool = True
     ):
         self.sfx_dir = Path(sfx_dir)
+        self.intro_dir = Path(intro_dir) if intro_dir else (SFX_INTRO_DIR if SFX_INTRO_DIR.parent == self.sfx_dir else self.sfx_dir / "intro")
+        self.swoosh_dir = Path(swoosh_dir) if swoosh_dir else (SFX_SWOOSH_DIR if SFX_SWOOSH_DIR.parent == self.sfx_dir else self.sfx_dir / "swoosh")
         self.output_dir = Path(output_dir) if output_dir else TEMP_DIR
         self.randomize = randomize
+
         self.sfx_dir.mkdir(parents=True, exist_ok=True)
+        self.intro_dir.mkdir(parents=True, exist_ok=True)
+        self.swoosh_dir.mkdir(parents=True, exist_ok=True)
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self._ensure_default_assets()
 
@@ -125,6 +132,18 @@ class SFXManager:
 
         if not boom_path.exists() or boom_path.stat().st_size == 0:
             synthesize_procedural_boom(boom_path)
+
+    def _scan_audio_files(self, folder: Path) -> List[Path]:
+        """Scan a folder for all supported audio formats (MP3, WAV, M4A, OGG, FLAC, AAC)."""
+        if not folder or not folder.exists() or not folder.is_dir():
+            return []
+        found: List[Path] = []
+        for ext in (
+            "*.mp3", "*.wav", "*.m4a", "*.ogg", "*.flac", "*.aac", "*.wma",
+            "*.MP3", "*.WAV", "*.M4A", "*.OGG", "*.FLAC", "*.AAC"
+        ):
+            found.extend([f for f in folder.glob(ext) if f.is_file() and f.stat().st_size > 0])
+        return sorted(list(set(found)))
 
     def _load_audio_samples(self, filepath: Path, target_sr: int = 44100) -> List[Tuple[float, float]]:
         """
@@ -201,26 +220,28 @@ class SFXManager:
         left_buf = [0.0] * total_frames
         right_buf = [0.0] * total_frames
 
-        # Scan assets/sfx/ for all user audio files (MP3, WAV, M4A, OGG, FLAC, AAC)
-        user_sfx_files: List[Path] = []
-        if self.sfx_dir.exists():
-            for ext in ("*.mp3", "*.wav", "*.m4a", "*.ogg", "*.flac", "*.aac", "*.MP3", "*.WAV"):
-                user_sfx_files.extend([f for f in self.sfx_dir.glob(ext) if f.is_file() and f.stat().st_size > 0])
-        user_sfx_files.sort()
-
         # 1. Opening hook impact at t=0.05s
-        boom_candidates = [
-            f for f in user_sfx_files
-            if any(k in f.name.lower() for k in ("boom", "impact", "hit", "bass", "hook", "intro", "start"))
-        ]
-        boom_samples: List[Tuple[float, float]] = []
+        # First priority: check assets/sfx/intro/ (any audio file, name doesn't matter, picked randomly)
+        intro_candidates = self._scan_audio_files(self.intro_dir)
+        source_intro_dir = self.intro_dir.name
 
-        if boom_candidates:
-            chosen_boom = random.choice(boom_candidates) if self.randomize else boom_candidates[0]
+        # Fallback: scan root sfx_dir for keyword matches
+        if not intro_candidates:
+            root_sfx = self._scan_audio_files(self.sfx_dir)
+            intro_candidates = [
+                f for f in root_sfx
+                if any(k in f.name.lower() for k in ("boom", "impact", "hit", "bass", "hook", "intro", "start"))
+            ]
+            source_intro_dir = "sfx"
+
+        boom_samples: List[Tuple[float, float]] = []
+        if intro_candidates:
+            chosen_boom = random.choice(intro_candidates) if self.randomize else intro_candidates[0]
             boom_samples = self._load_audio_samples(chosen_boom, sample_rate)
             if boom_samples:
-                print(f"  🔊 Impacto de gancho inicial personalizado: {chosen_boom.name}")
-        
+                print(f"  🔊 Impacto de gancho inicial: '{chosen_boom.name}' seleccionado aleatoriamente ({len(intro_candidates)} en {source_intro_dir}/)")
+
+        # Procedural fallback if no audio file was found or decoded
         if not boom_samples:
             procedural_boom = self.output_dir / "procedural_boom.wav"
             if not procedural_boom.exists():
@@ -236,47 +257,59 @@ class SFXManager:
                     left_buf[pos] += l_val * boom_vol
                     right_buf[pos] += r_val * boom_vol
 
-        # 2. Collect pool of whoosh transitions (custom files in assets/sfx/ + procedural fallbacks)
+        # 2. Collect pool of swoosh transitions (any audio in assets/sfx/swoosh/ picked randomly per cut)
         whoosh_pool: List[List[Tuple[float, float]]] = []
-        whoosh_candidates = [
-            f for f in user_sfx_files
-            if any(k in f.name.lower() for k in ("whoosh", "sweep", "cut", "transition", "swish", "swoosh", "pass"))
-        ]
-        # If user provided generic audio files not matching 'boom', treat them as potential transitions
-        if not whoosh_candidates and user_sfx_files:
-            whoosh_candidates = [f for f in user_sfx_files if f not in boom_candidates]
 
-        custom_loaded = []
-        for wf in whoosh_candidates:
+        # First priority: check assets/sfx/swoosh/ (or alias assets/sfx/whoosh/)
+        swoosh_candidates = self._scan_audio_files(self.swoosh_dir)
+        source_swoosh_dir = self.swoosh_dir.name
+        if not swoosh_candidates and (self.sfx_dir / "whoosh").is_dir():
+            swoosh_candidates = self._scan_audio_files(self.sfx_dir / "whoosh")
+            source_swoosh_dir = "whoosh"
+
+        # Fallback: scan root sfx_dir for keyword matches
+        if not swoosh_candidates:
+            root_sfx = self._scan_audio_files(self.sfx_dir)
+            swoosh_candidates = [
+                f for f in root_sfx
+                if any(k in f.name.lower() for k in ("whoosh", "sweep", "cut", "transition", "swish", "swoosh", "pass"))
+            ]
+            if not swoosh_candidates and root_sfx:
+                swoosh_candidates = [f for f in root_sfx if f not in intro_candidates]
+            source_swoosh_dir = "sfx"
+
+        custom_loaded: List[str] = []
+        for wf in swoosh_candidates:
             s = self._load_audio_samples(wf, sample_rate)
             if s:
                 whoosh_pool.append(s)
                 custom_loaded.append(wf.name)
 
         if custom_loaded:
-            print(f"  🔊 Transiciones cinemáticas personalizadas ({len(custom_loaded)} archivo(s)): {', '.join(custom_loaded)}")
+            print(f"  🔊 Transiciones swoosh: {len(custom_loaded)} efecto(s) cargados desde {source_swoosh_dir}/ (se elegirán aleatoriamente por corte: {', '.join(custom_loaded)})")
 
-        # Procedural variants if no custom files or to enrich variety
-        if self.randomize and len(whoosh_pool) < 3:
-            variants = [
-                (0.48, 330.0, 1850.0, 95.0),  # Snappy energetic whoosh
-                (0.55, 280.0, 1600.0, 85.0),  # Balanced cinematic whoosh
-                (0.64, 210.0, 1300.0, 72.0),  # Deep atmospheric cosmic sweep
-            ]
-            for dur, cf, sr_f, sub_f in variants:
-                temp_w = self.output_dir / f"var_whoosh_{int(cf)}.wav"
-                synthesize_procedural_whoosh(temp_w, duration=dur, sample_rate=sample_rate, center_freq=cf, sweep_range=sr_f, sub_freq=sub_f)
-                s = self._load_audio_samples(temp_w, sample_rate)
+        # Procedural variants ONLY if no custom swoosh files exist
+        if not whoosh_pool:
+            if self.randomize:
+                variants = [
+                    (0.48, 330.0, 1850.0, 95.0),  # Snappy energetic whoosh
+                    (0.55, 280.0, 1600.0, 85.0),  # Balanced cinematic whoosh
+                    (0.64, 210.0, 1300.0, 72.0),  # Deep atmospheric cosmic sweep
+                ]
+                for dur, cf, sr_f, sub_f in variants:
+                    temp_w = self.output_dir / f"var_whoosh_{int(cf)}.wav"
+                    synthesize_procedural_whoosh(temp_w, duration=dur, sample_rate=sample_rate, center_freq=cf, sweep_range=sr_f, sub_freq=sub_f)
+                    s = self._load_audio_samples(temp_w, sample_rate)
+                    if s:
+                        whoosh_pool.append(s)
+
+            if not whoosh_pool:
+                default_w = self.output_dir / "procedural_whoosh.wav"
+                if not default_w.exists():
+                    synthesize_procedural_whoosh(default_w)
+                s = self._load_audio_samples(default_w, sample_rate)
                 if s:
                     whoosh_pool.append(s)
-
-        if not whoosh_pool:
-            default_w = self.output_dir / "procedural_whoosh.wav"
-            if not default_w.exists():
-                synthesize_procedural_whoosh(default_w)
-            s = self._load_audio_samples(default_w, sample_rate)
-            if s:
-                whoosh_pool.append(s)
 
         # 3. Whoosh transition for every subsequent scene cut
         if whoosh_pool and len(scene_timings) > 1:

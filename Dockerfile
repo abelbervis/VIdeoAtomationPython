@@ -19,7 +19,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Create volume mount targets
-RUN mkdir -p /app/assets/music /app/assets/sfx /app/output /app/audio /app/subtitles /app/temp
+RUN mkdir -p /app/assets/music /app/assets/sfx/intro /app/assets/sfx/swoosh /app/output /app/audio /app/subtitles /app/temp
 
 ENTRYPOINT ["python", "main.py"]
 CMD ["--help"]
