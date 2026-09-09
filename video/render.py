@@ -98,25 +98,33 @@ class VideoRenderer:
                 str(output_clip)
             ]
         else:
-            # Static image: Apply documentary-grade varied Ken Burns camera movements
+            # Static image: Apply documentary-grade Ken Burns camera movements with smooth cinematic easing
             total_frames = int(self.fps * clip_duration)
+            d = max(1, total_frames)
+            progress = f"(on/{d})"
+            # Smoothstep curve (Ease-In-Out: smooth start, organic mid motion, gentle deceleration)
+            ease_io = f"({progress}*{progress}*(3-2*{progress}))"
+
             pattern = (scene_idx - 1) % 5
 
-            if pattern == 0:
-                # Smooth center zoom in (1.0 -> 1.18)
-                zoom_expr = "z='min(zoom+0.0013,1.18)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
+            if scene_idx == 1:
+                # Scene 1 Hook: Energetic Impact Zoom-In with Ease-Out (fast initial punch syncing with intro SFX)
+                zoom_expr = f"z='1.0+0.22*sin({progress}*(PI/2))':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
+            elif pattern == 0:
+                # Smooth center zoom in (1.0 -> 1.18) with organic Ease-In-Out
+                zoom_expr = f"z='1.0+0.18*{ease_io}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
             elif pattern == 1:
-                # Reveal zoom out (1.18 -> 1.0)
-                zoom_expr = "z='if(lte(zoom,1.0),1.18,max(1.001,zoom-0.0013))':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
+                # Reveal zoom out (1.20 -> 1.02) revealing cosmic scope with Ease-In-Out
+                zoom_expr = f"z='1.20-0.18*{ease_io}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
             elif pattern == 2:
-                # Slow cinematic pan right
-                zoom_expr = f"z='1.12':x='(iw-iw/zoom)*(on/{max(1, total_frames)})':y='ih/2-(ih/zoom/2)'"
+                # Cinematic pan right with smooth acceleration/deceleration
+                zoom_expr = f"z='1.14':x='(iw-iw/zoom)*{ease_io}':y='ih/2-(ih/zoom/2)'"
             elif pattern == 3:
-                # Slow cinematic pan left
-                zoom_expr = f"z='1.12':x='(iw-iw/zoom)*(1-on/{max(1, total_frames)})':y='ih/2-(ih/zoom/2)'"
+                # Cinematic pan left with smooth acceleration/deceleration
+                zoom_expr = f"z='1.14':x='(iw-iw/zoom)*(1-{ease_io})':y='ih/2-(ih/zoom/2)'"
             else:
-                # Subtle upward tilt
-                zoom_expr = f"z='1.12':x='iw/2-(iw/zoom/2)':y='(ih-ih/zoom)*(1-on/{max(1, total_frames)})'"
+                # Subtle upward tilt with smooth acceleration/deceleration
+                zoom_expr = f"z='1.14':x='iw/2-(iw/zoom/2)':y='(ih-ih/zoom)*(1-{ease_io})'"
 
             filter_chain = (
                 f"scale={self.width*2}:{self.height*2}:force_original_aspect_ratio=increase,"
