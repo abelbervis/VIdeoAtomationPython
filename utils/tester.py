@@ -50,11 +50,17 @@ def generate_audit_html(
 
     # Calculate relative paths from HTML location
     html_dir = output_html_path.parent.resolve()
+    assets_local_dir = html_dir / "assets"
 
     def get_rel_url(file_path: Optional[Path]) -> str:
         if not file_path:
             return ""
         p = Path(file_path).resolve()
+        # If the file also exists in video_folder/assets, prioritize that relative path
+        if assets_local_dir.exists():
+            candidate = assets_local_dir / p.name
+            if candidate.exists():
+                return f"assets/{candidate.name}"
         try:
             return str(os.path.relpath(p, html_dir)).replace("\\", "/")
         except ValueError:
@@ -547,6 +553,15 @@ def interactive_audit_menu(
 
     print_audit_console_summary(script, scene_assets, assets_metadata, scene_timings, topic)
     print(f"🌐 Storyboard visual generado en: {html_report_path.resolve()}\n")
+
+    # Detect non-interactive environment (e.g. running inside Docker without -it)
+    is_interactive = sys.stdin.isatty() if hasattr(sys.stdin, "isatty") else False
+    if not is_interactive:
+        print("⚠️  Entorno no interactivo detectado (Docker sin flags -it o ejecución en background).")
+        print("   Se generó el storyboard HTML y los recursos fueron preservados en la carpeta del video.")
+        print("   Para interactuar con este menú en Docker, ejecuta: docker run -it ... o docker compose run ...")
+        print("   Aprobando automáticamente para proceder al renderizado...")
+        return True, script, scene_assets, assets_metadata, scene_timings
 
     while True:
         print("\n" + "=" * 55)

@@ -166,6 +166,23 @@ def main():
     video_folder, output_filename = resolve_video_output_folder(args.output, args.topic)
     audit_html_path = Path(args.audit_html) if getattr(args, "audit_html", None) else (video_folder / "storyboard_audit.html")
 
+    # Ensure scene media assets & audio clips are immediately copied into video_folder/assets
+    # so the storyboard HTML and all scene files are fully portable and permanent
+    out_assets_dir = video_folder / "assets"
+    out_assets_dir.mkdir(parents=True, exist_ok=True)
+    for item in scene_assets:
+        src_f = item.get("file")
+        if src_f and Path(src_f).exists():
+            dst_f = out_assets_dir / Path(src_f).name
+            if dst_f.resolve() != Path(src_f).resolve():
+                shutil.copy2(src_f, dst_f)
+    for timing in scene_timings:
+        af = timing.get("audio_file")
+        if af and Path(af).exists():
+            dst_a = out_assets_dir / Path(af).name
+            if dst_a.resolve() != Path(af).resolve():
+                shutil.copy2(af, dst_a)
+
     # Generate standalone interactive HTML storyboard
     generate_audit_html(
         script=script,
@@ -189,7 +206,9 @@ def main():
             ass_path=None,
             narration_audio=narration_audio,
             sfx_track=None,
-            trending_metadata=trending_metadata
+            trending_metadata=trending_metadata,
+            scene_assets=scene_assets,
+            scene_timings=scene_timings
         )
         sys.exit(0)
 
@@ -222,7 +241,9 @@ def main():
                 ass_path=None,
                 narration_audio=narration_audio,
                 sfx_track=None,
-                trending_metadata=trending_metadata
+                trending_metadata=trending_metadata,
+                scene_assets=scene_assets,
+                scene_timings=scene_timings
             )
             sys.exit(0)
 
@@ -346,7 +367,9 @@ def main():
         ass_path=ass_path,
         narration_audio=narration_audio,
         sfx_track=sfx_track,
-        trending_metadata=trending_metadata
+        trending_metadata=trending_metadata,
+        scene_assets=scene_assets,
+        scene_timings=scene_timings
     )
 
     # 13. Clean Temporary Files

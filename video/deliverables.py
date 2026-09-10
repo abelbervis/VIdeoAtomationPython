@@ -47,7 +47,9 @@ def package_deliverables(
     ass_path: Optional[str],
     narration_audio: Optional[Path],
     sfx_track: Optional[Path],
-    trending_metadata: Optional[Dict[str, Any]] = None
+    trending_metadata: Optional[Dict[str, Any]] = None,
+    scene_assets: Optional[List[Dict[str, Any]]] = None,
+    scene_timings: Optional[List[Dict[str, Any]]] = None
 ) -> Dict[str, Path]:
     """
     Copies and organizes all intermediate assets (script, audio, subs, metadata)
@@ -93,6 +95,25 @@ def package_deliverables(
     storyboard_file = video_folder / "storyboard_audit.html"
     if storyboard_file.exists():
         deliverables["storyboard"] = storyboard_file
+
+    # 7. Scene Media Assets (videos, images, audio clips)
+    if scene_assets:
+        assets_dest_dir = video_folder / "assets"
+        assets_dest_dir.mkdir(parents=True, exist_ok=True)
+        for item in scene_assets:
+            src_file = item.get("file")
+            if src_file and Path(src_file).exists():
+                dest_file = assets_dest_dir / Path(src_file).name
+                if dest_file.resolve() != Path(src_file).resolve():
+                    shutil.copy2(src_file, dest_file)
+        if scene_timings:
+            for timing in scene_timings:
+                af = timing.get("audio_file")
+                if af and Path(af).exists():
+                    dest_audio = assets_dest_dir / Path(af).name
+                    if dest_audio.resolve() != Path(af).resolve():
+                        shutil.copy2(af, dest_audio)
+        deliverables["scene_assets"] = assets_dest_dir
 
     return deliverables
 
