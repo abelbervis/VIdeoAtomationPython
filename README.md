@@ -244,25 +244,21 @@ El sistema integra **Pollinations.ai** potenciado por el modelo **FLUX.1**:
 ### 7. Cascada Inteligente de 4 Niveles (`--provider auto`)
 Por defecto (`auto`), el sistema ejecuta un enrutamiento en cascada de alta resiliencia:
 - **Temas Espaciales:**
-  1. **NASA:** Tomas reales y documentales oficiales (`nasa_keywords`).
-  2. **Pexels:** Videos cinematográficos de archivo y timelapses de cielo nocturno (`stock_keywords`).
-  3. **Pixabay:** Animaciones 3D, CGI y simulaciones espaciales (`stock_keywords`).
+  1. **NASA:** Tomas reales y documentales oficiales (`keywords`).
+  2. **Pexels:** Videos cinematográficos de archivo y timelapses de cielo nocturno (`keywords`).
+  3. **Pixabay:** Animaciones 3D, CGI y simulaciones espaciales (`keywords`).
   4. **Pollinations (FLUX):** Generación fotorrealista personalizada para conceptos científicos que no existen en stock.
 - **Temas Generales / Terrestres:**
   1. **Pexels** → 2. **Pixabay** → 3. **NASA** → 4. **Pollinations (FLUX)**.
 
-### 8. Agente Revisor y Editor de Guión (Control de Calidad en 2da Pasada)
-Por defecto, el sistema activa automáticamente un **Agente Revisor (Critic)** que audita el borrador antes de descargar los medios:
-- **Eliminación de clichés:** Reescribe ganchos trillados (*"En los confines del universo..."*) para comenzar con contradicciones y hechos de alto impacto.
-- **Cadencia y densidad de palabras:** Ajusta las escenas para respetar el ritmo del habla humana (~2.3 palabras/segundo) y evitar subtítulos amontonados.
-- **Sincronización audiovisual:** Garantiza que lo que se narra concuerde con lo que se busca visualmente en NASA, Pexels o Pixabay.
-
+### 8. Generación Directa y Agente Revisor Opcional (`--review`)
+Por defecto, la generación de guión se ejecuta en **un solo pase directo y conciso** sin agentes intermedios innecesarios, maximizando la velocidad y facilidad de edición:
+- **Búsqueda visual unificada:** El guión incluye una lista concisa de `keywords` en inglés por escena que alimenta a todos los proveedores sin duplicar campos.
+- **Cadencia y ritmo optimizado:** El modelo genera narraciones concisas de 12 a 16 palabras por escena calculadas para el habla natural.
+- **Revisor opcional:** Si deseas activar una segunda pasada de auditoría con un crítico LLM:
 ```bash
-# La revisión está activada por defecto (--review)
-python main.py --topic "materia oscura"
-
-# Para desactivarla y priorizar la máxima velocidad:
-python main.py --topic "materia oscura" --no-review
+python main.py --topic "materia oscura" --review
+```
 ```
 
 ### 8. Transiciones, Subtítulos Dinámicos y Efectos de Sonido

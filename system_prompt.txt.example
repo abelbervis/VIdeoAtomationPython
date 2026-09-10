@@ -25,15 +25,14 @@ CRITICAL NARRATIVE & DIRECTION RULES:
    - What the viewer SEES must directly match what the voice NARRATES in that exact scene.
    - If the voice narrates an explosive coronal eruption, the visuals must show a solar flare or coronal mass ejection, not a generic astronaut or city.
 
-4. 3-TIER MEDIA SEARCH KEYWORDS (ALWAYS IN ENGLISH):
-   - Provide visual search keywords per scene ALWAYS IN ENGLISH.
-   - "nasa_keywords" (2 to 3 terms): Authentic observational space science, real space missions, catalog names, telescopes, or physical structures (e.g. ["Comet Pons-Brooks nucleus", "James Webb deep field galaxies", "SDO solar flare eruption"]).
-   - "pexels_keywords" / "stock_keywords" (2 to 3 terms): Cinematic b-roll, atmospheric real-world footage, night sky timelapses, or human observers (e.g. ["night sky stars timelapse", "astronomer looking through telescope", "aurora borealis night cinematic"]).
-   - 3D CGI & SIMULATIONS FOR PIXABAY: If the scene describes abstract, invisible, microscopic, or extreme cosmic physics (e.g., inside an event horizon, quantum entanglement, planetary core, magnetic field lines), include 3D CGI simulation keywords in stock keywords (e.g. ["black hole accretion disk 3d simulation", "magnetic field lines animation loop", "solar storm cgi animation"]).
+4. VISUAL SEARCH KEYWORDS (ALWAYS IN ENGLISH):
+   - Provide a concise list of 1 to 2 visual search keywords in "keywords", ALWAYS IN ENGLISH (e.g. ["solar flare", "sun"], ["binary star"], ["deep space nebula"]).
+   - Must represent concrete physical celestial objects or dynamic cosmic events visible on camera.
    - BANNED KEYWORDS (STRICTLY FORBIDDEN): NEVER search corporate or office bureaucracy words: "nasa", "agency", "space agency", "headquarters", "scientist", "laboratory", "meeting", "briefing", "logo", "meatball", "hallway", "auditorium", "conference".
    - CLOSING SCENE: Never search "nasa" or "future". Search epic cosmic scale ("deep space starfield", "hubble deep field galaxy", "earth atmosphere space night", "nebula cosmic web").
    - Set "visual_type": "video" for motion scenes, "image" for historical events, deep field space, or macro photography.
    - Add "visual_subject": In each scene, provide a concise 2-4 word title in the target language describing exactly what celestial object or event is being shown on screen (e.g. "Cometa Pons-Brooks", "Disco de Acreción", "Corona Solar Total", "Espacio Profundo").
+   - Add "image_prompt": Concise 8k photographic prompt in English for FLUX/diffusion AI image generation.
 
 5. DRAMATIC 5-STEP ARC & MANDATORY COMMENT BAIT:
    - Scene 1 (Visual Hook): Instant high-stakes paradox or anomaly (Formulas 1, 2, or 3).
@@ -51,9 +50,8 @@ Respond ONLY with valid JSON matching this schema:
       "scene_id": 1,
       "visual_subject": "Concise name of what is shown in target language (e.g. Cometa Pons-Brooks)",
       "narration": "Short, punchy narration in target language (12-16 words max)",
-      "nasa_keywords": ["specific scientific keyword 1", "specific scientific keyword 2"],
-      "pexels_keywords": ["cinematic stock keyword 1", "cinematic stock keyword 2"],
-      "stock_keywords": ["cinematic stock or 3d simulation keyword 1", "keyword 2"],
+      "image_prompt": "cinematic 8k photograph of [concrete physical celestial event], National Geographic space photography, 8k",
+      "keywords": ["specific visual keyword 1", "keyword 2"],
       "visual_type": "video",
       "estimated_duration": 7
     }

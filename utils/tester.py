@@ -105,8 +105,19 @@ def generate_audit_html(
         provider_name = (meta.get("provider") or ("NASA" if "nasa" in str(asset_file).lower() else "STOCK")).upper()
         subject = scene.get("visual_subject") or meta.get("title") or f"Escena {s_idx}"
 
-        nasa_kws = scene.get("nasa_keywords", [])
-        stock_kws = scene.get("pexels_keywords") or scene.get("stock_keywords", [])
+        raw_kws = (
+            scene.get("keywords")
+            or scene.get("nasa_keywords")
+            or scene.get("pexels_keywords")
+            or scene.get("stock_keywords")
+            or []
+        )
+        if isinstance(raw_kws, str):
+            kws = [k.strip() for k in raw_kws.split(",") if k.strip()]
+        elif isinstance(raw_kws, list):
+            kws = [str(k).strip() for k in raw_kws if str(k).strip()]
+        else:
+            kws = []
         image_prompt = scene.get("image_prompt", "")
 
         # Media preview element
@@ -162,8 +173,7 @@ def generate_audit_html(
                     <div class="info-block meta-details">
                         <label>🔍 METADATOS Y PALABRAS CLAVE:</label>
                         <ul class="meta-list">
-                            {f'<li><strong>NASA keywords:</strong> <code>{", ".join(nasa_kws)}</code></li>' if nasa_kws else ''}
-                            {f'<li><strong>Stock keywords:</strong> <code>{", ".join(stock_kws)}</code></li>' if stock_kws else ''}
+                            {f'<li><strong>Palabras clave:</strong> <code>{", ".join(kws)}</code></li>' if kws else ''}
                             {f'<li><strong>Atribución:</strong> {meta.get("attribution_text", "Dominio Público")}</li>' if meta.get("attribution_text") else ''}
                             {f'<li><strong>Archivo local:</strong> <code>{asset_file.name if asset_file else "None"}</code></li>' if asset_file else ''}
                         </ul>

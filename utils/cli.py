@@ -183,13 +183,13 @@ def parse_args() -> argparse.Namespace:
         dest="review",
         action="store_true",
         default=ENABLE_SCRIPT_REVIEW,
-        help="Enable secondary LLM Critic/Reviewer Agent to audit and polish hook, pacing, and visual keywords (default: True)"
+        help="Enable optional secondary LLM Critic/Reviewer Agent pass (default: False for fastest direct generation)"
     )
     parser.add_argument(
         "--no-review",
         dest="review",
         action="store_false",
-        help="Disable secondary script review agent for maximum generation speed"
+        help="Disable secondary script review agent for direct 1-pass generation (default)"
     )
     parser.add_argument(
         "--language", "--lang",
