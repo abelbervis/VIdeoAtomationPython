@@ -387,6 +387,26 @@ def parse_args() -> argparse.Namespace:
         help="Disable the viral Hook Title overlay on the first scene"
     )
 
+    # Tester & Audit Mode Options
+    parser.add_argument(
+        "--audit", "--tester", "--test-mode",
+        dest="audit",
+        action="store_true",
+        help="Interactive Tester & Audit Mode: Review script, audio, and downloaded visual media in console and HTML storyboard before rendering. Allows replacing assets or editing narration."
+    )
+    parser.add_argument(
+        "--dry-run", "--no-render",
+        dest="dry_run",
+        action="store_true",
+        help="Dry-Run Mode: Generates script, audio narration, downloads visuals, and creates HTML storyboard, but skips final video rendering."
+    )
+    parser.add_argument(
+        "--audit-html",
+        type=str,
+        default=None,
+        help="Custom file path for the exported HTML visual storyboard (default: output/<video>/storyboard_audit.html or assets/storyboard_audit.html)"
+    )
+
     args = parser.parse_args()
 
     # Sanitize inputs (strip surrounding quotes or comments if passed from shell, env, or docker)

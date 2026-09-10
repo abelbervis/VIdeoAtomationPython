@@ -89,6 +89,11 @@ def package_deliverables(
         save_json(trending_metadata, nasa_dest)
         deliverables["nasa_discovery"] = nasa_dest
 
+    # 6. Interactive Visual Storyboard / Audit HTML
+    storyboard_file = video_folder / "storyboard_audit.html"
+    if storyboard_file.exists():
+        deliverables["storyboard"] = storyboard_file
+
     return deliverables
 
 
@@ -104,6 +109,8 @@ def print_completion_summary(
     print("🎉 VIDEO CREATION COMPLETED SUCCESSFULLY!")
     print(f"📁 Carpeta del Video:     {video_folder.resolve()}")
     print(f"🎥 Video Final:           {final_video.resolve()}")
+    if "storyboard" in deliverables:
+        print(f"🌐 Storyboard (.html):    {deliverables['storyboard'].resolve()}")
     if "script" in deliverables:
         print(f"📜 Guión (.json):         {deliverables['script'].resolve()}")
     if "srt" in deliverables:

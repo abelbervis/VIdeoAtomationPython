@@ -42,6 +42,7 @@ from subtitles.attribution import build_source_attributions
 from subtitles.generator import SubtitleGenerator
 from utils.cli import parse_args
 from utils.files import check_ffmpeg, clean_temp_directory
+from utils.tester import generate_audit_html, interactive_audit_menu, print_audit_console_summary
 from video.deliverables import package_deliverables, print_completion_summary, resolve_video_output_folder
 from video.render import VideoRenderer
 
@@ -160,6 +161,73 @@ def main():
         pollinations=pollinations,
         enable_ai_fallback=getattr(args, "ai_fallback", True)
     )
+
+    # 7.5. Audit & Testing Step (Visual Storyboard & Interactive Refinement)
+    video_folder, output_filename = resolve_video_output_folder(args.output, args.topic)
+    audit_html_path = Path(args.audit_html) if getattr(args, "audit_html", None) else (video_folder / "storyboard_audit.html")
+
+    # Generate standalone interactive HTML storyboard
+    generate_audit_html(
+        script=script,
+        scene_assets=scene_assets,
+        assets_metadata=assets_metadata,
+        scene_timings=scene_timings,
+        topic=args.topic,
+        output_html_path=audit_html_path,
+        narration_audio_path=narration_audio
+    )
+
+    # Dry-Run Mode: Print audit summary and exit before rendering video
+    if getattr(args, "dry_run", False):
+        print_audit_console_summary(script, scene_assets, assets_metadata, scene_timings, args.topic)
+        print(f"🛑 Modo Dry-Run (--dry-run) finalizado: Renderizado omitido.")
+        print(f"🌐 Storyboard visual interactivo disponible en: {audit_html_path.resolve()}")
+        package_deliverables(
+            video_folder=video_folder,
+            script=script,
+            srt_path=None,
+            ass_path=None,
+            narration_audio=narration_audio,
+            sfx_track=None,
+            trending_metadata=trending_metadata
+        )
+        sys.exit(0)
+
+    # Interactive Audit Mode
+    if getattr(args, "audit", False):
+        providers_dict = {
+            "nasa": nasa,
+            "pexels": pexels,
+            "pixabay": pixabay,
+            "pollinations": pollinations
+        }
+        proceed, script, scene_assets, assets_metadata, scene_timings = interactive_audit_menu(
+            script=script,
+            scene_assets=scene_assets,
+            assets_metadata=assets_metadata,
+            scene_timings=scene_timings,
+            topic=args.topic,
+            tts_mgr=tts_mgr,
+            providers_dict=providers_dict,
+            orientation=vid_orientation,
+            html_report_path=audit_html_path
+        )
+        if not proceed:
+            print(f"\n🛑 Auditoría finalizada sin renderizar.")
+            print(f"📁 Recursos, guión y storyboard guardados en: {video_folder.resolve()}")
+            package_deliverables(
+                video_folder=video_folder,
+                script=script,
+                srt_path=None,
+                ass_path=None,
+                narration_audio=narration_audio,
+                sfx_track=None,
+                trending_metadata=trending_metadata
+            )
+            sys.exit(0)
+
+        # Recalculate total duration if scene narrations were edited
+        total_duration = sum(item["duration"] for item in scene_assets)
 
     # 8. Build Source Attribution Badges & Generate Subtitles
     source_attributions = build_source_attributions(
