@@ -6,10 +6,11 @@ Orchestrates downloading and allocating visual media assets from NASA, Pexels, a
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-from config import ASSETS_DIR
+from config import ASSETS_DIR, ENABLE_AI_IMAGE_FALLBACK
 from providers.nasa import NASAProvider
 from providers.pexels import PexelsProvider
 from providers.pixabay import PixabayProvider
+from providers.pollinations import PollinationsProvider
 
 # Detect if topic is space-specific for auto mode (Spanish, English, Chinese triggers)
 SPACE_TRIGGERS = [
@@ -74,11 +75,13 @@ def collect_scene_assets(
     orientation: str,
     primary_asset_file: Optional[Path] = None,
     primary_asset_meta: Optional[Dict[str, Any]] = None,
-    pixabay: Optional[PixabayProvider] = None
+    pixabay: Optional[PixabayProvider] = None,
+    pollinations: Optional[PollinationsProvider] = None,
+    enable_ai_fallback: bool = ENABLE_AI_IMAGE_FALLBACK
 ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
     """
     Collects visual media assets for all scenes according to chosen provider or auto intelligent routing.
-    Supports a resilient 3-tier cascade across NASA, Pexels, and Pixabay.
+    Supports a resilient cascade across NASA, Pexels, Pixabay, and Pollinations (FLUX AI fallback).
     """
     print(f"\n🔭 Fetching media assets (Mode: {chosen_provider.upper()})...")
     scene_assets = []
@@ -106,6 +109,18 @@ def collect_scene_assets(
             print(f"     📡 Fuente / Atribución: {primary_asset_meta.get('attribution_text', 'NASA')}")
             asset_file = primary_asset_file
             meta = primary_asset_meta
+        elif chosen_provider == "pollinations":
+            if pollinations:
+                asset_file, meta = pollinations.fetch_scene_asset(
+                    scene_idx=idx,
+                    prompt=scene.get("image_prompt"),
+                    keywords=stock_keywords,
+                    orientation=orientation,
+                    visual_subject=scene.get("visual_subject"),
+                    topic=topic
+                )
+            else:
+                print("  ⚠️ Pollinations provider requested, but provider instance is missing.")
         elif chosen_provider == "pixabay":
             if has_pixabay and pixabay:
                 asset_file, meta = pixabay.fetch_scene_asset(
@@ -217,6 +232,18 @@ def collect_scene_assets(
                         primary_asset_file=primary_asset_file,
                         primary_asset_meta=primary_asset_meta
                     )
+
+        # AI Image Generation Fallback (Zero-cost hyper-specific prompt match)
+        if not asset_file and enable_ai_fallback and pollinations:
+            print(f"    🎨 Stock visual not found for scene {idx}, generating tailored AI visual with Pollinations ({pollinations.default_model.upper()})...")
+            asset_file, meta = pollinations.fetch_scene_asset(
+                scene_idx=idx,
+                prompt=scene.get("image_prompt"),
+                keywords=stock_keywords,
+                orientation=orientation,
+                visual_subject=scene.get("visual_subject"),
+                topic=topic
+            )
 
         if asset_file and meta:
             scene_assets.append({

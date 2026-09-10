@@ -65,6 +65,7 @@ CRITICAL NARRATIVE & DIRECTION RULES:
    - CLOSING SCENE: Never search "nasa" or "future". Search epic cosmic scale ("deep space starfield", "hubble deep field galaxy", "earth atmosphere space night", "nebula cosmic web").
    - Set "visual_type": "video" for motion scenes, "image" for historical events, deep field space, or macro photography.
    - Add "visual_subject": In each scene, provide a concise 2-4 word title in the target language describing exactly what celestial object or event is being shown on screen (e.g. "Cometa Pons-Brooks", "Disco de Acreción", "Corona Solar Total", "Espacio Profundo").
+   - Add "image_prompt": Highly descriptive 8k photographic prompt in English tailored for FLUX/diffusion models. Must describe the concrete physical event occurring in this exact scene with photorealistic National Geographic telescope or cinematic sci-fi lighting (e.g. "cinematic 8k photograph of a volcanic exoplanet with magma rain falling under a violent alien sky, National Geographic space photography").
 
 5. DRAMATIC 5-STEP ARC & MANDATORY COMMENT BAIT:
    - Scene 1 (Visual Hook): Instant high-stakes paradox or anomaly (Formulas 1, 2, or 3).
@@ -82,6 +83,7 @@ Respond ONLY with valid JSON matching this schema:
       "scene_id": 1,
       "visual_subject": "Concise name of what is shown in target language (e.g. Cometa Pons-Brooks)",
       "narration": "Short, punchy narration in target language (12-16 words max)",
+      "image_prompt": "cinematic 8k photograph of [concrete physical celestial event], National Geographic space photography, 8k",
       "nasa_keywords": ["specific scientific keyword 1", "specific scientific keyword 2"],
       "pexels_keywords": ["cinematic stock keyword 1", "cinematic stock keyword 2"],
       "stock_keywords": ["cinematic stock or 3d simulation keyword 1", "keyword 2"],

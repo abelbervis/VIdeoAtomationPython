@@ -103,12 +103,39 @@ def parse_args() -> argparse.Namespace:
         "--provider",
         type=str,
         default=MEDIA_PROVIDER,
-        choices=["auto", "nasa", "pexels", "pixabay"],
+        choices=["auto", "nasa", "pexels", "pixabay", "pollinations"],
         help="Media source provider:\n"
-             "  'auto'    : Intelligent 3-tier cascade (NASA -> Pexels -> Pixabay)\n"
-             "  'nasa'    : Official NASA Image & Video Library (public domain space media)\n"
-             "  'pexels'  : Pexels API (high-definition vertical 9:16 stock videos & photos)\n"
-             "  'pixabay' : Pixabay API (space animations, 3D CGI simulations & stock footage)"
+             "  'auto'         : Intelligent cascade (NASA -> Pexels -> Pixabay -> Pollinations FLUX)\n"
+             "  'pollinations' : Pollinations.ai FLUX (Photorealistic AI text-to-image generation for impossible visuals)\n"
+             "  'nasa'         : Official NASA Image & Video Library (public domain space media)\n"
+             "  'pexels'       : Pexels API (high-definition vertical 9:16 stock videos & photos)\n"
+             "  'pixabay'      : Pixabay API (space animations, 3D CGI simulations & stock footage)"
+    )
+    parser.add_argument(
+        "--pollinations-key",
+        type=str,
+        default=None,
+        help="Optional Pollinations API key (from enter.pollinations.ai) to increase concurrency limits."
+    )
+    parser.add_argument(
+        "--pollinations-model",
+        type=str,
+        default=None,
+        choices=["flux", "turbo", "sana"],
+        help="Pollinations text-to-image model (default: flux, with fallback to turbo)."
+    )
+    parser.add_argument(
+        "--ai-fallback",
+        dest="ai_fallback",
+        action="store_true",
+        default=True,
+        help="Enable Pollinations FLUX text-to-image fallback when stock video/photo libraries yield no direct match (default: active)."
+    )
+    parser.add_argument(
+        "--no-ai-fallback",
+        dest="ai_fallback",
+        action="store_false",
+        help="Disable AI image generation fallback (uses synthetic background color instead)."
     )
     parser.add_argument(
         "--pexels-key",

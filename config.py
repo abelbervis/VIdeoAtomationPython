@@ -89,6 +89,10 @@ PEXELS_API_BASE = "https://api.pexels.com"
 PIXABAY_API_KEY = clean_env("PIXABAY_API_KEY", "")
 PIXABAY_API_BASE = "https://pixabay.com/api"
 
+POLLINATIONS_API_KEY = clean_env("POLLINATIONS_API_KEY", "")
+POLLINATIONS_MODEL = clean_env("POLLINATIONS_MODEL", "flux").lower()
+ENABLE_AI_IMAGE_FALLBACK = clean_env("ENABLE_AI_IMAGE_FALLBACK", "true").lower() in ("true", "1", "yes")
+
 MEDIA_PROVIDER = clean_env("MEDIA_PROVIDER", "auto").lower()
 
 GEMINI_API_KEY = clean_env("GEMINI_API_KEY", "")

@@ -24,6 +24,8 @@ from config import (
     MUSIC_VOLUME,
     PEXELS_API_KEY,
     PIXABAY_API_KEY,
+    POLLINATIONS_API_KEY,
+    POLLINATIONS_MODEL,
     SUPPORTED_LANGUAGES,
     TEMP_DIR,
     TRANSITION_DURATION,
@@ -35,6 +37,7 @@ from providers.collector import collect_scene_assets, prepare_primary_discovery_
 from providers.nasa import NASAProvider
 from providers.pexels import PexelsProvider
 from providers.pixabay import PixabayProvider
+from providers.pollinations import PollinationsProvider
 from subtitles.attribution import build_source_attributions
 from subtitles.generator import SubtitleGenerator
 from utils.cli import parse_args
@@ -85,6 +88,9 @@ def main():
     pexels = PexelsProvider(api_key=pexels_key)
     pixabay_key = args.pixabay_key or PIXABAY_API_KEY
     pixabay = PixabayProvider(api_key=pixabay_key)
+    pollinations_key = getattr(args, "pollinations_key", None) or POLLINATIONS_API_KEY
+    pollinations_model = getattr(args, "pollinations_model", None) or POLLINATIONS_MODEL
+    pollinations = PollinationsProvider(api_key=pollinations_key, default_model=pollinations_model)
 
     chosen_provider = args.provider.lower()
     if chosen_provider == "pexels" and not pexels.is_configured():
@@ -150,7 +156,9 @@ def main():
         orientation=vid_orientation,
         primary_asset_file=primary_asset_file,
         primary_asset_meta=primary_asset_meta,
-        pixabay=pixabay
+        pixabay=pixabay,
+        pollinations=pollinations,
+        enable_ai_fallback=getattr(args, "ai_fallback", True)
     )
 
     # 8. Build Source Attribution Badges & Generate Subtitles

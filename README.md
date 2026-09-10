@@ -229,16 +229,29 @@ Pixabay destaca por sus animaciones 3D/CGI de física cuántica, bucles cósmico
    python main.py --topic "simulación de agujero negro" --provider pixabay --pixabay-key "tu_clave"
    ```
 
-### 6. Cascada Inteligente de 3 Niveles (`--provider auto`)
-Por defecto (`auto`), el sistema ejecuta un enrutamiento en cascada de 3 niveles:
+### 6. Proveedor Pollinations con Modelo FLUX (`--provider pollinations`) y Rescate Automático con IA
+¿Narras un concepto cósmico imposible o exótico (lluvia de hierro en un exoplaneta, el interior de un horizonte de sucesos, un océano de metano en Titán) que las bibliotecas de stock comunes no tienen?
+El sistema integra **Pollinations.ai** potenciado por el modelo **FLUX.1**:
+
+- **Completamente Gratuito y sin registro obligatorio:** No requiere API key obligatoria para uso público. Si deseas elevar los límites de concurrencia puedes obtener una clave gratuita en [enter.pollinations.ai](https://enter.pollinations.ai/).
+- **Generación Visual Dedicada:** Puedes crear todo el video usando imágenes fotorrealistas de alta definición (9:16 vertical) generadas por IA:
+  ```bash
+  python main.py --topic "lluvia de magma en exoplanetas" --provider pollinations
+  ```
+- **Fallback Inteligente con IA (Rescate en modo Auto):** En la cascada inteligente (`--provider auto`), si NASA, Pexels o Pixabay no encuentran un recurso que coincida con la narración de una escena, el sistema **no coloca fondos vacíos**: genera automáticamente una toma cinematográfica personalizada con FLUX que ilustra exactamente lo que se está narrando.
+  - Para desactivar el rescate de IA y usar fondo neutro sintético: `--no-ai-fallback`.
+
+### 7. Cascada Inteligente de 4 Niveles (`--provider auto`)
+Por defecto (`auto`), el sistema ejecuta un enrutamiento en cascada de alta resiliencia:
 - **Temas Espaciales:**
   1. **NASA:** Tomas reales y documentales oficiales (`nasa_keywords`).
   2. **Pexels:** Videos cinematográficos de archivo y timelapses de cielo nocturno (`stock_keywords`).
   3. **Pixabay:** Animaciones 3D, CGI y simulaciones espaciales (`stock_keywords`).
+  4. **Pollinations (FLUX):** Generación fotorrealista personalizada para conceptos científicos que no existen en stock.
 - **Temas Generales / Terrestres:**
-  1. **Pexels** → 2. **Pixabay** → 3. **NASA**.
+  1. **Pexels** → 2. **Pixabay** → 3. **NASA** → 4. **Pollinations (FLUX)**.
 
-### 7. Agente Revisor y Editor de Guión (Control de Calidad en 2da Pasada)
+### 8. Agente Revisor y Editor de Guión (Control de Calidad en 2da Pasada)
 Por defecto, el sistema activa automáticamente un **Agente Revisor (Critic)** que audita el borrador antes de descargar los medios:
 - **Eliminación de clichés:** Reescribe ganchos trillados (*"En los confines del universo..."*) para comenzar con contradicciones y hechos de alto impacto.
 - **Cadencia y densidad de palabras:** Ajusta las escenas para respetar el ritmo del habla humana (~2.3 palabras/segundo) y evitar subtítulos amontonados.
