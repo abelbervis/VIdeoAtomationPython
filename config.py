@@ -379,4 +379,10 @@ DUCKING_RATIO = float(clean_env("DUCKING_RATIO", "4.5"))
 DUCKING_ATTACK = int(clean_env("DUCKING_ATTACK", "35"))
 DUCKING_RELEASE = int(clean_env("DUCKING_RELEASE", "280"))
 
+# Hook Title / Viral Headline Overlay (High-Retention Second 0-3 Impact Card)
+ENABLE_HOOK_TITLE = clean_env("ENABLE_HOOK_TITLE", "true").lower() in ("true", "1", "yes")
+HOOK_TITLE_DURATION = float(clean_env("HOOK_TITLE_DURATION", "2.6"))
+HOOK_TITLE_FONT_SIZE = int(clean_env("HOOK_TITLE_FONT_SIZE", "56"))
+HOOK_TITLE_COLOR = clean_env("HOOK_TITLE_COLOR", "&H00FFFFFF&")
+
 

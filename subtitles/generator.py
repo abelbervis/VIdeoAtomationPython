@@ -29,7 +29,39 @@ from config import (
     VIDEO_HEIGHT,
     SUPPORTED_LANGUAGES,
     resolve_highlight_color,
+    ENABLE_HOOK_TITLE,
+    HOOK_TITLE_DURATION,
+    HOOK_TITLE_FONT_SIZE,
+    HOOK_TITLE_COLOR,
 )
+
+
+def format_hook_title(text: str) -> str:
+    """
+    Format topic or hook sentence into a punchy, balanced 1-to-2 line headline for the first seconds.
+    Strips emojis/quotes, converts to uppercase, and splits into 2 lines if longer than 3 words.
+    """
+    if not text:
+        return ""
+    emoji_cleaner = re.compile(r'[\U00010000-\U0010ffff\u200d\u2600-\u26ff\u2700-\u27bf\ufe0f]')
+    clean = emoji_cleaner.sub('', text).strip().strip('"\'“”«»')
+    if not clean:
+        return ""
+    if is_cjk(clean):
+        if len(clean) > 8:
+            mid = len(clean) // 2
+            return clean[:mid] + r"\N" + clean[mid:]
+        return clean
+
+    clean = clean.upper()
+    words = clean.split()
+    if len(words) <= 3:
+        return clean
+    # Split into 2 balanced lines
+    mid = len(words) // 2
+    line1 = " ".join(words[:mid])
+    line2 = " ".join(words[mid:])
+    return f"{line1}\\N{line2}"
 
 
 def format_timestamp_srt(seconds: float) -> str:
@@ -185,12 +217,15 @@ class SubtitleGenerator:
         max_words_per_line: Optional[int] = None,
         language: str = "es",
         custom_font: Optional[str] = None,
-        source_attributions: Optional[List[Dict[str, Any]]] = None
+        source_attributions: Optional[List[Dict[str, Any]]] = None,
+        hook_title: Optional[str] = None,
+        hook_duration: float = HOOK_TITLE_DURATION
     ) -> Tuple[Path, Path]:
         """
         Generate both SRT and styled ASS subtitle files.
         Splits scene narrations into short, rhythmic chunks adapted to canvas aspect ratio.
-        Optionally renders professional source attribution badges (e.g. NASA APOD, NASA Library).
+        Optionally renders professional source attribution badges (e.g. NASA APOD, NASA Library)
+        and an attention-grabbing Hook Title Overlay in the first 2.5 seconds.
         """
         subtitle_chunks: List[Dict[str, Any]] = []
 
@@ -247,10 +282,13 @@ class SubtitleGenerator:
             ass_path,
             language=language,
             custom_font=custom_font,
-            source_attributions=source_attributions
+            source_attributions=source_attributions,
+            hook_title=hook_title,
+            hook_duration=hook_duration
         )
 
-        print(f"  📝 Subtitles generated: {srt_path.name} & {ass_path.name} ({len(subtitle_chunks)} cues, dynamic={self.dynamic_highlight}, anim={self.animation})")
+        hook_status = f", hook_title='{hook_title}'" if hook_title else ""
+        print(f"  📝 Subtitles generated: {srt_path.name} & {ass_path.name} ({len(subtitle_chunks)} cues, dynamic={self.dynamic_highlight}, anim={self.animation}{hook_status})")
         return srt_path, ass_path
 
     def _write_srt(self, chunks: List[Dict[str, Any]], file_path: Path) -> None:
@@ -269,11 +307,13 @@ class SubtitleGenerator:
         file_path: Path,
         language: str = "es",
         custom_font: Optional[str] = None,
-        source_attributions: Optional[List[Dict[str, Any]]] = None
+        source_attributions: Optional[List[Dict[str, Any]]] = None,
+        hook_title: Optional[str] = None,
+        hook_duration: float = HOOK_TITLE_DURATION
     ) -> None:
         """
         Write ASS format with custom styling, dynamic word-by-word active highlight,
-        and high-visibility semi-transparent source attribution badges.
+        high-visibility source attribution badges, and viral Hook Title Overlay.
         """
         has_cjk = any(is_cjk(c.get("text", "")) for c in chunks)
         is_chinese = has_cjk or (language or "").lower().startswith("zh")
@@ -299,7 +339,7 @@ class SubtitleGenerator:
         if not hl_color.endswith("&"):
             hl_color = f"{hl_color}&"
 
-        # Determine dimensions for SourceBadge (top-left safe zone badge) and subtitle safe margins
+        # Determine dimensions for SourceBadge (top-left safe zone badge), HookTitle, and subtitle safe margins
         if self.width < self.height:
             # Vertical (Shorts/TikTok/Reels Safe Zones)
             badge_font_size = 26
@@ -309,6 +349,11 @@ class SubtitleGenerator:
             badge_gap_y = 44
             badge_outline = 6
             badge_sub_outline = 5
+            # Hook title: Top-center impact headline below top badges
+            hook_font_size = HOOK_TITLE_FONT_SIZE
+            hook_margin_y = 380
+            hook_outline = 7.0
+            hook_shadow = 4.0
             # Subtitle horizontal margins: extra right margin for like/comment/share action stack
             sub_margin_l = 80
             sub_margin_r = 160
@@ -321,6 +366,10 @@ class SubtitleGenerator:
             badge_gap_y = 34
             badge_outline = 5
             badge_sub_outline = 4
+            hook_font_size = 42
+            hook_margin_y = 120
+            hook_outline = 5.0
+            hook_shadow = 3.0
             sub_margin_l = 80
             sub_margin_r = 80
         else:
@@ -332,6 +381,10 @@ class SubtitleGenerator:
             badge_gap_y = 34
             badge_outline = 5
             badge_sub_outline = 4
+            hook_font_size = 46
+            hook_margin_y = 180
+            hook_outline = 5.5
+            hook_shadow = 3.5
             sub_margin_l = 80
             sub_margin_r = 80
 
@@ -348,12 +401,22 @@ Style: ShortsDefault,{font_family},{font_size},{SUBTITLE_PRIMARY_COLOR},&H000000
 Style: SourceTitle,{font_family},{badge_font_size},&H00FFFFFF,&H000000FF,&H80000000,&H90101010,1,0,0,0,100,100,0.8,0,3,{badge_outline},0,7,{badge_margin_x},{badge_margin_x},{badge_margin_y},1
 Style: SourceSub,{font_family},{badge_sub_font_size},&H00E0E0E0,&H000000FF,&H80000000,&H90101010,0,0,0,0,100,100,0.5,0,3,{badge_sub_outline},0,7,{badge_margin_x},{badge_margin_x},{badge_margin_y + badge_gap_y},1
 Style: SourceSingle,{font_family},{badge_font_size - 2},&H00FFFFFF,&H000000FF,&H80000000,&H90101010,1,0,0,0,100,100,0.8,0,3,{badge_outline},0,7,{badge_margin_x},{badge_margin_x},{badge_margin_y},1
+Style: HookTitle,{font_family},{hook_font_size},{HOOK_TITLE_COLOR},&H000000FF,&H00000000,&HA0000000,-1,0,0,0,100,100,1.2,0,1,{hook_outline},{hook_shadow},8,80,80,{hook_margin_y},1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 """
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(header)
+
+            # 0. Write Viral Hook Title Overlay on Layer 2 (Center-Top with elastic punch-in and fade-out)
+            if hook_title and ENABLE_HOOK_TITLE:
+                formatted_hook = format_hook_title(hook_title)
+                if formatted_hook:
+                    h_start = "0:00:00.00"
+                    h_end = format_timestamp_ass(max(1.0, hook_duration))
+                    punch_tag = r"{\fscx75\fscy75\t(0,120,\fscx112\fscy112)\t(120,220,\fscx100\fscy100)\fad(0,250)}"
+                    f.write(f"Dialogue: 2,{h_start},{h_end},HookTitle,,0,0,0,,{punch_tag}{formatted_hook}\n")
 
             # 1. Write Source Attribution Badges on Layer 1 (Top-Left overlay with smooth fade and zero overlap)
             if source_attributions:

@@ -283,6 +283,13 @@ python main.py --topic "el sol" --no-sfx
 # Si prefieres una mezcla de volumen de música plano sin compresión sidechain:
 python main.py --topic "marte" --no-auto-ducking
 
+# Titular / Gancho Flotante de Alto Impacto (Hook Title Overlay):
+# Viene activo por defecto: en los primeros 2.5s aparece un titular contundente en el tercio superior
+# con entrada elástica de impacto sincronizada con el SFX boom.
+# Puedes personalizar el texto o desactivarlo:
+python main.py --topic "el sol" --hook-title "¿Y SI EL SOL SE APAGA HOY?"
+python main.py --topic "agujeros negros" --no-hook-title
+
 # Opciones de Badges de Atribución y Etiquetas Visuales:
 # Por defecto se muestra qué objeto se observa (ej. Cometa Pons-Brooks) y la fuente con fecha.
 # Puedes ocultar la etiqueta del objeto visual o la fecha si prefieres un diseño más minimalista:

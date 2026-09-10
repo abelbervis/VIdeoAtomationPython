@@ -16,6 +16,7 @@ from config import (
     ENABLE_SCRIPT_REVIEW,
     ENABLE_SFX,
     ENABLE_AUTO_DUCKING,
+    ENABLE_HOOK_TITLE,
     LLM_PROVIDER,
     MEDIA_PROVIDER,
     RANDOM_STYLE,
@@ -344,6 +345,19 @@ def parse_args() -> argparse.Namespace:
         "--no-badge-label",
         action="store_true",
         help="Disable displaying the visual subject label in attribution badges"
+    )
+    # Hook Title Overlay options (High-retention opening card)
+    parser.add_argument(
+        "--hook-title",
+        type=str,
+        default=None,
+        help="Custom viral headline text displayed during seconds 0-2.5 (default: auto-extracted from script title/hook)"
+    )
+    parser.add_argument(
+        "--no-hook-title",
+        action="store_true",
+        default=not ENABLE_HOOK_TITLE,
+        help="Disable the viral Hook Title overlay on the first scene"
     )
 
     args = parser.parse_args()

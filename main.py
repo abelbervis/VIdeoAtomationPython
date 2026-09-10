@@ -167,6 +167,19 @@ def main():
     dynamic_subs = args.dynamic_subtitles and not args.no_dynamic_subtitles
     sub_anim = getattr(args, "subtitle_animation", "pop")
     sub_words = getattr(args, "subtitle_words", None)
+
+    # Determine Hook Title Overlay (seconds 0-2.5 high-retention attention grabber)
+    effective_hook_title = None
+    if not getattr(args, "no_hook_title", False):
+        if getattr(args, "hook_title", None):
+            effective_hook_title = args.hook_title.strip()
+        else:
+            # Fall back to script title, hook, or topic
+            raw_candidate = script.get("title") or script.get("hook") or args.topic
+            if raw_candidate:
+                words = raw_candidate.strip().split()
+                effective_hook_title = " ".join(words[:7])
+
     sub_gen = SubtitleGenerator(
         width=vid_width,
         height=vid_height,
@@ -181,7 +194,8 @@ def main():
         max_words_per_line=sub_words,
         language=args.language,
         custom_font=args.font,
-        source_attributions=source_attributions
+        source_attributions=source_attributions,
+        hook_title=effective_hook_title
     )
 
     # 9. Synthesize Sound Effects (SFX) & Background Music Tracks
