@@ -13,6 +13,7 @@ Usage:
 
 import sys
 import time
+import shutil
 from pathlib import Path
 
 from ai.discovery import resolve_trending_topic
