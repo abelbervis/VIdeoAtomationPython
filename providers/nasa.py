@@ -83,54 +83,49 @@ class NASAProvider:
     def _build_search_queries(
         self,
         keywords: List[str],
-        topic_anchor: Optional[str],
-        visual_subject: Optional[str],
-        primary_title: Optional[str]
+        topic_anchor: Optional[str] = None,
+        visual_subject: Optional[str] = None,
+        primary_title: Optional[str] = None
     ) -> List[str]:
-        """Constructs prioritized search queries anchored to the celestial subject."""
-        # 1. Clean keywords
+        """Constructs concise, atomic search queries (maximum 2-3) anchored to visual keywords."""
         banned_words = {
             "nasa", "agency", "space agency", "headquarters", "scientist", "scientists",
             "laboratory", "meeting", "briefing", "logo", "meatball", "hallway", "office",
-            "future", "concept", "illustration", "3d"
+            "future", "concept", "illustration", "3d", "software", "photometry", "light curve",
+            "data", "citizen", "astronomy software", "analysis"
         }
-        clean_kws = [k.strip() for k in keywords if k.strip() and not any(b in k.lower().split() for b in banned_words)]
+        clean_kws: List[str] = []
+        for k in keywords:
+            if not k or not str(k).strip():
+                continue
+            cleaned = str(k).strip()
+            # Remove punctuation except hyphens
+            cleaned = re.sub(r'[^\w\s\-]', '', cleaned).strip()
+            # Skip if contains banned keywords
+            words_lower = cleaned.lower().split()
+            if any(b in words_lower for b in banned_words):
+                continue
+            # Keep atomic (max 3 words per query)
+            if len(words_lower) > 3:
+                cleaned = " ".join(words_lower[:3])
+            if cleaned and cleaned.lower() not in [c.lower() for c in clean_kws]:
+                clean_kws.append(cleaned)
 
-        # 2. Derive topic anchor
-        anchor = None
-        if primary_title:
-            p_clean = re.sub(r'^(A|An|The)\s+', '', primary_title, flags=re.I)
-            p_clean = re.sub(r'\s*\([^)]*\)', '', p_clean)
-            p_clean = re.sub(r'\s*-\s*(19|20)\d{2}.*$', '', p_clean)
-            anchor = re.split(r'[:\-—]', p_clean)[0].strip()
-            if len(anchor) > 28:
-                anchor = " ".join(anchor.split()[:4])
-        elif visual_subject:
-            v_clean = re.sub(r'[^\w\s]', '', visual_subject).strip()
-            if v_clean:
-                anchor = v_clean
-        elif topic_anchor:
-            anchor = re.sub(r'[¡!¿?]', '', topic_anchor).strip()
+        # If keywords are empty, attempt to translate visual_subject or topic_anchor
+        if not clean_kws:
+            subject_candidate = visual_subject or topic_anchor
+            if subject_candidate:
+                sub_clean = re.sub(r'[^\w\s\-]', '', str(subject_candidate)).strip().lower()
+                for es, en in SPANISH_TO_ENGLISH_ASTRONOMY.items():
+                    if es in sub_clean:
+                        sub_clean = en
+                        break
+                words = sub_clean.split()
+                if words and not any(b in words for b in banned_words):
+                    clean_kws.append(" ".join(words[:2]))
 
-        # Build query priority list
-        queries = []
-        if anchor:
-            for kw in clean_kws[:2]:
-                queries.append(f"{anchor} {kw}")
-            queries.append(anchor)
-
-        if len(clean_kws) > 1:
-            queries.append(" ".join(clean_kws[:2]))
-        queries.extend(clean_kws)
-
-        # Cosmic astronomy fallback queries
-        queries.extend([
-            "deep space galaxy telescope",
-            "astronomy nebula telescope",
-            "cosmic stars astronomy",
-            "earth orbit space night"
-        ])
-        return queries
+        # Limit to at most 2 clean, atomic queries per scene
+        return clean_kws[:2]
 
     def fetch_scene_asset(
         self,
@@ -146,48 +141,39 @@ class NASAProvider:
     ) -> Tuple[Optional[Path], Optional[Dict[str, Any]]]:
         """
         Search and download the highest-ranking scientific asset for a scene.
+        Limits queries to 2 atomic terms to prevent API hammering and timeouts.
         """
         save_dir = Path(save_dir)
         save_dir.mkdir(parents=True, exist_ok=True)
 
-        primary_title = primary_asset_meta.get("title") if primary_asset_meta else None
-        queries = self._build_search_queries(keywords, topic_anchor, visual_subject, primary_title)
+        queries = self._build_search_queries(keywords, topic_anchor, visual_subject)
+        if not queries:
+            return None, None
 
+        # 1. Search for video first across the atomic queries
         for query in queries:
-            print(f"  🔍 Querying NASA library for '{query}'...")
-
-            # 1. Try preferred type (video/image)
-            raw_items = self.client.raw_search(query, media_types=[preferred_type], page_size=10)
+            print(f"  🔍 Querying NASA library for '{query}' ({preferred_type})...")
+            raw_items = self.client.raw_search(query, media_types=[preferred_type], page_size=8)
             candidates = self.ranker.filter_and_rank(raw_items, topic_anchor=topic_anchor or query)
-
-            # 2. If no video found, fallback to high-res images
-            if not candidates and preferred_type == "video":
-                print(f"    ↳ No video found for '{query}', searching scientific images...")
-                raw_items = self.client.raw_search(query, media_types=["image"], page_size=10)
-                candidates = self.ranker.filter_and_rank(raw_items, topic_anchor=topic_anchor or query)
-
-            # If candidates were filtered out due to illustration ban, allow fallback only if no items found
-            if not candidates and raw_items:
-                candidates = self.ranker.filter_and_rank(raw_items, topic_anchor=topic_anchor or query, allow_illustrations=True)
 
             for cand in candidates:
                 dest_file, meta = self.downloader.download_candidate(cand, scene_idx, save_dir)
                 if dest_file and meta:
                     return dest_file, meta
 
-        # 3. If all searches fail and we have an authentic primary discovery visual, reuse it
-        if primary_asset_file and primary_asset_file.exists() and primary_asset_meta:
-            print(f"  ✨ Reusing verified authentic discovery visual for scene {scene_idx}: '{primary_asset_meta.get('title')}'")
-            dest_file = save_dir / f"scene_{scene_idx:02d}{primary_asset_file.suffix}"
-            shutil.copy2(primary_asset_file, dest_file)
-            meta = dict(primary_asset_meta)
-            meta["scene_index"] = scene_idx
-            meta["local_file"] = str(dest_file.name)
-            meta_file = save_dir / f"scene_{scene_idx:02d}.json"
-            save_json(meta, meta_file)
-            return dest_file, meta
+        # 2. If video not found, attempt ONE image query with the top keyword
+        if preferred_type == "video" and queries:
+            top_query = queries[0]
+            print(f"    ↳ No video found in NASA for '{top_query}', trying still image...")
+            raw_items = self.client.raw_search(top_query, media_types=["image"], page_size=6)
+            candidates = self.ranker.filter_and_rank(raw_items, topic_anchor=topic_anchor or top_query)
 
-        print(f"  ❌ Could not retrieve NASA asset for scene {scene_idx}.")
+            for cand in candidates:
+                dest_file, meta = self.downloader.download_candidate(cand, scene_idx, save_dir)
+                if dest_file and meta:
+                    return dest_file, meta
+
+        print(f"  ❌ No relevant NASA visual found for scene {scene_idx}.")
         return None, None
 
     def fetch_primary_discovery_asset(

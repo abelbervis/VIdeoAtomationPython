@@ -18,6 +18,7 @@ class NASAClient:
 
     def __init__(self, base_url: str = NASA_IMAGE_API_BASE):
         self.base_url = base_url.rstrip("/")
+        self._search_cache: Dict[str, List[Dict[str, Any]]] = {}
 
     def raw_search(
         self,
@@ -33,8 +34,12 @@ class NASAClient:
         if not media_types:
             media_types = ["video", "image"]
 
+        cache_key = f"{query.strip().lower()}:{','.join(sorted(media_types))}:{page_size}:{page}"
+        if cache_key in self._search_cache:
+            return self._search_cache[cache_key]
+
         params = {
-            "q": query,
+            "q": query.strip(),
             "media_type": ",".join(media_types),
             "page": page,
             "page_size": page_size
@@ -43,19 +48,22 @@ class NASAClient:
 
         try:
             req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-            with urllib.request.urlopen(req, timeout=20) as response:
+            with urllib.request.urlopen(req, timeout=12) as response:
                 payload = json.loads(response.read().decode("utf-8"))
-            return payload.get("collection", {}).get("items", [])
+            items = payload.get("collection", {}).get("items", [])
+            self._search_cache[cache_key] = items
+            return items
         except Exception as e:
             print(f"  ⚠️ Error de conexión con NASA API para '{query}': {e}")
             return []
 
     def get_asset_manifest_urls(self, nasa_id: str) -> List[str]:
         """Fetch all direct media URLs from the asset manifest (collection.json)."""
-        url = f"{self.base_url}/asset/{nasa_id}"
+        clean_id = urllib.parse.quote(str(nasa_id).strip(), safe="")
+        url = f"{self.base_url}/asset/{clean_id}"
         try:
             req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-            with urllib.request.urlopen(req, timeout=15) as response:
+            with urllib.request.urlopen(req, timeout=12) as response:
                 payload = json.loads(response.read().decode("utf-8"))
 
             items = payload.get("collection", {}).get("items", [])

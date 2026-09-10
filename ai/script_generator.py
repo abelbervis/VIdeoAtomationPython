@@ -57,13 +57,13 @@ CRITICAL NARRATIVE & DIRECTION RULES:
    - If the voice narrates an explosive coronal eruption, the visuals must show a solar flare or coronal mass ejection, not a generic astronaut or city.
 
 4. 3-TIER MEDIA SEARCH KEYWORDS (ALWAYS IN ENGLISH):
-   - Provide visual search keywords per scene ALWAYS IN ENGLISH.
-   - "nasa_keywords" (2 to 3 terms): Authentic observational space science, real space missions, catalog names, telescopes, or physical structures (e.g. ["Comet Pons-Brooks nucleus", "James Webb deep field galaxies", "SDO solar flare eruption"]).
-   - "pexels_keywords" / "stock_keywords" (2 to 3 terms): Cinematic b-roll, atmospheric real-world footage, night sky timelapses, or human observers (e.g. ["night sky stars timelapse", "astronomer looking through telescope", "aurora borealis night cinematic"]).
-   - 3D CGI & SIMULATIONS FOR PIXABAY: If the scene describes abstract, invisible, microscopic, or extreme cosmic physics (e.g., inside an event horizon, quantum entanglement, planetary core, magnetic field lines), include 3D CGI simulation keywords in stock keywords (e.g. ["black hole accretion disk 3d simulation", "magnetic field lines animation loop", "solar storm cgi animation"]).
-   - BANNED KEYWORDS (STRICTLY FORBIDDEN): NEVER search corporate or office bureaucracy words: "nasa", "agency", "space agency", "headquarters", "scientist", "laboratory", "meeting", "briefing", "logo", "meatball", "hallway", "auditorium", "conference".
+   - Provide visual search keywords per scene ALWAYS IN ENGLISH. Keep each keyword concise (1 to 2 words max).
+   - "nasa_keywords" (1 to 2 terms): Tangible, physical celestial objects, telescopes, or missions visible on camera (e.g. ["binary star"], ["solar flare"], ["nebula"], ["James Webb telescope"]).
+   - "pexels_keywords" / "stock_keywords" (1 to 2 terms): Motion-centric cinematic stock footage or 3D loops (e.g. ["binary stars orbit", "galaxy rotation timelapse", "telescope night sky", "solar flare animation"]).
+   - 3D CGI & SIMULATIONS FOR PIXABAY: If the scene describes abstract or extreme physics, use 3D simulation keywords (e.g. ["black hole accretion disk 3d", "magnetic field lines loop"]).
+   - BANNED KEYWORDS (STRICTLY FORBIDDEN): NEVER search corporate, data, software, or non-visual words: "nasa", "agency", "space agency", "headquarters", "scientist", "laboratory", "meeting", "briefing", "logo", "meatball", "hallway", "auditorium", "conference", "software", "photometry", "light curve", "data", "analysis", "code", "paper".
    - CLOSING SCENE: Never search "nasa" or "future". Search epic cosmic scale ("deep space starfield", "hubble deep field galaxy", "earth atmosphere space night", "nebula cosmic web").
-   - Set "visual_type": "video" for motion scenes, "image" for historical events, deep field space, or macro photography.
+   - Set "visual_type": "video" for all scenes to maintain dynamic motion and avoid static slideshow aesthetics. Only set "image" if specifically requesting a legendary single still photograph.
    - Add "visual_subject": In each scene, provide a concise 2-4 word title in the target language describing exactly what celestial object or event is being shown on screen (e.g. "Cometa Pons-Brooks", "Disco de Acreción", "Corona Solar Total", "Espacio Profundo").
    - Add "image_prompt": Highly descriptive 8k photographic prompt in English tailored for FLUX/diffusion models. Must describe the concrete physical event occurring in this exact scene with photorealistic National Geographic telescope or cinematic sci-fi lighting (e.g. "cinematic 8k photograph of a volcanic exoplanet with magma rain falling under a violent alien sky, National Geographic space photography").
 
