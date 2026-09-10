@@ -14,6 +14,7 @@ Usage:
 import sys
 import time
 import shutil
+import json
 from pathlib import Path
 
 from ai.discovery import resolve_trending_topic
@@ -115,32 +116,47 @@ def main():
         nasa_grounded_context=nasa_grounded_context
     )
 
-    # 5. Generate Structured AI Script
-    script_gen = ScriptGenerator(
-        gemini_key=args.gemini_key,
-        openai_key=args.openai_key,
-        groq_key=args.groq_key,
-        preferred_provider=args.llm,
-        prompt_file=args.prompt_file,
-        enable_review=getattr(args, "review", True)
-    )
-    script = script_gen.generate(
-        args.topic,
-        target_duration=args.duration,
-        language=args.language,
-        context_text=nasa_grounded_context
-    )
+    # 5. Generate Structured AI Script or Load Custom Pre-edited Script
+    if getattr(args, "custom_script", None):
+        custom_script_path = Path(args.custom_script).expanduser().resolve()
+        if not custom_script_path.exists() or not custom_script_path.is_file():
+            print(f"\n❌ Error: El archivo de guion especificado no existe: {custom_script_path}")
+            sys.exit(1)
+        try:
+            with open(custom_script_path, "r", encoding="utf-8") as f:
+                script = json.load(f)
+            print(f"\n📂 Cargando guion personalizado con escenas editadas desde: {custom_script_path.name}")
+            if script.get("title") and not args.topic:
+                args.topic = script["title"]
+        except Exception as e:
+            print(f"\n❌ Error al leer el archivo JSON de guion: {e}")
+            sys.exit(1)
+    else:
+        script_gen = ScriptGenerator(
+            gemini_key=args.gemini_key,
+            openai_key=args.openai_key,
+            groq_key=args.groq_key,
+            preferred_provider=args.llm,
+            prompt_file=args.prompt_file,
+            enable_review=getattr(args, "review", True)
+        )
+        script = script_gen.generate(
+            args.topic,
+            target_duration=args.duration,
+            language=args.language,
+            context_text=nasa_grounded_context
+        )
 
     # Strict check: If script generation fails, abort before creating media
     if not script or not script.get("scenes"):
         print("\n" + "=" * 65)
-        print("❌ ERROR FATAL: La API no pudo generar el guión.")
+        print("❌ ERROR FATAL: No se encontraron escenas válidas en el guión.")
         print("🛑 El proceso se ha detenido por completo. No se generará audio, subtítulos ni video.")
         print("=" * 65 + "\n")
         sys.exit(1)
 
     scenes = script.get("scenes", [])
-    print(f"📋 Script generated: \"{script.get('title', args.topic)}\" ({len(scenes)} scenes)")
+    print(f"📋 Script: \"{script.get('title', args.topic)}\" ({len(scenes)} scenes)")
     print(f"🪝 Hook: \"{script.get('hook', '')}\"")
 
     # 6. Synthesize Audio Narration & Accurate Timing
@@ -221,7 +237,7 @@ def main():
             "pixabay": pixabay,
             "pollinations": pollinations
         }
-        proceed, script, scene_assets, assets_metadata, scene_timings = interactive_audit_menu(
+        proceed, script, scene_assets, assets_metadata, scene_timings, narration_audio = interactive_audit_menu(
             script=script,
             scene_assets=scene_assets,
             assets_metadata=assets_metadata,
@@ -230,7 +246,9 @@ def main():
             tts_mgr=tts_mgr,
             providers_dict=providers_dict,
             orientation=vid_orientation,
-            html_report_path=audit_html_path
+            html_report_path=audit_html_path,
+            narration_audio=narration_audio,
+            video_folder=video_folder
         )
         if not proceed:
             print(f"\n🛑 Auditoría finalizada sin renderizar.")
@@ -248,7 +266,8 @@ def main():
             )
             sys.exit(0)
 
-        # Recalculate total duration if scene narrations were edited
+        # Refresh scenes and total duration if scene narrations or assets were edited
+        scenes = script.get("scenes", [])
         total_duration = sum(item["duration"] for item in scene_assets)
 
     # 8. Build Source Attribution Badges & Generate Subtitles

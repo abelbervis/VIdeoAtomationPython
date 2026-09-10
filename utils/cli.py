@@ -387,6 +387,15 @@ def parse_args() -> argparse.Namespace:
         help="Disable the viral Hook Title overlay on the first scene"
     )
 
+    # Custom Script Option (Pre-edited scenes JSON)
+    parser.add_argument(
+        "--script", "--custom-script",
+        dest="custom_script",
+        type=str,
+        default=None,
+        help="Path to an existing pre-edited script JSON file (e.g. output/<video>/script.json). Skips AI generation and uses your edited scenes directly."
+    )
+
     # Tester & Audit Mode Options
     parser.add_argument(
         "--audit", "--tester", "--test-mode",

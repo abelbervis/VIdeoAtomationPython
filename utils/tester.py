@@ -56,9 +56,20 @@ def generate_audit_html(
         if not file_path:
             return ""
         p = Path(file_path).resolve()
-        # If the file also exists in video_folder/assets, prioritize that relative path
+        # If the file also exists in video_folder/assets, prioritize that relative path and sync if needed
         if assets_local_dir.exists():
             candidate = assets_local_dir / p.name
+            if candidate.exists() and candidate.resolve() != p:
+                try:
+                    if p.exists() and p.stat().st_mtime >= candidate.stat().st_mtime:
+                        shutil.copy2(p, candidate)
+                except Exception:
+                    pass
+            elif p.exists() and not candidate.exists():
+                try:
+                    shutil.copy2(p, candidate)
+                except Exception:
+                    pass
             if candidate.exists():
                 return f"assets/{candidate.name}"
         try:
@@ -526,12 +537,14 @@ def interactive_audit_menu(
     tts_mgr: Any,
     providers_dict: Dict[str, Any],
     orientation: str = "portrait",
-    html_report_path: Optional[Path] = None
-) -> Tuple[bool, Dict[str, Any], List[Dict[str, Any]], List[Dict[str, Any]], List[Dict[str, Any]]]:
+    html_report_path: Optional[Path] = None,
+    narration_audio: Optional[Path] = None,
+    video_folder: Optional[Path] = None
+) -> Tuple[bool, Dict[str, Any], List[Dict[str, Any]], List[Dict[str, Any]], List[Dict[str, Any]], Optional[Path]]:
     """
     Interactive CLI loop allowing user to review and tweak script/assets before rendering.
     Returns:
-        (proceed_to_render: bool, script, scene_assets, assets_metadata, scene_timings)
+        (proceed_to_render: bool, script, scene_assets, assets_metadata, scene_timings, narration_audio)
     """
     nasa = providers_dict.get("nasa")
     pexels = providers_dict.get("pexels")
@@ -548,20 +561,20 @@ def interactive_audit_menu(
         assets_metadata=assets_metadata,
         scene_timings=scene_timings,
         topic=topic,
-        output_html_path=html_report_path
+        output_html_path=html_report_path,
+        narration_audio_path=narration_audio
     )
 
     print_audit_console_summary(script, scene_assets, assets_metadata, scene_timings, topic)
     print(f"🌐 Storyboard visual generado en: {html_report_path.resolve()}\n")
 
-    # Detect non-interactive environment (e.g. running inside Docker without -it)
+    # Detect completely closed stdin (e.g. background job without piped input)
     is_interactive = sys.stdin.isatty() if hasattr(sys.stdin, "isatty") else False
-    if not is_interactive:
-        print("⚠️  Entorno no interactivo detectado (Docker sin flags -it o ejecución en background).")
+    if not is_interactive and (not hasattr(sys.stdin, "readable") or not sys.stdin.readable()):
+        print("⚠️  Entorno sin entrada estándar interactiva detectado.")
         print("   Se generó el storyboard HTML y los recursos fueron preservados en la carpeta del video.")
-        print("   Para interactuar con este menú en Docker, ejecuta: docker run -it ... o docker compose run ...")
         print("   Aprobando automáticamente para proceder al renderizado...")
-        return True, script, scene_assets, assets_metadata, scene_timings
+        return True, script, scene_assets, assets_metadata, scene_timings, narration_audio
 
     while True:
         print("\n" + "=" * 55)
@@ -577,13 +590,16 @@ def interactive_audit_menu(
 
         try:
             choice = input("👉 Selecciona una opción [1-6] (Enter para aprobar): ").strip()
-        except (EOFError, KeyboardInterrupt):
+        except EOFError:
+            print("\n⚠️ Fin de archivo (EOF) detectado en la entrada. Aprobando automáticamente...")
+            return True, script, scene_assets, assets_metadata, scene_timings, narration_audio
+        except KeyboardInterrupt:
             print("\n🛑 Cancelado por el usuario.")
-            return False, script, scene_assets, assets_metadata, scene_timings
+            return False, script, scene_assets, assets_metadata, scene_timings, narration_audio
 
         if choice in ("", "5"):
             print("\n🚀 ¡Aprobado! Iniciando renderizado de video final...")
-            return True, script, scene_assets, assets_metadata, scene_timings
+            return True, script, scene_assets, assets_metadata, scene_timings, narration_audio
 
         elif choice == "1":
             print_audit_console_summary(script, scene_assets, assets_metadata, scene_timings, topic)
@@ -603,12 +619,26 @@ def interactive_audit_menu(
 
                 if new_text:
                     scene_ref["narration"] = new_text
-                    print(f"\n🎙️ Re-sintetizando audio para la escena {s_idx:02d}...")
-                    _, new_timings, _ = tts_mgr.synthesize_script(script)
+                    print(f"\n🎙️ Re-sintetizando audio para la escena {s_idx:02d} y concatenando narración...")
+                    new_full_audio, new_timings, _ = tts_mgr.synthesize_script(script)
+                    narration_audio = new_full_audio
                     scene_timings = new_timings
                     # Update duration in scene_assets
                     for item, timing in zip(scene_assets, scene_timings):
                         item["duration"] = timing["duration"]
+
+                    # Sync updated audio files directly into video_folder/assets
+                    if video_folder:
+                        out_assets_dir = Path(video_folder) / "assets"
+                        out_assets_dir.mkdir(parents=True, exist_ok=True)
+                        for timing in scene_timings:
+                            af = timing.get("audio_file")
+                            if af and Path(af).exists():
+                                dst_a = out_assets_dir / Path(af).name
+                                shutil.copy2(af, dst_a)
+                        if narration_audio and Path(narration_audio).exists():
+                            dst_narr = out_assets_dir / Path(narration_audio).name
+                            shutil.copy2(narration_audio, dst_narr)
 
                     # Refresh HTML
                     generate_audit_html(
@@ -617,9 +647,10 @@ def interactive_audit_menu(
                         assets_metadata=assets_metadata,
                         scene_timings=scene_timings,
                         topic=topic,
-                        output_html_path=html_report_path
+                        output_html_path=html_report_path,
+                        narration_audio_path=narration_audio
                     )
-                    print("✅ Narración y duraciones actualizadas con éxito.")
+                    print("✅ Narración, audios y duraciones actualizadas con éxito.")
             except Exception as e:
                 print(f"⚠️ Error al editar narración: {e}")
 
@@ -709,6 +740,13 @@ def interactive_audit_menu(
                     assets_metadata[s_idx - 1] = new_meta
                     print(f"✅ Escena {s_idx:02d} actualizada con: {new_file.name}")
 
+                    # Sync newly fetched asset directly into video_folder/assets
+                    if video_folder:
+                        out_assets_dir = Path(video_folder) / "assets"
+                        out_assets_dir.mkdir(parents=True, exist_ok=True)
+                        dst_f = out_assets_dir / Path(new_file).name
+                        shutil.copy2(new_file, dst_f)
+
                     # Refresh HTML
                     generate_audit_html(
                         script=script,
@@ -716,7 +754,8 @@ def interactive_audit_menu(
                         assets_metadata=assets_metadata,
                         scene_timings=scene_timings,
                         topic=topic,
-                        output_html_path=html_report_path
+                        output_html_path=html_report_path,
+                        narration_audio_path=narration_audio
                     )
                 else:
                     if sub_choice not in ("0", ""):
@@ -734,7 +773,7 @@ def interactive_audit_menu(
 
         elif choice == "6":
             print("\n🛑 Proceso finalizado sin renderizar. Tus recursos y guion están guardados.")
-            return False, script, scene_assets, assets_metadata, scene_timings
+            return False, script, scene_assets, assets_metadata, scene_timings, narration_audio
 
         else:
             print("⚠️ Opción no válida. Ingresa un número del 1 al 6.")
