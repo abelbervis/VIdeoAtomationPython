@@ -5,7 +5,7 @@ Organizes output files (video, script, subtitles, audio, metadata) in a clean de
 
 import shutil
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from config import OUTPUT_DIR
 from utils.files import sanitize_filename, save_json
