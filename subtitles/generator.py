@@ -36,32 +36,107 @@ from config import (
 )
 
 
-def format_hook_title(text: str) -> str:
+def format_hook_title(
+    text: str,
+    is_vertical: bool = True,
+    base_font_size: int = HOOK_TITLE_FONT_SIZE
+) -> Tuple[str, int]:
     """
-    Format topic or hook sentence into a punchy, balanced 1-to-2 line headline for the first seconds.
-    Strips emojis/quotes, converts to uppercase, and splits into 2 lines if longer than 3 words.
+    Format topic or hook headline into a punchy, balanced 1-to-3 line title for the opening hook.
+    Strips emojis/quotes, converts Latin text to uppercase, balances line lengths across word boundaries,
+    and dynamically computes font size so that the text never overflows screen boundaries or clips.
     """
     if not text:
-        return ""
+        return "", base_font_size
     emoji_cleaner = re.compile(r'[\U00010000-\U0010ffff\u200d\u2600-\u26ff\u2700-\u27bf\ufe0f]')
     clean = emoji_cleaner.sub('', text).strip().strip('"\'“”«»')
     if not clean:
-        return ""
+        return "", base_font_size
+
+    # CJK (Chinese / Japanese / Korean)
     if is_cjk(clean):
-        if len(clean) > 8:
-            mid = len(clean) // 2
-            return clean[:mid] + r"\N" + clean[mid:]
-        return clean
+        c_len = len(clean)
+        if c_len <= 8:
+            return clean, min(base_font_size, 52)
+        elif c_len <= 16:
+            mid = c_len // 2
+            return clean[:mid] + r"\N" + clean[mid:], min(base_font_size, 44)
+        else:
+            p1 = max(1, c_len // 3)
+            p2 = max(p1 + 1, (2 * c_len) // 3)
+            return clean[:p1] + r"\N" + clean[p1:p2] + r"\N" + clean[p2:], min(base_font_size, 38)
 
     clean = clean.upper()
     words = clean.split()
-    if len(words) <= 3:
-        return clean
-    # Split into 2 balanced lines
-    mid = len(words) // 2
-    line1 = " ".join(words[:mid])
-    line2 = " ".join(words[mid:])
-    return f"{line1}\\N{line2}"
+    if not words:
+        return "", base_font_size
+
+    total_len = len(clean)
+    num_words = len(words)
+
+    if is_vertical:
+        # Vertical 9:16 mobile format (width: 1080px, safe margins: ~920px)
+        if total_len <= 18 and num_words <= 3:
+            lines = [clean]
+        elif total_len <= 44 or num_words <= 7:
+            # 2 balanced lines
+            mid = len(words) // 2
+            best_split = mid
+            best_diff = 999
+            for s in range(max(1, mid - 1), min(len(words), mid + 2)):
+                l1 = " ".join(words[:s])
+                l2 = " ".join(words[s:])
+                diff = abs(len(l1) - len(l2))
+                if diff < best_diff:
+                    best_diff = diff
+                    best_split = s
+            lines = [" ".join(words[:best_split]), " ".join(words[best_split:])]
+        else:
+            # 3 balanced lines for long titles or questions
+            part1 = max(1, round(len(words) / 3))
+            part2 = max(part1 + 1, round(2 * len(words) / 3))
+            best_splits = (part1, part2)
+            best_diff = 999
+            for p1 in range(max(1, part1 - 1), min(len(words) - 1, part1 + 2)):
+                for p2 in range(max(p1 + 1, part2 - 1), min(len(words), part2 + 2)):
+                    l1 = " ".join(words[:p1])
+                    l2 = " ".join(words[p1:p2])
+                    l3 = " ".join(words[p2:])
+                    lengths = [len(l1), len(l2), len(l3)]
+                    diff = max(lengths) - min(lengths)
+                    if diff < best_diff:
+                        best_diff = diff
+                        best_splits = (p1, p2)
+            p1, p2 = best_splits
+            lines = [" ".join(words[:p1]), " ".join(words[p1:p2]), " ".join(words[p2:])]
+
+        longest_line = max(len(l) for l in lines)
+        if longest_line <= 14:
+            fs = min(base_font_size, 54)
+        elif longest_line <= 18:
+            fs = min(base_font_size, 48)
+        elif longest_line <= 22:
+            fs = min(base_font_size, 42)
+        elif longest_line <= 26:
+            fs = min(base_font_size, 38)
+        else:
+            fs = min(base_font_size, 34)
+
+        if len(lines) >= 3 and fs > 40:
+            fs = 40
+    else:
+        # Landscape / horizontal format (1920x1080)
+        if total_len <= 35:
+            lines = [clean]
+            fs = min(base_font_size, 44)
+        else:
+            mid = len(words) // 2
+            lines = [" ".join(words[:mid]), " ".join(words[mid:])]
+            longest_line = max(len(l) for l in lines)
+            fs = min(base_font_size, 42 if longest_line <= 30 else 36)
+
+    formatted_str = r"\N".join(lines)
+    return formatted_str, fs
 
 
 def format_timestamp_srt(seconds: float) -> str:
@@ -411,11 +486,12 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 
             # 0. Write Viral Hook Title Overlay on Layer 2 (Center-Top with elastic punch-in and fade-out)
             if hook_title and ENABLE_HOOK_TITLE:
-                formatted_hook = format_hook_title(hook_title)
+                is_vert = self.width < self.height
+                formatted_hook, hook_fs = format_hook_title(hook_title, is_vertical=is_vert)
                 if formatted_hook:
                     h_start = "0:00:00.00"
                     h_end = format_timestamp_ass(max(1.0, hook_duration))
-                    punch_tag = r"{\fscx75\fscy75\t(0,120,\fscx112\fscy112)\t(120,220,\fscx100\fscy100)\fad(0,250)}"
+                    punch_tag = rf"{{\fs{hook_fs}\fscx75\fscy75\t(0,120,\fscx112\fscy112)\t(120,220,\fscx100\fscy100)\fad(0,250)}}"
                     f.write(f"Dialogue: 2,{h_start},{h_end},HookTitle,,0,0,0,,{punch_tag}{formatted_hook}\n")
 
             # 1. Write Source Attribution Badges on Layer 1 (Top-Left overlay with smooth fade and zero overlap)

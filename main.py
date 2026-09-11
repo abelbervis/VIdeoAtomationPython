@@ -308,12 +308,28 @@ def main():
     if not getattr(args, "no_hook_title", False):
         if getattr(args, "hook_title", None):
             effective_hook_title = args.hook_title.strip()
-        else:
-            # Fall back to script title, hook, or topic
-            raw_candidate = script.get("title") or script.get("hook") or args.topic
-            if raw_candidate:
-                words = raw_candidate.strip().split()
-                effective_hook_title = " ".join(words[:7])
+        elif script.get("title") and script.get("title").strip():
+            effective_hook_title = script.get("title").strip()
+        elif args.topic and args.topic.strip():
+            effective_hook_title = args.topic.strip()
+        elif script.get("hook") and script.get("hook").strip():
+            raw_hook = script.get("hook").strip()
+            q_match = re.search(r'([¿?][^?]+[?])', raw_hook)
+            if q_match:
+                effective_hook_title = q_match.group(1).strip()
+            else:
+                words = raw_hook.split()
+                if len(words) <= 10:
+                    effective_hook_title = raw_hook
+                else:
+                    cand = words[:10]
+                    stop_words = {"de", "del", "la", "el", "los", "las", "un", "una", "en", "por", "para", "con", "y", "o", "que", "si", "a"}
+                    while cand and cand[-1].lower().rstrip(".,;:¿?!¡") in stop_words:
+                        cand.pop()
+                    effective_hook_title = " ".join(cand)
+
+    if effective_hook_title:
+        print(f"  🎯 Viral Hook Title overlay: '{effective_hook_title}'")
 
     sub_gen = SubtitleGenerator(
         width=vid_width,
