@@ -188,7 +188,8 @@ def main():
         primary_asset_meta=primary_asset_meta,
         pixabay=pixabay,
         pollinations=pollinations,
-        enable_ai_fallback=getattr(args, "ai_fallback", True)
+        enable_ai_fallback=getattr(args, "ai_fallback", True),
+        enable_broll_split=getattr(args, "broll_split", True)
     )
 
     # 7.5. Audit & Testing Step (Visual Storyboard & Interactive Refinement)
@@ -205,6 +206,11 @@ def main():
             dst_f = out_assets_dir / Path(src_f).name
             if dst_f.resolve() != Path(src_f).resolve():
                 shutil.copy2(src_f, dst_f)
+        sec_f = item.get("secondary_file")
+        if sec_f and Path(sec_f).exists():
+            dst_sec = out_assets_dir / Path(sec_f).name
+            if dst_sec.resolve() != Path(sec_f).resolve():
+                shutil.copy2(sec_f, dst_sec)
     for timing in scene_timings:
         af = timing.get("audio_file")
         if af and Path(af).exists():
@@ -345,7 +351,9 @@ def main():
         height=vid_height,
         fps=VIDEO_FPS,
         crf=args.crf,
-        preset=args.preset
+        preset=args.preset,
+        enable_broll_split=getattr(args, "broll_split", True),
+        enable_punch_in=getattr(args, "punch_in", True)
     )
     print(f"\n🎞️  Rendering scene clips ({vid_width}x{vid_height} @ {VIDEO_FPS}fps)...")
     scene_clips = []
@@ -365,7 +373,15 @@ def main():
         pad = trans_duration if (enable_trans and i < num_scenes - 1) else 0.0
 
         if asset_file and asset_file.exists():
-            clip = renderer.render_scene_clip(asset_file, s_duration, s_idx, is_video=is_video, transition_pad=pad)
+            clip = renderer.render_scene_clip(
+                asset_path=asset_file,
+                duration=s_duration,
+                scene_idx=s_idx,
+                is_video=is_video,
+                transition_pad=pad,
+                secondary_asset=item.get("secondary_file"),
+                secondary_is_video=item.get("secondary_is_video", False)
+            )
         else:
             clip = renderer.render_emergency_color_clip(s_duration, s_idx, transition_pad=pad)
         scene_clips.append(clip)

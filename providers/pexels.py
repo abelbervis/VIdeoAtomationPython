@@ -307,7 +307,8 @@ class PexelsProvider:
         keywords: List[str],
         preferred_type: str = "video",
         save_dir: Path = ASSETS_DIR,
-        orientation: Optional[str] = "portrait"
+        orientation: Optional[str] = "portrait",
+        filename_suffix: str = ""
     ) -> Tuple[Optional[Path], Optional[Dict[str, Any]]]:
         """
         Search and download the best matching Pexels asset for a scene.
@@ -342,8 +343,8 @@ class PexelsProvider:
                     if not best_url:
                         continue
 
-                    dest_file = save_dir / f"scene_{scene_idx:02d}.mp4"
-                    meta_file = save_dir / f"scene_{scene_idx:02d}.json"
+                    dest_file = save_dir / f"scene_{scene_idx:02d}{filename_suffix}.mp4"
+                    meta_file = save_dir / f"scene_{scene_idx:02d}{filename_suffix}.json"
 
                     print(f"  ⬇️ Downloading Pexels video: '{item['title']}' by {item['photographer']}...")
                     success = download_file(best_url, dest_file)
@@ -375,8 +376,8 @@ class PexelsProvider:
                 if not best_url:
                     continue
 
-                dest_file = save_dir / f"scene_{scene_idx:02d}.jpg"
-                meta_file = save_dir / f"scene_{scene_idx:02d}.json"
+                dest_file = save_dir / f"scene_{scene_idx:02d}{filename_suffix}.jpg"
+                meta_file = save_dir / f"scene_{scene_idx:02d}{filename_suffix}.json"
 
                 print(f"  ⬇️ Downloading Pexels photo: '{item['title']}' by {item['photographer']}...")
                 success = download_file(best_url, dest_file)

@@ -292,6 +292,11 @@ VIDEO_PRESET = clean_env("VIDEO_PRESET", "fast")
 DEFAULT_DURATION = 35
 MIN_SCENE_DURATION = 3.5
 
+# Pacing & Retention Optimizations (Viral Shorts / Reels / TikTok)
+ENABLE_BROLL_SPLIT = clean_env("ENABLE_BROLL_SPLIT", "true").lower() in ("true", "1", "yes")
+BROLL_SPLIT_THRESHOLD = float(clean_env("BROLL_SPLIT_THRESHOLD", "3.5"))  # Split scenes longer than 3.5s
+ENABLE_PUNCH_IN = clean_env("ENABLE_PUNCH_IN", "true").lower() in ("true", "1", "yes")
+
 # Subtitle Styling
 SUBTITLE_FONT = "Arial"
 SUBTITLE_FONT_SIZE = int(clean_env("SUBTITLE_FONT_SIZE", str(_default_format_cfg["subtitle_font_size"])))

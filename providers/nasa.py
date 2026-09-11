@@ -137,7 +137,8 @@ class NASAProvider:
         topic_anchor: Optional[str] = None,
         visual_subject: Optional[str] = None,
         primary_asset_file: Optional[Path] = None,
-        primary_asset_meta: Optional[Dict[str, Any]] = None
+        primary_asset_meta: Optional[Dict[str, Any]] = None,
+        filename_suffix: str = ""
     ) -> Tuple[Optional[Path], Optional[Dict[str, Any]]]:
         """
         Search and download the highest-ranking scientific asset for a scene.
@@ -157,7 +158,7 @@ class NASAProvider:
             candidates = self.ranker.filter_and_rank(raw_items, topic_anchor=topic_anchor or query)
 
             for cand in candidates:
-                dest_file, meta = self.downloader.download_candidate(cand, scene_idx, save_dir)
+                dest_file, meta = self.downloader.download_candidate(cand, scene_idx, save_dir, filename_suffix=filename_suffix)
                 if dest_file and meta:
                     return dest_file, meta
 
@@ -169,7 +170,7 @@ class NASAProvider:
             candidates = self.ranker.filter_and_rank(raw_items, topic_anchor=topic_anchor or top_query)
 
             for cand in candidates:
-                dest_file, meta = self.downloader.download_candidate(cand, scene_idx, save_dir)
+                dest_file, meta = self.downloader.download_candidate(cand, scene_idx, save_dir, filename_suffix=filename_suffix)
                 if dest_file and meta:
                     return dest_file, meta
 

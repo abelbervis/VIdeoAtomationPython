@@ -102,6 +102,10 @@ def generate_audit_html(
         media_badge_class = "badge-video" if is_video else "badge-image"
         media_badge_text = "🎬 VIDEO (MOVIMIENTO)" if is_video else "📷 IMAGEN ESTÁTICA"
 
+        sec_file = asset_item.get("secondary_file")
+        broll_badge = '<span class="badge" style="background:#0d9488;color:#fff;">🎬 B-ROLL SPLIT (2.5s)</span>' if (sec_file or s_duration > 3.5) else ''
+        punch_badge = '<span class="badge" style="background:#e11d48;color:#fff;">💥 PUNCH-IN (0.4s)</span>' if s_idx == 1 else ''
+
         provider_name = (meta.get("provider") or ("NASA" if "nasa" in str(asset_file).lower() else "STOCK")).upper()
         subject = scene.get("visual_subject") or meta.get("title") or f"Escena {s_idx}"
 
@@ -151,6 +155,8 @@ def generate_audit_html(
                     <span class="scene-subject">{subject}</span>
                 </div>
                 <div class="scene-badges">
+                    {punch_badge}
+                    {broll_badge}
                     <span class="badge {media_badge_class}">{media_badge_text}</span>
                     <span class="badge badge-provider">{provider_name}</span>
                     <span class="badge badge-time">⏱️ {s_duration:.1f}s ({timing.get('start', 0):.1f}s - {timing.get('end', 0):.1f}s)</span>

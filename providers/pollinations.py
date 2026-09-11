@@ -152,7 +152,8 @@ class PollinationsProvider:
         keywords: Optional[list] = None,
         orientation: str = "vertical",
         visual_subject: Optional[str] = None,
-        topic: str = "deep space"
+        topic: str = "deep space",
+        filename_suffix: str = ""
     ) -> Tuple[Optional[Path], Optional[Dict[str, Any]]]:
         """
         Fetches an AI-generated photographic visual for a specific scene.
@@ -171,7 +172,7 @@ class PollinationsProvider:
 
         width, height = self._get_dimensions(orientation)
         seed = int(time.time()) % 100000 + (scene_idx * 37)
-        filename = f"pollinations_scene_{scene_idx:02d}_{seed}.jpg"
+        filename = f"pollinations_scene_{scene_idx:02d}{filename_suffix}_{seed}.jpg"
         out_path = self.save_dir / filename
 
         print(f"  🎨 Generating AI visual with Pollinations ({self.default_model.upper()}) for scene {scene_idx}...")

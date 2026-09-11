@@ -51,7 +51,8 @@ class NASADownloader:
         self,
         candidate: NASACandidate,
         scene_idx: int,
-        save_dir: Path
+        save_dir: Path,
+        filename_suffix: str = ""
     ) -> Tuple[Optional[Path], Optional[Dict[str, Any]]]:
         """
         Retrieves direct download URLs for a NASACandidate, downloads the optimal resolution,
@@ -67,8 +68,8 @@ class NASADownloader:
             return None, None
 
         ext = ".mp4" if candidate.media_type == "video" else ".jpg"
-        dest_file = save_dir / f"scene_{scene_idx:02d}{ext}"
-        meta_file = save_dir / f"scene_{scene_idx:02d}.json"
+        dest_file = save_dir / f"scene_{scene_idx:02d}{filename_suffix}{ext}"
+        meta_file = save_dir / f"scene_{scene_idx:02d}{filename_suffix}.json"
 
         print(f"  ⬇️ Descargando NASA {candidate.media_type} [{candidate.center}]: '{candidate.title}'...")
         success = download_file(best_url, dest_file)

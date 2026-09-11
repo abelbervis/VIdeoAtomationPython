@@ -39,6 +39,9 @@ from config import (
     DUCKING_RATIO,
     DUCKING_ATTACK,
     DUCKING_RELEASE,
+    ENABLE_BROLL_SPLIT,
+    BROLL_SPLIT_THRESHOLD,
+    ENABLE_PUNCH_IN,
 )
 from utils.files import save_json, check_ffmpeg
 
@@ -54,7 +57,10 @@ class VideoRenderer:
         height: int = VIDEO_HEIGHT,
         fps: int = VIDEO_FPS,
         crf: int = VIDEO_CRF,
-        preset: str = VIDEO_PRESET
+        preset: str = VIDEO_PRESET,
+        enable_broll_split: bool = ENABLE_BROLL_SPLIT,
+        broll_split_threshold: float = BROLL_SPLIT_THRESHOLD,
+        enable_punch_in: bool = ENABLE_PUNCH_IN
     ):
         self.output_dir = Path(output_dir)
         self.temp_dir = Path(temp_dir)
@@ -63,32 +69,54 @@ class VideoRenderer:
         self.fps = fps
         self.crf = crf
         self.preset = preset
+        self.enable_broll_split = enable_broll_split
+        self.broll_split_threshold = broll_split_threshold
+        self.enable_punch_in = enable_punch_in
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.temp_dir.mkdir(parents=True, exist_ok=True)
 
-    def render_scene_clip(
+    def _render_single_shot(
         self,
         asset_path: Path,
         duration: float,
         scene_idx: int,
+        output_clip: Path,
         is_video: bool = False,
-        transition_pad: float = 0.0
+        is_hook_punch: bool = False,
+        camera_variation: Optional[str] = None
     ) -> Path:
         """
-        Render an individual scene visual clip formatted to target dimensions.
-        transition_pad adds extra head/tail frames so visual crossfades don't shorten audio sync.
-        Applies varied camera motion patterns across scenes for static images.
+        Renders a single visual shot segment formatted to target vertical dimensions.
+        Supports snap punch-in zoom (pattern interrupt), close-up angle cuts, and Ken Burns easing.
         """
-        output_clip = self.temp_dir / f"clip_{scene_idx:02d}.mp4"
-        clip_duration = duration + transition_pad
+        clip_duration = max(0.2, duration)
 
         if is_video:
-            # Loop short videos if needed, center crop to target format
-            filter_chain = (
-                f"scale={self.width}:{self.height}:force_original_aspect_ratio=increase,"
-                f"crop={self.width}:{self.height},"
-                f"setsar=1,fps={self.fps}"
-            )
+            # Video asset processing
+            if is_hook_punch:
+                # Video punch-in zoom during the first 12 frames (~0.4s) for hook retention
+                crop_expr = "iw/(1.0+0.16*if(lte(n\\,12)\\,sqrt(n/12)\\,1.0))"
+                filter_chain = (
+                    f"crop=w='{crop_expr}':h='ih/(1.0+0.16*if(lte(n\\,12)\\,sqrt(n/12)\\,1.0))':"
+                    f"x='(in_w-out_w)/2':y='(in_h-out_h)/2',"
+                    f"scale={self.width}:{self.height}:force_original_aspect_ratio=increase,"
+                    f"crop={self.width}:{self.height},"
+                    f"setsar=1,fps={self.fps}"
+                )
+            elif camera_variation == "closeup":
+                # Detail cut zoom on video
+                filter_chain = (
+                    f"scale={int(self.width*1.30)}:{int(self.height*1.30)}:force_original_aspect_ratio=increase,"
+                    f"crop={self.width}:{self.height},"
+                    f"setsar=1,fps={self.fps}"
+                )
+            else:
+                filter_chain = (
+                    f"scale={self.width}:{self.height}:force_original_aspect_ratio=increase,"
+                    f"crop={self.width}:{self.height},"
+                    f"setsar=1,fps={self.fps}"
+                )
+
             cmd = [
                 "ffmpeg", "-y",
                 "-stream_loop", "-1",
@@ -97,39 +125,56 @@ class VideoRenderer:
                 "-vf", filter_chain,
                 "-c:v", VIDEO_CODEC,
                 "-preset", "fast",
-                "-crf", "17",
+                "-crf", str(self.crf),
                 "-pix_fmt", "yuv420p",
                 "-an",
                 str(output_clip)
             ]
         else:
-            # Static image: Apply documentary-grade Ken Burns camera movements with smooth cinematic easing
-            total_frames = int(self.fps * clip_duration)
+            # Static image: Ken Burns / Punch-in motion
+            total_frames = max(1, int(self.fps * clip_duration))
             d = max(1, total_frames)
             progress = f"(on/{d})"
             # Smoothstep curve (Ease-In-Out: smooth start, organic mid motion, gentle deceleration)
             ease_io = f"({progress}*{progress}*(3-2*{progress}))"
 
-            pattern = (scene_idx - 1) % 5
-
-            if scene_idx == 1:
-                # Scene 1 Hook: Energetic Impact Zoom-In with Ease-Out (fast initial punch syncing with intro SFX)
-                zoom_expr = f"z='1.0+0.22*sin({progress}*(PI/2))':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
-            elif pattern == 0:
-                # Smooth center zoom in (1.0 -> 1.18) with organic Ease-In-Out
-                zoom_expr = f"z='1.0+0.18*{ease_io}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
-            elif pattern == 1:
-                # Reveal zoom out (1.20 -> 1.02) revealing cosmic scope with Ease-In-Out
-                zoom_expr = f"z='1.20-0.18*{ease_io}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
-            elif pattern == 2:
-                # Cinematic pan right with smooth acceleration/deceleration
-                zoom_expr = f"z='1.14':x='(iw-iw/zoom)*{ease_io}':y='ih/2-(ih/zoom/2)'"
-            elif pattern == 3:
-                # Cinematic pan left with smooth acceleration/deceleration
-                zoom_expr = f"z='1.14':x='(iw-iw/zoom)*(1-{ease_io})':y='ih/2-(ih/zoom/2)'"
+            if is_hook_punch:
+                # 💥 PUNTO 2.1: Punch-in de Impacto Inmediato (Pattern Interrupt)
+                # En los primeros 12 frames (~0.4s a 30fps), zoom rápido de 1.0 a 1.16 siguiendo curva sqrt (explosivo),
+                # seguido por un avance suave continuo de 1.16 a 1.22 durante el resto de la toma.
+                punch_frames = min(12, max(4, total_frames // 2))
+                rem_frames = max(1, total_frames - punch_frames)
+                zoom_expr = (
+                    f"z='if(lte(on\\,{punch_frames})\\,1.0+0.16*sqrt(on/{punch_frames})\\,1.16+0.06*((on-{punch_frames})/{rem_frames}))':"
+                    f"x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
+                )
+            elif camera_variation == "closeup":
+                # Close-up angle cut for B-roll split on single image (focal length shift)
+                zoom_expr = f"z='1.35+0.06*{ease_io}':x='iw*0.48-(iw/zoom/2)':y='(ih-ih/zoom)*(1-{ease_io})'"
             else:
-                # Subtle upward tilt with smooth acceleration/deceleration
-                zoom_expr = f"z='1.14':x='iw/2-(iw/zoom/2)':y='(ih-ih/zoom)*(1-{ease_io})'"
+                pattern = (scene_idx - 1) % 5
+                if scene_idx == 1 and self.enable_punch_in:
+                    punch_frames = min(12, max(4, total_frames // 2))
+                    rem_frames = max(1, total_frames - punch_frames)
+                    zoom_expr = (
+                        f"z='if(lte(on\\,{punch_frames})\\,1.0+0.16*sqrt(on/{punch_frames})\\,1.16+0.06*((on-{punch_frames})/{rem_frames}))':"
+                        f"x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
+                    )
+                elif pattern == 0:
+                    # Smooth center zoom in (1.0 -> 1.18) with organic Ease-In-Out
+                    zoom_expr = f"z='1.0+0.18*{ease_io}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
+                elif pattern == 1:
+                    # Reveal zoom out (1.20 -> 1.02) revealing cosmic scope with Ease-In-Out
+                    zoom_expr = f"z='1.20-0.18*{ease_io}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
+                elif pattern == 2:
+                    # Cinematic pan right with smooth acceleration/deceleration
+                    zoom_expr = f"z='1.14':x='(iw-iw/zoom)*{ease_io}':y='ih/2-(ih/zoom/2)'"
+                elif pattern == 3:
+                    # Cinematic pan left with smooth acceleration/deceleration
+                    zoom_expr = f"z='1.14':x='(iw-iw/zoom)*(1-{ease_io})':y='ih/2-(ih/zoom/2)'"
+                else:
+                    # Subtle upward tilt with smooth acceleration/deceleration
+                    zoom_expr = f"z='1.14':x='iw/2-(iw/zoom/2)':y='(ih-ih/zoom)*(1-{ease_io})'"
 
             filter_chain = (
                 f"scale={self.width*2}:{self.height*2}:force_original_aspect_ratio=increase,"
@@ -144,7 +189,7 @@ class VideoRenderer:
                 "-vf", filter_chain,
                 "-c:v", VIDEO_CODEC,
                 "-preset", "fast",
-                "-crf", "17",
+                "-crf", str(self.crf),
                 "-pix_fmt", "yuv420p",
                 "-an",
                 str(output_clip)
@@ -155,15 +200,15 @@ class VideoRenderer:
             if output_clip.exists() and output_clip.stat().st_size > 0:
                 return output_clip
         except subprocess.CalledProcessError:
-            # Fallback simple scale if zoompan filter fails on specific image sizes
-            print(f"  ⚠️ Motion filter fallback for scene {scene_idx}...")
+            # Fallback simple scale if motion filter fails
+            print(f"  ⚠️ Motion filter fallback for shot in scene {scene_idx}...")
             fallback_filter = (
                 f"scale={self.width}:{self.height}:force_original_aspect_ratio=increase,"
                 f"crop={self.width}:{self.height},setsar=1,fps={self.fps}"
             )
             fallback_cmd = [
                 "ffmpeg", "-y",
-                "-loop", "1",
+                "-loop", "1" if not is_video else "0",
                 "-i", str(asset_path),
                 "-t", f"{clip_duration:.2f}",
                 "-vf", fallback_filter,
@@ -176,6 +221,103 @@ class VideoRenderer:
             subprocess.run(fallback_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
 
         return output_clip
+
+    def render_scene_clip(
+        self,
+        asset_path: Path,
+        duration: float,
+        scene_idx: int,
+        is_video: bool = False,
+        transition_pad: float = 0.0,
+        secondary_asset: Optional[Path] = None,
+        secondary_is_video: bool = False
+    ) -> Path:
+        """
+        Render an individual scene visual clip formatted to target dimensions.
+        transition_pad adds extra head/tail frames so visual crossfades don't shorten audio sync.
+        When duration > broll_split_threshold and enable_broll_split is True, automatically
+        splits the scene into two shots (Shot 1 + Shot 2 B-Roll) to preserve 2.5s pacing.
+        """
+        output_clip = self.temp_dir / f"clip_{scene_idx:02d}.mp4"
+        total_clip_duration = duration + transition_pad
+
+        # 🎬 PUNTO 1.1: Regla de los 2.5 Segundos (B-Roll Split)
+        should_split = (
+            self.enable_broll_split
+            and duration > self.broll_split_threshold
+            and duration >= 2.0
+        )
+
+        if should_split:
+            d1 = round(duration / 2.0, 2)
+            d2 = round(duration - d1, 2)
+            shot2_duration = d2 + transition_pad
+
+            sub1_path = self.temp_dir / f"subclip_{scene_idx:02d}_1.mp4"
+            sub2_path = self.temp_dir / f"subclip_{scene_idx:02d}_2.mp4"
+
+            # Shot 1: opening segment (with hook punch-in if Scene 1)
+            is_hook = (scene_idx == 1 and self.enable_punch_in)
+            self._render_single_shot(
+                asset_path=asset_path,
+                duration=d1,
+                scene_idx=scene_idx,
+                output_clip=sub1_path,
+                is_video=is_video,
+                is_hook_punch=is_hook,
+                camera_variation=None
+            )
+
+            # Shot 2: complementary B-Roll or alternate close-up angle cut
+            has_broll_media = secondary_asset and secondary_asset.exists()
+            broll_target_asset = secondary_asset if has_broll_media else asset_path
+            broll_is_video = secondary_is_video if has_broll_media else is_video
+            broll_variation = None if has_broll_media else "closeup"
+
+            self._render_single_shot(
+                asset_path=broll_target_asset,
+                duration=shot2_duration,
+                scene_idx=scene_idx,
+                output_clip=sub2_path,
+                is_video=broll_is_video,
+                is_hook_punch=False,
+                camera_variation=broll_variation
+            )
+
+            # Concatenate Shot 1 and Shot 2 into output_clip
+            if sub1_path.exists() and sub2_path.exists():
+                concat_cmd = [
+                    "ffmpeg", "-y",
+                    "-i", str(sub1_path),
+                    "-i", str(sub2_path),
+                    "-filter_complex", "[0:v][1:v]concat=n=2:v=1:a=0[v]",
+                    "-map", "[v]",
+                    "-c:v", VIDEO_CODEC,
+                    "-preset", "fast",
+                    "-crf", str(self.crf),
+                    "-pix_fmt", "yuv420p",
+                    "-an",
+                    str(output_clip)
+                ]
+                try:
+                    subprocess.run(concat_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+                    split_type = "B-Roll media" if has_broll_media else "Focal Angle Cut"
+                    print(f"  🎬 Scene {scene_idx:02d} B-Roll Split active: Shot 1 ({d1:.1f}s) + Shot 2 ({d2:.1f}s) [{split_type}]")
+                    return output_clip
+                except subprocess.CalledProcessError as e:
+                    print(f"  ⚠️ Concat failed for split scene {scene_idx}: {e.stderr.decode()[:150] if e.stderr else ''}")
+
+        # Standard single shot execution (if not split or if concat fallback triggered)
+        is_hook = (scene_idx == 1 and self.enable_punch_in)
+        return self._render_single_shot(
+            asset_path=asset_path,
+            duration=total_clip_duration,
+            scene_idx=scene_idx,
+            output_clip=output_clip,
+            is_video=is_video,
+            is_hook_punch=is_hook,
+            camera_variation=None
+        )
 
     def render_emergency_color_clip(self, duration: float, scene_idx: int, transition_pad: float = 0.0) -> Path:
         """Generate a space-dark gradient background if an asset fails to download."""

@@ -249,7 +249,7 @@ class SFXManager:
             boom_samples = self._load_audio_samples(procedural_boom, sample_rate)
 
         if boom_samples:
-            start_frame = int(0.05 * sample_rate)
+            start_frame = int(0.00 * sample_rate)
             boom_vol = volume * (random.uniform(0.80, 0.95) if self.randomize else 0.85)
             for idx, (l_val, r_val) in enumerate(boom_samples):
                 pos = start_frame + idx

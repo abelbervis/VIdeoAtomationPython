@@ -29,6 +29,8 @@ from config import (
     SUPPORTED_TRANSITIONS,
     VIDEO_CRF,
     VIDEO_PRESET,
+    ENABLE_BROLL_SPLIT,
+    ENABLE_PUNCH_IN,
     get_language_voice,
     sanitize_env_value,
 )
@@ -280,6 +282,33 @@ def parse_args() -> argparse.Namespace:
         "--no-transitions",
         action="store_true",
         help="Disable scene visual transitions (standard hard cuts)"
+    )
+    # Viral retention & pacing options
+    parser.add_argument(
+        "--broll-split",
+        dest="broll_split",
+        action="store_true",
+        default=ENABLE_BROLL_SPLIT,
+        help="Split long scenes (>3.5s) into two visual cuts to maintain 2.5s pacing (default: active)"
+    )
+    parser.add_argument(
+        "--no-broll-split",
+        dest="broll_split",
+        action="store_false",
+        help="Disable automatic B-Roll splitting of long scenes"
+    )
+    parser.add_argument(
+        "--punch-in",
+        dest="punch_in",
+        action="store_true",
+        default=ENABLE_PUNCH_IN,
+        help="Apply Pattern Interrupt snap punch-in zoom during first 0.4s of Scene 1 (default: active)"
+    )
+    parser.add_argument(
+        "--no-punch-in",
+        dest="punch_in",
+        action="store_false",
+        help="Disable opening hook punch-in zoom"
     )
     # Subtitle options
     parser.add_argument(

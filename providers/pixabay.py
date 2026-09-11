@@ -206,7 +206,8 @@ class PixabayProvider:
         keywords: List[str],
         preferred_type: str = "video",
         save_dir: Path = ASSETS_DIR,
-        orientation: Optional[str] = "portrait"
+        orientation: Optional[str] = "portrait",
+        filename_suffix: str = ""
     ) -> Tuple[Optional[Path], Optional[Dict[str, Any]]]:
         """
         Search and download the best matching Pixabay asset for a scene.
@@ -240,8 +241,8 @@ class PixabayProvider:
                     if not best_url:
                         continue
 
-                    dest_file = save_dir / f"scene_{scene_idx:02d}.mp4"
-                    meta_file = save_dir / f"scene_{scene_idx:02d}.json"
+                    dest_file = save_dir / f"scene_{scene_idx:02d}{filename_suffix}.mp4"
+                    meta_file = save_dir / f"scene_{scene_idx:02d}{filename_suffix}.json"
 
                     user_name = (item.get("user") or "").strip()
                     print(f"  ⬇️ Downloading Pixabay video: '{item['title']}' by {user_name}...")
@@ -272,8 +273,8 @@ class PixabayProvider:
                 if not best_url:
                     continue
 
-                dest_file = save_dir / f"scene_{scene_idx:02d}.jpg"
-                meta_file = save_dir / f"scene_{scene_idx:02d}.json"
+                dest_file = save_dir / f"scene_{scene_idx:02d}{filename_suffix}.jpg"
+                meta_file = save_dir / f"scene_{scene_idx:02d}{filename_suffix}.json"
 
                 user_name = (item.get("user") or "").strip()
                 print(f"  ⬇️ Downloading Pixabay photo: '{item['title']}' by {user_name}...")
