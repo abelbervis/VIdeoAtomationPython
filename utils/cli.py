@@ -59,6 +59,11 @@ def parse_args() -> argparse.Namespace:
         help="Discover mode: inspect and display available NASA trending discoveries with AI viral scores and hooks, without rendering a video."
     )
     parser.add_argument(
+        "--robo",
+        action="store_true",
+        help="Robo Agents mode: generate a humorous conversation between Orange and Blue robot agents."
+    )
+    parser.add_argument(
         "--date",
         type=str,
         default=None,

@@ -59,6 +59,18 @@ def main():
         print("Please install FFmpeg: https://ffmpeg.org/download.html")
         sys.exit(1)
 
+    # If --robo mode is selected, run Robo Agents pipeline
+    if getattr(args, "robo", False):
+        from robo_agents.main import run_robo_pipeline
+        topic = args.topic or "por qué el cielo es azul"
+        run_robo_pipeline(
+            topic=topic,
+            turns=5,
+            pexels_key=args.pexels_key,
+            pixabay_key=args.pixabay_key
+        )
+        return
+
     # 1. Resolve Topic (Autonomous NASA Trend Hunter / Discover Mode or User-Supplied Topic)
     topic, nasa_grounded_context, trending_metadata = resolve_trending_topic(args)
     args.topic = topic

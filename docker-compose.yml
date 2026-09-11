@@ -20,3 +20,5 @@ services:
       - ./utils:/app/utils
       - ./providers:/app/providers
       - ./ai:/app/ai
+      - ./robo_agents:/app/robo_agents
+
