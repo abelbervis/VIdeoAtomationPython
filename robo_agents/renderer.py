@@ -71,16 +71,24 @@ class RoboRenderer:
         self._load_bot_images()
 
     def _load_bot_images(self):
-        """Load and resize robot PNGs."""
-        bot_size = (400, 400)
-        if self.orange_png_path.exists():
-            self.orange_bot = Image.open(self.orange_png_path).convert("RGBA").resize(bot_size, Image.Resampling.LANCZOS)
-        else:
+        """Load and resize robot PNGs with safe fallback handling."""
+        bot_size = (360, 360)
+        try:
+            if self.orange_png_path.exists() and self.orange_png_path.stat().st_size > 0:
+                self.orange_bot = Image.open(self.orange_png_path).convert("RGBA").resize(bot_size, Image.Resampling.LANCZOS)
+            else:
+                self.orange_bot = Image.new("RGBA", bot_size, (255, 140, 0, 255))
+        except Exception as e:
+            print(f"  ⚠️ Warning loading Orange Bot image: {e}. Using fallback color.")
             self.orange_bot = Image.new("RGBA", bot_size, (255, 140, 0, 255))
 
-        if self.blue_png_path.exists():
-            self.blue_bot = Image.open(self.blue_png_path).convert("RGBA").resize(bot_size, Image.Resampling.LANCZOS)
-        else:
+        try:
+            if self.blue_png_path.exists() and self.blue_png_path.stat().st_size > 0:
+                self.blue_bot = Image.open(self.blue_png_path).convert("RGBA").resize(bot_size, Image.Resampling.LANCZOS)
+            else:
+                self.blue_bot = Image.new("RGBA", bot_size, (0, 162, 255, 255))
+        except Exception as e:
+            print(f"  ⚠️ Warning loading Blue Bot image: {e}. Using fallback color.")
             self.blue_bot = Image.new("RGBA", bot_size, (0, 162, 255, 255))
 
     def create_turn_overlay(
@@ -93,9 +101,9 @@ class RoboRenderer:
     ) -> Path:
         """
         Renders a transparent PNG overlay containing:
-        - Orange Robot (bottom left)
-        - Blue Robot (bottom right)
-        - Highlight on active speaker
+        - Orange Robot (elevated above TikTok description zone)
+        - Blue Robot (elevated and inset from right-hand action column)
+        - Active speaker highlight and elevation
         - Dynamic text speech bubble pointing to active speaker
         """
         overlay = Image.new("RGBA", (width, height), (0, 0, 0, 0))
@@ -103,10 +111,12 @@ class RoboRenderer:
 
         is_orange = speaker.lower() == "orange"
 
-        # 1. Position Avatars (Bottom zone)
+        # 1. Position Avatars (Elevated safely above TikTok/Shorts caption zone: y=1450-1920)
         # Active speaker is placed slightly higher & full opacity; idle speaker is slightly lower & dimmer
-        orange_y = 1320 if is_orange else 1360
-        blue_y = 1320 if not is_orange else 1360
+        orange_y = 1040 if is_orange else 1080
+        blue_y = 1040 if not is_orange else 1080
+        orange_x = 60
+        blue_x = width - 360 - 90  # Inset 90px from right to avoid like/comment sidebar
 
         orange_img = self.orange_bot.copy()
         blue_img = self.blue_bot.copy()
@@ -122,52 +132,52 @@ class RoboRenderer:
             a = a.point(lambda p: int(p * 0.55))
             blue_img.putalpha(a)
 
-        overlay.paste(orange_img, (60, orange_y), orange_img)
-        overlay.paste(blue_img, (width - 400 - 60, blue_y), blue_img)
+        overlay.paste(orange_img, (orange_x, orange_y), orange_img)
+        overlay.paste(blue_img, (blue_x, blue_y), blue_img)
 
         # 2. Character Name Badges
-        font_badge = find_system_font(32)
+        font_badge = find_system_font(30)
         # Orange badge
-        draw.rounded_rectangle([70, orange_y + 390, 270, orange_y + 440], radius=15, fill=(255, 140, 0, 230))
-        draw.text((105, orange_y + 396), "ORANGE", font=font_badge, fill=(255, 255, 255, 255))
+        draw.rounded_rectangle([orange_x + 10, orange_y + 350, orange_x + 200, orange_y + 395], radius=14, fill=(255, 140, 0, 230))
+        draw.text((orange_x + 40, orange_y + 356), "ORANGE", font=font_badge, fill=(255, 255, 255, 255))
         # Blue badge
-        draw.rounded_rectangle([width - 270, blue_y + 390, width - 70, blue_y + 440], radius=15, fill=(0, 140, 255, 230))
-        draw.text((width - 225, blue_y + 396), "BLUE", font=font_badge, fill=(255, 255, 255, 255))
+        draw.rounded_rectangle([blue_x + 150, blue_y + 350, blue_x + 340, blue_y + 395], radius=14, fill=(0, 140, 255, 230))
+        draw.text((blue_x + 205, blue_y + 356), "BLUE", font=font_badge, fill=(255, 255, 255, 255))
 
-        # 3. Speech Bubble Rendering
-        font_text = find_system_font(44)
+        # 3. Speech Bubble Rendering (Positioned above the robots, leaving top area for background video)
+        font_text = find_system_font(42)
         wrapped_lines = textwrap.wrap(text, width=24)
-        line_height = 54
+        line_height = 52
         text_height = len(wrapped_lines) * line_height
 
         bubble_w = 940
-        bubble_h = max(220, text_height + 80)
+        bubble_h = max(200, text_height + 70)
         bubble_x = (width - bubble_w) // 2
-        bubble_y = 960 - (bubble_h // 2)
+        bubble_y = 990 - bubble_h
 
         # Speech bubble box with rounded corners
         bg_color = (255, 255, 255, 245)
         border_color = (255, 140, 0, 255) if is_orange else (0, 162, 255, 255)
         draw.rounded_rectangle(
             [bubble_x, bubble_y, bubble_x + bubble_w, bubble_y + bubble_h],
-            radius=35,
+            radius=32,
             fill=bg_color,
             outline=border_color,
             width=6,
         )
 
-        # Bubble Tail pointing down towards speaker
+        # Bubble Tail pointing down towards the active robot's head
         if is_orange:
             tail_pts = [
-                (bubble_x + 160, bubble_y + bubble_h - 2),
-                (bubble_x + 200, bubble_y + bubble_h + 45),
-                (bubble_x + 250, bubble_y + bubble_h - 2),
+                (bubble_x + 130, bubble_y + bubble_h - 2),
+                (bubble_x + 175, bubble_y + bubble_h + 45),
+                (bubble_x + 220, bubble_y + bubble_h - 2),
             ]
         else:
             tail_pts = [
-                (bubble_x + bubble_w - 250, bubble_y + bubble_h - 2),
-                (bubble_x + bubble_w - 200, bubble_y + bubble_h + 45),
-                (bubble_x + bubble_w - 160, bubble_y + bubble_h - 2),
+                (bubble_x + bubble_w - 220, bubble_y + bubble_h - 2),
+                (bubble_x + bubble_w - 175, bubble_y + bubble_h + 45),
+                (bubble_x + bubble_w - 130, bubble_y + bubble_h - 2),
             ]
 
         draw.polygon(tail_pts, fill=bg_color, outline=border_color)
@@ -175,7 +185,6 @@ class RoboRenderer:
         # Render dialogue text inside bubble
         curr_y = bubble_y + (bubble_h - text_height) // 2
         for line in wrapped_lines:
-            # Measure line width using textbbox
             bbox = draw.textbbox((0, 0), line, font=font_text)
             w_line = bbox[2] - bbox[0]
             curr_x = bubble_x + (bubble_w - w_line) // 2
@@ -243,11 +252,12 @@ class RoboRenderer:
         # 2. Render Overlay PNG
         overlay_png = self.create_turn_overlay(speaker, text, turn_idx)
 
-        # 3. FFmpeg composition: rescale background to 1080x1920 vertical & overlay PNG
+        # 3. FFmpeg composition: rescale background to 1080x1920 vertical, overlay PNG & normalize audio
         filter_complex = (
             f"[0:v]scale={VIDEO_WIDTH}:{VIDEO_HEIGHT}:force_original_aspect_ratio=increase,"
             f"crop={VIDEO_WIDTH}:{VIDEO_HEIGHT},setsar=1,fps={VIDEO_FPS}[bg];"
-            f"[bg][1:v]overlay=0:0[outv]"
+            f"[bg][1:v]overlay=0:0[outv];"
+            f"[2:a]loudnorm=I=-16:TP=-1.5:LRA=11[outa]"
         )
 
         cmd = [
@@ -259,7 +269,7 @@ class RoboRenderer:
             "-t", f"{duration:.2f}",
             "-filter_complex", filter_complex,
             "-map", "[outv]",
-            "-map", "2:a",
+            "-map", "[outa]",
             "-c:v", VIDEO_CODEC,
             "-preset", "fast",
             "-crf", "18",

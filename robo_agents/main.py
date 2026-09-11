@@ -63,7 +63,7 @@ def parse_args():
 def run_robo_pipeline(
     topic: str = "por qué el cielo es azul",
     turns: int = 5,
-    orange_voice: str = "es-MX-DaliaNeural",
+    orange_voice: str = "es-MX-JorgeNeural",
     blue_voice: str = "es-ES-AlvaroNeural",
     pexels_key: str = None,
     pixabay_key: str = None,
