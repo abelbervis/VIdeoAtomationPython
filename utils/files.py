@@ -7,6 +7,7 @@ import os
 import re
 import shutil
 import subprocess
+import time
 import urllib.request
 import urllib.parse
 from pathlib import Path
@@ -160,31 +161,39 @@ def sanitize_url(url: str) -> str:
 def download_file(url: str, dest_path: Path, timeout: int = 30) -> bool:
     """
     Download a file from a URL to dest_path with progress and error safety.
-    Works with standard urllib and handles SSL, redirects, and URL sanitization.
+    Works with standard urllib and handles SSL, redirects, URL sanitization, and transient retries.
     """
     dest_path = Path(dest_path)
     dest_path.parent.mkdir(parents=True, exist_ok=True)
     clean_url = sanitize_url(url)
 
-    try:
-        req = urllib.request.Request(
-            clean_url,
-            headers={
-                "User-Agent": "NASA-Shorts-Generator/1.0 (Science Education Tool; Mozilla/5.0)"
-            }
-        )
-        with urllib.request.urlopen(req, timeout=timeout) as response, open(dest_path, "wb") as out_file:
-            shutil.copyfileobj(response, out_file)
-        
-        # Verify non-empty file
-        if dest_path.exists() and dest_path.stat().st_size > 0:
-            return True
-        return False
-    except Exception as e:
-        print(f"  ⚠️ Error downloading {clean_url}: {e}")
-        if dest_path.exists():
-            dest_path.unlink(missing_ok=True)
-        return False
+    max_attempts = 2
+    for attempt in range(max_attempts):
+        try:
+            req = urllib.request.Request(
+                clean_url,
+                headers={
+                    "User-Agent": "NASA-Shorts-Generator/1.0 (Science Education Tool; Mozilla/5.0)"
+                }
+            )
+            with urllib.request.urlopen(req, timeout=timeout) as response, open(dest_path, "wb") as out_file:
+                shutil.copyfileobj(response, out_file)
+
+            # Verify non-empty file
+            if dest_path.exists() and dest_path.stat().st_size > 0:
+                return True
+            if dest_path.exists():
+                dest_path.unlink(missing_ok=True)
+        except Exception as e:
+            if dest_path.exists():
+                dest_path.unlink(missing_ok=True)
+            if attempt < max_attempts - 1:
+                time.sleep(1.0)
+                continue
+            print(f"  ⚠️ Error downloading {clean_url}: {e}")
+            return False
+
+    return False
 
 
 def get_media_duration(filepath: Path) -> float:
