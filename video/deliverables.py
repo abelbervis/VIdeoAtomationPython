@@ -106,6 +106,11 @@ def package_deliverables(
                 dest_file = assets_dest_dir / Path(src_file).name
                 if dest_file.resolve() != Path(src_file).resolve():
                     shutil.copy2(src_file, dest_file)
+            sec_file = item.get("secondary_file")
+            if sec_file and Path(sec_file).exists():
+                dest_sec = assets_dest_dir / Path(sec_file).name
+                if dest_sec.resolve() != Path(sec_file).resolve():
+                    shutil.copy2(sec_file, dest_sec)
         if scene_timings:
             for timing in scene_timings:
                 af = timing.get("audio_file")

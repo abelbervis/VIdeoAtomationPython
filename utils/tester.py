@@ -44,9 +44,37 @@ def generate_audit_html(
     scenes = script.get("scenes", [])
     total_duration = sum(item.get("duration", 0.0) for item in scene_assets)
 
-    num_videos = sum(1 for item in scene_assets if item.get("is_video"))
-    num_images = len(scene_assets) - num_videos
-    motion_ratio = (num_videos / len(scene_assets) * 100) if scene_assets else 0
+    total_shots = 0
+    num_video_shots = 0
+    num_image_shots = 0
+    num_broll_splits = 0
+
+    for item in scene_assets:
+        s_dur = item.get("duration", 0.0)
+        has_split = bool(item.get("secondary_file") or s_dur > 3.5)
+        if item.get("is_video"):
+            num_video_shots += 1
+        else:
+            num_image_shots += 1
+
+        if has_split:
+            total_shots += 2
+            num_broll_splits += 1
+            if item.get("secondary_file"):
+                if item.get("secondary_is_video"):
+                    num_video_shots += 1
+                else:
+                    num_image_shots += 1
+            else:
+                # 1.35x focal angle cut of primary
+                if item.get("is_video"):
+                    num_video_shots += 1
+                else:
+                    num_image_shots += 1
+        else:
+            total_shots += 1
+
+    motion_ratio = (num_video_shots / total_shots * 100) if total_shots else 0
 
     # Calculate relative paths from HTML location
     html_dir = output_html_path.parent.resolve()
@@ -89,8 +117,27 @@ def generate_audit_html(
         s_duration = asset_item.get("duration", timing.get("duration", 0.0))
         is_video = asset_item.get("is_video", False)
         asset_file = asset_item.get("file")
-        rel_media_url = get_rel_url(asset_file) if asset_file else ""
+        sec_file = asset_item.get("secondary_file")
+        sec_is_video = asset_item.get("secondary_is_video", False)
+        sec_meta = asset_item.get("secondary_meta") or {}
+        has_split = bool(sec_file or s_duration > 3.5)
 
+        start_time = float(timing.get("start", 0.0))
+        end_time = float(timing.get("end", start_time + s_duration))
+
+        if has_split:
+            d1 = round(s_duration / 2.0, 2)
+            d2 = round(s_duration - d1, 2)
+            t1_end = start_time + d1
+            t2_start = t1_end
+        else:
+            d1 = s_duration
+            d2 = 0.0
+            t1_end = end_time
+            t2_start = start_time
+
+        rel_media_url = get_rel_url(asset_file) if asset_file else ""
+        rel_broll_url = get_rel_url(sec_file) if sec_file else ""
         audio_file = timing.get("audio_file")
         rel_audio_url = get_rel_url(audio_file) if audio_file else ""
 
@@ -98,13 +145,6 @@ def generate_audit_html(
         word_count = _count_words(narration)
         word_status_class = "badge-ok" if word_count <= 16 else "badge-warn"
         word_status_text = f"{word_count} palabras" + (" (óptimo)" if word_count <= 16 else " (denso >16)")
-
-        media_badge_class = "badge-video" if is_video else "badge-image"
-        media_badge_text = "🎬 VIDEO (MOVIMIENTO)" if is_video else "📷 IMAGEN ESTÁTICA"
-
-        sec_file = asset_item.get("secondary_file")
-        broll_badge = '<span class="badge" style="background:#0d9488;color:#fff;">🎬 B-ROLL SPLIT (2.5s)</span>' if (sec_file or s_duration > 3.5) else ''
-        punch_badge = '<span class="badge" style="background:#e11d48;color:#fff;">💥 PUNCH-IN (0.4s)</span>' if s_idx == 1 else ''
 
         provider_name = (meta.get("provider") or ("NASA" if "nasa" in str(asset_file).lower() else "STOCK")).upper()
         subject = scene.get("visual_subject") or meta.get("title") or f"Escena {s_idx}"
@@ -124,31 +164,123 @@ def generate_audit_html(
             kws = []
         image_prompt = scene.get("image_prompt", "")
 
-        # Media preview element
+        punch_badge = '<span class="badge" style="background:#e11d48;color:#fff;">💥 PUNCH-IN (0.4s)</span>' if s_idx == 1 else ''
+        if has_split:
+            if sec_file:
+                broll_badge = '<span class="badge" style="background:#0d9488;color:#fff;">🎬 2 TOMAS (B-ROLL SPLIT 2.5s)</span>'
+            else:
+                broll_badge = '<span class="badge" style="background:#d97706;color:#fff;">🔍 2 TOMAS (CORTE FOCAL 2.5s)</span>'
+        else:
+            broll_badge = '<span class="badge" style="background:#4b5563;color:#fff;">🎬 TOMA ÚNICA</span>'
+
+        # --- Shot 1 HTML (Principal) ---
         if asset_file and asset_file.exists():
             if is_video:
-                media_element = f"""
+                media_shot1 = f"""
                 <div class="media-container">
                     <video src="{rel_media_url}" controls muted loop playsinline preload="metadata"></video>
                     <div class="media-overlay-badge">{provider_name}</div>
                 </div>
                 """
             else:
-                media_element = f"""
+                media_shot1 = f"""
                 <div class="media-container">
                     <img src="{rel_media_url}" alt="{subject}" loading="lazy" />
                     <div class="media-overlay-badge">{provider_name}</div>
                 </div>
                 """
         else:
-            media_element = """
+            media_shot1 = """
             <div class="media-placeholder">
                 <p>⚠️ Sin archivo asignado</p>
             </div>
             """
 
+        shot1_html = f"""
+        <div class="shot-card">
+            <div class="shot-header">
+                <span class="shot-tag">TOMA 1: PRINCIPAL ({start_time:.1f}s - {t1_end:.1f}s)</span>
+                <span class="badge {'badge-video' if is_video else 'badge-image'}">{'🎬 VIDEO' if is_video else '📷 FOTO'}</span>
+            </div>
+            {media_shot1}
+            <div class="shot-footer">
+                <code>{asset_file.name if asset_file else "None"}</code>
+            </div>
+        </div>
+        """
+
+        # --- Shot 2 HTML (B-Roll o Reencuadre Focal) ---
+        if has_split:
+            if sec_file:
+                broll_p_name = (sec_meta.get("provider") or ("NASA" if "nasa" in str(sec_file).lower() else "B-ROLL")).upper()
+                if sec_file.exists():
+                    if sec_is_video:
+                        media_shot2 = f"""
+                        <div class="media-container">
+                            <video src="{rel_broll_url}" controls muted loop playsinline preload="metadata"></video>
+                            <div class="media-overlay-badge">{broll_p_name}</div>
+                        </div>
+                        """
+                    else:
+                        media_shot2 = f"""
+                        <div class="media-container">
+                            <img src="{rel_broll_url}" alt="{subject} B-Roll" loading="lazy" />
+                            <div class="media-overlay-badge">{broll_p_name}</div>
+                        </div>
+                        """
+                else:
+                    media_shot2 = """
+                    <div class="media-placeholder">
+                        <p>⚠️ Archivo B-Roll no encontrado</p>
+                    </div>
+                    """
+                shot2_html = f"""
+                <div class="shot-card shot-broll-active">
+                    <div class="shot-header">
+                        <span class="shot-tag" style="color:#2dd4bf;">TOMA 2: B-ROLL ({t2_start:.1f}s - {end_time:.1f}s)</span>
+                        <span class="badge {'badge-video' if sec_is_video else 'badge-image'}">{'🎬 VIDEO' if sec_is_video else '📷 FOTO'}</span>
+                    </div>
+                    {media_shot2}
+                    <div class="shot-footer">
+                        <code>{sec_file.name}</code>
+                    </div>
+                </div>
+                """
+            else:
+                shot2_html = f"""
+                <div class="shot-card shot-focal-cut">
+                    <div class="shot-header">
+                        <span class="shot-tag" style="color:#fbbf24;">TOMA 2: CORTE FOCAL ({t2_start:.1f}s - {end_time:.1f}s)</span>
+                        <span class="badge" style="background:#b45309;color:#fff;">🔍 ZOOM 1.35x</span>
+                    </div>
+                    <div class="focal-cut-preview">
+                        <div class="focal-cut-inner">
+                            <span class="focal-icon">🔍</span>
+                            <strong>Reencuadre Dinámico (Close-Up)</strong>
+                            <p>Corte automático a los 2.5s sobre la toma principal para dinamizar el corte.</p>
+                            <span class="focal-tip">💡 Puedes asignarle un video/imagen B-Roll independiente en la consola (Opción 3).</span>
+                        </div>
+                    </div>
+                    <div class="shot-footer">
+                        <span>Ángulo alternativo automático</span>
+                    </div>
+                </div>
+                """
+            shots_block = f"""
+            <div class="shots-grid">
+                {shot1_html}
+                {shot2_html}
+            </div>
+            """
+        else:
+            shots_block = f"""
+            <div class="shots-grid single-shot">
+                {shot1_html}
+            </div>
+            """
+
         card = f"""
-        <div class="scene-card {'card-warn' if not is_video else ''}" id="scene-card-{s_idx}">
+        <div class="scene-card" id="scene-card-{s_idx}">
             <div class="scene-header">
                 <div class="scene-title-group">
                     <span class="scene-number">#{s_idx:02d}</span>
@@ -157,16 +289,15 @@ def generate_audit_html(
                 <div class="scene-badges">
                     {punch_badge}
                     {broll_badge}
-                    <span class="badge {media_badge_class}">{media_badge_text}</span>
                     <span class="badge badge-provider">{provider_name}</span>
-                    <span class="badge badge-time">⏱️ {s_duration:.1f}s ({timing.get('start', 0):.1f}s - {timing.get('end', 0):.1f}s)</span>
+                    <span class="badge badge-time">⏱️ {s_duration:.1f}s ({start_time:.1f}s - {end_time:.1f}s)</span>
                     <span class="badge {word_status_class}">{word_status_text}</span>
                 </div>
             </div>
 
             <div class="scene-body">
                 <div class="scene-media-col">
-                    {media_element}
+                    {shots_block}
                     {f'<audio controls src="{rel_audio_url}" class="scene-audio-player"></audio>' if rel_audio_url else ''}
                 </div>
 
@@ -177,11 +308,12 @@ def generate_audit_html(
                     </div>
 
                     <div class="info-block meta-details">
-                        <label>🔍 METADATOS Y PALABRAS CLAVE:</label>
+                        <label>🔍 METADATOS Y TOMAS:</label>
                         <ul class="meta-list">
+                            <li><strong>Toma 1:</strong> <code>{asset_file.name if asset_file else "None"}</code> ({meta.get("attribution_text", "Dominio Público")})</li>
+                            {f'<li><strong>Toma 2 (B-Roll):</strong> <code>{sec_file.name}</code> ({sec_meta.get("attribution_text", "B-Roll complementario")})</li>' if (has_split and sec_file) else ''}
+                            {f'<li><strong>Toma 2 (Corte Focal):</strong> <em>Reencuadre 1.35x automático sobre toma 1</em></li>' if (has_split and not sec_file) else ''}
                             {f'<li><strong>Palabras clave:</strong> <code>{", ".join(kws)}</code></li>' if kws else ''}
-                            {f'<li><strong>Atribución:</strong> {meta.get("attribution_text", "Dominio Público")}</li>' if meta.get("attribution_text") else ''}
-                            {f'<li><strong>Archivo local:</strong> <code>{asset_file.name if asset_file else "None"}</code></li>' if asset_file else ''}
                         </ul>
                     </div>
 
@@ -327,17 +459,107 @@ def generate_audit_html(
         .badge-warn {{ background: #d29922; color: #000; }}
         .scene-body {{
             display: grid;
-            grid-template-columns: 320px 1fr;
+            grid-template-columns: minmax(360px, 1.35fr) 1fr;
             gap: 20px;
             padding: 20px;
         }}
-        @media (max-width: 860px) {{
+        @media (max-width: 980px) {{
             .scene-body {{ grid-template-columns: 1fr; }}
         }}
         .scene-media-col {{
             display: flex;
             flex-direction: column;
             gap: 12px;
+        }}
+        .shots-grid {{
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }}
+        .shots-grid.single-shot {{
+            grid-template-columns: 1fr;
+        }}
+        @media (max-width: 600px) {{
+            .shots-grid {{ grid-template-columns: 1fr; }}
+        }}
+        .shot-card {{
+            background: #11161d;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }}
+        .shot-card.shot-broll-active {{
+            border-color: #0d9488;
+            box-shadow: 0 0 10px rgba(13, 148, 136, 0.15);
+        }}
+        .shot-card.shot-focal-cut {{
+            border-color: #d29922;
+        }}
+        .shot-header {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.74rem;
+            font-weight: 700;
+        }}
+        .shot-tag {{
+            letter-spacing: 0.4px;
+        }}
+        .shot-footer {{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            padding-top: 4px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }}
+        .shot-footer code {{
+            background: #21262d;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #79c0ff;
+            word-break: break-all;
+            max-width: 100%;
+        }}
+        .focal-cut-preview {{
+            min-height: 180px;
+            background: linear-gradient(135deg, #1c2128 0%, #0d1117 100%);
+            border: 1px dashed var(--accent-amber);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }}
+        .focal-cut-inner {{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            color: #c9d1d9;
+        }}
+        .focal-icon {{
+            font-size: 2rem;
+        }}
+        .focal-cut-inner strong {{
+            color: #fbbf24;
+            font-size: 0.88rem;
+        }}
+        .focal-cut-inner p {{
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            max-width: 200px;
+            line-height: 1.35;
+        }}
+        .focal-tip {{
+            font-size: 0.68rem;
+            color: #58a6ff;
+            margin-top: 4px;
         }}
         .media-container {{
             position: relative;
@@ -451,10 +673,11 @@ def generate_audit_html(
             {f'<div class="header-hook">🪝 "{hook}"</div>' if hook else ''}
 
             <div class="stats-bar">
-                <div class="stat-item">⏱️ Duración Total: <strong>{total_duration:.1f}s</strong></div>
+                <div class="stat-item">⏱️ Duración: <strong>{total_duration:.1f}s</strong></div>
                 <div class="stat-item">📋 Escenas: <strong>{len(scenes)}</strong></div>
-                <div class="stat-item">🎬 Videos en movimiento: <strong style="color: {'var(--accent-green)' if motion_ratio >= 60 else 'var(--accent-amber)'};">{num_videos}/{len(scene_assets)} ({motion_ratio:.0f}%)</strong></div>
-                <div class="stat-item">📷 Imágenes fijas: <strong>{num_images}</strong></div>
+                <div class="stat-item">🎬 Tomas Totales: <strong>{total_shots}</strong> (<strong>{num_broll_splits}</strong> B-Roll Splits)</div>
+                <div class="stat-item">🎥 Videos en movimiento: <strong style="color: {'var(--accent-green)' if motion_ratio >= 60 else 'var(--accent-amber)'};">{num_video_shots}/{total_shots} ({motion_ratio:.0f}%)</strong></div>
+                <div class="stat-item">📷 Tomas fijas: <strong>{num_image_shots}</strong></div>
             </div>
 
             {f'''
@@ -492,22 +715,51 @@ def print_audit_console_summary(
     scene_timings: List[Dict[str, Any]],
     topic: str
 ) -> None:
-    """Print an aesthetic, structured audit table in the terminal."""
+    """Print an aesthetic, structured audit table in the terminal with B-roll shot visibility."""
     total_duration = sum(item.get("duration", 0.0) for item in scene_assets)
-    num_videos = sum(1 for item in scene_assets if item.get("is_video"))
-    num_images = len(scene_assets) - num_videos
-    motion_ratio = (num_videos / len(scene_assets) * 100) if scene_assets else 0
 
-    print("\n" + "═" * 70)
-    print("🔍  PANEL DE AUDITORÍA & TESTING DE VIDEO (PRE-RENDER)")
-    print("═" * 70)
+    total_shots = 0
+    num_video_shots = 0
+    num_image_shots = 0
+    num_broll_splits = 0
+
+    for item in scene_assets:
+        s_dur = item.get("duration", 0.0)
+        has_split = bool(item.get("secondary_file") or s_dur > 3.5)
+        if item.get("is_video"):
+            num_video_shots += 1
+        else:
+            num_image_shots += 1
+
+        if has_split:
+            total_shots += 2
+            num_broll_splits += 1
+            if item.get("secondary_file"):
+                if item.get("secondary_is_video"):
+                    num_video_shots += 1
+                else:
+                    num_image_shots += 1
+            else:
+                if item.get("is_video"):
+                    num_video_shots += 1
+                else:
+                    num_image_shots += 1
+        else:
+            total_shots += 1
+
+    motion_ratio = (num_video_shots / total_shots * 100) if total_shots else 0
+
+    print("\n" + "═" * 74)
+    print("🔍  PANEL DE AUDITORÍA & STORYBOARD TESTING (PRE-RENDER)")
+    print("═" * 74)
     print(f"🎯 Tema:       '{topic}'")
     print(f"📋 Título:     \"{script.get('title', topic)}\"")
     if script.get("hook"):
         print(f"🪝 Hook:       \"{script.get('hook')}\"")
     print(f"⏱️  Duración:   ~{total_duration:.1f} segundos ({len(scene_assets)} escenas)")
-    print(f"🎬 Dinamismo:  {num_videos} videos / {num_images} fotos ({motion_ratio:.0f}% en movimiento)")
-    print("─" * 70)
+    print(f"🎬 Tomas:      {total_shots} tomas totales ({len(scene_assets)} principales + {num_broll_splits} B-Roll splits)")
+    print(f"🎥 Dinamismo:  {num_video_shots} videos / {num_image_shots} fotos ({motion_ratio:.0f}% tomas en movimiento)")
+    print("─" * 74)
 
     warnings = []
 
@@ -516,32 +768,51 @@ def print_audit_console_summary(
         s_duration = asset_item.get("duration", timing.get("duration", 0.0))
         is_video = asset_item.get("is_video", False)
         asset_file = asset_item.get("file")
+        sec_file = asset_item.get("secondary_file")
+        sec_is_video = asset_item.get("secondary_is_video", False)
+        sec_meta = asset_item.get("secondary_meta") or {}
+        has_split = bool(sec_file or s_duration > 3.5)
+
         narration = timing.get("narration", "").strip()
         word_count = _count_words(narration)
 
-        media_icon = "🎬 VIDEO " if is_video else "📷 IMAGEN"
-        provider = (meta.get("provider") or ("NASA" if "nasa" in str(asset_file).lower() else "STOCK")).upper()
-        file_name = asset_file.name if asset_file else "SIN ARCHIVO"
+        if has_split:
+            d1 = round(s_duration / 2.0, 2)
+            d2 = round(s_duration - d1, 2)
+        else:
+            d1 = s_duration
+            d2 = 0.0
 
-        status_flag = "✅"
+        p1_name = (meta.get("provider") or ("NASA" if "nasa" in str(asset_file).lower() else "STOCK")).upper()
+        f1_name = asset_file.name if asset_file else "SIN ARCHIVO"
+        m1_icon = "🎬 VIDEO " if is_video else "📷 IMAGEN"
+
         if not is_video:
-            status_flag = "⚠️ FOTO"
-            warnings.append(f"Escena {s_idx:02d}: Es una imagen fija. Podría percibirse como diapositiva sin movimiento.")
+            warnings.append(f"Escena {s_idx:02d} (Toma 1): Imagen fija. Puedes reemplazarla por video.")
         if word_count > 16:
             warnings.append(f"Escena {s_idx:02d}: Guion extenso ({word_count} palabras). Puede sonar acelerado.")
 
-        print(f"[{s_idx:02d}] {media_icon} ({provider:<6}) | ⏱️ {s_duration:4.1f}s | 📝 {word_count:2d} palabras | {status_flag}")
-        print(f"     🗣️ \"{narration[:65]}{'...' if len(narration) > 65 else ''}\"")
-        print(f"     📁 {file_name}")
+        if has_split:
+            print(f"[{s_idx:02d}.1] {m1_icon} ({p1_name:<6}) | ⏱️ {d1:4.1f}s | Toma 1: Principal 📁 {f1_name}")
+            if sec_file:
+                p2_name = (sec_meta.get("provider") or ("NASA" if "nasa" in str(sec_file).lower() else "B-ROLL")).upper()
+                m2_icon = "🎬 VIDEO " if sec_is_video else "📷 IMAGEN"
+                print(f"[{s_idx:02d}.2] {m2_icon} ({p2_name:<6}) | ⏱️ {d2:4.1f}s | Toma 2: B-Roll    📁 {sec_file.name}")
+            else:
+                print(f"[{s_idx:02d}.2] 🔍 CORTE FOCAL   | ⏱️ {d2:4.1f}s | Toma 2: Reencuadre dinámico 1.35x (Close-Up)")
+        else:
+            print(f"[{s_idx:02d}]   {m1_icon} ({p1_name:<6}) | ⏱️ {s_duration:4.1f}s | Toma Única        📁 {f1_name}")
 
-    print("─" * 70)
+        print(f"     🗣️ \"{narration[:68]}{'...' if len(narration) > 68 else ''}\"")
+
+    print("─" * 74)
     if warnings:
         print("⚠️  AVISOS DE AUDITORÍA DETECTADOS:")
         for w in warnings:
             print(f"   • {w}")
     else:
-        print("✨ ¡Todo en orden! Guion conciso y óptimo porcentaje de video en movimiento.")
-    print("═" * 70 + "\n")
+        print("✨ ¡Todo en orden! Guion conciso y óptimo ritmo visual con B-Roll splits.")
+    print("═" * 74 + "\n")
 
 
 def interactive_audit_menu(
@@ -671,7 +942,7 @@ def interactive_audit_menu(
                 print(f"⚠️ Error al editar narración: {e}")
 
         elif choice == "3":
-            # Change / re-search asset
+            # Change / re-search asset (Toma 1 o Toma 2 B-Roll)
             try:
                 raw_idx = input(f"¿De qué escena deseas cambiar el visual? (1 a {len(scene_assets)}): ").strip()
                 if not raw_idx.isdigit() or not (1 <= int(raw_idx) <= len(scene_assets)):
@@ -680,90 +951,160 @@ def interactive_audit_menu(
                 s_idx = int(raw_idx)
                 asset_item = scene_assets[s_idx - 1]
                 meta_item = assets_metadata[s_idx - 1]
+                scene_ref = script["scenes"][s_idx - 1]
+                s_duration = asset_item.get("duration", 0.0)
+                sec_file = asset_item.get("secondary_file")
+                has_split = bool(sec_file or s_duration > 3.5)
 
-                print(f"\nVisual actual de la escena {s_idx:02d}: {asset_item.get('file')}")
-                print("  [1] Re-buscar en Pexels (Videos en movimiento)")
-                print("  [2] Re-buscar en Pixabay (Simulaciones 3D / Espacio)")
-                print("  [3] Re-buscar en NASA (Observaciones científicas)")
-                print("  [4] Generar nueva imagen con IA Pollinations (FLUX)")
-                print("  [5] Asignar archivo local propio (video o imagen)")
+                f1_desc = asset_item.get("file").name if asset_item.get("file") else "Sin archivo"
+                if sec_file:
+                    f2_desc = f"{sec_file.name} (B-Roll complementario)"
+                elif has_split:
+                    f2_desc = "Ninguno (usando Corte Focal 1.35x dinámico)"
+                else:
+                    f2_desc = "No aplica (escena corta <= 3.5s)"
+
+                print(f"\nVisuales actuales de la Escena {s_idx:02d}:")
+                print(f"  [1] Toma 1 (Principal): {f1_desc}")
+                print(f"  [2] Toma 2 (B-Roll):    {f2_desc}")
+                print("  [3] Ambas tomas")
                 print("  [0] Cancelar")
 
-                sub_choice = input("👉 Elige fuente [1-5]: ").strip()
+                shot_target = input("👉 ¿Qué toma deseas editar? [1-3] (0 para cancelar): ").strip()
+                if shot_target not in ("1", "2", "3"):
+                    continue
 
-                new_file = None
-                new_meta = None
+                def _edit_target_shot(target: str) -> bool:
+                    is_broll = (target == "secondary")
+                    label = "Toma 2 (B-Roll)" if is_broll else "Toma 1 (Principal)"
+                    cur_f = asset_item.get("secondary_file") if is_broll else asset_item.get("file")
+                    suffix = "_broll" if is_broll else ""
 
-                if sub_choice == "1" and pexels and pexels.is_configured():
-                    kw_input = input("Keywords para Pexels (ej: 'space nebula timelapse'): ").strip()
-                    kws = [k.strip() for k in kw_input.split(",") if k.strip()] or [topic]
-                    new_file, new_meta = pexels.fetch_scene_asset(
-                        scene_idx=s_idx,
-                        keywords=kws,
-                        preferred_type="video",
-                        orientation=orientation
-                    )
-                elif sub_choice == "2" and pixabay and pixabay.is_configured():
-                    kw_input = input("Keywords para Pixabay (ej: 'black hole 3d'): ").strip()
-                    kws = [k.strip() for k in kw_input.split(",") if k.strip()] or [topic]
-                    new_file, new_meta = pixabay.fetch_scene_asset(
-                        scene_idx=s_idx,
-                        keywords=kws,
-                        preferred_type="video",
-                        orientation=orientation
-                    )
-                elif sub_choice == "3" and nasa:
-                    kw_input = input("Keywords para NASA (ej: 'solar flare'): ").strip()
-                    kws = [k.strip() for k in kw_input.split(",") if k.strip()] or [topic]
-                    new_file, new_meta = nasa.fetch_scene_asset(
-                        scene_idx=s_idx,
-                        keywords=kws,
-                        preferred_type="video",
-                        orientation=orientation,
-                        topic_anchor=topic
-                    )
-                elif sub_choice == "4" and pollinations:
-                    prompt_input = input("Prompt fotográfico para FLUX (en inglés): ").strip()
-                    if prompt_input:
+                    print(f"\n--- Editando {label} de la Escena {s_idx:02d} ---")
+                    print(f"Archivo actual: {cur_f.name if cur_f else 'Ninguno'}")
+                    print("  [1] Re-buscar en Pexels (Videos en movimiento)")
+                    print("  [2] Re-buscar en Pixabay (Simulaciones 3D / Espacio)")
+                    print("  [3] Re-buscar en NASA (Observaciones científicas)")
+                    print("  [4] Generar con IA Pollinations (FLUX)")
+                    print("  [5] Asignar archivo local propio (video o imagen)")
+                    if is_broll:
+                        print("  [6] Quitar B-Roll (usar Corte Focal dinámico 1.35x)")
+                    print("  [0] Cancelar")
+
+                    sub_choice = input("👉 Elige opción: ").strip()
+
+                    new_file = None
+                    new_meta = None
+
+                    if sub_choice == "1" and pexels and pexels.is_configured():
+                        default_kw = f"{scene_ref.get('visual_subject', topic)} detail" if is_broll else scene_ref.get("visual_subject", topic)
+                        kw_input = input(f"Keywords para Pexels (Enter para '{default_kw}'): ").strip()
+                        kw_str = kw_input if kw_input else default_kw
+                        kws = [k.strip() for k in kw_str.split(",") if k.strip()]
+                        new_file, new_meta = pexels.fetch_scene_asset(
+                            scene_idx=s_idx,
+                            keywords=kws,
+                            preferred_type="video",
+                            orientation=orientation,
+                            filename_suffix=suffix
+                        )
+                    elif sub_choice == "2" and pixabay and pixabay.is_configured():
+                        default_kw = f"{scene_ref.get('visual_subject', topic)} detail" if is_broll else scene_ref.get("visual_subject", topic)
+                        kw_input = input(f"Keywords para Pixabay (Enter para '{default_kw}'): ").strip()
+                        kw_str = kw_input if kw_input else default_kw
+                        kws = [k.strip() for k in kw_str.split(",") if k.strip()]
+                        new_file, new_meta = pixabay.fetch_scene_asset(
+                            scene_idx=s_idx,
+                            keywords=kws,
+                            preferred_type="video",
+                            orientation=orientation,
+                            filename_suffix=suffix
+                        )
+                    elif sub_choice == "3" and nasa:
+                        default_kw = f"{scene_ref.get('visual_subject', topic)} close up" if is_broll else scene_ref.get("visual_subject", topic)
+                        kw_input = input(f"Keywords para NASA (Enter para '{default_kw}'): ").strip()
+                        kw_str = kw_input if kw_input else default_kw
+                        kws = [k.strip() for k in kw_str.split(",") if k.strip()]
+                        new_file, new_meta = nasa.fetch_scene_asset(
+                            scene_idx=s_idx,
+                            keywords=kws,
+                            preferred_type="video",
+                            orientation=orientation,
+                            topic_anchor=topic,
+                            filename_suffix=suffix
+                        )
+                    elif sub_choice == "4" and pollinations:
+                        base_p = scene_ref.get("image_prompt") or f"{topic}, {scene_ref.get('visual_subject', '')}"
+                        default_prompt = f"{base_p} cinematic close up detail, alternate camera angle" if is_broll else base_p
+                        prompt_input = input(f"Prompt para FLUX (Enter para '{default_prompt[:60]}...'): ").strip()
+                        p_str = prompt_input if prompt_input else default_prompt
                         new_file, new_meta = pollinations.fetch_scene_asset(
                             scene_idx=s_idx,
-                            prompt=prompt_input,
+                            prompt=p_str,
                             orientation=orientation,
-                            topic=topic
+                            topic=topic,
+                            filename_suffix=suffix
                         )
-                elif sub_choice == "5":
-                    path_input = input("Ruta absoluta o relativa del archivo (.mp4, .mov, .jpg, .png): ").strip()
-                    loc_p = Path(path_input).expanduser().resolve()
-                    if loc_p.exists() and loc_p.is_file():
-                        ext = loc_p.suffix.lower()
-                        dest_file = ASSETS_DIR / f"scene_{s_idx:02d}{ext}"
-                        shutil.copy2(loc_p, dest_file)
-                        is_vid = ext in [".mp4", ".mov", ".mkv", ".webm"]
-                        new_file = dest_file
-                        new_meta = {
-                            "scene_index": s_idx,
-                            "provider": "local",
-                            "title": loc_p.name,
-                            "media_type": "video" if is_vid else "image",
-                            "attribution_text": "Material del usuario"
-                        }
+                    elif sub_choice == "5":
+                        path_input = input("Ruta absoluta o relativa del archivo (.mp4, .mov, .jpg, .png): ").strip()
+                        loc_p = Path(path_input).expanduser().resolve()
+                        if loc_p.exists() and loc_p.is_file():
+                            ext = loc_p.suffix.lower()
+                            dest_file = ASSETS_DIR / f"scene_{s_idx:02d}{suffix}{ext}"
+                            shutil.copy2(loc_p, dest_file)
+                            is_vid = ext in [".mp4", ".mov", ".mkv", ".webm"]
+                            new_file = dest_file
+                            new_meta = {
+                                "scene_index": s_idx,
+                                "provider": "local",
+                                "title": loc_p.name,
+                                "media_type": "video" if is_vid else "image",
+                                "attribution_text": "Material del usuario"
+                            }
+                        else:
+                            print(f"⚠️ El archivo '{path_input}' no existe.")
+                    elif is_broll and sub_choice == "6":
+                        asset_item["secondary_file"] = None
+                        asset_item["secondary_is_video"] = False
+                        asset_item["secondary_meta"] = None
+                        print(f"✅ B-Roll removido de la Escena {s_idx:02d}. Se usará Corte Focal dinámico 1.35x.")
+                        return True
+
+                    if new_file and new_meta:
+                        if is_broll:
+                            asset_item["secondary_file"] = new_file
+                            asset_item["secondary_is_video"] = (new_meta.get("media_type") == "video")
+                            asset_item["secondary_meta"] = new_meta
+                            print(f"✅ B-Roll de la Escena {s_idx:02d} actualizado con: {new_file.name}")
+                        else:
+                            asset_item["file"] = new_file
+                            asset_item["is_video"] = (new_meta.get("media_type") == "video")
+                            assets_metadata[s_idx - 1] = new_meta
+                            print(f"✅ Toma Principal de la Escena {s_idx:02d} actualizada con: {new_file.name}")
+
+                        # Sync newly fetched asset directly into video_folder/assets
+                        if video_folder:
+                            out_assets_dir = Path(video_folder) / "assets"
+                            out_assets_dir.mkdir(parents=True, exist_ok=True)
+                            dst_f = out_assets_dir / Path(new_file).name
+                            shutil.copy2(new_file, dst_f)
+                        return True
                     else:
-                        print(f"⚠️ El archivo '{path_input}' no existe.")
+                        if sub_choice not in ("0", ""):
+                            print("⚠️ No se pudo asignar el nuevo asset o no se encontró coincidencia.")
+                        return False
 
-                if new_file and new_meta:
-                    asset_item["file"] = new_file
-                    asset_item["is_video"] = (new_meta.get("media_type") == "video")
-                    assets_metadata[s_idx - 1] = new_meta
-                    print(f"✅ Escena {s_idx:02d} actualizada con: {new_file.name}")
+                modified = False
+                if shot_target == "1":
+                    modified = _edit_target_shot("primary")
+                elif shot_target == "2":
+                    modified = _edit_target_shot("secondary")
+                elif shot_target == "3":
+                    m1 = _edit_target_shot("primary")
+                    m2 = _edit_target_shot("secondary")
+                    modified = m1 or m2
 
-                    # Sync newly fetched asset directly into video_folder/assets
-                    if video_folder:
-                        out_assets_dir = Path(video_folder) / "assets"
-                        out_assets_dir.mkdir(parents=True, exist_ok=True)
-                        dst_f = out_assets_dir / Path(new_file).name
-                        shutil.copy2(new_file, dst_f)
-
-                    # Refresh HTML
+                if modified:
                     generate_audit_html(
                         script=script,
                         scene_assets=scene_assets,
@@ -773,10 +1114,6 @@ def interactive_audit_menu(
                         output_html_path=html_report_path,
                         narration_audio_path=narration_audio
                     )
-                else:
-                    if sub_choice not in ("0", ""):
-                        print("⚠️ No se pudo asignar el nuevo asset o no se encontró coincidencia.")
-
             except Exception as e:
                 print(f"⚠️ Error al cambiar asset: {e}")
 

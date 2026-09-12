@@ -294,11 +294,16 @@ def collect_scene_assets(
         if asset_file and enable_broll_split and timing["duration"] > broll_split_threshold:
             broll_kws = keywords[1:] if len(keywords) > 1 else [f"{keywords[0]} detail"]
             broll_subject = f"{scene.get('visual_subject', '')} detail".strip() or None
+            broll_prompt = (
+                f"{scene.get('image_prompt')} cinematic close up detail, alternate angle"
+                if scene.get("image_prompt")
+                else None
+            )
             broll_file, broll_m = _fetch_asset_candidate(
                 kws=broll_kws,
                 pref_type=visual_type,
                 suffix="_broll",
-                prompt=None,
+                prompt=broll_prompt,
                 v_subject=broll_subject,
                 is_primary_override=False
             )
@@ -306,7 +311,6 @@ def collect_scene_assets(
                 secondary_file = broll_file
                 secondary_is_video = (broll_m.get("media_type") == "video")
                 secondary_meta = broll_m
-                assets_metadata.append(broll_m)
                 print(f"    🎬 B-Roll split asset acquired for Scene {idx:02d}: {broll_file.name}")
 
         if asset_file and meta:
@@ -316,7 +320,8 @@ def collect_scene_assets(
                 "is_video": (meta["media_type"] == "video"),
                 "duration": timing["duration"],
                 "secondary_file": secondary_file,
-                "secondary_is_video": secondary_is_video
+                "secondary_is_video": secondary_is_video,
+                "secondary_meta": secondary_meta
             })
             assets_metadata.append(meta)
         else:
@@ -327,7 +332,8 @@ def collect_scene_assets(
                 "is_video": False,
                 "duration": timing["duration"],
                 "secondary_file": None,
-                "secondary_is_video": False
+                "secondary_is_video": False,
+                "secondary_meta": None
             })
             assets_metadata.append({
                 "scene_index": idx,
