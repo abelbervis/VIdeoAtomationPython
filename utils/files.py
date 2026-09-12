@@ -138,17 +138,37 @@ def load_json(filepath: Path) -> Optional[Any]:
         return None
 
 
+def sanitize_url(url: str) -> str:
+    """
+    Sanitize a URL by percent-encoding spaces, control characters,
+    and non-ASCII characters in path and query without double-encoding existing escapes.
+    """
+    if not url or not isinstance(url, str):
+        return ""
+    url = url.strip()
+    try:
+        parts = urllib.parse.urlsplit(url)
+        unquoted_path = urllib.parse.unquote(parts.path)
+        path = urllib.parse.quote(unquoted_path, safe="/~:@!$&'()*+,;=")
+        unquoted_query = urllib.parse.unquote(parts.query)
+        query = urllib.parse.quote(unquoted_query, safe="=&?/~:@!$'()*+,;")
+        return urllib.parse.urlunsplit((parts.scheme, parts.netloc, path, query, parts.fragment))
+    except Exception:
+        return url.replace(" ", "%20")
+
+
 def download_file(url: str, dest_path: Path, timeout: int = 30) -> bool:
     """
     Download a file from a URL to dest_path with progress and error safety.
-    Works with standard urllib and handles SSL and redirects.
+    Works with standard urllib and handles SSL, redirects, and URL sanitization.
     """
     dest_path = Path(dest_path)
     dest_path.parent.mkdir(parents=True, exist_ok=True)
+    clean_url = sanitize_url(url)
 
     try:
         req = urllib.request.Request(
-            url,
+            clean_url,
             headers={
                 "User-Agent": "NASA-Shorts-Generator/1.0 (Science Education Tool; Mozilla/5.0)"
             }
@@ -161,7 +181,7 @@ def download_file(url: str, dest_path: Path, timeout: int = 30) -> bool:
             return True
         return False
     except Exception as e:
-        print(f"  ⚠️ Error downloading {url}: {e}")
+        print(f"  ⚠️ Error downloading {clean_url}: {e}")
         if dest_path.exists():
             dest_path.unlink(missing_ok=True)
         return False

@@ -68,8 +68,9 @@ class NASAClient:
 
             items = payload.get("collection", {}).get("items", [])
             urls = [item.get("href") for item in items if item.get("href")]
-            # Ensure HTTPS
-            return [u.replace("http://", "https://") for u in urls]
+            # Ensure HTTPS and sanitized percent-encoded URLs (e.g. spaces in paths)
+            from utils.files import sanitize_url
+            return [sanitize_url(u.replace("http://", "https://")) for u in urls]
         except Exception as e:
             print(f"  ⚠️ Error obteniendo URLs para '{nasa_id}': {e}")
             return []
