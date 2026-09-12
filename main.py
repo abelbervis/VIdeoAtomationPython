@@ -71,9 +71,26 @@ def main():
         )
         return
 
-    # 1. Resolve Topic (Autonomous NASA Trend Hunter / Discover Mode or User-Supplied Topic)
-    topic, nasa_grounded_context, trending_metadata = resolve_trending_topic(args)
-    args.topic = topic
+    # 1. Resolve Topic (Content Ideas Discovery, Autonomous NASA Trend Hunter, or User-Supplied Topic)
+    if getattr(args, "discover_ideas", False):
+        from ai.idea_discovery import resolve_content_ideas
+        topic, idea_meta = resolve_content_ideas(args)
+        if not topic:
+            return
+        args.topic = topic
+        trending_metadata = None
+        nasa_grounded_context = None
+        if idea_meta:
+            nasa_grounded_context = (
+                f"Enfoque y contexto de la idea seleccionada:\n"
+                f"- Título sugerido: {idea_meta.get('title')}\n"
+                f"- Gancho recomendado (primeros 3 segundos): {idea_meta.get('hook')}\n"
+                f"- Ángulo visual: {idea_meta.get('visual_angle')}\n"
+                f"- Por qué engancha: {idea_meta.get('why_it_works')}"
+            )
+    else:
+        topic, nasa_grounded_context, trending_metadata = resolve_trending_topic(args)
+        args.topic = topic
 
     # 2. Configure Output Format & Localization Details
     fmt_cfg = resolve_video_format(args.format)

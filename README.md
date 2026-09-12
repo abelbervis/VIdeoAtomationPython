@@ -166,6 +166,30 @@ python main.py --top-choice 1 --refresh
 
 > **Sincronización de Sesión**: La lista generada con `--discover` se guarda en `output/.trending_cache.json`. Al ejecutar `--top-choice <N>`, el sistema reutiliza la lista exacta de tu consulta previa para que la opción elegida coincida al 100% (incluso entre ejecuciones de contenedores en Docker).
 
+### 5. Modo Descubridor de Ideas de Contenido (`--discover-ideas` o `--ideas`)
+Si no tienes un tema en mente o pasas mucho tiempo pensando qué video producir, este modo actúa como un **estratega de contenido viral interactivo**. Te sugiere ideas estructuradas con ganchos (*hooks*) de 3 segundos, enfoques visuales y justificación de retención:
+
+```bash
+# 1. Abrir el descubridor interactivo de ideas:
+python main.py --discover-ideas
+
+# 2. Filtrar por categorías o nichos específicos:
+python main.py --discover-ideas --ideas-category misterios
+python main.py --discover-ideas --ideas-category agujeros_negros
+python main.py --discover-ideas --ideas-category planetas_extremos
+python main.py --discover-ideas --ideas-category james_webb
+python main.py --discover-ideas --ideas-category paradojas
+python main.py --discover-ideas --ideas-category que_pasaria_si
+
+# 3. Solo ver la lista en terminal sin entrar al modo interactivo:
+python main.py --discover-ideas --list-ideas
+
+# 4. Generar directamente una opción específica:
+python main.py --discover-ideas --top-choice 1
+```
+
+En el menú interactivo puedes pulsar el número de la idea `[1-5]` para producir el video al instante, pulsar `[R]` para regenerar 5 ideas frescas diferentes, o `[C]` para cambiar de categoría temática.
+
 ### 5. Navegación Histórica en el Archivo de la NASA (`--date`, `--days-back`, `--archive`)
 ¿Te interesa hablar de eventos o descubrimientos astronómicos del pasado aunque no sean recientes? Puedes viajar en el tiempo a cualquier fecha desde **junio de 1995 hasta hoy**:
 

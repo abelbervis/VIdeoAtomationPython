@@ -165,6 +165,9 @@ def resolve_trending_topic(args) -> Tuple[str, Optional[str], Optional[Dict[str,
         print("   python main.py --discover --days-back 30")
         print("   python main.py --discover --archive   (gemas aleatorias de 1995 a hoy)")
         print("   (o usa '--refresh' para forzar una nueva consulta en vivo a la NASA)")
+        print("💡 ¿Buscas ideas virales de contenido y temas de alto impacto?")
+        print("   python main.py --discover-ideas")
+        print("   python main.py --discover-ideas --ideas-category misterios")
         print("=" * 65 + "\n")
         sys.exit(0)
 

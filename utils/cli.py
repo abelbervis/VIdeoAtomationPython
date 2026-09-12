@@ -61,6 +61,23 @@ def parse_args() -> argparse.Namespace:
         help="Discover mode: inspect and display available NASA trending discoveries with AI viral scores and hooks, without rendering a video."
     )
     parser.add_argument(
+        "--discover-ideas", "--ideas", "--brainstorm",
+        dest="discover_ideas",
+        action="store_true",
+        help="Content ideas discovery mode: brainstorms and ranks high-retention video topic ideas with 3-second hooks, categories, and visual angles."
+    )
+    parser.add_argument(
+        "--ideas-category",
+        type=str,
+        default="all",
+        help="Filter brainstormed ideas by category: 'all', 'misterios', 'agujeros_negros', 'planetas_extremos', 'james_webb', 'paradojas', 'apocalipsis', 'que_pasaria_si'."
+    )
+    parser.add_argument(
+        "--list-ideas",
+        action="store_true",
+        help="Display the discovered content ideas table and exit without opening the interactive selection prompt."
+    )
+    parser.add_argument(
         "--robo",
         action="store_true",
         help="Robo Agents mode: generate a humorous conversation between Orange and Blue robot agents."
@@ -472,12 +489,14 @@ def parse_args() -> argparse.Namespace:
         args.trending = True
         args.topic = None
 
-    # If --top-choice was explicitly passed in command line arguments, activate trending mode
-    if any(arg.startswith("--top-choice") for arg in sys.argv):
+    # Check if --top-choice was explicitly passed in command line arguments
+    top_choice_explicit = any(arg.startswith("--top-choice") for arg in sys.argv)
+    args.top_choice_explicit = top_choice_explicit
+    if top_choice_explicit and not args.discover_ideas:
         args.trending = True
 
     # Auto-activate trending if historical date/days-back/archive is specified without a custom topic
-    if (args.date or args.days_back or args.archive) and not args.topic and not args.discover:
+    if (args.date or args.days_back or args.archive) and not args.topic and not args.discover and not args.discover_ideas:
         args.trending = True
 
     # Handle Variety / Randomization overrides
