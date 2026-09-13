@@ -6,6 +6,13 @@ services:
     image: nasa_shorts:latest
     env_file:
       - .env
+    environment:
+      - ENABLE_ORB=${ENABLE_ORB:-false}
+      - ORB_PALETTE=${ORB_PALETTE:-cosmic}
+      - ORB_POSITION=${ORB_POSITION:-center}
+      - ORB_SIZE=${ORB_SIZE:-medium}
+      - ORB_OPACITY=${ORB_OPACITY:-0.90}
+      - ORB_ANIMATION=${ORB_ANIMATION:-pulse}
     volumes:
       # Mount output folder to your local machine to get the generated MP4s
       - ./output:/app/output

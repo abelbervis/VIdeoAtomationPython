@@ -81,10 +81,15 @@ docker build -t nasa_shorts .
 docker compose run --rm nasa-shorts --discover
 docker compose run --rm nasa-shorts --top-choice 2
 
+# Generar video con Orbe Gradiente en Docker:
+docker compose run --rm nasa-shorts --topic "Misterios del Cosmos" --orb
+docker compose run --rm nasa-shorts --top-choice 1 --orb --orb-palette cosmic --orb-animation pulse
+
 # O con docker run:
 # En Linux / macOS:
 docker run --rm -v "$(pwd)/output:/app/output" --env-file .env nasa_shorts --discover
 docker run --rm -v "$(pwd)/output:/app/output" --env-file .env nasa_shorts --top-choice 2
+docker run --rm -v "$(pwd)/output:/app/output" --env-file .env nasa_shorts --topic "Marte" --orb
 
 # En Windows (PowerShell):
 docker run --rm -v "${PWD}/output:/app/output" --env-file .env nasa_shorts --discover
@@ -328,6 +333,35 @@ python main.py --topic "agujeros negros" --no-hook-title
 # Puedes ocultar la etiqueta del objeto visual o la fecha si prefieres un diseño más minimalista:
 python main.py --topic "cometas" --no-badge-label
 python main.py --topic "galaxias" --no-badge-date
+```
+
+### 🔮 Orbe Gradiente Animado (`--orb`, Estética Viral para Reels & TikTok)
+Para lograr una estética moderna inspirada en canales virales de ciencia y tecnología, el generador incluye un **Orbe Gradiente Multicapa** generado proceduralmente en tiempo real y compuesto sobre el video mediante aceleración FFmpeg:
+- **Resplandor Cósmico y Sombras Suaves**: Renderizado con capas difusas de gradiente radial, atmósfera y reflejos especulares.
+- **Animación Orgánica**: Rítmica pulsación armónica de escala (`pulse`), flotación ondulante natural en 2D (`float`) o respiración de luminosidad (`breathing`).
+- **Control Completo por Terminal y Docker**:
+```bash
+# Activar el orbe con configuración cósmica por defecto:
+python main.py --topic "agujeros negros" --orb
+
+# Cambiar paleta de colores:
+python main.py --topic "exoplanetas" --orb --orb-palette cyberpunk  # Magenta, cian y violeta neón
+python main.py --topic "el sol" --orb --orb-palette solar            # Ámbar incandescente y dorado
+python main.py --topic "auroras" --orb --orb-palette aurora          # Verde esmeralda y turquesa
+python main.py --topic "galaxias" --orb --orb-palette nebula         # Índigo, púrpura y magenta
+
+# Cambiar posición en pantalla:
+python main.py --topic "marte" --orb --orb-position floating         # Flotando orgánicamente en el centro
+python main.py --topic "saturno" --orb --orb-position ambient        # Como resplandor gigante de fondo
+python main.py --topic "espacio" --orb --orb-position top-right      # Como insignia o watermark elegante
+
+# Personalizar tamaño y animación:
+python main.py --topic "quásares" --orb --orb-size large --orb-animation pulse
+```
+
+En **Docker**, puedes pasar cualquier flag directamente o configurar las variables de entorno en tu archivo `.env` (`ENABLE_ORB=true`, `ORB_PALETTE=cosmic`, etc.):
+```bash
+docker compose run --rm nasa-shorts --topic "Misterios del Cosmos" --orb --orb-palette cosmic
 ```
 
 ### 7. Filtro Inteligente Anti-Logos y Relevancia Visual Cósmica

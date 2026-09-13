@@ -42,8 +42,15 @@ from config import (
     ENABLE_BROLL_SPLIT,
     BROLL_SPLIT_THRESHOLD,
     ENABLE_PUNCH_IN,
+    ENABLE_ORB,
+    ORB_PALETTE,
+    ORB_POSITION,
+    ORB_SIZE,
+    ORB_OPACITY,
+    ORB_ANIMATION,
 )
 from utils.files import save_json, check_ffmpeg
+from video.orb import generate_gradient_orb_svg, get_or_create_orb_asset, GradientOrbManager
 
 
 class VideoRenderer:
@@ -444,11 +451,13 @@ class VideoRenderer:
         scene_durations: Optional[List[float]] = None,
         transition: str = DEFAULT_TRANSITION,
         transition_duration: float = TRANSITION_DURATION,
-        auto_ducking: bool = ENABLE_AUTO_DUCKING
+        auto_ducking: bool = ENABLE_AUTO_DUCKING,
+        orb_config: Optional[Dict[str, Any]] = None,
     ) -> Path:
         """
         Concatenate visual scene clips with transitions, mix audio tracks (voice, music, SFX),
-        apply dynamic sidechain auto-ducking, burn styled subtitles, and render final production-ready MP4.
+        apply dynamic sidechain auto-ducking, burn styled subtitles, optionally composite
+        an animated gradient orb overlay, and render final production-ready MP4.
         """
         if not check_ffmpeg():
             raise RuntimeError("FFmpeg is not installed or not found in system PATH.")
@@ -524,7 +533,55 @@ class VideoRenderer:
             # Voice only
             filter_complex.append("[1:a]aformat=channel_layouts=stereo,volume=1.0[aout]")
 
-        # 3. Subtitles burning
+        # 3. Gradient Orb Overlay & Subtitles burning
+        orb_active = False
+        if orb_config and orb_config.get("enabled", False):
+            orb_active = True
+        elif orb_config is None and ENABLE_ORB:
+            orb_active = True
+            orb_config = {
+                "enabled": True,
+                "palette": ORB_PALETTE,
+                "position": ORB_POSITION,
+                "size": ORB_SIZE,
+                "opacity": ORB_OPACITY,
+                "animation": ORB_ANIMATION,
+            }
+
+        video_source = "[0:v]"
+        if orb_active and orb_config:
+            palette = orb_config.get("palette", ORB_PALETTE)
+            position = orb_config.get("position", ORB_POSITION)
+            size = orb_config.get("size", ORB_SIZE)
+            opacity = orb_config.get("opacity", ORB_OPACITY)
+            animation = orb_config.get("animation", ORB_ANIMATION)
+
+            orb_asset_path = get_or_create_orb_asset(palette=palette, target_dir=ASSETS_DIR / "orbs")
+
+            cmd.extend(["-loop", "1", "-i", str(orb_asset_path)])
+            orb_input_idx = curr_idx
+            curr_idx += 1
+
+            orb_mgr = GradientOrbManager(
+                palette=palette,
+                position=position,
+                size=size,
+                opacity=opacity,
+                animation=animation,
+            )
+            orb_filter_chain = orb_mgr.build_filter_chain(
+                input_idx=orb_input_idx,
+                output_label="orb_layer",
+                video_width=self.width,
+                video_height=self.height,
+                fps=self.fps
+            )
+            x_coord, y_coord = orb_mgr.get_overlay_coordinates(self.width, self.height)
+            filter_complex.append(f"{orb_filter_chain};[0:v][orb_layer]overlay=eval=frame:x='{x_coord}':y='{y_coord}':format=auto:shortest=1[v_orb]")
+            video_source = "[v_orb]"
+            print(f"  🔮 Animated Gradient Orb active (Palette: '{palette}', Position: '{position}', Style: '{animation}', Size: '{size}')")
+
+        # Subtitles burning
         subtitle_filter = ""
         if subtitles_file and subtitles_file.exists():
             sub_path_escaped = str(subtitles_file.resolve()).replace(":", "\\:")
@@ -542,9 +599,9 @@ class VideoRenderer:
                 subtitle_filter = f"subtitles='{sub_path_escaped}'{fonts_param}"
 
         if subtitle_filter:
-            filter_complex.append(f"[0:v]{subtitle_filter}[vout]")
+            filter_complex.append(f"{video_source}{subtitle_filter}[vout]")
         else:
-            filter_complex.append("[0:v]copy[vout]")
+            filter_complex.append(f"{video_source}copy[vout]")
 
         filter_str = ";".join(filter_complex)
 

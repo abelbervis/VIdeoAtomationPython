@@ -428,6 +428,17 @@ def main():
 
     enable_ducking = args.auto_ducking and not args.no_auto_ducking
 
+    orb_config = {
+        "enabled": getattr(args, "orb", False),
+        "palette": getattr(args, "orb_palette", "cosmic"),
+        "position": getattr(args, "orb_position", "center"),
+        "size": getattr(args, "orb_size", "medium"),
+        "opacity": getattr(args, "orb_opacity", 0.90),
+        "animation": getattr(args, "orb_animation", "pulse"),
+    }
+    if orb_config["enabled"]:
+        print(f"  🔮 Gradient Orb visual overlay active: Palette='{orb_config['palette']}', Position='{orb_config['position']}', Style='{orb_config['animation']}'")
+
     final_video = renderer.assemble_final_video(
         scene_clips=scene_clips,
         narration_audio=narration_audio,
@@ -441,7 +452,8 @@ def main():
         scene_durations=scene_durations,
         transition=trans_type,
         transition_duration=trans_duration,
-        auto_ducking=enable_ducking
+        auto_ducking=enable_ducking,
+        orb_config=orb_config,
     )
 
     # 12. Package Deliverables inside Video Folder

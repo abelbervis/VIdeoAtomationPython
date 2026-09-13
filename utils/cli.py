@@ -31,6 +31,12 @@ from config import (
     VIDEO_PRESET,
     ENABLE_BROLL_SPLIT,
     ENABLE_PUNCH_IN,
+    ENABLE_ORB,
+    ORB_PALETTE,
+    ORB_POSITION,
+    ORB_SIZE,
+    ORB_OPACITY,
+    ORB_ANIMATION,
     get_language_voice,
     sanitize_env_value,
 )
@@ -454,6 +460,55 @@ def parse_args() -> argparse.Namespace:
         help="Disable the viral Hook Title overlay on the first scene"
     )
 
+    # Gradient Orb Overlay (Animated pulsing aesthetic orb)
+    parser.add_argument(
+        "--orb", "--gradient-orb",
+        dest="orb",
+        action="store_true",
+        default=ENABLE_ORB,
+        help="Enable dynamic animated Gradient Orb overlay (pulsing glowing 3D sphere) for modern viral aesthetics"
+    )
+    parser.add_argument(
+        "--no-orb",
+        dest="no_orb",
+        action="store_true",
+        help="Disable the Gradient Orb overlay"
+    )
+    parser.add_argument(
+        "--orb-palette",
+        type=str,
+        default=ORB_PALETTE,
+        choices=["cosmic", "cyberpunk", "solar", "aurora", "nebula", "monochrome"],
+        help=f"Color palette for the Gradient Orb (default: '{ORB_PALETTE}')"
+    )
+    parser.add_argument(
+        "--orb-position",
+        type=str,
+        default=ORB_POSITION,
+        choices=["center", "floating", "ambient", "bottom", "top-right", "bottom-right"],
+        help=f"Screen position for the Gradient Orb (default: '{ORB_POSITION}')"
+    )
+    parser.add_argument(
+        "--orb-size",
+        type=str,
+        default=ORB_SIZE,
+        choices=["small", "medium", "large", "ambient"],
+        help=f"Size of the Gradient Orb (default: '{ORB_SIZE}')"
+    )
+    parser.add_argument(
+        "--orb-opacity",
+        type=float,
+        default=ORB_OPACITY,
+        help=f"Opacity factor for the Gradient Orb (0.1 - 1.0, default: {ORB_OPACITY})"
+    )
+    parser.add_argument(
+        "--orb-animation",
+        type=str,
+        default=ORB_ANIMATION,
+        choices=["pulse", "float", "breathing", "none"],
+        help=f"Animation style for the Gradient Orb (default: '{ORB_ANIMATION}')"
+    )
+
     # Custom Script Option (Pre-edited scenes JSON)
     parser.add_argument(
         "--script", "--custom-script",
@@ -484,6 +539,10 @@ def parse_args() -> argparse.Namespace:
     )
 
     args = parser.parse_args()
+
+    # Handle orb override
+    if getattr(args, "no_orb", False):
+        args.orb = False
 
     # Sanitize inputs (strip surrounding quotes or comments if passed from shell, env, or docker)
     args.language = (args.language or DEFAULT_LANGUAGE).lower().strip()
