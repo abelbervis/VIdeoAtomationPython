@@ -49,6 +49,22 @@ def parse_args() -> argparse.Namespace:
         help="Topic for the video (e.g., 'agujeros negros', 'Marte'). If omitted or --trending is used, automatically hunts viral NASA discoveries."
     )
     parser.add_argument(
+        "--summary", "--notes", "--resumen",
+        dest="summary",
+        type=str,
+        nargs="?",
+        const="",
+        default=None,
+        help="Generate video from a summary, notes, or transcript of a viral topic.\nPass text directly or leave empty to paste interactively in the terminal."
+    )
+    parser.add_argument(
+        "--summary-file", "--notes-file", "--resumen-file",
+        dest="summary_file",
+        type=str,
+        default=None,
+        help="Path to a text or markdown file containing the summary/notes of the viral topic."
+    )
+    parser.add_argument(
         "--trending", "--auto-topic",
         dest="trending",
         action="store_true",

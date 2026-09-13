@@ -144,6 +144,19 @@ def load_system_prompt(custom_path: Optional[str] = None) -> Tuple[str, str]:
 SYSTEM_PROMPT, DEFAULT_PROMPT_SOURCE = load_system_prompt()
 
 
+def format_script_context_section(context_text: Optional[str]) -> str:
+    """Format grounded context for prompts, cleanly differentiating user summaries from NASA archives."""
+    if not context_text or not context_text.strip():
+        return ""
+    ctx = context_text.strip()
+    if any(k in ctx.upper() for k in ["RESUMEN", "USER", "NOTAS", "DIRECTIVAS ESTRICTAS"]):
+        return (
+            f"\nVIRAL TOPIC SUMMARY & FACTUAL MANDATE (CRITICAL: BASE SCRIPT STRICTLY ON THIS):\n"
+            f"\"\"\"\n{ctx}\n\"\"\"\n"
+        )
+    return f"\nOFFICIAL SCIENTIFIC / FACTUAL CONTEXT (Use as factual core):\n\"\"\"\n{ctx}\n\"\"\"\n"
+
+
 def get_language_instructions(language: str) -> Tuple[str, str]:
     """Return language label and specific prompt directives for the LLM."""
     lang = (language or "es").lower().strip()
@@ -345,9 +358,7 @@ class ScriptGenerator:
         lang_name, lang_guidance = get_language_instructions(language)
         try:
             endpoint = f"{self.groq_api_base}/chat/completions"
-            context_section = ""
-            if context_text and context_text.strip():
-                context_section = f"\nOFFICIAL SCIENTIFIC CONTEXT FROM NASA (Use as factual core):\n\"\"\"\n{context_text.strip()}\n\"\"\"\n"
+            context_section = format_script_context_section(context_text)
 
             payload = {
                 "model": model,
@@ -456,18 +467,15 @@ class ScriptGenerator:
     ) -> Optional[Dict[str, Any]]:
         """Call Gemini API via REST with connection close and model fallbacks."""
         lang_name, lang_guidance = get_language_instructions(language)
-        context_section = ""
-        if context_text and context_text.strip():
-            context_section = f"\nOFFICIAL SCIENTIFIC CONTEXT FROM NASA (Use as factual core):\n\"\"\"\n{context_text.strip()}\n\"\"\"\n"
+        context_section = format_script_context_section(context_text)
 
-        prompt = (
-            f"{self.system_prompt}\n\n"
+        user_content = (
             f"Topic: {topic}\n"
             f"Target duration: {target_duration} seconds.\n"
             f"Target Language: {lang_name}\n"
             f"Language Requirements:\n{lang_guidance}\n"
             f"{context_section}"
-            f"Generate the JSON script:"
+            f"Generate the JSON script following the schema:"
         )
 
         models_to_try = ["gemini-2.5-flash", "gemini-flash-latest"]
@@ -482,11 +490,13 @@ class ScriptGenerator:
             try:
                 url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={self.gemini_key}"
                 payload = {
-                    "contents": [{"parts": [{"text": prompt}]}],
+                    "system_instruction": {"parts": [{"text": self.system_prompt}]},
+                    "contents": [{"role": "user", "parts": [{"text": user_content}]}],
                     "generationConfig": {
                         "temperature": 0.65,
                         "responseMimeType": "application/json",
-                        "maxOutputTokens": 2048,
+                        "maxOutputTokens": 8192,
+                        "thinkingConfig": {"thinkingBudget": 0}
                     }
                 }
 
@@ -530,9 +540,7 @@ class ScriptGenerator:
         lang_name, lang_guidance = get_language_instructions(language)
         try:
             endpoint = self.base_url if (self.base_url and self.base_url.startswith("http")) else "https://api.openai.com/v1/chat/completions"
-            context_section = ""
-            if context_text and context_text.strip():
-                context_section = f"\nOFFICIAL SCIENTIFIC CONTEXT FROM NASA (Use as factual core):\n\"\"\"\n{context_text.strip()}\n\"\"\"\n"
+            context_section = format_script_context_section(context_text)
 
             payload = {
                 "model": "gpt-4o-mini",
@@ -667,9 +675,21 @@ class ScriptGenerator:
         Used as a zero-downtime safety net if external LLM APIs experience transient timeouts.
         """
         raw_context = (context_text or "").strip()
-        # Clean off any injected notes
-        clean_facts = re.sub(r"\[OFFICIAL NASA DISCOVERY[^\]]*\]", "", raw_context).strip()
-        sentences = [s.strip() for s in re.split(r"[.!?]+", clean_facts) if len(s.strip()) > 15]
+        is_user_summary = any(k in raw_context.upper() for k in ["RESUMEN", "USER", "NOTAS", "DIRECTIVAS ESTRICTAS"])
+        
+        # Extract the pure factual summary text if formatted with triple quotes
+        if is_user_summary:
+            summary_match = re.search(r'"""(.*?)"""', raw_context, re.DOTALL)
+            if summary_match:
+                clean_facts = summary_match.group(1).strip()
+            else:
+                clean_facts = re.sub(r"(RESUMEN Y NOTAS[^\n]*|DIRECTIVAS ESTRICTAS[^\n]*)", "", raw_context).strip()
+        else:
+            clean_facts = re.sub(r"\[OFFICIAL NASA DISCOVERY[^\]]*\]", "", raw_context).strip()
+
+        # Normalize numeric thousands separators (e.g., 10.000 -> 10000) so we don't break mid-sentence
+        clean_facts = re.sub(r"(\d+)\.(\d+)", r"\1\2", clean_facts)
+        sentences = [s.strip() for s in re.split(r"[.!?\n]+", clean_facts) if len(s.strip()) > 15]
 
         # Determine language-specific strings
         lang = (language or "es").lower()
@@ -678,35 +698,57 @@ class ScriptGenerator:
 
         title = topic.strip()
         if is_es:
-            hook = f"¿Sabías lo que acaba de revelar la NASA sobre {title}?"
-            c1_narr = f"La NASA acaba de registrar una observación histórica sobre {title}."
-            c2_narr = sentences[0] if len(sentences) > 0 else f"Los científicos espaciales han detectado señales asombrosas que cambian lo que sabíamos."
-            c3_narr = sentences[1] if len(sentences) > 1 else f"Este fenómeno cósmico abre una nueva era para comprender los misterios del universo."
-            c4_narr = f"El cosmos esconde secretos que apenas comenzamos a descubrir. ¿Qué opinas tú?"
-            on_screen_1 = title[:30].upper()
-            on_screen_2 = "DESCUBRIMIENTO OFICIAL"
-            on_screen_3 = "DATOS CÓSMICOS"
-            on_screen_4 = "¿QUÉ OPINAS TÚ?"
+            if is_user_summary:
+                hook = f"¿Conocías este misterio sobre {title}?"
+                c1_narr = sentences[0] if len(sentences) > 0 else f"Un sorprendente reporte sobre {title} se ha vuelto viral en las últimas horas."
+                c2_narr = sentences[1] if len(sentences) > 1 else f"Los datos revelan detalles inesperados que están dejando a todos intrigados."
+                c3_narr = sentences[2] if len(sentences) > 2 else f"Este fenómeno plantea interrogantes fascinantes que desafían las explicaciones comunes."
+                c4_narr = f"¿Qué opinas tú de esto? Cuéntanos en los comentarios."
+                on_screen_1 = title[:30].upper()
+                on_screen_2 = "DATOS CLAVE"
+                on_screen_3 = "EL MISTERIO"
+                on_screen_4 = "¿QUÉ OPINAS TÚ?"
+            else:
+                hook = f"¿Sabías lo que acaba de revelar la NASA sobre {title}?"
+                c1_narr = f"La NASA acaba de registrar una observación histórica sobre {title}."
+                c2_narr = sentences[0] if len(sentences) > 0 else f"Los científicos espaciales han detectado señales asombrosas que cambian lo que sabíamos."
+                c3_narr = sentences[1] if len(sentences) > 1 else f"Este fenómeno cósmico abre una nueva era para comprender los misterios del universo."
+                c4_narr = f"El cosmos esconde secretos que apenas comenzamos a descubrir. ¿Qué opinas tú?"
+                on_screen_1 = title[:30].upper()
+                on_screen_2 = "DESCUBRIMIENTO OFICIAL"
+                on_screen_3 = "DATOS CÓSMICOS"
+                on_screen_4 = "¿QUÉ OPINAS TÚ?"
         elif is_en:
-            hook = f"Did you know what NASA just discovered about {title}?"
-            c1_narr = f"NASA has just captured a groundbreaking observation of {title}."
-            c2_narr = sentences[0] if len(sentences) > 0 else f"Astrophysicists detected astonishing data that challenges our models."
-            c3_narr = sentences[1] if len(sentences) > 1 else f"This cosmic phenomenon marks a major leap in understanding deep space."
-            c4_narr = f"The universe holds infinite secrets waiting to be unlocked. What do you think?"
-            on_screen_1 = title[:30].upper()
-            on_screen_2 = "OFFICIAL DISCOVERY"
-            on_screen_3 = "COSMIC DATA"
-            on_screen_4 = "WHAT DO YOU THINK?"
+            if is_user_summary:
+                hook = f"Did you know about this mystery regarding {title}?"
+                c1_narr = sentences[0] if len(sentences) > 0 else f"A breaking revelation about {title} has captured the world's attention."
+                c2_narr = sentences[1] if len(sentences) > 1 else f"The latest information uncovers fascinating details that challenge our understanding."
+                c3_narr = sentences[2] if len(sentences) > 2 else f"This phenomenon raises crucial questions that experts are now investigating."
+                c4_narr = f"What is your theory on this? Let us know in the comments."
+                on_screen_1 = title[:30].upper()
+                on_screen_2 = "KEY FACTS"
+                on_screen_3 = "THE MYSTERY"
+                on_screen_4 = "WHAT DO YOU THINK?"
+            else:
+                hook = f"Did you know what NASA just discovered about {title}?"
+                c1_narr = f"NASA has just captured a groundbreaking observation of {title}."
+                c2_narr = sentences[0] if len(sentences) > 0 else f"Astrophysicists detected astonishing data that challenges our models."
+                c3_narr = sentences[1] if len(sentences) > 1 else f"This cosmic phenomenon marks a major leap in understanding deep space."
+                c4_narr = f"The universe holds infinite secrets waiting to be unlocked. What do you think?"
+                on_screen_1 = title[:30].upper()
+                on_screen_2 = "OFFICIAL DISCOVERY"
+                on_screen_3 = "COSMIC DATA"
+                on_screen_4 = "WHAT DO YOU THINK?"
         else:
             # Default / Chinese or other
-            hook = f"关于 {title}，NASA刚刚公布了惊人发现！"
-            c1_narr = f"NASA官方最新公布了关于 {title} 的前沿探测数据。"
-            c2_narr = sentences[0] if len(sentences) > 0 else f"科学家们捕获到了令人震撼的深空信号。"
-            c3_narr = sentences[1] if len(sentences) > 1 else f"这项天文发现正在改写我们对宇宙奥秘的认知。"
-            c4_narr = f"浩瀚星空还有多少未知？留下你的想法！"
+            hook = f"关于 {title}，最新公布了惊人细节！"
+            c1_narr = sentences[0] if len(sentences) > 0 else f"关于 {title} 的前沿报告引发了全球关注。"
+            c2_narr = sentences[1] if len(sentences) > 1 else f"最新数据捕获到了令人震撼的线索。"
+            c3_narr = sentences[2] if len(sentences) > 2 else f"这项发现正在改写我们对事件本质的认知。"
+            c4_narr = f"留下你的想法，你怎么看？"
             on_screen_1 = title[:20]
-            on_screen_2 = "NASA官方发现"
-            on_screen_3 = "宇宙前沿数据"
+            on_screen_2 = "前沿数据"
+            on_screen_3 = "核心线索"
             on_screen_4 = "你怎么看？"
 
         # Construct scenes adapted to target duration with unified visual keywords

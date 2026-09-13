@@ -71,8 +71,12 @@ def main():
         )
         return
 
-    # 1. Resolve Topic (Content Ideas Discovery, Autonomous NASA Trend Hunter, or User-Supplied Topic)
-    if getattr(args, "discover_ideas", False):
+    # 1. Resolve Topic (Summary Mode, Content Ideas Discovery, NASA Trend Hunter, or User-Supplied Topic)
+    if getattr(args, "summary", None) is not None or getattr(args, "summary_file", None):
+        from ai.summary_processor import process_summary_mode
+        topic, nasa_grounded_context, trending_metadata = process_summary_mode(args)
+        args.topic = topic
+    elif getattr(args, "discover_ideas", False):
         from ai.idea_discovery import resolve_content_ideas
         topic, idea_meta = resolve_content_ideas(args)
         if not topic:
