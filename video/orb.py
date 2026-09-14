@@ -18,22 +18,24 @@ from typing import Dict, Any, Optional, Tuple, List
 
 def extract_audio_speech_envelope(
     audio_path: Path,
-    target_fps: int = 10,
-    max_frames: int = 800,
-) -> Tuple[List[float], int]:
+    threshold: float = 0.035,
+    min_silence_dur: float = 0.40,
+    max_intervals: int = 35,
+) -> List[Tuple[float, float]]:
     """
-    Extracts a normalized, smoothed audio volume envelope (0.0 to 1.0)
-    suitable for driving real-time bio-reactive visual animations.
-    Uses Python standard library `wave` and falls back to a temporary WAV conversion if needed.
+    Extracts high-level continuous speech intervals [(start_sec, end_sec), ...]
+    from the narration audio track using lightweight PCM energy analysis.
+    This creates compact, highly efficient FFmpeg filter graphs that never exceed
+    expression parser limits or memory buffers.
     """
     audio_path = Path(audio_path)
     if not audio_path.exists() or audio_path.stat().st_size == 0:
-        return [], target_fps
+        return []
 
     wav_to_clean: Optional[Path] = None
     read_path = audio_path
 
-    # If audio is not a standard PCM WAV, convert a temporary copy to 16kHz mono PCM
+    # Convert a temporary mono PCM WAV if input is compressed (AAC/MP3)
     if audio_path.suffix.lower() != ".wav":
         wav_to_clean = audio_path.parent / f"_temp_env_{audio_path.stem}.wav"
         try:
@@ -47,54 +49,66 @@ def extract_audio_speech_envelope(
             ], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             read_path = wav_to_clean
         except Exception:
-            return [], target_fps
+            return []
 
     try:
         with wave.open(str(read_path), "rb") as wf:
-            n_chan = wf.getnchannels()
             s_rate = wf.getframerate()
             n_frames = wf.getnframes()
             raw_bytes = wf.readframes(n_frames)
 
         samples_count = len(raw_bytes) // 2
         if samples_count == 0:
-            return [], target_fps
+            return []
 
         samples = struct.unpack(f"<{samples_count}h", raw_bytes)
-        spf = max(1, (s_rate * n_chan) // target_fps)
+        # 100ms window analysis
+        chunk_size = max(1, s_rate // 10)
 
-        raw_levels = []
-        for i in range(0, len(samples), spf):
-            chunk = samples[i:i + spf]
+        raw_active = []
+        for i in range(0, len(samples), chunk_size):
+            chunk = samples[i:i + chunk_size]
             if not chunk:
                 continue
             rms = math.sqrt(sum(s * s for s in chunk) / len(chunk))
-            # Normalize with gentle sensitivity: conversational speech peaks around 6000-14000
-            norm = min(1.0, rms / 9000.0)
-            raw_levels.append(norm)
+            norm = min(1.0, rms / 8000.0)
+            raw_active.append(norm >= threshold)
 
-        # Smooth envelope with rapid attack and musical decay
-        smoothed = []
-        curr = 0.0
-        for val in raw_levels:
-            if val > curr:
-                # Fast attack: immediately swells when speech or a word begins
-                curr = curr * 0.30 + val * 0.70
+        # Detect raw active intervals
+        raw_intervals: List[Tuple[float, float]] = []
+        in_speech = False
+        start_idx = 0
+        for idx, is_act in enumerate(raw_active):
+            if is_act and not in_speech:
+                in_speech = True
+                start_idx = idx
+            elif not is_act and in_speech:
+                in_speech = False
+                raw_intervals.append((round(start_idx * 0.1, 2), round(idx * 0.1, 2)))
+        if in_speech:
+            raw_intervals.append((round(start_idx * 0.1, 2), round(len(raw_active) * 0.1, 2)))
+
+        # Merge close intervals (inter-word gaps < min_silence_dur) into smooth continuous speech blocks
+        merged: List[Tuple[float, float]] = []
+        for start, end in raw_intervals:
+            if not merged:
+                merged.append((start, end))
             else:
-                # Organic decay: soft trailing off when a word ends
-                curr = curr * 0.65 + val * 0.35
-            smoothed.append(round(curr, 3))
+                prev_start, prev_end = merged[-1]
+                if start - prev_end <= min_silence_dur:
+                    merged[-1] = (prev_start, max(prev_end, end))
+                else:
+                    merged.append((start, end))
 
-        # Downsample if too long to prevent gigantic FFmpeg filter strings
-        if len(smoothed) > max_frames:
-            step = math.ceil(len(smoothed) / max_frames)
-            smoothed = smoothed[::step]
-            target_fps = max(3, target_fps // step)
+        # Filter out negligible micro-clicks (<0.18s)
+        filtered = [(s, e) for s, e in merged if (e - s) >= 0.18]
+        if len(filtered) > max_intervals:
+            filtered = filtered[:max_intervals]
 
-        return smoothed, target_fps
+        return filtered
     except Exception as e:
         print(f"  ⚠️ Audio envelope extraction notice: {e}")
-        return [], target_fps
+        return []
     finally:
         if wav_to_clean and wav_to_clean.exists():
             try:
@@ -439,55 +453,46 @@ class GradientOrbManager:
 
         # Check if audio-reactive speech animation is requested or active
         is_audio_reactive = self.animation in ("reactive", "speaking", "voice", "alive", "speech")
-        env_points: List[float] = []
-        env_fps = 10
+        speech_intervals: List[Tuple[float, float]] = []
 
         if is_audio_reactive and self.audio_path and self.audio_path.exists():
-            env_points, env_fps = extract_audio_speech_envelope(self.audio_path, target_fps=8)
+            speech_intervals = extract_audio_speech_envelope(self.audio_path)
 
         filters = []
-        if is_audio_reactive and env_points:
-            # Build piecewise linear speech energy expression
-            dt = 1.0 / env_fps
-            conds = []
-            for k, val in enumerate(env_points):
-                if val <= 0.025:
-                    continue  # Silence
-                t1 = round(k * dt, 2)
-                t2 = round((k + 1) * dt, 2)
-                conds.append(f"between(t,{t1},{t2})*{val}")
+        if is_audio_reactive and speech_intervals:
+            # Build ultra-compact speech activity mask (e.g. 5-25 continuous interval windows)
+            conds = [f"between(t,{start:.2f},{end:.2f})" for start, end in speech_intervals]
+            speech_mask = f"min(1,{'+'.join(conds)})"
 
-            env_expr = "+".join(conds) if conds else "0"
-
-            # Scale: Base + Idle breathing in silence (+- 4%) + Speech expansion (up to +35% on vocal peaks)
+            # Dynamic speech cadence:
+            # - While speaking (mask == 1): dynamic expansion (+28% on syllable peaks) + voice shimmer
+            # - In silence/pauses (mask == 0): settles into tranquil idle breathing (+- 4%)
+            speech_cadence = f"(max(0,sin(2*PI*t/0.45))*{speech_mask})"
             scale_expr = (
                 f"eval=frame:"
-                f"w='trunc({target_size}*(1.0 + 0.04*sin(2*PI*t/2.5) + 0.35*({env_expr}))/2)*2':"
+                f"w='trunc({target_size}*(1.0 + 0.04*sin(2*PI*t/2.5) + 0.28*{speech_cadence})/2)*2':"
                 f"h='-2'"
             )
 
-            # Color & Hue Shift:
-            # In silence: slow organic hue drift (+- 15 deg)
-            # When speaking: shifts color temperature dynamically and saturates with vocal intensity
+            # Chromatic vitality: shifts saturation and hue dynamically during speech bursts
             hue_expr = (
-                f"h='85*({env_expr}) + 18*sin(2*PI*t/2.0)':"
-                f"s='1.0 + 0.35*({env_expr})'"
+                f"h='65*{speech_cadence} + 18*sin(2*PI*t/2.0)':"
+                f"s='1.0 + 0.28*{speech_mask}'"
             )
 
             filters.append(f"[{input_idx}:v]scale={scale_expr}")
             filters.append(f"hue={hue_expr}")
             filters.append("format=yuva420p")
             filters.append(f"colorchannelmixer=aa={effective_opacity:.2f}[{output_label}]")
-        elif is_audio_reactive and not env_points:
-            # Living speaking simulation if no audio file was passed:
-            # Uses composite harmonic voice cadences (bursts of expansion and resting pauses)
-            simulated_speech = "(max(0,sin(2*PI*t/1.2)) * max(0,sin(2*PI*t/0.45)))"
+        elif is_audio_reactive and not speech_intervals:
+            # Living speaking simulation if audio had no detectable voice or no file was passed:
+            simulated_speech = "(max(0,sin(2*PI*t/1.2))*max(0,sin(2*PI*t/0.45)))"
             scale_expr = (
                 f"eval=frame:"
-                f"w='trunc({target_size}*(1.0 + 0.05*sin(2*PI*t/2.2) + 0.30*{simulated_speech})/2)*2':"
+                f"w='trunc({target_size}*(1.0 + 0.04*sin(2*PI*t/2.5) + 0.28*{simulated_speech})/2)*2':"
                 f"h='-2'"
             )
-            hue_expr = f"h='75*{simulated_speech} + 20*sin(2*PI*t/1.8)':s='1.0 + 0.25*{simulated_speech}'"
+            hue_expr = f"h='65*{simulated_speech} + 18*sin(2*PI*t/2.0)':s='1.0 + 0.25*{simulated_speech}'"
 
             filters.append(f"[{input_idx}:v]scale={scale_expr}")
             filters.append(f"hue={hue_expr}")
