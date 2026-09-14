@@ -583,7 +583,11 @@ class VideoRenderer:
                 fps=self.fps
             )
             x_coord, y_coord = orb_mgr.get_overlay_coordinates(self.width, self.height)
-            filter_complex.append(f"{orb_filter_chain};[0:v][orb_layer]overlay=eval=frame:x='{x_coord}':y='{y_coord}':format=auto:shortest=1[v_orb]")
+            filter_complex.append(
+                f"{orb_filter_chain};"
+                f"[0:v]eq=brightness=-0.03:contrast=1.06:saturation=1.04[bg_graded];"
+                f"[bg_graded][orb_layer]overlay=eval=frame:x='{x_coord}':y='{y_coord}':format=auto:shortest=1[v_orb]"
+            )
             video_source = "[v_orb]"
             print(f"  🔮 Animated Gradient Orb active (Palette: '{palette}', Position: '{position}', Style: '{animation}', Size: '{size}')")
 

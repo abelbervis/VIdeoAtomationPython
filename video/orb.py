@@ -228,6 +228,10 @@ def generate_gradient_orb_svg(
     svg_content = f"""<svg width="{canvas_size}" height="{canvas_size}" viewBox="0 0 {canvas_size} {canvas_size}" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <!-- Multi-stage Gaussian Blur filters for radiant volumetric diffusion -->
+    <filter id="backdropGlow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="90" result="darkBlur" />
+    </filter>
+
     <filter id="ultraAura" x="-60%" y="-60%" width="220%" height="220%">
       <feGaussianBlur stdDeviation="70" result="blur1" />
     </filter>
@@ -251,6 +255,15 @@ def generate_gradient_orb_svg(
     <clipPath id="coreClip">
       <circle cx="{c}" cy="{c}" r="{r_sphere}" />
     </clipPath>
+
+    <!-- Stage 0: Deep Space Radial Backdrop Occlusion (Dimming Lens for busy/daylight stock footage) -->
+    <radialGradient id="backdropOcclusion" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#010006" stop-opacity="0.94" />
+      <stop offset="28%" stop-color="#03010f" stop-opacity="0.84" />
+      <stop offset="55%" stop-color="#070318" stop-opacity="0.55" />
+      <stop offset="78%" stop-color="#0c0722" stop-opacity="0.22" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.0" />
+    </radialGradient>
 
     <!-- Layer 0: Ultra-wide diffused atmospheric radiance -->
     <radialGradient id="outerRadiance" cx="50%" cy="50%" r="50%">
@@ -331,6 +344,10 @@ def generate_gradient_orb_svg(
     </radialGradient>
   </defs>
 
+  <!-- Stage 0: Deep Space Radial Backdrop Occlusion (Creates instant contrast on any stock video) -->
+  <circle cx="{c}" cy="{c}" r="{int(r_aura * 1.08)}" fill="url(#backdropOcclusion)" filter="url(#backdropGlow)" opacity="0.95" />
+  <circle cx="{c}" cy="{c}" r="{int(r_sphere * 1.32)}" fill="#010006" filter="url(#softCorona)" opacity="0.80" />
+
   <!-- Stage 1: Ultra-Wide Diffused Atmospheric Radiance (Environmental Illumination) -->
   <circle cx="{c}" cy="{c}" r="{r_aura}" fill="url(#outerRadiance)" filter="url(#ultraAura)" />
   <circle cx="{c}" cy="{c}" r="{int(r_aura * 0.85)}" fill="url(#outerRadiance)" filter="url(#softCorona)" opacity="0.95" />
@@ -370,6 +387,10 @@ def generate_gradient_orb_svg(
 
   <!-- Stage 6: Fixed 3D Glass Specular Crown (Anchored Top-Left Reflection) -->
   <ellipse cx="{int(c - r_sphere * 0.28)}" cy="{int(c - r_sphere * 0.28)}" rx="{r_specular}" ry="{int(r_specular * 0.68)}" fill="url(#specularGleam)" transform="rotate(-28 {int(c - r_sphere * 0.28)} {int(c - r_sphere * 0.28)})" />
+
+  <!-- Stage 7: Crisp Edge Separation & Refraction Rim -->
+  <circle cx="{c}" cy="{c}" r="{r_sphere}" fill="none" stroke="#000000" stroke-width="2.2" opacity="0.85" />
+  <circle cx="{c}" cy="{c}" r="{r_sphere - 1}" fill="none" stroke="{palette['core_highlight']}" stroke-width="1.0" opacity="0.65" />
 </svg>"""
 
     if not save_path:
@@ -788,13 +809,26 @@ def render_orb_test_preview(
     )
     x_coord, y_coord = mgr.get_overlay_coordinates(width, height)
 
-    # Background color: subtle dark space gradient simulation with lavfi color
-    bg_color = "0x0b0e14" if bg_style == "cosmic" else "0x000000"
+    # Background input setup: supports bright/daylight stock simulation, city, nature, or deep space
+    if bg_style == "bright":
+        # Simulates bright, high-key daylight footage (sky + sunny urban tones)
+        bg_input = f"color=c=0xd8e8f5:s={width}x{height}:r=30:d={duration}"
+    elif bg_style == "nature":
+        # Simulates green forest / outdoor sunny nature stock footage
+        bg_input = f"color=c=0x2d4a3e:s={width}x{height}:r=30:d={duration}"
+    elif bg_style == "city":
+        # Simulates warm evening city lights / architecture stock
+        bg_input = f"color=c=0x40302b:s={width}x{height}:r=30:d={duration}"
+    elif bg_style == "cosmic":
+        bg_input = f"color=c=0x0b0e14:s={width}x{height}:r=30:d={duration}"
+    else:
+        bg_input = f"color=c=0x000000:s={width}x{height}:r=30:d={duration}"
 
     # Filter complex with timer / label overlay so user sees live animation specs
     filter_complex = [
         orb_filter,
-        f"[0:v][orb_layer]overlay=eval=frame:x='{x_coord}':y='{y_coord}':shortest=1[v_orb]",
+        f"[0:v]eq=brightness=-0.03:contrast=1.06:saturation=1.04[bg_graded]",
+        f"[bg_graded][orb_layer]overlay=eval=frame:x='{x_coord}':y='{y_coord}':shortest=1[v_orb]",
         f"[v_orb]drawtext=text='LIVING ORB TESTER \\: {palette.upper()} ({animation.upper()})':fontcolor=white:fontsize=36:box=1:boxcolor=black@0.65:boxborderw=12:x=(w-text_w)/2:y=180[vout]"
     ]
     filter_str = ";".join(filter_complex)
@@ -809,7 +843,7 @@ def render_orb_test_preview(
 
     cmd = [
         "ffmpeg", "-y",
-        "-f", "lavfi", "-i", f"color=c={bg_color}:s={width}x{height}:r=30:d={duration}",
+        "-f", "lavfi", "-i", bg_input,
         "-loop", "1", "-i", str(orb_asset),
         *audio_input_args,
         "-filter_complex", filter_str,
@@ -828,10 +862,10 @@ def render_orb_test_preview(
         subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     except subprocess.CalledProcessError:
         # Fallback if drawtext fails (e.g. missing font)
-        fallback_filter = f"{orb_filter};[0:v][orb_layer]overlay=eval=frame:x='{x_coord}':y='{y_coord}':shortest=1[vout]"
+        fallback_filter = f"{orb_filter};[0:v]eq=brightness=-0.03:contrast=1.06:saturation=1.04[bg_graded];[bg_graded][orb_layer]overlay=eval=frame:x='{x_coord}':y='{y_coord}':shortest=1[vout]"
         cmd_fallback = [
             "ffmpeg", "-y",
-            "-f", "lavfi", "-i", f"color=c={bg_color}:s={width}x{height}:r=30:d={duration}",
+            "-f", "lavfi", "-i", bg_input,
             "-loop", "1", "-i", str(orb_asset),
             *audio_input_args,
             "-filter_complex", fallback_filter,

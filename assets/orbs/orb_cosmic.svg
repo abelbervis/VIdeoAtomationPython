@@ -1,6 +1,10 @@
 <svg width="1000" height="1000" viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <!-- Multi-stage Gaussian Blur filters for radiant volumetric diffusion -->
+    <filter id="backdropGlow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="90" result="darkBlur" />
+    </filter>
+
     <filter id="ultraAura" x="-60%" y="-60%" width="220%" height="220%">
       <feGaussianBlur stdDeviation="70" result="blur1" />
     </filter>
@@ -24,6 +28,15 @@
     <clipPath id="coreClip">
       <circle cx="500" cy="500" r="260" />
     </clipPath>
+
+    <!-- Stage 0: Deep Space Radial Backdrop Occlusion (Dimming Lens for busy/daylight stock footage) -->
+    <radialGradient id="backdropOcclusion" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#010006" stop-opacity="0.94" />
+      <stop offset="28%" stop-color="#03010f" stop-opacity="0.84" />
+      <stop offset="55%" stop-color="#070318" stop-opacity="0.55" />
+      <stop offset="78%" stop-color="#0c0722" stop-opacity="0.22" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.0" />
+    </radialGradient>
 
     <!-- Layer 0: Ultra-wide diffused atmospheric radiance -->
     <radialGradient id="outerRadiance" cx="50%" cy="50%" r="50%">
@@ -104,6 +117,10 @@
     </radialGradient>
   </defs>
 
+  <!-- Stage 0: Deep Space Radial Backdrop Occlusion (Creates instant contrast on any stock video) -->
+  <circle cx="500" cy="500" r="475" fill="url(#backdropOcclusion)" filter="url(#backdropGlow)" opacity="0.95" />
+  <circle cx="500" cy="500" r="343" fill="#010006" filter="url(#softCorona)" opacity="0.80" />
+
   <!-- Stage 1: Ultra-Wide Diffused Atmospheric Radiance (Environmental Illumination) -->
   <circle cx="500" cy="500" r="440" fill="url(#outerRadiance)" filter="url(#ultraAura)" />
   <circle cx="500" cy="500" r="374" fill="url(#outerRadiance)" filter="url(#softCorona)" opacity="0.95" />
@@ -143,4 +160,8 @@
 
   <!-- Stage 6: Fixed 3D Glass Specular Crown (Anchored Top-Left Reflection) -->
   <ellipse cx="427" cy="427" rx="130" ry="88" fill="url(#specularGleam)" transform="rotate(-28 427 427)" />
+
+  <!-- Stage 7: Crisp Edge Separation & Refraction Rim -->
+  <circle cx="500" cy="500" r="260" fill="none" stroke="#000000" stroke-width="2.2" opacity="0.85" />
+  <circle cx="500" cy="500" r="259" fill="none" stroke="#ffffff" stroke-width="1.0" opacity="0.65" />
 </svg>

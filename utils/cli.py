@@ -526,6 +526,13 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Path to an optional custom voice audio file to test the audio-reactive speaking orb"
     )
+    parser.add_argument(
+        "--test-orb-bg",
+        type=str,
+        default="bright",
+        choices=["bright", "cosmic", "nature", "city", "dark"],
+        help="Background style to preview the Orb against: 'bright' (simulates bright/daylight stock footage), 'cosmic' (deep space), 'nature' (green scenery), or 'dark' (default: 'bright')"
+    )
 
     # Custom Script Option (Pre-edited scenes JSON)
     parser.add_argument(

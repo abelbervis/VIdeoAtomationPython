@@ -87,6 +87,7 @@ def main():
             width=fmt_cfg["width"],
             height=fmt_cfg["height"],
             sample_audio=sample_audio_path,
+            bg_style=getattr(args, "test_orb_bg", "bright"),
         )
         return
 
