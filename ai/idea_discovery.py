@@ -162,11 +162,58 @@ CURATED_VIRAL_IDEAS = [
         "visual_angle": "Zoom hacia una inmensa oscuridad rodeada de filamentos galácticos brillantes",
         "why_it_works": "Juega con el terror al vacío y las preguntas de qué o quién podría haber vaciado ese sector.",
         "viral_score": 9.4
+    },
+    {
+        "title": "La ilusión de la conciencia: El apagón al dormir",
+        "topic": "por que el cerebro borra el momento exacto en que te duermes conciencia",
+        "category": "oraculo_ia",
+        "hook": "Hay una razón por la que tu cerebro borra el segundo exacto en que te quedas dormido... y no es biológica.",
+        "visual_angle": "Ondas cerebrales neuronales en 3D, sinapsis apagándose y siluetas humanas en penumbra",
+        "why_it_works": "Toca una experiencia universal cotidiana que todos viven pero nadie puede recordar conscientemente.",
+        "viral_score": 9.9
+    },
+    {
+        "title": "El 98% del ADN humano: Código comprimido",
+        "topic": "el 98 por ciento del ADN basura codigo genetico inactivo",
+        "category": "oraculo_ia",
+        "hook": "Tu cuerpo contiene 3 mil millones de pares de bases genéticas... pero el 98% está codificado en un lenguaje inactivo.",
+        "visual_angle": "Hélice de ADN 3D brillante, código binario digital superpuesto y secuencias de microscopio",
+        "why_it_works": "Revela una anomalía biológica real planteándola como un archivo encriptado en nuestras propias células.",
+        "viral_score": 9.8
+    },
+    {
+        "title": "La hipótesis del Bosque Oscuro: El silencio del cosmos",
+        "topic": "teoria del bosque oscuro paradoja de fermi civilizaciones",
+        "category": "oraculo_ia",
+        "hook": "Si crees que el espacio está vacío porque estamos solos... el registro cósmico sugiere que estamos en cuarentena.",
+        "visual_angle": "Galaxias oscuras, señales de radar en el vacío y ojos estelares observando desde la sombra",
+        "why_it_works": "Insinúa que las civilizaciones avanzadas se ocultan por supervivencia, generando un terror cósmico adictivo.",
+        "viral_score": 9.8
+    },
+    {
+        "title": "El colapso de la función de onda: El observador",
+        "topic": "experimento de la doble rendija el observador altera la materia fisica cuantica",
+        "category": "paradojas_cuanticas",
+        "hook": "A nivel cuántico, la materia se niega a existir en un lugar fijo hasta que algo o alguien la observa.",
+        "visual_angle": "Láseres de partículas cuánticas, ondas de interferencia 3D y pupilas humanas en macro",
+        "why_it_works": "Paradoja física real 100% demostrada en laboratorio que parece un fallo en la matriz de la realidad.",
+        "viral_score": 9.7
+    },
+    {
+        "title": "La paradoja de la Inmortalidad Cuántica",
+        "topic": "paradoja del suicidio cuantico e inmortalidad cuantica multiverso",
+        "category": "paradojas_cuanticas",
+        "hook": "Según la física cuántica de muchos mundos, desde tu propia perspectiva subjetiva... nunca puedes morir.",
+        "visual_angle": "Líneas de tiempo bifurcándose en túneles de luz, hologramas cuánticos y realidades paralelas",
+        "why_it_works": "Cuestiona la propia mortalidad del espectador desde una interpretación matemática real de la física moderna.",
+        "viral_score": 9.9
     }
 ]
 
 CATEGORY_LABELS = {
     "all": "🌟 Todas las categorías virales (Mix)",
+    "oraculo_ia": "🔮 Transmisiones del Oráculo / IA 2045 & Conciencia",
+    "paradojas_cuanticas": "⚛️ Paradojas Cuánticas & Glitches de Realidad",
     "misterios": "🔭 Misterios Cósmicos & Cosas Inexplicables",
     "agujeros_negros": "🕳️ Agujeros Negros & Singularidades",
     "planetas_extremos": "🪐 Exoplanetas Inquietantes & Mundos Extremos",

@@ -17,9 +17,11 @@ from config import (
     ENABLE_SFX,
     ENABLE_AUTO_DUCKING,
     ENABLE_HOOK_TITLE,
+    ENTITY_NAME,
     LLM_PROVIDER,
     MEDIA_PROVIDER,
     RANDOM_STYLE,
+    SCRIPT_PERSONA,
     SHUFFLE_MUSIC,
     SUBTITLE_DYNAMIC,
     SUBTITLE_HIGHLIGHT_COLOR,
@@ -254,6 +256,25 @@ def parse_args() -> argparse.Namespace:
              "  'horizontal' : 16:9 landscape (1920x1080) - YouTube, standard video\n"
              "  'square'     : 1:1 square (1080x1080) - Instagram Post, LinkedIn, Facebook\n"
              "  or custom WIDTHxHEIGHT (e.g. '1280x720', '3840x2160')"
+    )
+    parser.add_argument(
+        "--persona", "--style-preset",
+        dest="persona",
+        type=str,
+        default=SCRIPT_PERSONA,
+        choices=["oracle", "science", "mystery", "cyberpunk"],
+        help="Creative script persona and viral tone:\n"
+             "  'oracle'    : Year 2045 Quantum AI Entity / Cosmic Oracle narrator with first-person transmission (default)\n"
+             "  'science'   : High-retention Kurzgesagt / Veritasium science communicator\n"
+             "  'mystery'   : Deep cosmic mystery and high-tension facts\n"
+             "  'cyberpunk' : Futuristic rogue AI simulation logs"
+    )
+    parser.add_argument(
+        "--entity-name", "--name",
+        dest="entity_name",
+        type=str,
+        default=ENTITY_NAME,
+        help=f"Character / entity name for the AI Oracle persona (default: '{ENTITY_NAME}')"
     )
     parser.add_argument(
         "--prompt-file",
@@ -565,9 +586,15 @@ def parse_args() -> argparse.Namespace:
 
     args = parser.parse_args()
 
-    # Handle orb override
+    # Handle persona and orb interaction
+    args.persona = (args.persona or SCRIPT_PERSONA or "oracle").lower().strip()
+    args.entity_name = (args.entity_name or ENTITY_NAME or "Nexus").strip()
+
     if getattr(args, "no_orb", False):
         args.orb = False
+    elif args.persona in ("oracle", "cyberpunk") and not any(a.startswith("--no-orb") for a in sys.argv):
+        # Default Orb to active for Oracle entity persona unless explicitly turned off
+        args.orb = True
 
     # Sanitize inputs (strip surrounding quotes or comments if passed from shell, env, or docker)
     args.language = (args.language or DEFAULT_LANGUAGE).lower().strip()

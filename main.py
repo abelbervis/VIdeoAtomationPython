@@ -134,6 +134,7 @@ def main():
     print(f"📐 Format:       {fmt_cfg['description']}")
     print(f"🌍 Language:     {lang_name} ({args.language})")
     print(f"⏱️  Duration:     ~{args.duration} seconds")
+    print(f"🎭 Persona:      {args.persona.upper()} ({getattr(args, 'entity_name', 'Nexus')})")
     print(f"🤖 LLM Provider: {args.llm.upper()}")
     print(f"🗣️  Voice:        {args.voice}")
     print(f"🌐 Media:        {args.provider.upper()}")
@@ -191,7 +192,9 @@ def main():
             groq_key=args.groq_key,
             preferred_provider=args.llm,
             prompt_file=args.prompt_file,
-            enable_review=getattr(args, "review", True)
+            enable_review=getattr(args, "review", True),
+            persona=getattr(args, "persona", "oracle"),
+            entity_name=getattr(args, "entity_name", "Nexus")
         )
         script = script_gen.generate(
             args.topic,
