@@ -13,8 +13,12 @@
       <feGaussianBlur stdDeviation="22" result="blur3" />
     </filter>
 
-    <filter id="plasmaDiffusion" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="14" result="blur4" />
+    <filter id="vortexDeepBlur" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="16" result="blurDeep" />
+    </filter>
+
+    <filter id="vortexSharpBlur" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blurSharp" />
     </filter>
 
     <clipPath id="coreClip">
@@ -48,30 +52,58 @@
       <stop offset="100%" stop-color="#003847" stop-opacity="0.0" />
     </radialGradient>
 
-    <!-- Internal Fluid Plasma Vortex Gradients -->
-    <radialGradient id="plasmaVortex1" cx="40%" cy="38%" r="60%">
-      <stop offset="0%" stop-color="#70ffbd" stop-opacity="0.90" />
-      <stop offset="45%" stop-color="#00e599" stop-opacity="0.65" />
-      <stop offset="85%" stop-color="#00e599" stop-opacity="0.20" />
+    <!-- Multi-Layer Fluid Plasma Vortex Gradients -->
+    <!-- Vortex Core Singularity Eye -->
+    <radialGradient id="vortexEye" cx="48%" cy="46%" r="50%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="1.0" />
+      <stop offset="20%" stop-color="#ffffff" stop-opacity="0.95" />
+      <stop offset="55%" stop-color="#70ffbd" stop-opacity="0.80" />
+      <stop offset="85%" stop-color="#00e599" stop-opacity="0.30" />
       <stop offset="100%" stop-color="#003847" stop-opacity="0.0" />
     </radialGradient>
 
-    <radialGradient id="plasmaVortex2" cx="62%" cy="65%" r="55%">
-      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.85" />
-      <stop offset="40%" stop-color="#00d2b4" stop-opacity="0.55" />
-      <stop offset="80%" stop-color="#00d2b4" stop-opacity="0.15" />
+    <!-- Layer 1: Primary Spiral Swirl Gradient -->
+    <radialGradient id="plasmaVortex1" cx="42%" cy="38%" r="62%">
+      <stop offset="0%" stop-color="#70ffbd" stop-opacity="0.92" />
+      <stop offset="35%" stop-color="#00e599" stop-opacity="0.75" />
+      <stop offset="75%" stop-color="#00e599" stop-opacity="0.25" />
       <stop offset="100%" stop-color="#003847" stop-opacity="0.0" />
     </radialGradient>
 
-    <!-- Linear Fluid Streamer Gradient -->
-    <linearGradient id="fluidStreamer" x1="15%" y1="20%" x2="85%" y2="80%">
-      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.85" />
-      <stop offset="35%" stop-color="#70ffbd" stop-opacity="0.70" />
-      <stop offset="70%" stop-color="#00e599" stop-opacity="0.40" />
+    <!-- Layer 2: Counter-Current Fluid Swirl -->
+    <radialGradient id="plasmaVortex2" cx="58%" cy="62%" r="58%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.90" />
+      <stop offset="30%" stop-color="#00d2b4" stop-opacity="0.70" />
+      <stop offset="70%" stop-color="#00d2b4" stop-opacity="0.20" />
+      <stop offset="100%" stop-color="#003847" stop-opacity="0.0" />
+    </radialGradient>
+
+    <!-- Layer 3: Fluid Spiral Arm Linear Flow -->
+    <linearGradient id="spiralArmGrad1" x1="10%" y1="15%" x2="90%" y2="85%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.90" />
+      <stop offset="30%" stop-color="#70ffbd" stop-opacity="0.80" />
+      <stop offset="65%" stop-color="#00e599" stop-opacity="0.50" />
+      <stop offset="100%" stop-color="#00d2b4" stop-opacity="0.0" />
+    </linearGradient>
+
+    <!-- Layer 4: Counter Spiral Arm Linear Flow -->
+    <linearGradient id="spiralArmGrad2" x1="85%" y1="20%" x2="15%" y2="80%">
+      <stop offset="0%" stop-color="#00d2b4" stop-opacity="0.85" />
+      <stop offset="40%" stop-color="#00e599" stop-opacity="0.65" />
+      <stop offset="80%" stop-color="#003847" stop-opacity="0.20" />
       <stop offset="100%" stop-color="#003847" stop-opacity="0.0" />
     </linearGradient>
 
-    <!-- Layer 3: Organic Specular Highlight Flare -->
+    <!-- Layer 5: Caustic Equatorial Ring Arc -->
+    <linearGradient id="causticRingGrad" x1="0%" y1="50%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#70ffbd" stop-opacity="0.0" />
+      <stop offset="25%" stop-color="#ffffff" stop-opacity="0.75" />
+      <stop offset="50%" stop-color="#70ffbd" stop-opacity="0.90" />
+      <stop offset="75%" stop-color="#00d2b4" stop-opacity="0.65" />
+      <stop offset="100%" stop-color="#00d2b4" stop-opacity="0.0" />
+    </linearGradient>
+
+    <!-- Layer 6: Organic Specular Highlight Flare -->
     <radialGradient id="specularGleam" cx="30%" cy="26%" r="42%">
       <stop offset="0%" stop-color="#ffffff" stop-opacity="0.98" />
       <stop offset="35%" stop-color="#70ffbd" stop-opacity="0.60" />
@@ -90,19 +122,30 @@
   <!-- Stage 3: Main 3D Volumetric Living Core Body -->
   <circle cx="500" cy="500" r="260" fill="url(#orbVolumetric)" />
 
-  <!-- Stage 4: Internal Fluid Plasma Vortex Streams & Filaments (Living Plasma Core) -->
+  <!-- Stage 4: Layered Fluid Internal Vortex Core (Multi-Stream Plasma Dynamo) -->
   <g clip-path="url(#coreClip)">
-    <!-- Swirling Plasma Cloud 1 -->
-    <ellipse cx="383" cy="409" rx="221" ry="143" fill="url(#plasmaVortex1)" filter="url(#plasmaDiffusion)" transform="rotate(35 383 409)" opacity="0.85" />
-    
-    <!-- Counter-Swirling Plasma Cloud 2 -->
-    <ellipse cx="604" cy="578" rx="195" ry="130" fill="url(#plasmaVortex2)" filter="url(#plasmaDiffusion)" transform="rotate(-40 604 578)" opacity="0.78" />
+    <!-- Layer 4A: Deep Nebula Plasma Bed (Counter-rotating diffuse base) -->
+    <ellipse cx="396" cy="416" rx="234" ry="156" fill="url(#plasmaVortex1)" filter="url(#vortexDeepBlur)" transform="rotate(45 396 416)" opacity="0.90" />
+    <ellipse cx="598" cy="572" rx="208" ry="135" fill="url(#plasmaVortex2)" filter="url(#vortexDeepBlur)" transform="rotate(-35 598 572)" opacity="0.82" />
+    <ellipse cx="435" cy="598" rx="182" ry="117" fill="url(#plasmaVortex1)" filter="url(#vortexDeepBlur)" transform="rotate(70 435 598)" opacity="0.70" />
 
-    <!-- Organic Fluid Plasma Filament Ribbon -->
-    <path d="M 305 565 C 422 331, 552 383, 695 474 C 578 643, 448 669, 305 565 Z" fill="url(#fluidStreamer)" filter="url(#plasmaDiffusion)" opacity="0.65" />
+    <!-- Layer 4B: Primary Fluid Vortex Spiral Arm (Clockwise Energy Stream) -->
+    <path d="M 292 539 C 409 305, 578 357, 708 474 C 591 669, 435 695, 292 539 Z" fill="url(#spiralArmGrad1)" filter="url(#vortexSharpBlur)" opacity="0.75" />
 
-    <!-- Secondary Harmonic Ribbon -->
-    <path d="M 370 396 C 500 318, 656 552, 604 656 C 474 552, 396 526, 370 396 Z" fill="url(#plasmaVortex1)" filter="url(#plasmaDiffusion)" opacity="0.55" />
+    <!-- Layer 4C: Secondary Counter-Fluid Spiral Arm (Counter-Clockwise Vortex) -->
+    <path d="M 357 383 C 513 292, 682 526, 617 669 C 461 578, 383 539, 357 383 Z" fill="url(#spiralArmGrad2)" filter="url(#vortexSharpBlur)" opacity="0.70" />
+
+    <!-- Layer 4D: Inner Toroidal Caustic Ring (Equatorial Light Ribbon) -->
+    <ellipse cx="500" cy="513" rx="187" ry="72" fill="url(#causticRingGrad)" filter="url(#vortexSharpBlur)" transform="rotate(-18 500 500)" opacity="0.80" />
+
+    <!-- Layer 4E: Vortex Core Singularity Eye (Hyper-Bright Focus Center) -->
+    <circle cx="485" cy="480" r="72" fill="url(#vortexEye)" filter="url(#vortexSharpBlur)" opacity="0.95" />
+    <circle cx="485" cy="480" r="31" fill="#ffffff" filter="url(#vortexSharpBlur)" opacity="0.90" />
+
+    <!-- Layer 4F: Quantum Plasma Nodes (Micro Sparkle Points) -->
+    <circle cx="402" cy="443" r="10" fill="#ffffff" filter="url(#vortexSharpBlur)" opacity="0.85" />
+    <circle cx="609" cy="546" r="9" fill="#70ffbd" filter="url(#vortexSharpBlur)" opacity="0.90" />
+    <circle cx="448" cy="604" r="7" fill="#ffffff" filter="url(#vortexSharpBlur)" opacity="0.80" />
   </g>
 
   <!-- Stage 5: High-Luminance Specular Flare Accent (Glassy Light Crown) -->

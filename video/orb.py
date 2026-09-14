@@ -218,11 +218,13 @@ def generate_gradient_orb_svg(
     r_aura = int(canvas_size * 0.42)
     r_specular = int(r_sphere * 0.45)
 
-    # Coords for internal plasma arcs & vortex centers
-    p_x1 = int(c - r_sphere * 0.45)
-    p_y1 = int(c - r_sphere * 0.35)
-    p_x2 = int(c + r_sphere * 0.40)
-    p_y2 = int(c + r_sphere * 0.30)
+    # Coords for internal plasma vortex centers & spiral arms
+    p_x1 = int(c - r_sphere * 0.40)
+    p_y1 = int(c - r_sphere * 0.32)
+    p_x2 = int(c + r_sphere * 0.38)
+    p_y2 = int(c + r_sphere * 0.28)
+    p_x3 = int(c - r_sphere * 0.25)
+    p_y3 = int(c + r_sphere * 0.38)
 
     svg_content = f"""<svg width="{canvas_size}" height="{canvas_size}" viewBox="0 0 {canvas_size} {canvas_size}" xmlns="http://www.w3.org/2000/svg">
   <defs>
@@ -239,8 +241,12 @@ def generate_gradient_orb_svg(
       <feGaussianBlur stdDeviation="22" result="blur3" />
     </filter>
 
-    <filter id="plasmaDiffusion" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="14" result="blur4" />
+    <filter id="vortexDeepBlur" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="16" result="blurDeep" />
+    </filter>
+
+    <filter id="vortexSharpBlur" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blurSharp" />
     </filter>
 
     <clipPath id="coreClip">
@@ -274,30 +280,58 @@ def generate_gradient_orb_svg(
       <stop offset="100%" stop-color="{palette['deep_edge']}" stop-opacity="0.0" />
     </radialGradient>
 
-    <!-- Internal Fluid Plasma Vortex Gradients -->
-    <radialGradient id="plasmaVortex1" cx="40%" cy="38%" r="60%">
-      <stop offset="0%" stop-color="{palette['inner_glow']}" stop-opacity="0.90" />
-      <stop offset="45%" stop-color="{palette['ambient_aura']}" stop-opacity="0.65" />
-      <stop offset="85%" stop-color="{palette['mid_gradient']}" stop-opacity="0.20" />
+    <!-- Multi-Layer Fluid Plasma Vortex Gradients -->
+    <!-- Vortex Core Singularity Eye -->
+    <radialGradient id="vortexEye" cx="48%" cy="46%" r="50%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="1.0" />
+      <stop offset="20%" stop-color="{palette['core_highlight']}" stop-opacity="0.95" />
+      <stop offset="55%" stop-color="{palette['inner_glow']}" stop-opacity="0.80" />
+      <stop offset="85%" stop-color="{palette['ambient_aura']}" stop-opacity="0.30" />
       <stop offset="100%" stop-color="{palette['deep_edge']}" stop-opacity="0.0" />
     </radialGradient>
 
-    <radialGradient id="plasmaVortex2" cx="62%" cy="65%" r="55%">
-      <stop offset="0%" stop-color="{palette['core_highlight']}" stop-opacity="0.85" />
-      <stop offset="40%" stop-color="{palette['ambient_secondary']}" stop-opacity="0.55" />
-      <stop offset="80%" stop-color="{palette['outer_gradient']}" stop-opacity="0.15" />
+    <!-- Layer 1: Primary Spiral Swirl Gradient -->
+    <radialGradient id="plasmaVortex1" cx="42%" cy="38%" r="62%">
+      <stop offset="0%" stop-color="{palette['inner_glow']}" stop-opacity="0.92" />
+      <stop offset="35%" stop-color="{palette['ambient_aura']}" stop-opacity="0.75" />
+      <stop offset="75%" stop-color="{palette['mid_gradient']}" stop-opacity="0.25" />
       <stop offset="100%" stop-color="{palette['deep_edge']}" stop-opacity="0.0" />
     </radialGradient>
 
-    <!-- Linear Fluid Streamer Gradient -->
-    <linearGradient id="fluidStreamer" x1="15%" y1="20%" x2="85%" y2="80%">
-      <stop offset="0%" stop-color="{palette['core_highlight']}" stop-opacity="0.85" />
-      <stop offset="35%" stop-color="{palette['inner_glow']}" stop-opacity="0.70" />
-      <stop offset="70%" stop-color="{palette['ambient_aura']}" stop-opacity="0.40" />
+    <!-- Layer 2: Counter-Current Fluid Swirl -->
+    <radialGradient id="plasmaVortex2" cx="58%" cy="62%" r="58%">
+      <stop offset="0%" stop-color="{palette['core_highlight']}" stop-opacity="0.90" />
+      <stop offset="30%" stop-color="{palette['ambient_secondary']}" stop-opacity="0.70" />
+      <stop offset="70%" stop-color="{palette['outer_gradient']}" stop-opacity="0.20" />
+      <stop offset="100%" stop-color="{palette['deep_edge']}" stop-opacity="0.0" />
+    </radialGradient>
+
+    <!-- Layer 3: Fluid Spiral Arm Linear Flow -->
+    <linearGradient id="spiralArmGrad1" x1="10%" y1="15%" x2="90%" y2="85%">
+      <stop offset="0%" stop-color="{palette['core_highlight']}" stop-opacity="0.90" />
+      <stop offset="30%" stop-color="{palette['inner_glow']}" stop-opacity="0.80" />
+      <stop offset="65%" stop-color="{palette['ambient_aura']}" stop-opacity="0.50" />
+      <stop offset="100%" stop-color="{palette['outer_gradient']}" stop-opacity="0.0" />
+    </linearGradient>
+
+    <!-- Layer 4: Counter Spiral Arm Linear Flow -->
+    <linearGradient id="spiralArmGrad2" x1="85%" y1="20%" x2="15%" y2="80%">
+      <stop offset="0%" stop-color="{palette['ambient_secondary']}" stop-opacity="0.85" />
+      <stop offset="40%" stop-color="{palette['mid_gradient']}" stop-opacity="0.65" />
+      <stop offset="80%" stop-color="{palette['deep_edge']}" stop-opacity="0.20" />
       <stop offset="100%" stop-color="{palette['deep_edge']}" stop-opacity="0.0" />
     </linearGradient>
 
-    <!-- Layer 3: Organic Specular Highlight Flare -->
+    <!-- Layer 5: Caustic Equatorial Ring Arc -->
+    <linearGradient id="causticRingGrad" x1="0%" y1="50%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="{palette['inner_glow']}" stop-opacity="0.0" />
+      <stop offset="25%" stop-color="{palette['core_highlight']}" stop-opacity="0.75" />
+      <stop offset="50%" stop-color="{palette['inner_glow']}" stop-opacity="0.90" />
+      <stop offset="75%" stop-color="{palette['ambient_secondary']}" stop-opacity="0.65" />
+      <stop offset="100%" stop-color="{palette['outer_gradient']}" stop-opacity="0.0" />
+    </linearGradient>
+
+    <!-- Layer 6: Organic Specular Highlight Flare -->
     <radialGradient id="specularGleam" cx="30%" cy="26%" r="42%">
       <stop offset="0%" stop-color="#ffffff" stop-opacity="0.98" />
       <stop offset="35%" stop-color="{palette['inner_glow']}" stop-opacity="0.60" />
@@ -316,19 +350,30 @@ def generate_gradient_orb_svg(
   <!-- Stage 3: Main 3D Volumetric Living Core Body -->
   <circle cx="{c}" cy="{c}" r="{r_sphere}" fill="url(#orbVolumetric)" />
 
-  <!-- Stage 4: Internal Fluid Plasma Vortex Streams & Filaments (Living Plasma Core) -->
+  <!-- Stage 4: Layered Fluid Internal Vortex Core (Multi-Stream Plasma Dynamo) -->
   <g clip-path="url(#coreClip)">
-    <!-- Swirling Plasma Cloud 1 -->
-    <ellipse cx="{p_x1}" cy="{p_y1}" rx="{int(r_sphere * 0.85)}" ry="{int(r_sphere * 0.55)}" fill="url(#plasmaVortex1)" filter="url(#plasmaDiffusion)" transform="rotate(35 {p_x1} {p_y1})" opacity="0.85" />
-    
-    <!-- Counter-Swirling Plasma Cloud 2 -->
-    <ellipse cx="{p_x2}" cy="{p_y2}" rx="{int(r_sphere * 0.75)}" ry="{int(r_sphere * 0.50)}" fill="url(#plasmaVortex2)" filter="url(#plasmaDiffusion)" transform="rotate(-40 {p_x2} {p_y2})" opacity="0.78" />
+    <!-- Layer 4A: Deep Nebula Plasma Bed (Counter-rotating diffuse base) -->
+    <ellipse cx="{p_x1}" cy="{p_y1}" rx="{int(r_sphere * 0.90)}" ry="{int(r_sphere * 0.60)}" fill="url(#plasmaVortex1)" filter="url(#vortexDeepBlur)" transform="rotate(45 {p_x1} {p_y1})" opacity="0.90" />
+    <ellipse cx="{p_x2}" cy="{p_y2}" rx="{int(r_sphere * 0.80)}" ry="{int(r_sphere * 0.52)}" fill="url(#plasmaVortex2)" filter="url(#vortexDeepBlur)" transform="rotate(-35 {p_x2} {p_y2})" opacity="0.82" />
+    <ellipse cx="{p_x3}" cy="{p_y3}" rx="{int(r_sphere * 0.70)}" ry="{int(r_sphere * 0.45)}" fill="url(#plasmaVortex1)" filter="url(#vortexDeepBlur)" transform="rotate(70 {p_x3} {p_y3})" opacity="0.70" />
 
-    <!-- Organic Fluid Plasma Filament Ribbon -->
-    <path d="M {c - int(r_sphere*0.75)} {c + int(r_sphere*0.25)} C {c - int(r_sphere*0.3)} {c - int(r_sphere*0.65)}, {c + int(r_sphere*0.2)} {c - int(r_sphere*0.45)}, {c + int(r_sphere*0.75)} {c - int(r_sphere*0.1)} C {c + int(r_sphere*0.3)} {c + int(r_sphere*0.55)}, {c - int(r_sphere*0.2)} {c + int(r_sphere*0.65)}, {c - int(r_sphere*0.75)} {c + int(r_sphere*0.25)} Z" fill="url(#fluidStreamer)" filter="url(#plasmaDiffusion)" opacity="0.65" />
+    <!-- Layer 4B: Primary Fluid Vortex Spiral Arm (Clockwise Energy Stream) -->
+    <path d="M {c - int(r_sphere*0.80)} {c + int(r_sphere*0.15)} C {c - int(r_sphere*0.35)} {c - int(r_sphere*0.75)}, {c + int(r_sphere*0.30)} {c - int(r_sphere*0.55)}, {c + int(r_sphere*0.80)} {c - int(r_sphere*0.10)} C {c + int(r_sphere*0.35)} {c + int(r_sphere*0.65)}, {c - int(r_sphere*0.25)} {c + int(r_sphere*0.75)}, {c - int(r_sphere*0.80)} {c + int(r_sphere*0.15)} Z" fill="url(#spiralArmGrad1)" filter="url(#vortexSharpBlur)" opacity="0.75" />
 
-    <!-- Secondary Harmonic Ribbon -->
-    <path d="M {c - int(r_sphere*0.5)} {c - int(r_sphere*0.4)} C {c} {c - int(r_sphere*0.7)}, {c + int(r_sphere*0.6)} {c + int(r_sphere*0.2)}, {c + int(r_sphere*0.4)} {c + int(r_sphere*0.6)} C {c - int(r_sphere*0.1)} {c + int(r_sphere*0.2)}, {c - int(r_sphere*0.4)} {c + int(r_sphere*0.1)}, {c - int(r_sphere*0.5)} {c - int(r_sphere*0.4)} Z" fill="url(#plasmaVortex1)" filter="url(#plasmaDiffusion)" opacity="0.55" />
+    <!-- Layer 4C: Secondary Counter-Fluid Spiral Arm (Counter-Clockwise Vortex) -->
+    <path d="M {c - int(r_sphere*0.55)} {c - int(r_sphere*0.45)} C {c + int(r_sphere*0.05)} {c - int(r_sphere*0.80)}, {c + int(r_sphere*0.70)} {c + int(r_sphere*0.10)}, {c + int(r_sphere*0.45)} {c + int(r_sphere*0.65)} C {c - int(r_sphere*0.15)} {c + int(r_sphere*0.30)}, {c - int(r_sphere*0.45)} {c + int(r_sphere*0.15)}, {c - int(r_sphere*0.55)} {c - int(r_sphere*0.45)} Z" fill="url(#spiralArmGrad2)" filter="url(#vortexSharpBlur)" opacity="0.70" />
+
+    <!-- Layer 4D: Inner Toroidal Caustic Ring (Equatorial Light Ribbon) -->
+    <ellipse cx="{c}" cy="{c + int(r_sphere * 0.05)}" rx="{int(r_sphere * 0.72)}" ry="{int(r_sphere * 0.28)}" fill="url(#causticRingGrad)" filter="url(#vortexSharpBlur)" transform="rotate(-18 {c} {c})" opacity="0.80" />
+
+    <!-- Layer 4E: Vortex Core Singularity Eye (Hyper-Bright Focus Center) -->
+    <circle cx="{c - int(r_sphere * 0.06)}" cy="{c - int(r_sphere * 0.08)}" r="{int(r_sphere * 0.28)}" fill="url(#vortexEye)" filter="url(#vortexSharpBlur)" opacity="0.95" />
+    <circle cx="{c - int(r_sphere * 0.06)}" cy="{c - int(r_sphere * 0.08)}" r="{int(r_sphere * 0.12)}" fill="#ffffff" filter="url(#vortexSharpBlur)" opacity="0.90" />
+
+    <!-- Layer 4F: Quantum Plasma Nodes (Micro Sparkle Points) -->
+    <circle cx="{c - int(r_sphere * 0.38)}" cy="{c - int(r_sphere * 0.22)}" r="{int(r_sphere * 0.04)}" fill="#ffffff" filter="url(#vortexSharpBlur)" opacity="0.85" />
+    <circle cx="{c + int(r_sphere * 0.42)}" cy="{c + int(r_sphere * 0.18)}" r="{int(r_sphere * 0.035)}" fill="{palette['inner_glow']}" filter="url(#vortexSharpBlur)" opacity="0.90" />
+    <circle cx="{c - int(r_sphere * 0.20)}" cy="{c + int(r_sphere * 0.40)}" r="{int(r_sphere * 0.03)}" fill="{palette['core_highlight']}" filter="url(#vortexSharpBlur)" opacity="0.80" />
   </g>
 
   <!-- Stage 5: High-Luminance Specular Flare Accent (Glassy Light Crown) -->
