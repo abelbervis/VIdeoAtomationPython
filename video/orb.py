@@ -193,10 +193,8 @@ def generate_gradient_orb_svg(
 ) -> Tuple[Path, str]:
     """
     Generate a high-definition SVG file containing an organic 3D gradient orb with
-    an intense, radiant multi-stage atmospheric glow and realistic volumetric lighting.
-    Features:
-      - Multi-layer luminous halo: Ultra-wide diffused ambient glow + atmospheric corona + 3D spherical core + specular flare.
-      - Ethereal light bleeding effect for seamless blending over cosmic background video.
+    an intense, radiant multi-stage atmospheric glow, realistic volumetric lighting,
+    and an internal fluid plasma core with vortex filaments.
     """
     palette = ORB_PALETTES.get(palette_key.lower().strip(), ORB_PALETTES["cosmic"])
 
@@ -205,6 +203,12 @@ def generate_gradient_orb_svg(
     r_corona = int(canvas_size * 0.38)
     r_aura = int(canvas_size * 0.48)
     r_specular = int(r_sphere * 0.46)
+
+    # Coords for internal plasma arcs & vortex centers
+    p_x1 = int(c - r_sphere * 0.45)
+    p_y1 = int(c - r_sphere * 0.35)
+    p_x2 = int(c + r_sphere * 0.40)
+    p_y2 = int(c + r_sphere * 0.30)
 
     svg_content = f"""<svg width="{canvas_size}" height="{canvas_size}" viewBox="0 0 {canvas_size} {canvas_size}" xmlns="http://www.w3.org/2000/svg">
   <defs>
@@ -220,6 +224,14 @@ def generate_gradient_orb_svg(
     <filter id="intenseGlow" x="-30%" y="-30%" width="160%" height="160%">
       <feGaussianBlur stdDeviation="22" result="blur3" />
     </filter>
+
+    <filter id="plasmaDiffusion" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="14" result="blur4" />
+    </filter>
+
+    <clipPath id="coreClip">
+      <circle cx="{c}" cy="{c}" r="{r_sphere}" />
+    </clipPath>
 
     <!-- Layer 0: Ultra-wide diffused ambient radiance -->
     <radialGradient id="outerRadiance" cx="50%" cy="50%" r="50%">
@@ -248,6 +260,29 @@ def generate_gradient_orb_svg(
       <stop offset="100%" stop-color="{palette['deep_edge']}" stop-opacity="0.0" />
     </radialGradient>
 
+    <!-- Internal Fluid Plasma Vortex Gradients -->
+    <radialGradient id="plasmaVortex1" cx="40%" cy="38%" r="60%">
+      <stop offset="0%" stop-color="{palette['inner_glow']}" stop-opacity="0.90" />
+      <stop offset="45%" stop-color="{palette['ambient_aura']}" stop-opacity="0.65" />
+      <stop offset="85%" stop-color="{palette['mid_gradient']}" stop-opacity="0.20" />
+      <stop offset="100%" stop-color="{palette['deep_edge']}" stop-opacity="0.0" />
+    </radialGradient>
+
+    <radialGradient id="plasmaVortex2" cx="62%" cy="65%" r="55%">
+      <stop offset="0%" stop-color="{palette['core_highlight']}" stop-opacity="0.85" />
+      <stop offset="40%" stop-color="{palette['ambient_secondary']}" stop-opacity="0.55" />
+      <stop offset="80%" stop-color="{palette['outer_gradient']}" stop-opacity="0.15" />
+      <stop offset="100%" stop-color="{palette['deep_edge']}" stop-opacity="0.0" />
+    </radialGradient>
+
+    <!-- Linear Fluid Streamer Gradient -->
+    <linearGradient id="fluidStreamer" x1="15%" y1="20%" x2="85%" y2="80%">
+      <stop offset="0%" stop-color="{palette['core_highlight']}" stop-opacity="0.85" />
+      <stop offset="35%" stop-color="{palette['inner_glow']}" stop-opacity="0.70" />
+      <stop offset="70%" stop-color="{palette['ambient_aura']}" stop-opacity="0.40" />
+      <stop offset="100%" stop-color="{palette['deep_edge']}" stop-opacity="0.0" />
+    </linearGradient>
+
     <!-- Layer 3: Organic Specular Highlight Flare -->
     <radialGradient id="specularGleam" cx="30%" cy="26%" r="42%">
       <stop offset="0%" stop-color="#ffffff" stop-opacity="0.98" />
@@ -267,7 +302,22 @@ def generate_gradient_orb_svg(
   <!-- Stage 3: Main 3D Volumetric Living Core Body -->
   <circle cx="{c}" cy="{c}" r="{r_sphere}" fill="url(#orbVolumetric)" />
 
-  <!-- Stage 4: High-Luminance Specular Flare Accent (Glassy Light Crown) -->
+  <!-- Stage 4: Internal Fluid Plasma Vortex Streams & Filaments (Living Plasma Core) -->
+  <g clip-path="url(#coreClip)">
+    <!-- Swirling Plasma Cloud 1 -->
+    <ellipse cx="{p_x1}" cy="{p_y1}" rx="{int(r_sphere * 0.85)}" ry="{int(r_sphere * 0.55)}" fill="url(#plasmaVortex1)" filter="url(#plasmaDiffusion)" transform="rotate(35 {p_x1} {p_y1})" opacity="0.85" />
+    
+    <!-- Counter-Swirling Plasma Cloud 2 -->
+    <ellipse cx="{p_x2}" cy="{p_y2}" rx="{int(r_sphere * 0.75)}" ry="{int(r_sphere * 0.50)}" fill="url(#plasmaVortex2)" filter="url(#plasmaDiffusion)" transform="rotate(-40 {p_x2} {p_y2})" opacity="0.78" />
+
+    <!-- Organic Fluid Plasma Filament Ribbon -->
+    <path d="M {c - int(r_sphere*0.75)} {c + int(r_sphere*0.25)} C {c - int(r_sphere*0.3)} {c - int(r_sphere*0.65)}, {c + int(r_sphere*0.2)} {c - int(r_sphere*0.45)}, {c + int(r_sphere*0.75)} {c - int(r_sphere*0.1)} C {c + int(r_sphere*0.3)} {c + int(r_sphere*0.55)}, {c - int(r_sphere*0.2)} {c + int(r_sphere*0.65)}, {c - int(r_sphere*0.75)} {c + int(r_sphere*0.25)} Z" fill="url(#fluidStreamer)" filter="url(#plasmaDiffusion)" opacity="0.65" />
+
+    <!-- Secondary Harmonic Ribbon -->
+    <path d="M {c - int(r_sphere*0.5)} {c - int(r_sphere*0.4)} C {c} {c - int(r_sphere*0.7)}, {c + int(r_sphere*0.6)} {c + int(r_sphere*0.2)}, {c + int(r_sphere*0.4)} {c + int(r_sphere*0.6)} C {c - int(r_sphere*0.1)} {c + int(r_sphere*0.2)}, {c - int(r_sphere*0.4)} {c + int(r_sphere*0.1)}, {c - int(r_sphere*0.5)} {c - int(r_sphere*0.4)} Z" fill="url(#plasmaVortex1)" filter="url(#plasmaDiffusion)" opacity="0.55" />
+  </g>
+
+  <!-- Stage 5: High-Luminance Specular Flare Accent (Glassy Light Crown) -->
   <ellipse cx="{int(c * 0.84)}" cy="{int(c * 0.80)}" rx="{r_specular}" ry="{int(r_specular * 0.72)}" fill="url(#specularGleam)" transform="rotate(-20 {int(c * 0.84)} {int(c * 0.80)})" />
 </svg>"""
 
@@ -277,8 +327,6 @@ def generate_gradient_orb_svg(
     save_path = Path(save_path)
     save_path.parent.mkdir(parents=True, exist_ok=True)
     save_path.write_text(svg_content, encoding="utf-8")
-
-    return save_path, svg_content
 
     return save_path, svg_content
 
@@ -426,8 +474,12 @@ class GradientOrbManager:
                 f"s='1.0 + 0.45*({env_expr})'"
             )
 
+            # Fluid Plasma Motion: Continuous swirl with speech acceleration
+            rotate_expr = f"a='2*PI*t/8.0 + 0.8*({env_expr})':ow='rotw(iw)':oh='roth(ih)':c=none"
+
             filters.append(f"[{input_idx}:v]scale={scale_expr}")
             filters.append(f"hue={hue_expr}")
+            filters.append(f"rotate={rotate_expr}")
             filters.append("format=yuva420p")
             filters.append(f"colorchannelmixer=aa={effective_opacity:.2f}[{output_label}]")
         elif is_audio_reactive and not env_points:
@@ -440,8 +492,11 @@ class GradientOrbManager:
                 f"h='-2'"
             )
             hue_expr = f"h='110*{simulated_speech} + 25*sin(2*PI*t/1.8)':s='1.0 + 0.35*{simulated_speech}'"
+            rotate_expr = f"a='2*PI*t/7.5 + 0.6*{simulated_speech}':ow='rotw(iw)':oh='roth(ih)':c=none"
+
             filters.append(f"[{input_idx}:v]scale={scale_expr}")
             filters.append(f"hue={hue_expr}")
+            filters.append(f"rotate={rotate_expr}")
             filters.append("format=yuva420p")
             filters.append(f"colorchannelmixer=aa={effective_opacity:.2f}[{output_label}]")
         elif self.animation in ("pulse", "breathing", "all"):
@@ -453,20 +508,28 @@ class GradientOrbManager:
             )
             # Subtle breathing color temperature shift
             hue_expr = "h='28*sin(2*PI*t/2.0)':s='1.0 + 0.15*sin(2*PI*t/2.0)'"
+            rotate_expr = "a='2*PI*t/9.0':ow='rotw(iw)':oh='roth(ih)':c=none"
+
             filters.append(f"[{input_idx}:v]scale={scale_expr}")
             filters.append(f"hue={hue_expr}")
+            filters.append(f"rotate={rotate_expr}")
             filters.append("format=yuva420p")
             filters.append(f"colorchannelmixer=aa={effective_opacity:.2f}[{output_label}]")
         elif self.animation in ("float", "hover"):
-            # Floating hover with subtle chromatic luminescence
+            # Floating hover with subtle chromatic luminescence & continuous fluid vortex
             hue_expr = "h='35*sin(2*PI*t/3.0)':s='1.0 + 0.12*sin(2*PI*t/2.5)'"
+            rotate_expr = "a='2*PI*t/8.5':ow='rotw(iw)':oh='roth(ih)':c=none"
+
             filters.append(f"[{input_idx}:v]scale={target_size}:-2")
             filters.append(f"hue={hue_expr}")
+            filters.append(f"rotate={rotate_expr}")
             filters.append("format=yuva420p")
             filters.append(f"colorchannelmixer=aa={effective_opacity:.2f}[{output_label}]")
         else:
             scale_expr = f"{target_size}:-2"
+            rotate_expr = "a='2*PI*t/10.0':ow='rotw(iw)':oh='roth(ih)':c=none"
             filters.append(f"[{input_idx}:v]scale={scale_expr}")
+            filters.append(f"rotate={rotate_expr}")
             filters.append("format=yuva420p")
             filters.append(f"colorchannelmixer=aa={effective_opacity:.2f}[{output_label}]")
 
