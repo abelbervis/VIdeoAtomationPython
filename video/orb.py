@@ -199,10 +199,10 @@ def generate_gradient_orb_svg(
     palette = ORB_PALETTES.get(palette_key.lower().strip(), ORB_PALETTES["cosmic"])
 
     c = canvas_size // 2
-    r_sphere = int(canvas_size * 0.28)
-    r_corona = int(canvas_size * 0.38)
-    r_aura = int(canvas_size * 0.48)
-    r_specular = int(r_sphere * 0.46)
+    r_sphere = int(canvas_size * 0.26)
+    r_corona = int(canvas_size * 0.35)
+    r_aura = int(canvas_size * 0.42)
+    r_specular = int(r_sphere * 0.45)
 
     # Coords for internal plasma arcs & vortex centers
     p_x1 = int(c - r_sphere * 0.45)
@@ -459,27 +459,23 @@ class GradientOrbManager:
 
             env_expr = "+".join(conds) if conds else "0"
 
-            # Scale: Base + Idle breathing in silence (+- 4%) + Speech expansion (up to +45% on vocal peaks)
+            # Scale: Base + Idle breathing in silence (+- 4%) + Speech expansion (up to +35% on vocal peaks)
             scale_expr = (
                 f"eval=frame:"
-                f"w='trunc({target_size}*(1.0 + 0.04*sin(2*PI*t/2.5) + 0.45*({env_expr}))/2)*2':"
+                f"w='trunc({target_size}*(1.0 + 0.04*sin(2*PI*t/2.5) + 0.35*({env_expr}))/2)*2':"
                 f"h='-2'"
             )
 
             # Color & Hue Shift:
             # In silence: slow organic hue drift (+- 15 deg)
-            # When speaking: shifts color temperature dynamically up to 135 degrees and saturates with vocal intensity
+            # When speaking: shifts color temperature dynamically and saturates with vocal intensity
             hue_expr = (
-                f"h='135*({env_expr}) + 18*sin(2*PI*t/2.0)':"
-                f"s='1.0 + 0.45*({env_expr})'"
+                f"h='85*({env_expr}) + 18*sin(2*PI*t/2.0)':"
+                f"s='1.0 + 0.35*({env_expr})'"
             )
-
-            # Fluid Plasma Motion: Continuous swirl with speech acceleration
-            rotate_expr = f"a='2*PI*t/8.0 + 0.8*({env_expr})':ow='rotw(iw)':oh='roth(ih)':c=none"
 
             filters.append(f"[{input_idx}:v]scale={scale_expr}")
             filters.append(f"hue={hue_expr}")
-            filters.append(f"rotate={rotate_expr}")
             filters.append("format=yuva420p")
             filters.append(f"colorchannelmixer=aa={effective_opacity:.2f}[{output_label}]")
         elif is_audio_reactive and not env_points:
@@ -488,48 +484,40 @@ class GradientOrbManager:
             simulated_speech = "(max(0,sin(2*PI*t/1.2)) * max(0,sin(2*PI*t/0.45)))"
             scale_expr = (
                 f"eval=frame:"
-                f"w='trunc({target_size}*(1.0 + 0.05*sin(2*PI*t/2.2) + 0.35*{simulated_speech})/2)*2':"
+                f"w='trunc({target_size}*(1.0 + 0.05*sin(2*PI*t/2.2) + 0.30*{simulated_speech})/2)*2':"
                 f"h='-2'"
             )
-            hue_expr = f"h='110*{simulated_speech} + 25*sin(2*PI*t/1.8)':s='1.0 + 0.35*{simulated_speech}'"
-            rotate_expr = f"a='2*PI*t/7.5 + 0.6*{simulated_speech}':ow='rotw(iw)':oh='roth(ih)':c=none"
+            hue_expr = f"h='75*{simulated_speech} + 20*sin(2*PI*t/1.8)':s='1.0 + 0.25*{simulated_speech}'"
 
             filters.append(f"[{input_idx}:v]scale={scale_expr}")
             filters.append(f"hue={hue_expr}")
-            filters.append(f"rotate={rotate_expr}")
             filters.append("format=yuva420p")
             filters.append(f"colorchannelmixer=aa={effective_opacity:.2f}[{output_label}]")
         elif self.animation in ("pulse", "breathing", "all"):
-            # Rhythmic breathing with live subtle hue modulation: +/- 15% scale oscillation every 2.0s
+            # Rhythmic breathing with live subtle hue modulation: +/- 12% scale oscillation every 2.0s
             scale_expr = (
                 f"eval=frame:"
-                f"w='trunc({target_size}*(1.0 + 0.15*sin(2*PI*t/2.0))/2)*2':"
+                f"w='trunc({target_size}*(1.0 + 0.12*sin(2*PI*t/2.0))/2)*2':"
                 f"h='-2'"
             )
             # Subtle breathing color temperature shift
-            hue_expr = "h='28*sin(2*PI*t/2.0)':s='1.0 + 0.15*sin(2*PI*t/2.0)'"
-            rotate_expr = "a='2*PI*t/9.0':ow='rotw(iw)':oh='roth(ih)':c=none"
+            hue_expr = "h='24*sin(2*PI*t/2.0)':s='1.0 + 0.12*sin(2*PI*t/2.0)'"
 
             filters.append(f"[{input_idx}:v]scale={scale_expr}")
             filters.append(f"hue={hue_expr}")
-            filters.append(f"rotate={rotate_expr}")
             filters.append("format=yuva420p")
             filters.append(f"colorchannelmixer=aa={effective_opacity:.2f}[{output_label}]")
         elif self.animation in ("float", "hover"):
-            # Floating hover with subtle chromatic luminescence & continuous fluid vortex
-            hue_expr = "h='35*sin(2*PI*t/3.0)':s='1.0 + 0.12*sin(2*PI*t/2.5)'"
-            rotate_expr = "a='2*PI*t/8.5':ow='rotw(iw)':oh='roth(ih)':c=none"
+            # Floating hover with subtle chromatic luminescence
+            hue_expr = "h='30*sin(2*PI*t/3.0)':s='1.0 + 0.10*sin(2*PI*t/2.5)'"
 
             filters.append(f"[{input_idx}:v]scale={target_size}:-2")
             filters.append(f"hue={hue_expr}")
-            filters.append(f"rotate={rotate_expr}")
             filters.append("format=yuva420p")
             filters.append(f"colorchannelmixer=aa={effective_opacity:.2f}[{output_label}]")
         else:
             scale_expr = f"{target_size}:-2"
-            rotate_expr = "a='2*PI*t/10.0':ow='rotw(iw)':oh='roth(ih)':c=none"
             filters.append(f"[{input_idx}:v]scale={scale_expr}")
-            filters.append(f"rotate={rotate_expr}")
             filters.append("format=yuva420p")
             filters.append(f"colorchannelmixer=aa={effective_opacity:.2f}[{output_label}]")
 

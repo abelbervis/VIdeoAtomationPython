@@ -18,7 +18,7 @@
     </filter>
 
     <clipPath id="coreClip">
-      <circle cx="500" cy="500" r="280" />
+      <circle cx="500" cy="500" r="260" />
     </clipPath>
 
     <!-- Layer 0: Ultra-wide diffused ambient radiance -->
@@ -81,30 +81,30 @@
   </defs>
 
   <!-- Stage 1: Ultra-Wide Diffused Atmospheric Radiance (Environmental Illumination) -->
-  <circle cx="500" cy="500" r="480" fill="url(#outerRadiance)" filter="url(#ultraAura)" />
-  <circle cx="500" cy="500" r="422" fill="url(#outerRadiance)" filter="url(#softCorona)" opacity="0.9" />
+  <circle cx="500" cy="500" r="420" fill="url(#outerRadiance)" filter="url(#ultraAura)" />
+  <circle cx="500" cy="500" r="369" fill="url(#outerRadiance)" filter="url(#softCorona)" opacity="0.9" />
 
   <!-- Stage 2: Concentrated Radiant Corona Ring (Intense Edge Glow) -->
-  <circle cx="500" cy="500" r="380" fill="url(#coronalHalo)" filter="url(#intenseGlow)" />
+  <circle cx="500" cy="500" r="350" fill="url(#coronalHalo)" filter="url(#intenseGlow)" />
 
   <!-- Stage 3: Main 3D Volumetric Living Core Body -->
-  <circle cx="500" cy="500" r="280" fill="url(#orbVolumetric)" />
+  <circle cx="500" cy="500" r="260" fill="url(#orbVolumetric)" />
 
   <!-- Stage 4: Internal Fluid Plasma Vortex Streams & Filaments (Living Plasma Core) -->
   <g clip-path="url(#coreClip)">
     <!-- Swirling Plasma Cloud 1 -->
-    <ellipse cx="374" cy="402" rx="238" ry="154" fill="url(#plasmaVortex1)" filter="url(#plasmaDiffusion)" transform="rotate(35 374 402)" opacity="0.85" />
+    <ellipse cx="383" cy="409" rx="221" ry="143" fill="url(#plasmaVortex1)" filter="url(#plasmaDiffusion)" transform="rotate(35 383 409)" opacity="0.85" />
     
     <!-- Counter-Swirling Plasma Cloud 2 -->
-    <ellipse cx="612" cy="584" rx="210" ry="140" fill="url(#plasmaVortex2)" filter="url(#plasmaDiffusion)" transform="rotate(-40 612 584)" opacity="0.78" />
+    <ellipse cx="604" cy="578" rx="195" ry="130" fill="url(#plasmaVortex2)" filter="url(#plasmaDiffusion)" transform="rotate(-40 604 578)" opacity="0.78" />
 
     <!-- Organic Fluid Plasma Filament Ribbon -->
-    <path d="M 290 570 C 416 318, 556 374, 710 472 C 584 654, 444 682, 290 570 Z" fill="url(#fluidStreamer)" filter="url(#plasmaDiffusion)" opacity="0.65" />
+    <path d="M 305 565 C 422 331, 552 383, 695 474 C 578 643, 448 669, 305 565 Z" fill="url(#fluidStreamer)" filter="url(#plasmaDiffusion)" opacity="0.65" />
 
     <!-- Secondary Harmonic Ribbon -->
-    <path d="M 360 388 C 500 304, 668 556, 612 668 C 472 556, 388 528, 360 388 Z" fill="url(#plasmaVortex1)" filter="url(#plasmaDiffusion)" opacity="0.55" />
+    <path d="M 370 396 C 500 318, 656 552, 604 656 C 474 552, 396 526, 370 396 Z" fill="url(#plasmaVortex1)" filter="url(#plasmaDiffusion)" opacity="0.55" />
   </g>
 
   <!-- Stage 5: High-Luminance Specular Flare Accent (Glassy Light Crown) -->
-  <ellipse cx="420" cy="400" rx="128" ry="92" fill="url(#specularGleam)" transform="rotate(-20 420 400)" />
+  <ellipse cx="420" cy="400" rx="117" ry="84" fill="url(#specularGleam)" transform="rotate(-20 420 400)" />
 </svg>
