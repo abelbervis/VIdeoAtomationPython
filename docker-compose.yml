@@ -1,31 +1,24 @@
 version: '3.8'
 
 services:
-  nasa-shorts:
+  nasa-shorts-web:
     build: .
     image: nasa_shorts:latest
+    ports:
+      - "3000:3000"
     env_file:
       - .env
     environment:
-      - ENABLE_ORB=${ENABLE_ORB:-false}
+      - PORT=3000
+      - NODE_ENV=production
+      - ENABLE_ORB=${ENABLE_ORB:-true}
       - ORB_PALETTE=${ORB_PALETTE:-cosmic}
-      - ORB_POSITION=${ORB_POSITION:-center}
-      - ORB_SIZE=${ORB_SIZE:-medium}
-      - ORB_OPACITY=${ORB_OPACITY:-0.90}
-      - ORB_ANIMATION=${ORB_ANIMATION:-pulse}
+      - ORB_POSITION=${ORB_POSITION:-presenter}
+      - ORB_ANIMATION=${ORB_ANIMATION:-speaking}
     volumes:
-      # Mount output folder to your local machine to get the generated MP4s
+      # Mount output folder to host machine to preserve generated videos
       - ./output:/app/output
       # Mount assets and music
       - ./assets:/app/assets
-      # Live sync source files so edits take effect immediately without rebuilding image
-      - ./config.py:/app/config.py
-      - ./main.py:/app/main.py
-      - ./audio:/app/audio
-      - ./video:/app/video
-      - ./subtitles:/app/subtitles
-      - ./utils:/app/utils
-      - ./providers:/app/providers
-      - ./ai:/app/ai
-      - ./robo_agents:/app/robo_agents
+
 
