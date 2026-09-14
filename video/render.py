@@ -633,22 +633,67 @@ class VideoRenderer:
             str(final_output_path)
         ]
 
+        # 4. Execute rendering with robust multi-stage fallback
         try:
             subprocess.run(final_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
         except subprocess.CalledProcessError as e:
             err_msg = e.stderr.decode("utf-8", errors="replace") if e.stderr else str(e)
-            print(f"  ⚠️ Subtitle filter warning ({err_msg[:120]}), rendering fallback stream...")
-            fallback_cmd = [
-                "ffmpeg", "-y",
-                "-i", str(raw_video_path),
-                "-i", str(narration_audio),
-                "-c:v", "copy",
-                "-c:a", AUDIO_CODEC,
-                "-b:a", AUDIO_BITRATE,
-                "-shortest",
-                str(final_output_path)
-            ]
-            subprocess.run(fallback_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+            # Extract the actual error lines from the end of stderr rather than the header
+            err_lines = [l.strip() for l in err_msg.splitlines() if l.strip()]
+            relevant_err = " | ".join(err_lines[-3:]) if err_lines else "Unknown FFmpeg error"
+            print(f"  ⚠️ Video composition notice ({relevant_err[:160]}). Retrying with resilient filter composition...")
+
+            # Resilient Fallback 1: Keep Orb + Audio/Music/SFX/Ducking mixing, just omit subtitle filter
+            try:
+                resilient_filter_complex = []
+                # Keep audio chain
+                if has_music and auto_ducking:
+                    resilient_filter_complex.append(";".join(filter_parts) + ";" + mix_chain)
+                elif has_music or has_sfx:
+                    resilient_filter_complex.append(";".join(audio_parts) + ";" + mix_chain)
+                else:
+                    resilient_filter_complex.append("[1:a]aformat=channel_layouts=stereo,volume=1.0[aout]")
+
+                # Keep Orb visual layer
+                if orb_active and orb_config:
+                    resilient_filter_complex.append(
+                        f"{orb_filter_chain};[0:v][orb_layer]overlay=eval=frame:x='{x_coord}':y='{y_coord}':format=auto:shortest=1[vout]"
+                    )
+                else:
+                    resilient_filter_complex.append("[0:v]copy[vout]")
+
+                resilient_cmd = [
+                    "ffmpeg", "-y",
+                    *cmd[2:],
+                    "-filter_complex", ";".join(resilient_filter_complex),
+                    "-map", "[vout]",
+                    "-map", "[aout]",
+                    "-c:v", VIDEO_CODEC,
+                    "-preset", self.preset,
+                    "-crf", str(self.crf),
+                    "-b:v", VIDEO_BITRATE,
+                    "-c:a", AUDIO_CODEC,
+                    "-b:a", AUDIO_BITRATE,
+                    "-shortest",
+                    "-movflags", "+faststart",
+                    str(final_output_path)
+                ]
+                subprocess.run(resilient_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+                print("  ✅ Video successfully rendered with animated Gradient Orb and full audio mix.")
+            except subprocess.CalledProcessError as fallback_err:
+                fallback_msg = fallback_err.stderr.decode("utf-8", errors="replace") if fallback_err.stderr else str(fallback_err)
+                print(f"  ⚠️ Resilient composition failed ({fallback_msg[-120:]}), applying direct stream multiplex...")
+                direct_cmd = [
+                    "ffmpeg", "-y",
+                    "-i", str(raw_video_path),
+                    "-i", str(narration_audio),
+                    "-c:v", "copy",
+                    "-c:a", AUDIO_CODEC,
+                    "-b:a", AUDIO_BITRATE,
+                    "-shortest",
+                    str(final_output_path)
+                ]
+                subprocess.run(direct_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
 
         # 4. Save metadata audit file
         if assets_metadata:
