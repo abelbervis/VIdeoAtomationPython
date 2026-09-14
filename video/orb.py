@@ -396,32 +396,67 @@ class GradientOrbManager:
     def __init__(
         self,
         palette: str = "cosmic",
-        position: str = "center",
+        position: str = "presenter",
         size: str = "medium",
         opacity: float = 0.90,
-        animation: str = "pulse",
+        animation: str = "speaking",
         custom_x: Optional[int] = None,
         custom_y: Optional[int] = None,
         audio_path: Optional[Path] = None,
+        total_duration: float = 35.0,
+        intro_duration: float = 3.8,
     ):
         self.palette = palette.lower().strip() if palette else "cosmic"
         if self.palette not in ORB_PALETTES:
             self.palette = "cosmic"
 
-        self.position = position.lower().strip() if position else "center"
+        self.position = position.lower().strip() if position else "presenter"
         self.size_name = size.lower().strip() if size else "medium"
         self.pixel_size = ORB_SIZE_MAP.get(self.size_name, 440)
         self.opacity = max(0.1, min(1.0, float(opacity)))
-        self.animation = animation.lower().strip() if animation else "pulse"
+        self.animation = animation.lower().strip() if animation else "speaking"
         self.custom_x = custom_x
         self.custom_y = custom_y
         self.audio_path = Path(audio_path) if audio_path else None
+        self.total_duration = max(3.0, float(total_duration))
+        self.intro_duration = max(1.5, float(intro_duration))
 
     def get_overlay_coordinates(self, video_width: int, video_height: int) -> Tuple[str, str]:
         """
         Calculates FFmpeg expression strings for X and Y overlay coordinates,
-        taking animation (floating hover / bobbing) and positions into account.
+        taking 3-Phase Presenter choreography, floating hover, and fixed positions into account.
         """
+        # 1. Check for 3-Phase AI Presenter / Host Mode
+        if self.position in ("presenter", "host") or self.animation in ("presenter", "host"):
+            tot = self.total_duration
+            if tot <= 7.0:
+                t1 = max(1.0, tot * 0.35)
+                t2 = min(tot - 1.2, t1 + 0.8)
+                t3 = max(t2 + 0.5, tot - 1.5)
+                t4 = min(tot - 0.2, t3 + 0.8)
+            else:
+                t1 = min(max(2.5, self.intro_duration), tot * 0.35)
+                t2 = t1 + 1.1
+                t3 = max(t2 + 2.0, tot - 4.2)
+                t4 = t3 + 1.0
+
+            p1 = f"min(1,max(0,(t-{t1:.2f})/{max(0.1, t2 - t1):.2f}))"
+            e1 = f"({p1}*{p1}*(3-2*{p1}))"
+
+            p2 = f"min(1,max(0,(t-{t3:.2f})/{max(0.1, t4 - t3):.2f}))"
+            e2 = f"({p2}*{p2}*(3-2*{p2}))"
+
+            x_center = "(W-w)/2"
+            x_corner = "W-w-50"
+            x_expr = f"({x_center})*(1-{e1}+{e2}) + ({x_corner})*({e1}-{e2}) + 12*sin(2*PI*t/3.6)"
+
+            y_center = f"(H-h)/2 - {int(video_height * 0.04)}"
+            y_corner = "140"
+            y_outro = f"(H-h)/2 - {int(video_height * 0.06)}"
+            y_expr = f"({y_center})*(1-{e1}) + ({y_corner})*({e1}-{e2}) + ({y_outro})*{e2} + 16*sin(2*PI*t/2.2)"
+
+            return x_expr, y_expr
+
         # Base dimensions of scaled orb
         w_expr = "w"
         h_expr = "h"
@@ -481,6 +516,7 @@ class GradientOrbManager:
         Generate FFmpeg filter chain that animates the orb input (input_idx)
         and prepares it for overlaying onto the main video.
         Features:
+          - 3-Phase Presenter Choreography (Intro Center -> Glide to Corner -> Outro Hook)
           - Audio-reactive speech modulation (speaking / voice / reactive animation):
             dynamically swells in size with voice decibels and shifts color temperature.
           - In speech pauses: settles into gentle idle breathing.
@@ -488,6 +524,7 @@ class GradientOrbManager:
           - Smooth chroma & hue shifts so the orb feels alive.
         """
         target_size = self.pixel_size
+        is_presenter = self.position in ("presenter", "host") or self.animation in ("presenter", "host")
 
         if self.position == "ambient":
             # Ambient mode uses larger soft radius with subtle breathing
@@ -497,13 +534,41 @@ class GradientOrbManager:
             effective_opacity = self.opacity
 
         # Check if audio-reactive speech animation is requested or active
-        is_audio_reactive = self.animation in ("reactive", "speaking", "voice", "alive", "speech")
+        is_audio_reactive = is_presenter or self.animation in ("reactive", "speaking", "voice", "alive", "speech")
         speech_intervals: List[Tuple[float, float]] = []
 
         if is_audio_reactive and self.audio_path and self.audio_path.exists():
             speech_intervals = extract_audio_speech_envelope(self.audio_path)
 
         filters = []
+
+        # Base dynamic size expression
+        if is_presenter:
+            tot = self.total_duration
+            if tot <= 7.0:
+                t1 = max(1.0, tot * 0.35)
+                t2 = min(tot - 1.2, t1 + 0.8)
+                t3 = max(t2 + 0.5, tot - 1.5)
+                t4 = min(tot - 0.2, t3 + 0.8)
+            else:
+                t1 = min(max(2.5, self.intro_duration), tot * 0.35)
+                t2 = t1 + 1.1
+                t3 = max(t2 + 2.0, tot - 4.2)
+                t4 = t3 + 1.0
+
+            p1 = f"min(1,max(0,(t-{t1:.2f})/{max(0.1, t2 - t1):.2f}))"
+            e1 = f"({p1}*{p1}*(3-2*{p1}))"
+
+            p2 = f"min(1,max(0,(t-{t3:.2f})/{max(0.1, t4 - t3):.2f}))"
+            e2 = f"({p2}*{p2}*(3-2*{p2}))"
+
+            s_intro = min(int(video_width * 0.48), 520)
+            s_corner = min(int(video_width * 0.26), 280)
+            s_outro = min(int(video_width * 0.42), 460)
+            base_s = f"({s_intro}*(1-{e1}) + {s_corner}*({e1}-{e2}) + {s_outro}*{e2})"
+        else:
+            base_s = str(target_size)
+
         if is_audio_reactive and speech_intervals:
             # Build ultra-compact speech activity mask (e.g. 5-25 continuous interval windows)
             conds = [f"between(t,{start:.2f},{end:.2f})" for start, end in speech_intervals]
@@ -513,7 +578,7 @@ class GradientOrbManager:
             # - While speaking (mask == 1): dynamic expansion (+28% on syllable peaks) + voice shimmer
             # - In silence/pauses (mask == 0): settles into tranquil idle breathing (+- 4%)
             speech_cadence = f"(max(0,sin(2*PI*t/0.45))*{speech_mask})"
-            scale_val = f"trunc({target_size}*(1.0 + 0.04*sin(2*PI*t/2.5) + 0.28*{speech_cadence})/2)*2"
+            scale_val = f"trunc({base_s}*(1.0 + 0.04*sin(2*PI*t/2.5) + 0.28*{speech_cadence})/2)*2"
             scale_expr = f"eval=frame:w='{scale_val}':h='{scale_val}'"
 
             # Chromatic vitality: shifts saturation and hue dynamically during speech bursts
@@ -533,7 +598,7 @@ class GradientOrbManager:
         elif is_audio_reactive and not speech_intervals:
             # Living speaking simulation if audio had no detectable voice or no file was passed:
             simulated_speech = "(max(0,sin(2*PI*t/1.2))*max(0,sin(2*PI*t/0.45)))"
-            scale_val = f"trunc({target_size}*(1.0 + 0.04*sin(2*PI*t/2.5) + 0.28*{simulated_speech})/2)*2"
+            scale_val = f"trunc({base_s}*(1.0 + 0.04*sin(2*PI*t/2.5) + 0.28*{simulated_speech})/2)*2"
             scale_expr = f"eval=frame:w='{scale_val}':h='{scale_val}'"
             hue_expr = f"h='65*{simulated_speech} + 18*sin(2*PI*t/2.0)':s='1.0 + 0.25*{simulated_speech}'"
             rotate_expr = f"a='2*PI*t/10.0 + 0.35*{simulated_speech}':ow='iw':oh='ih':c=none"
@@ -545,7 +610,7 @@ class GradientOrbManager:
             filters.append(f"colorchannelmixer=aa={effective_opacity:.2f}[{output_label}]")
         elif self.animation in ("pulse", "breathing", "all"):
             # Rhythmic breathing with live subtle hue modulation: +/- 12% scale oscillation every 2.0s
-            scale_val = f"trunc({target_size}*(1.0 + 0.12*sin(2*PI*t/2.0))/2)*2"
+            scale_val = f"trunc({base_s}*(1.0 + 0.12*sin(2*PI*t/2.0))/2)*2"
             scale_expr = f"eval=frame:w='{scale_val}':h='{scale_val}'"
             hue_expr = "h='24*sin(2*PI*t/2.0)':s='1.0 + 0.12*sin(2*PI*t/2.0)'"
             rotate_expr = "a='2*PI*t/12.0':ow='iw':oh='ih':c=none"
@@ -710,6 +775,8 @@ def render_orb_test_preview(
         opacity=opacity,
         animation=animation,
         audio_path=resolved_audio,
+        total_duration=duration,
+        intro_duration=max(1.5, duration * 0.35),
     )
 
     # Construct dynamic filter chains

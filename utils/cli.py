@@ -485,8 +485,8 @@ def parse_args() -> argparse.Namespace:
         "--orb-position",
         type=str,
         default=ORB_POSITION,
-        choices=["center", "floating", "ambient", "bottom", "top-right", "bottom-right"],
-        help=f"Screen position for the Gradient Orb (default: '{ORB_POSITION}')"
+        choices=["presenter", "host", "center", "floating", "ambient", "bottom", "top-right", "bottom-right"],
+        help=f"Screen position for the Gradient Orb (default: '{ORB_POSITION}'). 'presenter' activates 3-phase dynamic choreography (Intro Center -> Body Corner -> Outro Center)."
     )
     parser.add_argument(
         "--orb-size",
@@ -505,7 +505,7 @@ def parse_args() -> argparse.Namespace:
         "--orb-animation",
         type=str,
         default=ORB_ANIMATION,
-        choices=["speaking", "reactive", "pulse", "float", "breathing", "none"],
+        choices=["speaking", "presenter", "reactive", "pulse", "float", "breathing", "none"],
         help=f"Animation style for the Gradient Orb. Use 'speaking' or 'reactive' for audio-reactive speech pulsation and dynamic color shifts (default: '{ORB_ANIMATION}')"
     )
     parser.add_argument(

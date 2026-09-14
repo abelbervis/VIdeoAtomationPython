@@ -562,6 +562,9 @@ class VideoRenderer:
             orb_input_idx = curr_idx
             curr_idx += 1
 
+            total_video_dur = sum(scene_durations) if scene_durations else 35.0
+            intro_scene_dur = scene_durations[0] if scene_durations and len(scene_durations) > 1 else 3.8
+
             orb_mgr = GradientOrbManager(
                 palette=palette,
                 position=position,
@@ -569,6 +572,8 @@ class VideoRenderer:
                 opacity=opacity,
                 animation=animation,
                 audio_path=narration_audio,
+                total_duration=total_video_dur,
+                intro_duration=intro_scene_dur,
             )
             orb_filter_chain = orb_mgr.build_filter_chain(
                 input_idx=orb_input_idx,
