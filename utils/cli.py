@@ -505,20 +505,26 @@ def parse_args() -> argparse.Namespace:
         "--orb-animation",
         type=str,
         default=ORB_ANIMATION,
-        choices=["pulse", "float", "breathing", "none"],
-        help=f"Animation style for the Gradient Orb (default: '{ORB_ANIMATION}')"
+        choices=["speaking", "reactive", "pulse", "float", "breathing", "none"],
+        help=f"Animation style for the Gradient Orb. Use 'speaking' or 'reactive' for audio-reactive speech pulsation and dynamic color shifts (default: '{ORB_ANIMATION}')"
     )
     parser.add_argument(
         "--test-orb", "--orb-tester", "--preview-orb",
         dest="test_orb",
         action="store_true",
-        help="Orb Tester Mode: Renders an immediate 4-second preview video of the Gradient Orb without running AI, TTS, or downloading stock visuals."
+        help="Orb Tester Mode: Renders an immediate preview video of the Gradient Orb without running AI or downloading stock visuals."
     )
     parser.add_argument(
         "--test-orb-duration",
         type=float,
         default=4.0,
         help="Duration in seconds for the Orb Tester preview video (default: 4.0)"
+    )
+    parser.add_argument(
+        "--test-orb-audio",
+        type=str,
+        default=None,
+        help="Path to an optional custom voice audio file to test the audio-reactive speaking orb"
     )
 
     # Custom Script Option (Pre-edited scenes JSON)

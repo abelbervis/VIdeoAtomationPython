@@ -75,15 +75,18 @@ def main():
     if getattr(args, "test_orb", False):
         from video.orb import render_orb_test_preview
         fmt_cfg = resolve_video_format(args.format)
+        sample_audio_arg = getattr(args, "test_orb_audio", None)
+        sample_audio_path = Path(sample_audio_arg) if sample_audio_arg else None
         render_orb_test_preview(
             palette=getattr(args, "orb_palette", "cosmic"),
             position=getattr(args, "orb_position", "center"),
             size=getattr(args, "orb_size", "medium"),
-            animation=getattr(args, "orb_animation", "pulse"),
+            animation=getattr(args, "orb_animation", "speaking"),
             opacity=getattr(args, "orb_opacity", 0.90),
             duration=getattr(args, "test_orb_duration", 4.0),
             width=fmt_cfg["width"],
             height=fmt_cfg["height"],
+            sample_audio=sample_audio_path,
         )
         return
 

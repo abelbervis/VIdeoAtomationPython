@@ -568,6 +568,7 @@ class VideoRenderer:
                 size=size,
                 opacity=opacity,
                 animation=animation,
+                audio_path=narration_audio,
             )
             orb_filter_chain = orb_mgr.build_filter_chain(
                 input_idx=orb_input_idx,

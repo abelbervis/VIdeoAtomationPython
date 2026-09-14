@@ -338,10 +338,11 @@ python main.py --topic "galaxias" --no-badge-date
 ### 🔮 Orbe Gradiente Animado (`--orb`, Estética Viral para Reels & TikTok)
 Para lograr una estética moderna inspirada en canales virales de ciencia y tecnología, el generador incluye un **Orbe Gradiente Multicapa** generado proceduralmente en tiempo real y compuesto sobre el video mediante aceleración FFmpeg:
 - **Resplandor Cósmico y Sombras Suaves**: Renderizado con capas difusas de gradiente radial, atmósfera y reflejos especulares.
-- **Animación Orgánica**: Rítmica pulsación armónica de escala (`pulse`), flotación ondulante natural en 2D (`float`) o respiración de luminosidad (`breathing`).
+- **Entidad Viva Reactiva a la Voz (`speaking` / `reactive`)**: El orbe **escucha la locución en tiempo real**. Con cada palabra y pico de decibelios se expande dinámicamente hasta un **+45%**, muta su temperatura de color y saturación cromática, y en las pausas de silencio entra en reposo flotante (*idle breathing*).
+- **Animaciones Alternativas**: Rítmica pulsación armónica (`pulse`), flotación ondulante en 2D (`float`) o respiración de reposo (`breathing`).
 - **Control Completo por Terminal y Docker**:
 ```bash
-# Activar el orbe con configuración cósmica por defecto:
+# Activar el orbe parlante bio-reactivo por defecto:
 python main.py --topic "agujeros negros" --orb
 
 # Cambiar paleta de colores:
@@ -356,23 +357,26 @@ python main.py --topic "saturno" --orb --orb-position ambient        # Como resp
 python main.py --topic "espacio" --orb --orb-position top-right      # Como insignia o watermark elegante
 
 # Personalizar tamaño y animación:
-python main.py --topic "quásares" --orb --orb-size large --orb-animation pulse
+python main.py --topic "quásares" --orb --orb-size large --orb-animation speaking
 ```
 
 #### ⚡ Modo Tester Instantáneo para el Orbe (`--test-orb`)
-Para previsualizar y afinar la animación, paleta o posición del orbe **en segundos sin generar guión ni descargar audios**:
+Para previsualizar y afinar la animación, paleta o posición del orbe **en segundos**:
 ```bash
-# Renderiza un video de prueba de 4 segundos al instante:
+# Renderiza un video de prueba con voz hablada y reactividad instantánea:
 python main.py --test-orb
 
-# Probar paleta y animación específica:
-python main.py --test-orb --orb-palette cyberpunk --orb-animation float
+# Probar paleta específica hablando en tiempo real:
+python main.py --test-orb --orb-palette solar --orb-animation speaking
+
+# Probar con tu propio archivo de voz:
+python main.py --test-orb --test-orb-audio ruta/a/tu_audio.mp3
 
 # Probar posición flotante y duración personalizada:
-python main.py --test-orb --orb-position floating --orb-palette solar --test-orb-duration 5
+python main.py --test-orb --orb-position floating --orb-palette cyberpunk --test-orb-duration 5
 
 # Con Docker:
-docker compose run --rm nasa-shorts --test-orb --orb-palette aurora --orb-animation pulse
+docker compose run --rm nasa-shorts --test-orb --orb-palette aurora --orb-animation speaking
 ```
 El video de prueba se guarda directamente en `output/orb_previews/` con una etiqueta descriptiva en pantalla.
 

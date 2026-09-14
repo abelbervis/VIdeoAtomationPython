@@ -400,6 +400,6 @@ ORB_PALETTE = clean_env("ORB_PALETTE", "cosmic").lower()
 ORB_POSITION = clean_env("ORB_POSITION", "center").lower()
 ORB_SIZE = clean_env("ORB_SIZE", "medium").lower()
 ORB_OPACITY = float(clean_env("ORB_OPACITY", "0.90"))
-ORB_ANIMATION = clean_env("ORB_ANIMATION", "pulse").lower()
+ORB_ANIMATION = clean_env("ORB_ANIMATION", "speaking").lower()
 
 
