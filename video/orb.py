@@ -188,68 +188,87 @@ ORB_SIZE_MAP: Dict[str, int] = {
 
 def generate_gradient_orb_svg(
     palette_key: str = "cosmic",
-    canvas_size: int = 800,
+    canvas_size: int = 1000,
     save_path: Optional[Path] = None,
 ) -> Tuple[Path, str]:
     """
-    Generate a high-definition SVG file containing an organic 3D gradient orb.
+    Generate a high-definition SVG file containing an organic 3D gradient orb with
+    an intense, radiant multi-stage atmospheric glow and realistic volumetric lighting.
     Features:
-      - 3-stage layered lighting: ambient diffused atmospheric halo + spherical 3D volume + luminous specular highlight.
-      - Resolution-independent vector graphics natively parsed by FFmpeg's librsvg.
+      - Multi-layer luminous halo: Ultra-wide diffused ambient glow + atmospheric corona + 3D spherical core + specular flare.
+      - Ethereal light bleeding effect for seamless blending over cosmic background video.
     """
     palette = ORB_PALETTES.get(palette_key.lower().strip(), ORB_PALETTES["cosmic"])
 
     c = canvas_size // 2
-    r_sphere = int(canvas_size * 0.33)
+    r_sphere = int(canvas_size * 0.28)
+    r_corona = int(canvas_size * 0.38)
     r_aura = int(canvas_size * 0.48)
-    r_specular = int(r_sphere * 0.45)
+    r_specular = int(r_sphere * 0.46)
 
     svg_content = f"""<svg width="{canvas_size}" height="{canvas_size}" viewBox="0 0 {canvas_size} {canvas_size}" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <!-- Filter for soft Gaussian glow diffusion -->
-    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="36" result="blur" />
+    <!-- Multi-stage Gaussian Blur filters for radiant volumetric diffusion -->
+    <filter id="ultraAura" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="80" result="blur1" />
     </filter>
     
-    <filter id="intenseAura" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="64" result="blur" />
+    <filter id="softCorona" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="45" result="blur2" />
     </filter>
 
-    <!-- Outer Ambient Diffused Aura -->
-    <radialGradient id="auraGrad" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="{palette['ambient_aura']}" stop-opacity="0.85" />
-      <stop offset="38%" stop-color="{palette['ambient_secondary']}" stop-opacity="0.45" />
-      <stop offset="75%" stop-color="{palette['outer_gradient']}" stop-opacity="0.15" />
+    <filter id="intenseGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="22" result="blur3" />
+    </filter>
+
+    <!-- Layer 0: Ultra-wide diffused ambient radiance -->
+    <radialGradient id="outerRadiance" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="{palette['ambient_aura']}" stop-opacity="0.95" />
+      <stop offset="25%" stop-color="{palette['ambient_secondary']}" stop-opacity="0.70" />
+      <stop offset="55%" stop-color="{palette['outer_gradient']}" stop-opacity="0.35" />
+      <stop offset="80%" stop-color="{palette['mid_gradient']}" stop-opacity="0.10" />
       <stop offset="100%" stop-color="{palette['deep_edge']}" stop-opacity="0.0" />
     </radialGradient>
 
-    <!-- Primary Volumetric 3D Sphere Radial Gradient -->
+    <!-- Layer 1: Radiant Coronal Flare Halo -->
+    <radialGradient id="coronalHalo" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="{palette['core_highlight']}" stop-opacity="0.80" />
+      <stop offset="35%" stop-color="{palette['inner_glow']}" stop-opacity="0.65" />
+      <stop offset="70%" stop-color="{palette['ambient_aura']}" stop-opacity="0.30" />
+      <stop offset="100%" stop-color="{palette['outer_gradient']}" stop-opacity="0.0" />
+    </radialGradient>
+
+    <!-- Layer 2: Primary Volumetric 3D Sphere Radial Gradient -->
     <radialGradient id="orbVolumetric" cx="36%" cy="32%" r="68%" fx="32%" fy="28%">
       <stop offset="0%" stop-color="{palette['core_highlight']}" stop-opacity="1.0" />
       <stop offset="12%" stop-color="{palette['inner_glow']}" stop-opacity="0.98" />
-      <stop offset="38%" stop-color="{palette['mid_gradient']}" stop-opacity="0.94" />
-      <stop offset="70%" stop-color="{palette['outer_gradient']}" stop-opacity="0.88" />
-      <stop offset="90%" stop-color="{palette['deep_edge']}" stop-opacity="0.65" />
+      <stop offset="38%" stop-color="{palette['mid_gradient']}" stop-opacity="0.95" />
+      <stop offset="72%" stop-color="{palette['outer_gradient']}" stop-opacity="0.90" />
+      <stop offset="92%" stop-color="{palette['deep_edge']}" stop-opacity="0.75" />
       <stop offset="100%" stop-color="{palette['deep_edge']}" stop-opacity="0.0" />
     </radialGradient>
 
-    <!-- Specular Flare Accent (Offset Luminous Crown) -->
+    <!-- Layer 3: Organic Specular Highlight Flare -->
     <radialGradient id="specularGleam" cx="30%" cy="26%" r="42%">
-      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95" />
-      <stop offset="40%" stop-color="{palette['inner_glow']}" stop-opacity="0.4" />
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.98" />
+      <stop offset="35%" stop-color="{palette['inner_glow']}" stop-opacity="0.60" />
+      <stop offset="80%" stop-color="{palette['mid_gradient']}" stop-opacity="0.10" />
       <stop offset="100%" stop-color="{palette['mid_gradient']}" stop-opacity="0.0" />
     </radialGradient>
   </defs>
 
-  <!-- Layer 1: Wide Ambient Diffused Aura -->
-  <circle cx="{c}" cy="{c}" r="{r_aura}" fill="url(#auraGrad)" filter="url(#intenseAura)" />
-  <circle cx="{c}" cy="{c}" r="{int(r_aura * 0.85)}" fill="url(#auraGrad)" filter="url(#softGlow)" />
+  <!-- Stage 1: Ultra-Wide Diffused Atmospheric Radiance (Environmental Illumination) -->
+  <circle cx="{c}" cy="{c}" r="{r_aura}" fill="url(#outerRadiance)" filter="url(#ultraAura)" />
+  <circle cx="{c}" cy="{c}" r="{int(r_aura * 0.88)}" fill="url(#outerRadiance)" filter="url(#softCorona)" opacity="0.9" />
 
-  <!-- Layer 2: Main 3D Volumetric Sphere Body -->
+  <!-- Stage 2: Concentrated Radiant Corona Ring (Intense Edge Glow) -->
+  <circle cx="{c}" cy="{c}" r="{r_corona}" fill="url(#coronalHalo)" filter="url(#intenseGlow)" />
+
+  <!-- Stage 3: Main 3D Volumetric Living Core Body -->
   <circle cx="{c}" cy="{c}" r="{r_sphere}" fill="url(#orbVolumetric)" />
 
-  <!-- Layer 3: Organic Specular Highlight -->
-  <ellipse cx="{int(c * 0.82)}" cy="{int(c * 0.78)}" rx="{r_specular}" ry="{int(r_specular * 0.75)}" fill="url(#specularGleam)" transform="rotate(-18 {int(c * 0.82)} {int(c * 0.78)})" />
+  <!-- Stage 4: High-Luminance Specular Flare Accent (Glassy Light Crown) -->
+  <ellipse cx="{int(c * 0.84)}" cy="{int(c * 0.80)}" rx="{r_specular}" ry="{int(r_specular * 0.72)}" fill="url(#specularGleam)" transform="rotate(-20 {int(c * 0.84)} {int(c * 0.80)})" />
 </svg>"""
 
     if not save_path:
@@ -258,6 +277,8 @@ def generate_gradient_orb_svg(
     save_path = Path(save_path)
     save_path.parent.mkdir(parents=True, exist_ok=True)
     save_path.write_text(svg_content, encoding="utf-8")
+
+    return save_path, svg_content
 
     return save_path, svg_content
 
@@ -455,10 +476,11 @@ class GradientOrbManager:
 def get_or_create_orb_asset(
     palette: str = "cosmic",
     target_dir: Optional[Path] = None,
+    force_refresh: bool = False,
 ) -> Path:
     """
     Retrieves or generates a high-resolution transparent RGBA PNG asset
-    for the specified gradient orb palette.
+    with multi-stage atmospheric glow for the specified gradient orb palette.
     """
     import subprocess
 
@@ -472,11 +494,11 @@ def get_or_create_orb_asset(
     png_path = dest_dir / f"orb_{palette_key}.png"
     svg_path = dest_dir / f"orb_{palette_key}.svg"
 
-    if png_path.exists() and png_path.stat().st_size > 1000:
+    if not force_refresh and png_path.exists() and png_path.stat().st_size > 1000:
         return png_path
 
-    # Generate vector SVG
-    generate_gradient_orb_svg(palette_key=palette_key, canvas_size=800, save_path=svg_path)
+    # Generate vector SVG with enhanced multi-layer radiant glow
+    generate_gradient_orb_svg(palette_key=palette_key, canvas_size=1000, save_path=svg_path)
 
     # Render high-quality transparent RGBA PNG via FFmpeg
     try:

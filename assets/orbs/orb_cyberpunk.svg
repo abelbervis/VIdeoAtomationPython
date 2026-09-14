@@ -1,47 +1,64 @@
-<svg width="800" height="800" viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg">
+<svg width="1000" height="1000" viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <!-- Filter for soft Gaussian glow diffusion -->
-    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="36" result="blur" />
+    <!-- Multi-stage Gaussian Blur filters for radiant volumetric diffusion -->
+    <filter id="ultraAura" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="80" result="blur1" />
     </filter>
     
-    <filter id="intenseAura" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="64" result="blur" />
+    <filter id="softCorona" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="45" result="blur2" />
     </filter>
 
-    <!-- Outer Ambient Diffused Aura -->
-    <radialGradient id="auraGrad" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#ff007f" stop-opacity="0.85" />
-      <stop offset="38%" stop-color="#00d4ff" stop-opacity="0.45" />
-      <stop offset="75%" stop-color="#00d4ff" stop-opacity="0.15" />
+    <filter id="intenseGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="22" result="blur3" />
+    </filter>
+
+    <!-- Layer 0: Ultra-wide diffused ambient radiance -->
+    <radialGradient id="outerRadiance" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ff007f" stop-opacity="0.95" />
+      <stop offset="25%" stop-color="#00d4ff" stop-opacity="0.70" />
+      <stop offset="55%" stop-color="#00d4ff" stop-opacity="0.35" />
+      <stop offset="80%" stop-color="#7b2cbf" stop-opacity="0.10" />
       <stop offset="100%" stop-color="#ff5400" stop-opacity="0.0" />
     </radialGradient>
 
-    <!-- Primary Volumetric 3D Sphere Radial Gradient -->
+    <!-- Layer 1: Radiant Coronal Flare Halo -->
+    <radialGradient id="coronalHalo" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.80" />
+      <stop offset="35%" stop-color="#ff007f" stop-opacity="0.65" />
+      <stop offset="70%" stop-color="#ff007f" stop-opacity="0.30" />
+      <stop offset="100%" stop-color="#00d4ff" stop-opacity="0.0" />
+    </radialGradient>
+
+    <!-- Layer 2: Primary Volumetric 3D Sphere Radial Gradient -->
     <radialGradient id="orbVolumetric" cx="36%" cy="32%" r="68%" fx="32%" fy="28%">
       <stop offset="0%" stop-color="#ffffff" stop-opacity="1.0" />
       <stop offset="12%" stop-color="#ff007f" stop-opacity="0.98" />
-      <stop offset="38%" stop-color="#7b2cbf" stop-opacity="0.94" />
-      <stop offset="70%" stop-color="#00d4ff" stop-opacity="0.88" />
-      <stop offset="90%" stop-color="#ff5400" stop-opacity="0.65" />
+      <stop offset="38%" stop-color="#7b2cbf" stop-opacity="0.95" />
+      <stop offset="72%" stop-color="#00d4ff" stop-opacity="0.90" />
+      <stop offset="92%" stop-color="#ff5400" stop-opacity="0.75" />
       <stop offset="100%" stop-color="#ff5400" stop-opacity="0.0" />
     </radialGradient>
 
-    <!-- Specular Flare Accent (Offset Luminous Crown) -->
+    <!-- Layer 3: Organic Specular Highlight Flare -->
     <radialGradient id="specularGleam" cx="30%" cy="26%" r="42%">
-      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95" />
-      <stop offset="40%" stop-color="#ff007f" stop-opacity="0.4" />
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.98" />
+      <stop offset="35%" stop-color="#ff007f" stop-opacity="0.60" />
+      <stop offset="80%" stop-color="#7b2cbf" stop-opacity="0.10" />
       <stop offset="100%" stop-color="#7b2cbf" stop-opacity="0.0" />
     </radialGradient>
   </defs>
 
-  <!-- Layer 1: Wide Ambient Diffused Aura -->
-  <circle cx="400" cy="400" r="384" fill="url(#auraGrad)" filter="url(#intenseAura)" />
-  <circle cx="400" cy="400" r="326" fill="url(#auraGrad)" filter="url(#softGlow)" />
+  <!-- Stage 1: Ultra-Wide Diffused Atmospheric Radiance (Environmental Illumination) -->
+  <circle cx="500" cy="500" r="480" fill="url(#outerRadiance)" filter="url(#ultraAura)" />
+  <circle cx="500" cy="500" r="422" fill="url(#outerRadiance)" filter="url(#softCorona)" opacity="0.9" />
 
-  <!-- Layer 2: Main 3D Volumetric Sphere Body -->
-  <circle cx="400" cy="400" r="264" fill="url(#orbVolumetric)" />
+  <!-- Stage 2: Concentrated Radiant Corona Ring (Intense Edge Glow) -->
+  <circle cx="500" cy="500" r="380" fill="url(#coronalHalo)" filter="url(#intenseGlow)" />
 
-  <!-- Layer 3: Organic Specular Highlight -->
-  <ellipse cx="328" cy="312" rx="118" ry="88" fill="url(#specularGleam)" transform="rotate(-18 328 312)" />
+  <!-- Stage 3: Main 3D Volumetric Living Core Body -->
+  <circle cx="500" cy="500" r="280" fill="url(#orbVolumetric)" />
+
+  <!-- Stage 4: High-Luminance Specular Flare Accent (Glassy Light Crown) -->
+  <ellipse cx="420" cy="400" rx="128" ry="92" fill="url(#specularGleam)" transform="rotate(-20 420 400)" />
 </svg>
