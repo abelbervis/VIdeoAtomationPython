@@ -214,10 +214,11 @@ def generate_gradient_orb_svg(
     palette = ORB_PALETTES.get(palette_key.lower().strip(), ORB_PALETTES["cosmic"])
 
     c = canvas_size // 2
-    r_sphere = int(canvas_size * 0.26)
-    r_corona = int(canvas_size * 0.35)
-    r_aura = int(canvas_size * 0.44)
-    r_specular = int(r_sphere * 0.50)
+    # Sphere radius relative to canvas (keeps ample margin for aura falloff to reach exact zero)
+    r_sphere = int(canvas_size * 0.24)
+    r_corona = int(canvas_size * 0.31)
+    r_aura = int(canvas_size * 0.40)
+    r_specular = int(r_sphere * 0.48)
 
     # Coords for internal plasma vortex centers & spiral arms
     p_x1 = int(c - r_sphere * 0.35)
@@ -227,159 +228,131 @@ def generate_gradient_orb_svg(
 
     svg_content = f"""<svg width="{canvas_size}" height="{canvas_size}" viewBox="0 0 {canvas_size} {canvas_size}" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <!-- Multi-stage Gaussian Blur filters for radiant volumetric diffusion -->
-    <filter id="backdropGlow" x="-80%" y="-80%" width="260%" height="260%">
-      <feGaussianBlur stdDeviation="90" result="darkBlur" />
-    </filter>
-
-    <filter id="ultraAura" x="-60%" y="-60%" width="220%" height="220%">
-      <feGaussianBlur stdDeviation="70" result="blur1" />
-    </filter>
-    
-    <filter id="softCorona" x="-40%" y="-40%" width="180%" height="180%">
-      <feGaussianBlur stdDeviation="38" result="blur2" />
-    </filter>
-
-    <filter id="intenseGlow" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="18" result="blur3" />
-    </filter>
-
+    <!-- Internal caustics blur filters (confined strictly within the spherical clipping boundary) -->
     <filter id="vortexDeepBlur" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="14" result="blurDeep" />
+      <feGaussianBlur stdDeviation="12" result="blurDeep" />
     </filter>
 
     <filter id="vortexSharpBlur" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="6" result="blurSharp" />
+      <feGaussianBlur stdDeviation="5" result="blurSharp" />
     </filter>
 
+    <!-- Clip path defining the physical spherical glass body -->
     <clipPath id="coreClip">
       <circle cx="{c}" cy="{c}" r="{r_sphere}" />
     </clipPath>
 
-    <!-- Stage 0: Deep Space Radial Backdrop Occlusion (Dimming Lens for busy/daylight stock footage) -->
-    <radialGradient id="backdropOcclusion" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#010006" stop-opacity="0.94" />
-      <stop offset="28%" stop-color="#03010f" stop-opacity="0.84" />
-      <stop offset="55%" stop-color="#070318" stop-opacity="0.55" />
-      <stop offset="78%" stop-color="#0c0722" stop-opacity="0.22" />
-      <stop offset="100%" stop-color="#000000" stop-opacity="0.0" />
-    </radialGradient>
-
-    <!-- Layer 0: Ultra-wide diffused atmospheric radiance -->
+    <!-- Layer 0: Ultra-Smooth Clean Environmental Radiance (Seamlessly vanishes to 0% alpha well before canvas borders) -->
     <radialGradient id="outerRadiance" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="{palette['ambient_aura']}" stop-opacity="0.95" />
-      <stop offset="25%" stop-color="{palette['ambient_secondary']}" stop-opacity="0.65" />
-      <stop offset="55%" stop-color="{palette['outer_gradient']}" stop-opacity="0.30" />
-      <stop offset="85%" stop-color="{palette['mid_gradient']}" stop-opacity="0.08" />
-      <stop offset="100%" stop-color="{palette['deep_edge']}" stop-opacity="0.0" />
+      <stop offset="0%" stop-color="{palette['ambient_aura']}" stop-opacity="0.80" />
+      <stop offset="35%" stop-color="{palette['ambient_secondary']}" stop-opacity="0.45" />
+      <stop offset="65%" stop-color="{palette['outer_gradient']}" stop-opacity="0.18" />
+      <stop offset="88%" stop-color="{palette['mid_gradient']}" stop-opacity="0.03" />
+      <stop offset="100%" stop-color="{palette['mid_gradient']}" stop-opacity="0.0" />
     </radialGradient>
 
-    <!-- Layer 1: Radiant Coronal Flare Halo -->
+    <!-- Layer 1: Radiant Coronal Plasma Flare Halo -->
     <radialGradient id="coronalHalo" cx="50%" cy="50%" r="50%">
       <stop offset="0%" stop-color="{palette['core_highlight']}" stop-opacity="0.85" />
-      <stop offset="35%" stop-color="{palette['inner_glow']}" stop-opacity="0.70" />
-      <stop offset="70%" stop-color="{palette['ambient_aura']}" stop-opacity="0.35" />
+      <stop offset="30%" stop-color="{palette['inner_glow']}" stop-opacity="0.65" />
+      <stop offset="65%" stop-color="{palette['ambient_aura']}" stop-opacity="0.25" />
+      <stop offset="90%" stop-color="{palette['outer_gradient']}" stop-opacity="0.04" />
       <stop offset="100%" stop-color="{palette['outer_gradient']}" stop-opacity="0.0" />
     </radialGradient>
 
-    <!-- Layer 2: Deep 3D Glass Body (Fresnel Lens Gradient) -->
-    <radialGradient id="orbVolumetric" cx="38%" cy="34%" r="66%" fx="32%" fy="28%">
-      <stop offset="0%" stop-color="{palette['core_highlight']}" stop-opacity="0.95" />
-      <stop offset="15%" stop-color="{palette['inner_glow']}" stop-opacity="0.90" />
-      <stop offset="42%" stop-color="{palette['mid_gradient']}" stop-opacity="0.92" />
-      <stop offset="78%" stop-color="{palette['outer_gradient']}" stop-opacity="0.96" />
-      <stop offset="94%" stop-color="{palette['deep_edge']}" stop-opacity="1.0" />
-      <stop offset="100%" stop-color="#020008" stop-opacity="0.90" />
+    <!-- Layer 2: Deep 3D Quantum Glass Body (High-contrast Fresnel lens with deep onyx rim) -->
+    <radialGradient id="orbVolumetric" cx="36%" cy="32%" r="68%" fx="30%" fy="26%">
+      <stop offset="0%" stop-color="{palette['core_highlight']}" stop-opacity="1.0" />
+      <stop offset="14%" stop-color="{palette['inner_glow']}" stop-opacity="0.95" />
+      <stop offset="38%" stop-color="{palette['mid_gradient']}" stop-opacity="0.94" />
+      <stop offset="72%" stop-color="{palette['outer_gradient']}" stop-opacity="0.98" />
+      <stop offset="92%" stop-color="{palette['deep_edge']}" stop-opacity="1.0" />
+      <stop offset="100%" stop-color="#020008" stop-opacity="1.0" />
     </radialGradient>
 
     <!-- Layer 3: Concentric Quantum Resonance Gradients -->
     <!-- Resonance Ring 1 -->
     <linearGradient id="ringGrad1" x1="10%" y1="20%" x2="90%" y2="80%">
-      <stop offset="0%" stop-color="{palette['core_highlight']}" stop-opacity="0.90" />
-      <stop offset="30%" stop-color="{palette['inner_glow']}" stop-opacity="0.75" />
-      <stop offset="70%" stop-color="{palette['ambient_aura']}" stop-opacity="0.40" />
+      <stop offset="0%" stop-color="{palette['core_highlight']}" stop-opacity="0.95" />
+      <stop offset="28%" stop-color="{palette['inner_glow']}" stop-opacity="0.80" />
+      <stop offset="68%" stop-color="{palette['ambient_aura']}" stop-opacity="0.45" />
       <stop offset="100%" stop-color="{palette['deep_edge']}" stop-opacity="0.0" />
     </linearGradient>
 
     <!-- Resonance Ring 2 -->
     <linearGradient id="ringGrad2" x1="85%" y1="15%" x2="15%" y2="85%">
-      <stop offset="0%" stop-color="{palette['ambient_secondary']}" stop-opacity="0.85" />
-      <stop offset="45%" stop-color="{palette['mid_gradient']}" stop-opacity="0.65" />
-      <stop offset="85%" stop-color="{palette['deep_edge']}" stop-opacity="0.20" />
+      <stop offset="0%" stop-color="{palette['ambient_secondary']}" stop-opacity="0.90" />
+      <stop offset="45%" stop-color="{palette['mid_gradient']}" stop-opacity="0.70" />
+      <stop offset="85%" stop-color="{palette['deep_edge']}" stop-opacity="0.25" />
       <stop offset="100%" stop-color="{palette['deep_edge']}" stop-opacity="0.0" />
     </linearGradient>
 
     <!-- Vortex Core Singularity Eye -->
     <radialGradient id="vortexEye" cx="50%" cy="50%" r="50%">
       <stop offset="0%" stop-color="#ffffff" stop-opacity="1.0" />
-      <stop offset="25%" stop-color="{palette['core_highlight']}" stop-opacity="0.95" />
-      <stop offset="55%" stop-color="{palette['inner_glow']}" stop-opacity="0.75" />
-      <stop offset="85%" stop-color="{palette['ambient_aura']}" stop-opacity="0.25" />
+      <stop offset="25%" stop-color="{palette['core_highlight']}" stop-opacity="0.98" />
+      <stop offset="55%" stop-color="{palette['inner_glow']}" stop-opacity="0.80" />
+      <stop offset="85%" stop-color="{palette['ambient_aura']}" stop-opacity="0.30" />
       <stop offset="100%" stop-color="{palette['deep_edge']}" stop-opacity="0.0" />
     </radialGradient>
 
     <!-- Equatorial Caustic Ribbon -->
     <linearGradient id="causticRibbon" x1="0%" y1="50%" x2="100%" y2="50%">
       <stop offset="0%" stop-color="{palette['inner_glow']}" stop-opacity="0.0" />
-      <stop offset="30%" stop-color="{palette['core_highlight']}" stop-opacity="0.85" />
-      <stop offset="50%" stop-color="#ffffff" stop-opacity="0.95" />
-      <stop offset="70%" stop-color="{palette['ambient_secondary']}" stop-opacity="0.75" />
+      <stop offset="30%" stop-color="{palette['core_highlight']}" stop-opacity="0.90" />
+      <stop offset="50%" stop-color="#ffffff" stop-opacity="1.0" />
+      <stop offset="70%" stop-color="{palette['ambient_secondary']}" stop-opacity="0.80" />
       <stop offset="100%" stop-color="{palette['outer_gradient']}" stop-opacity="0.0" />
     </linearGradient>
 
     <!-- Fixed 3D Glass Specular Crown (Top-Left Highlight) -->
-    <radialGradient id="specularGleam" cx="32%" cy="28%" r="45%">
-      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.98" />
-      <stop offset="25%" stop-color="#ffffff" stop-opacity="0.75" />
-      <stop offset="50%" stop-color="{palette['inner_glow']}" stop-opacity="0.40" />
-      <stop offset="80%" stop-color="{palette['mid_gradient']}" stop-opacity="0.08" />
+    <radialGradient id="specularGleam" cx="30%" cy="26%" r="48%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="1.0" />
+      <stop offset="22%" stop-color="#ffffff" stop-opacity="0.80" />
+      <stop offset="50%" stop-color="{palette['inner_glow']}" stop-opacity="0.45" />
+      <stop offset="80%" stop-color="{palette['mid_gradient']}" stop-opacity="0.10" />
       <stop offset="100%" stop-color="{palette['mid_gradient']}" stop-opacity="0.0" />
     </radialGradient>
 
     <!-- Subsurface Bounce Flare (Bottom-Right) -->
-    <radialGradient id="subsurfaceBounce" cx="72%" cy="74%" r="40%">
-      <stop offset="0%" stop-color="{palette['ambient_aura']}" stop-opacity="0.55" />
-      <stop offset="50%" stop-color="{palette['outer_gradient']}" stop-opacity="0.25" />
+    <radialGradient id="subsurfaceBounce" cx="72%" cy="74%" r="42%">
+      <stop offset="0%" stop-color="{palette['ambient_aura']}" stop-opacity="0.65" />
+      <stop offset="50%" stop-color="{palette['outer_gradient']}" stop-opacity="0.30" />
       <stop offset="100%" stop-color="{palette['deep_edge']}" stop-opacity="0.0" />
     </radialGradient>
   </defs>
 
-  <!-- Stage 0: Deep Space Radial Backdrop Occlusion (Creates instant contrast on any stock video) -->
-  <circle cx="{c}" cy="{c}" r="{int(r_aura * 1.08)}" fill="url(#backdropOcclusion)" filter="url(#backdropGlow)" opacity="0.95" />
-  <circle cx="{c}" cy="{c}" r="{int(r_sphere * 1.32)}" fill="#010006" filter="url(#softCorona)" opacity="0.80" />
+  <!-- Stage 1: Ultra-Smooth Diffused Atmospheric Radiance (Zero edge-bleed) -->
+  <circle cx="{c}" cy="{c}" r="{r_aura}" fill="url(#outerRadiance)" />
 
-  <!-- Stage 1: Ultra-Wide Diffused Atmospheric Radiance (Environmental Illumination) -->
-  <circle cx="{c}" cy="{c}" r="{r_aura}" fill="url(#outerRadiance)" filter="url(#ultraAura)" />
-  <circle cx="{c}" cy="{c}" r="{int(r_aura * 0.85)}" fill="url(#outerRadiance)" filter="url(#softCorona)" opacity="0.95" />
+  <!-- Stage 2: Concentrated Radiant Corona Ring (Silky edge halo) -->
+  <circle cx="{c}" cy="{c}" r="{r_corona}" fill="url(#coronalHalo)" />
 
-  <!-- Stage 2: Concentrated Radiant Corona Ring (Intense Edge Glow) -->
-  <circle cx="{c}" cy="{c}" r="{r_corona}" fill="url(#coronalHalo)" filter="url(#intenseGlow)" />
-
-  <!-- Stage 3: Deep 3D Glass Sphere Body with Fresnel Rim -->
+  <!-- Stage 3: Deep 3D Glass Sphere Body with Dark Fresnel Rim for Instant Background Isolation -->
   <circle cx="{c}" cy="{c}" r="{r_sphere}" fill="url(#orbVolumetric)" />
 
   <!-- Stage 4: Quantum Fluid Caustic Core (Internal Living Energy) -->
   <g clip-path="url(#coreClip)">
     <!-- Base Diffuse Fluid Bed -->
-    <ellipse cx="{p_x1}" cy="{p_y1}" rx="{int(r_sphere * 0.88)}" ry="{int(r_sphere * 0.58)}" fill="url(#ringGrad1)" filter="url(#vortexDeepBlur)" transform="rotate(35 {p_x1} {p_y1})" opacity="0.85" />
-    <ellipse cx="{p_x2}" cy="{p_y2}" rx="{int(r_sphere * 0.80)}" ry="{int(r_sphere * 0.50)}" fill="url(#ringGrad2)" filter="url(#vortexDeepBlur)" transform="rotate(-30 {p_x2} {p_y2})" opacity="0.80" />
+    <ellipse cx="{p_x1}" cy="{p_y1}" rx="{int(r_sphere * 0.88)}" ry="{int(r_sphere * 0.58)}" fill="url(#ringGrad1)" filter="url(#vortexDeepBlur)" transform="rotate(35 {p_x1} {p_y1})" opacity="0.88" />
+    <ellipse cx="{p_x2}" cy="{p_y2}" rx="{int(r_sphere * 0.80)}" ry="{int(r_sphere * 0.50)}" fill="url(#ringGrad2)" filter="url(#vortexDeepBlur)" transform="rotate(-30 {p_x2} {p_y2})" opacity="0.82" />
 
     <!-- Concentric Harmonic Wave Ribbons (Interlocking Quantum Caustics) -->
-    <path d="M {c - int(r_sphere*0.75)} {c + int(r_sphere*0.12)} C {c - int(r_sphere*0.30)} {c - int(r_sphere*0.70)}, {c + int(r_sphere*0.25)} {c - int(r_sphere*0.50)}, {c + int(r_sphere*0.75)} {c - int(r_sphere*0.08)} C {c + int(r_sphere*0.30)} {c + int(r_sphere*0.60)}, {c - int(r_sphere*0.20)} {c + int(r_sphere*0.70)}, {c - int(r_sphere*0.75)} {c + int(r_sphere*0.12)} Z" fill="url(#ringGrad1)" filter="url(#vortexSharpBlur)" opacity="0.80" />
+    <path d="M {c - int(r_sphere*0.75)} {c + int(r_sphere*0.12)} C {c - int(r_sphere*0.30)} {c - int(r_sphere*0.70)}, {c + int(r_sphere*0.25)} {c - int(r_sphere*0.50)}, {c + int(r_sphere*0.75)} {c - int(r_sphere*0.08)} C {c + int(r_sphere*0.30)} {c + int(r_sphere*0.60)}, {c - int(r_sphere*0.20)} {c + int(r_sphere*0.70)}, {c - int(r_sphere*0.75)} {c + int(r_sphere*0.12)} Z" fill="url(#ringGrad1)" filter="url(#vortexSharpBlur)" opacity="0.85" />
     
-    <path d="M {c - int(r_sphere*0.50)} {c - int(r_sphere*0.40)} C {c + int(r_sphere*0.02)} {c - int(r_sphere*0.75)}, {c + int(r_sphere*0.65)} {c + int(r_sphere*0.08)}, {c + int(r_sphere*0.40)} {c + int(r_sphere*0.60)} C {c - int(r_sphere*0.10)} {c + int(r_sphere*0.25)}, {c - int(r_sphere*0.40)} {c + int(r_sphere*0.12)}, {c - int(r_sphere*0.50)} {c - int(r_sphere*0.40)} Z" fill="url(#ringGrad2)" filter="url(#vortexSharpBlur)" opacity="0.75" />
+    <path d="M {c - int(r_sphere*0.50)} {c - int(r_sphere*0.40)} C {c + int(r_sphere*0.02)} {c - int(r_sphere*0.75)}, {c + int(r_sphere*0.65)} {c + int(r_sphere*0.08)}, {c + int(r_sphere*0.40)} {c + int(r_sphere*0.60)} C {c - int(r_sphere*0.10)} {c + int(r_sphere*0.25)}, {c - int(r_sphere*0.40)} {c + int(r_sphere*0.12)}, {c - int(r_sphere*0.50)} {c - int(r_sphere*0.40)} Z" fill="url(#ringGrad2)" filter="url(#vortexSharpBlur)" opacity="0.80" />
 
     <!-- Tilted Equatorial Light Ribbon -->
-    <ellipse cx="{c}" cy="{c + int(r_sphere * 0.04)}" rx="{int(r_sphere * 0.74)}" ry="{int(r_sphere * 0.24)}" fill="url(#causticRibbon)" filter="url(#vortexSharpBlur)" transform="rotate(-15 {c} {c})" opacity="0.85" />
+    <ellipse cx="{c}" cy="{c + int(r_sphere * 0.04)}" rx="{int(r_sphere * 0.74)}" ry="{int(r_sphere * 0.24)}" fill="url(#causticRibbon)" filter="url(#vortexSharpBlur)" transform="rotate(-15 {c} {c})" opacity="0.90" />
 
     <!-- Concentric Singularity Light Core (Pulsing Energy Eye) -->
-    <circle cx="{c}" cy="{c}" r="{int(r_sphere * 0.32)}" fill="url(#vortexEye)" filter="url(#vortexSharpBlur)" opacity="0.95" />
-    <circle cx="{c}" cy="{c}" r="{int(r_sphere * 0.12)}" fill="#ffffff" filter="url(#vortexSharpBlur)" opacity="0.92" />
+    <circle cx="{c}" cy="{c}" r="{int(r_sphere * 0.32)}" fill="url(#vortexEye)" filter="url(#vortexSharpBlur)" opacity="0.98" />
+    <circle cx="{c}" cy="{c}" r="{int(r_sphere * 0.12)}" fill="#ffffff" filter="url(#vortexSharpBlur)" opacity="0.96" />
 
     <!-- Quantum Light Nodes (Micro-stars suspended inside) -->
-    <circle cx="{c - int(r_sphere * 0.32)}" cy="{c - int(r_sphere * 0.18)}" r="{int(r_sphere * 0.035)}" fill="#ffffff" filter="url(#vortexSharpBlur)" opacity="0.85" />
-    <circle cx="{c + int(r_sphere * 0.36)}" cy="{c + int(r_sphere * 0.15)}" r="{int(r_sphere * 0.03)}" fill="{palette['inner_glow']}" filter="url(#vortexSharpBlur)" opacity="0.90" />
-    <circle cx="{c - int(r_sphere * 0.15)}" cy="{c + int(r_sphere * 0.35)}" r="{int(r_sphere * 0.025)}" fill="{palette['core_highlight']}" filter="url(#vortexSharpBlur)" opacity="0.85" />
+    <circle cx="{c - int(r_sphere * 0.32)}" cy="{c - int(r_sphere * 0.18)}" r="{int(r_sphere * 0.035)}" fill="#ffffff" filter="url(#vortexSharpBlur)" opacity="0.90" />
+    <circle cx="{c + int(r_sphere * 0.36)}" cy="{c + int(r_sphere * 0.15)}" r="{int(r_sphere * 0.03)}" fill="{palette['inner_glow']}" filter="url(#vortexSharpBlur)" opacity="0.92" />
+    <circle cx="{c - int(r_sphere * 0.15)}" cy="{c + int(r_sphere * 0.35)}" r="{int(r_sphere * 0.025)}" fill="{palette['core_highlight']}" filter="url(#vortexSharpBlur)" opacity="0.90" />
   </g>
 
   <!-- Stage 5: Subsurface Light Bounce (Bottom-Right Soft Depth) -->
@@ -388,9 +361,9 @@ def generate_gradient_orb_svg(
   <!-- Stage 6: Fixed 3D Glass Specular Crown (Anchored Top-Left Reflection) -->
   <ellipse cx="{int(c - r_sphere * 0.28)}" cy="{int(c - r_sphere * 0.28)}" rx="{r_specular}" ry="{int(r_specular * 0.68)}" fill="url(#specularGleam)" transform="rotate(-28 {int(c - r_sphere * 0.28)} {int(c - r_sphere * 0.28)})" />
 
-  <!-- Stage 7: Crisp Edge Separation & Refraction Rim -->
-  <circle cx="{c}" cy="{c}" r="{r_sphere}" fill="none" stroke="#000000" stroke-width="2.2" opacity="0.85" />
-  <circle cx="{c}" cy="{c}" r="{r_sphere - 1}" fill="none" stroke="{palette['core_highlight']}" stroke-width="1.0" opacity="0.65" />
+  <!-- Stage 7: Optical Refraction Micro-Rim (Guarantees crisp shape definition against any background) -->
+  <circle cx="{c}" cy="{c}" r="{r_sphere}" fill="none" stroke="#000000" stroke-width="1.8" opacity="0.80" />
+  <circle cx="{c}" cy="{c}" r="{r_sphere - 1}" fill="none" stroke="{palette['core_highlight']}" stroke-width="0.8" opacity="0.60" />
 </svg>"""
 
     if not save_path:
