@@ -359,6 +359,23 @@ python main.py --topic "espacio" --orb --orb-position top-right      # Como insi
 python main.py --topic "quásares" --orb --orb-size large --orb-animation pulse
 ```
 
+#### ⚡ Modo Tester Instantáneo para el Orbe (`--test-orb`)
+Para previsualizar y afinar la animación, paleta o posición del orbe **en segundos sin generar guión ni descargar audios**:
+```bash
+# Renderiza un video de prueba de 4 segundos al instante:
+python main.py --test-orb
+
+# Probar paleta y animación específica:
+python main.py --test-orb --orb-palette cyberpunk --orb-animation float
+
+# Probar posición flotante y duración personalizada:
+python main.py --test-orb --orb-position floating --orb-palette solar --test-orb-duration 5
+
+# Con Docker:
+docker compose run --rm nasa-shorts --test-orb --orb-palette aurora --orb-animation pulse
+```
+El video de prueba se guarda directamente en `output/orb_previews/` con una etiqueta descriptiva en pantalla.
+
 En **Docker**, puedes pasar cualquier flag directamente o configurar las variables de entorno en tu archivo `.env` (`ENABLE_ORB=true`, `ORB_PALETTE=cosmic`, etc.):
 ```bash
 docker compose run --rm nasa-shorts --topic "Misterios del Cosmos" --orb --orb-palette cosmic

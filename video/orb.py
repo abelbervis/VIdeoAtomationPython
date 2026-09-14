@@ -233,8 +233,13 @@ class GradientOrbManager:
         # Animate hovering motion (float)
         if self.animation in ("float", "hover", "all") or self.position == "floating":
             # Compound harmonic motion (gentle organic drift in 2D space)
-            x_anim = f"{base_x} + 18*sin(2*PI*t/3.6)"
-            y_anim = f"{base_y} + 28*sin(2*PI*t/2.8)"
+            x_anim = f"{base_x} + 26*sin(2*PI*t/3.2)"
+            y_anim = f"{base_y} + 38*sin(2*PI*t/2.4)"
+            return x_anim, y_anim
+        elif self.animation in ("pulse", "breathing"):
+            # Subtle floating offset while pulsing so it feels alive and never static
+            x_anim = f"{base_x} + 10*sin(2*PI*t/4.0)"
+            y_anim = f"{base_y} + 16*sin(2*PI*t/2.8)"
             return x_anim, y_anim
 
         return base_x, base_y
@@ -264,12 +269,12 @@ class GradientOrbManager:
         else:
             effective_opacity = self.opacity
 
-        # Pulsing scale expression
+        # Pulsing scale expression (distinct, clearly visible periodic breathing)
         if self.animation in ("pulse", "breathing", "all"):
-            # Rhythmic breathing: +/- 7% scale oscillation every 2.4 seconds
+            # Rhythmic breathing: +/- 15% scale oscillation every 2.0 seconds
             scale_expr = (
                 f"eval=frame:"
-                f"w='trunc({target_size}*(1.0 + 0.07*sin(2*PI*t/2.4))/2)*2':"
+                f"w='trunc({target_size}*(1.0 + 0.15*sin(2*PI*t/2.0))/2)*2':"
                 f"h='-2'"
             )
         else:
@@ -325,3 +330,118 @@ def get_or_create_orb_asset(
             return svg_path
 
     return png_path if png_path.exists() else svg_path
+
+
+def render_orb_test_preview(
+    palette: str = "cosmic",
+    position: str = "center",
+    size: str = "medium",
+    animation: str = "pulse",
+    opacity: float = 0.90,
+    duration: float = 4.0,
+    output_path: Optional[Path] = None,
+    width: int = 1080,
+    height: int = 1920,
+    bg_style: str = "cosmic",
+) -> Path:
+    """
+    Renders an ultra-fast (2-4 seconds) video preview of the animated gradient orb.
+    Avoids running the entire generation pipeline (no script generation, no TTS, no stock downloads).
+    Produces a ready-to-view vertical MP4 in seconds.
+    """
+    import subprocess
+    import shutil
+
+    if output_path is None:
+        out_dir = Path("output") / "orb_previews"
+        out_dir.mkdir(parents=True, exist_ok=True)
+        output_path = out_dir / f"test_orb_{palette}_{position}_{animation}.mp4"
+    else:
+        output_path = Path(output_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    print(f"\n🔮 [Orb Tester] Generando vista previa rápida del Orbe Gradiente...")
+    print(f"   • Paleta: '{palette}'")
+    print(f"   • Posición: '{position}'")
+    print(f"   • Animación: '{animation}'")
+    print(f"   • Tamaño: '{size}' | Opacidad: {opacity}")
+    print(f"   • Duración: {duration}s | Resolución: {width}x{height}")
+
+    # Generate or get asset
+    orb_asset = get_or_create_orb_asset(palette=palette)
+
+    # Initialize manager
+    mgr = GradientOrbManager(
+        palette=palette,
+        position=position,
+        size=size,
+        opacity=opacity,
+        animation=animation,
+    )
+
+    # Construct dynamic filter chains
+    orb_filter = mgr.build_filter_chain(
+        input_idx=1,
+        output_label="orb_layer",
+        video_width=width,
+        video_height=height,
+        fps=30
+    )
+    x_coord, y_coord = mgr.get_overlay_coordinates(width, height)
+
+    # Background color: subtle dark space gradient simulation with lavfi color
+    bg_color = "0x0b0e14" if bg_style == "cosmic" else "0x000000"
+
+    # Filter complex with timer / label overlay so user sees live animation specs
+    filter_complex = [
+        orb_filter,
+        f"[0:v][orb_layer]overlay=eval=frame:x='{x_coord}':y='{y_coord}':shortest=1[v_orb]",
+        f"[v_orb]drawtext=text='ORB TESTER \\: {palette.upper()} ({animation.upper()})':fontcolor=white:fontsize=38:box=1:boxcolor=black@0.65:boxborderw=12:x=(w-text_w)/2:y=180[vout]"
+    ]
+    filter_str = ";".join(filter_complex)
+
+    cmd = [
+        "ffmpeg", "-y",
+        "-f", "lavfi", "-i", f"color=c={bg_color}:s={width}x{height}:r=30:d={duration}",
+        "-loop", "1", "-i", str(orb_asset),
+        "-f", "lavfi", "-i", f"anullsrc=r=44100:cl=stereo",
+        "-filter_complex", filter_str,
+        "-map", "[vout]",
+        "-map", "2:a",
+        "-c:v", "libx264",
+        "-preset", "ultrafast",
+        "-pix_fmt", "yuv420p",
+        "-c:a", "aac",
+        "-shortest",
+        "-movflags", "+faststart",
+        str(output_path)
+    ]
+
+    try:
+        subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    except subprocess.CalledProcessError:
+        # Fallback if drawtext fails (e.g. missing font)
+        fallback_filter = f"{orb_filter};[0:v][orb_layer]overlay=eval=frame:x='{x_coord}':y='{y_coord}':shortest=1[vout]"
+        cmd_fallback = [
+            "ffmpeg", "-y",
+            "-f", "lavfi", "-i", f"color=c={bg_color}:s={width}x{height}:r=30:d={duration}",
+            "-loop", "1", "-i", str(orb_asset),
+            "-f", "lavfi", "-i", f"anullsrc=r=44100:cl=stereo",
+            "-filter_complex", fallback_filter,
+            "-map", "[vout]",
+            "-map", "2:a",
+            "-c:v", "libx264",
+            "-preset", "ultrafast",
+            "-pix_fmt", "yuv420p",
+            "-c:a", "aac",
+            "-shortest",
+            "-movflags", "+faststart",
+            str(output_path)
+        ]
+        subprocess.run(cmd_fallback, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    print(f"\n✨ ¡Vista previa del Orbe generada en tiempo récord!")
+    print(f"🎬 Video listo para ver: {output_path.resolve()}")
+    print(f"📦 Tamaño: {output_path.stat().st_size / 1024:.1f} KB\n")
+    return output_path
+

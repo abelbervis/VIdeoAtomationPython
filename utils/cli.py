@@ -508,6 +508,18 @@ def parse_args() -> argparse.Namespace:
         choices=["pulse", "float", "breathing", "none"],
         help=f"Animation style for the Gradient Orb (default: '{ORB_ANIMATION}')"
     )
+    parser.add_argument(
+        "--test-orb", "--orb-tester", "--preview-orb",
+        dest="test_orb",
+        action="store_true",
+        help="Orb Tester Mode: Renders an immediate 4-second preview video of the Gradient Orb without running AI, TTS, or downloading stock visuals."
+    )
+    parser.add_argument(
+        "--test-orb-duration",
+        type=float,
+        default=4.0,
+        help="Duration in seconds for the Orb Tester preview video (default: 4.0)"
+    )
 
     # Custom Script Option (Pre-edited scenes JSON)
     parser.add_argument(

@@ -71,6 +71,22 @@ def main():
         )
         return
 
+    # If --test-orb mode is selected, render instant orb preview video and exit
+    if getattr(args, "test_orb", False):
+        from video.orb import render_orb_test_preview
+        fmt_cfg = resolve_video_format(args.format)
+        render_orb_test_preview(
+            palette=getattr(args, "orb_palette", "cosmic"),
+            position=getattr(args, "orb_position", "center"),
+            size=getattr(args, "orb_size", "medium"),
+            animation=getattr(args, "orb_animation", "pulse"),
+            opacity=getattr(args, "orb_opacity", 0.90),
+            duration=getattr(args, "test_orb_duration", 4.0),
+            width=fmt_cfg["width"],
+            height=fmt_cfg["height"],
+        )
+        return
+
     # 1. Resolve Topic (Summary Mode, Content Ideas Discovery, NASA Trend Hunter, or User-Supplied Topic)
     if getattr(args, "summary", None) is not None or getattr(args, "summary_file", None):
         from ai.summary_processor import process_summary_mode
