@@ -513,11 +513,8 @@ class GradientOrbManager:
             # - While speaking (mask == 1): dynamic expansion (+28% on syllable peaks) + voice shimmer
             # - In silence/pauses (mask == 0): settles into tranquil idle breathing (+- 4%)
             speech_cadence = f"(max(0,sin(2*PI*t/0.45))*{speech_mask})"
-            scale_expr = (
-                f"eval=frame:"
-                f"w='trunc({target_size}*(1.0 + 0.04*sin(2*PI*t/2.5) + 0.28*{speech_cadence})/2)*2':"
-                f"h='-2'"
-            )
+            scale_val = f"trunc({target_size}*(1.0 + 0.04*sin(2*PI*t/2.5) + 0.28*{speech_cadence})/2)*2"
+            scale_expr = f"eval=frame:w='{scale_val}':h='{scale_val}'"
 
             # Chromatic vitality: shifts saturation and hue dynamically during speech bursts
             hue_expr = (
@@ -525,49 +522,55 @@ class GradientOrbManager:
                 f"s='1.0 + 0.28*{speech_mask}'"
             )
 
+            # Continuous vortex swirl with fixed bounding canvas (prevents jitter/wobble with levitation)
+            rotate_expr = f"a='2*PI*t/10.0 + 0.35*{speech_mask}*sin(2*PI*t/1.2)':ow='iw':oh='ih':c=none"
+
             filters.append(f"[{input_idx}:v]scale={scale_expr}")
+            filters.append(f"rotate={rotate_expr}")
             filters.append(f"hue={hue_expr}")
             filters.append("format=yuva420p")
             filters.append(f"colorchannelmixer=aa={effective_opacity:.2f}[{output_label}]")
         elif is_audio_reactive and not speech_intervals:
             # Living speaking simulation if audio had no detectable voice or no file was passed:
             simulated_speech = "(max(0,sin(2*PI*t/1.2))*max(0,sin(2*PI*t/0.45)))"
-            scale_expr = (
-                f"eval=frame:"
-                f"w='trunc({target_size}*(1.0 + 0.04*sin(2*PI*t/2.5) + 0.28*{simulated_speech})/2)*2':"
-                f"h='-2'"
-            )
+            scale_val = f"trunc({target_size}*(1.0 + 0.04*sin(2*PI*t/2.5) + 0.28*{simulated_speech})/2)*2"
+            scale_expr = f"eval=frame:w='{scale_val}':h='{scale_val}'"
             hue_expr = f"h='65*{simulated_speech} + 18*sin(2*PI*t/2.0)':s='1.0 + 0.25*{simulated_speech}'"
+            rotate_expr = f"a='2*PI*t/10.0 + 0.35*{simulated_speech}':ow='iw':oh='ih':c=none"
 
             filters.append(f"[{input_idx}:v]scale={scale_expr}")
+            filters.append(f"rotate={rotate_expr}")
             filters.append(f"hue={hue_expr}")
             filters.append("format=yuva420p")
             filters.append(f"colorchannelmixer=aa={effective_opacity:.2f}[{output_label}]")
         elif self.animation in ("pulse", "breathing", "all"):
             # Rhythmic breathing with live subtle hue modulation: +/- 12% scale oscillation every 2.0s
-            scale_expr = (
-                f"eval=frame:"
-                f"w='trunc({target_size}*(1.0 + 0.12*sin(2*PI*t/2.0))/2)*2':"
-                f"h='-2'"
-            )
-            # Subtle breathing color temperature shift
+            scale_val = f"trunc({target_size}*(1.0 + 0.12*sin(2*PI*t/2.0))/2)*2"
+            scale_expr = f"eval=frame:w='{scale_val}':h='{scale_val}'"
             hue_expr = "h='24*sin(2*PI*t/2.0)':s='1.0 + 0.12*sin(2*PI*t/2.0)'"
+            rotate_expr = "a='2*PI*t/12.0':ow='iw':oh='ih':c=none"
 
             filters.append(f"[{input_idx}:v]scale={scale_expr}")
+            filters.append(f"rotate={rotate_expr}")
             filters.append(f"hue={hue_expr}")
             filters.append("format=yuva420p")
             filters.append(f"colorchannelmixer=aa={effective_opacity:.2f}[{output_label}]")
         elif self.animation in ("float", "hover"):
-            # Floating hover with subtle chromatic luminescence
+            # Floating hover with subtle chromatic luminescence & smooth cosmic vortex spin
+            scale_expr = f"{target_size}:{target_size}"
             hue_expr = "h='30*sin(2*PI*t/3.0)':s='1.0 + 0.10*sin(2*PI*t/2.5)'"
+            rotate_expr = "a='2*PI*t/14.0':ow='iw':oh='ih':c=none"
 
-            filters.append(f"[{input_idx}:v]scale={target_size}:-2")
+            filters.append(f"[{input_idx}:v]scale={scale_expr}")
+            filters.append(f"rotate={rotate_expr}")
             filters.append(f"hue={hue_expr}")
             filters.append("format=yuva420p")
             filters.append(f"colorchannelmixer=aa={effective_opacity:.2f}[{output_label}]")
         else:
-            scale_expr = f"{target_size}:-2"
+            scale_expr = f"{target_size}:{target_size}"
+            rotate_expr = "a='2*PI*t/15.0':ow='iw':oh='ih':c=none"
             filters.append(f"[{input_idx}:v]scale={scale_expr}")
+            filters.append(f"rotate={rotate_expr}")
             filters.append("format=yuva420p")
             filters.append(f"colorchannelmixer=aa={effective_opacity:.2f}[{output_label}]")
 
