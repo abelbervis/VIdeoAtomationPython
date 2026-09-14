@@ -136,30 +136,54 @@ app.get('/api/discover', async (req, res) => {
 
 // 4. API: AI Script Generator Preview
 app.post('/api/generate-script', async (req, res) => {
-  const { topic, persona = 'oracle', entityName = 'Nexus', language = 'es', duration = 35 } = req.body;
+  const {
+    topic,
+    persona = 'oracle',
+    entityName = 'Nexus',
+    language = 'es',
+    duration = 35,
+    llmProvider = 'auto',
+  } = req.body;
+
+  const geminiKey = (req.body.geminiKey || '').trim();
+  const groqKey = (req.body.groqKey || '').trim();
+  const openaiKey = (req.body.openaiKey || '').trim();
 
   if (!topic) {
     return res.status(400).json({ error: 'Topic is required' });
   }
 
+  const escapePy = (str: string) => (str || '').replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+
+  const keyArgs = [];
+  if (geminiKey) keyArgs.push(`gemini_key="${escapePy(geminiKey)}"`);
+  if (groqKey) keyArgs.push(`groq_key="${escapePy(groqKey)}"`);
+  if (openaiKey) keyArgs.push(`openai_key="${escapePy(openaiKey)}"`);
+
+  const keyArgsStr = keyArgs.length > 0 ? ', ' + keyArgs.join(', ') : '';
+
   const scriptPy = `
 import json
 from ai.script_generator import ScriptGenerator
 
-gen = ScriptGenerator(persona="${persona}", entity_name="${entityName}")
-script = gen.generate(topic="""${topic.replace(/"/g, '\\"')}""", target_duration=${duration}, language="${language}")
-print("JSON_START")
+gen = ScriptGenerator(
+    persona="${escapePy(persona)}",
+    entity_name="${escapePy(entityName)}",
+    preferred_provider="${escapePy(llmProvider)}"${keyArgsStr}
+)
+script = gen.generate(topic="""${escapePy(topic)}""", target_duration=${duration}, language="${escapePy(language)}")
+print("\\nJSON_START")
 print(json.dumps(script))
-print("JSON_END")
+print("\\nJSON_END")
 `;
 
   const result = await runPythonCommand(['-c', scriptPy]);
   try {
     const stdout = result.stdout;
-    const jsonStart = stdout.indexOf('JSON_START') + 10;
+    const rawStart = stdout.indexOf('JSON_START');
     const jsonEnd = stdout.indexOf('JSON_END');
-    if (jsonStart !== -1 && jsonEnd !== -1) {
-      const jsonStr = stdout.substring(jsonStart, jsonEnd).trim();
+    if (rawStart !== -1 && jsonEnd !== -1) {
+      const jsonStr = stdout.substring(rawStart + 10, jsonEnd).trim();
       const scriptData = JSON.parse(jsonStr);
       return res.json({ script: scriptData });
     }
@@ -177,6 +201,10 @@ app.post('/api/render-video', (req, res) => {
     entityName = 'Nexus',
     duration = 35,
     provider = 'auto',
+    llmProvider = 'auto',
+    geminiKey,
+    groqKey,
+    openaiKey,
     format = 'vertical',
     orb = true,
     orbPalette = 'cosmic',
@@ -216,6 +244,10 @@ app.post('/api/render-video', (req, res) => {
   pyArgs.push('--entity-name', entityName);
   pyArgs.push('--duration', duration.toString());
   pyArgs.push('--provider', provider);
+  if (llmProvider) pyArgs.push('--llm', llmProvider);
+  if (geminiKey) pyArgs.push('--gemini-key', geminiKey);
+  if (groqKey) pyArgs.push('--groq-key', groqKey);
+  if (openaiKey) pyArgs.push('--openai-key', openaiKey);
   pyArgs.push('--format', format);
 
   if (orb) {

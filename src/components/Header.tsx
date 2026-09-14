@@ -44,7 +44,19 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, onTabChange }) => {
           </div>
           <span className="text-slate-700">•</span>
           <div className="flex items-center gap-1 text-purple-400">
-            <Sparkles className="w-3 h-3" /> <span>Gemini AI: Conectado</span>
+            <Sparkles className="w-3 h-3" />
+            <span>
+              IA LLM:{' '}
+              {envStatus?.gemini || envStatus?.groq || envStatus?.openai
+                ? [
+                    envStatus?.groq ? 'Groq ⚡' : null,
+                    envStatus?.gemini ? 'Gemini ✨' : null,
+                    envStatus?.openai ? 'OpenAI 🤖' : null,
+                  ]
+                    .filter(Boolean)
+                    .join(' | ')
+                : 'Factual Generator (Fallback)'}
+            </span>
           </div>
           <span className="text-slate-700">•</span>
           <div className="flex items-center gap-1 text-cyan-400">

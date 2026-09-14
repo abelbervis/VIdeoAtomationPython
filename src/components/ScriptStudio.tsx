@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   PersonaType,
   ProviderType,
+  LLMProviderType,
   FormatType,
   OrbPalette,
   OrbPosition,
@@ -23,6 +24,12 @@ import {
   Palette,
   FileText,
   Volume2,
+  Cpu,
+  Key,
+  ChevronDown,
+  ChevronUp,
+  ShieldCheck,
+  Zap,
 } from 'lucide-react';
 import { OrbSimulator } from './OrbSimulator';
 
@@ -47,7 +54,14 @@ export const ScriptStudio: React.FC<ScriptStudioProps> = ({ onStartRender }) => 
   const [entityName, setEntityName] = useState('Nexus');
   const [duration, setDuration] = useState(35);
   const [provider, setProvider] = useState<ProviderType>('auto');
+  const [llmProvider, setLlmProvider] = useState<LLMProviderType>('auto');
   const [format, setFormat] = useState<FormatType>('vertical');
+
+  // Custom API Keys
+  const [showKeyPanel, setShowKeyPanel] = useState(false);
+  const [geminiKey, setGeminiKey] = useState('');
+  const [groqKey, setGroqKey] = useState('');
+  const [openaiKey, setOpenaiKey] = useState('');
 
   // Orb Config
   const [enableOrb, setEnableOrb] = useState(true);
@@ -82,6 +96,10 @@ export const ScriptStudio: React.FC<ScriptStudioProps> = ({ onStartRender }) => 
           persona,
           entityName,
           duration,
+          llmProvider,
+          geminiKey,
+          groqKey,
+          openaiKey,
           language: 'es',
         }),
       });
@@ -113,6 +131,10 @@ export const ScriptStudio: React.FC<ScriptStudioProps> = ({ onStartRender }) => 
       entityName,
       duration,
       provider,
+      llmProvider,
+      geminiKey,
+      groqKey,
+      openaiKey,
       format,
       orb: enableOrb,
       orbPalette,
@@ -246,7 +268,7 @@ export const ScriptStudio: React.FC<ScriptStudioProps> = ({ onStartRender }) => 
             </div>
 
             {/* Controls Row */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
               <div>
                 <label className="block text-xs text-slate-400 mb-1 flex items-center gap-1">
                   <Clock className="w-3 h-3 text-purple-400" /> Duración ({duration}s)
@@ -259,6 +281,22 @@ export const ScriptStudio: React.FC<ScriptStudioProps> = ({ onStartRender }) => 
                   onChange={(e) => setDuration(Number(e.target.value))}
                   className="w-full accent-purple-500 bg-slate-950 h-1.5 rounded-lg appearance-none cursor-pointer"
                 />
+              </div>
+
+              <div>
+                <label className="block text-xs text-slate-400 mb-1 flex items-center gap-1">
+                  <Cpu className="w-3 h-3 text-purple-400" /> Proveedor IA (LLM)
+                </label>
+                <select
+                  value={llmProvider}
+                  onChange={(e) => setLlmProvider(e.target.value as LLMProviderType)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg text-xs text-purple-300 font-semibold px-2 py-1.5 focus:outline-none focus:border-purple-500"
+                >
+                  <option value="auto">Auto (Cascada Groq → Gemini → OpenAI)</option>
+                  <option value="gemini">Google Gemini (gemini-2.5-flash)</option>
+                  <option value="groq">Groq LPU (llama-3.3-70b Ultrarrápido)</option>
+                  <option value="openai">OpenAI (gpt-4o-mini)</option>
+                </select>
               </div>
 
               <div>
@@ -292,6 +330,84 @@ export const ScriptStudio: React.FC<ScriptStudioProps> = ({ onStartRender }) => 
                   <option value="square">Cuadrado 1:1 (Post/Feed)</option>
                 </select>
               </div>
+            </div>
+
+            {/* Custom API Keys Collapsible Drawer */}
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => setShowKeyPanel(!showKeyPanel)}
+                className="flex items-center justify-between w-full px-3 py-2 bg-slate-950 hover:bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-300 transition-all"
+              >
+                <div className="flex items-center gap-2">
+                  <Key className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="font-semibold text-slate-200">
+                    Configurar Claves de API de IA (Gemini, Groq, OpenAI)
+                  </span>
+                  {llmProvider !== 'auto' && (
+                    <span className="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-mono text-[10px] uppercase font-bold border border-purple-500/30">
+                      Modo: {llmProvider}
+                    </span>
+                  )}
+                </div>
+                {showKeyPanel ? (
+                  <ChevronUp className="w-4 h-4 text-slate-400" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 text-slate-400" />
+                )}
+              </button>
+
+              {showKeyPanel && (
+                <div className="mt-3 p-4 bg-slate-950 border border-slate-800 rounded-xl space-y-3">
+                  <div className="flex items-center gap-2 text-xs text-slate-400 border-b border-slate-800 pb-2">
+                    <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>
+                      Las claves ingresadas aquí sobrescriben las variables de entorno de tu archivo <code>.env</code>.
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-purple-300 mb-1 flex items-center gap-1">
+                        <Sparkles className="w-3 h-3 text-purple-400" /> Gemini API Key
+                      </label>
+                      <input
+                        type="password"
+                        value={geminiKey}
+                        onChange={(e) => setGeminiKey(e.target.value)}
+                        placeholder="AIzaSy..."
+                        className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-purple-500 font-mono"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-semibold text-cyan-300 mb-1 flex items-center gap-1">
+                        <Zap className="w-3 h-3 text-cyan-400" /> Groq API Key
+                      </label>
+                      <input
+                        type="password"
+                        value={groqKey}
+                        onChange={(e) => setGroqKey(e.target.value)}
+                        placeholder="gsk_..."
+                        className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500 font-mono"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-semibold text-emerald-300 mb-1 flex items-center gap-1">
+                        <Bot className="w-3 h-3 text-emerald-400" /> OpenAI API Key
+                      </label>
+                      <input
+                        type="password"
+                        value={openaiKey}
+                        onChange={(e) => setOpenaiKey(e.target.value)}
+                        placeholder="sk-..."
+                        className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500 font-mono"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Action Buttons */}

@@ -1,5 +1,6 @@
 export type PersonaType = 'oracle' | 'science' | 'mystery' | 'cyberpunk';
 export type ProviderType = 'auto' | 'nasa' | 'pexels' | 'pixabay' | 'pollinations';
+export type LLMProviderType = 'auto' | 'gemini' | 'groq' | 'openai';
 export type FormatType = 'vertical' | 'horizontal' | 'square';
 export type OrbPalette = 'cosmic' | 'cyberpunk' | 'solar' | 'aurora' | 'nebula' | 'monochrome';
 export type OrbPosition = 'presenter' | 'host' | 'center' | 'floating' | 'ambient' | 'top-right' | 'bottom-right';
