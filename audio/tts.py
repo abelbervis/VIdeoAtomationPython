@@ -18,6 +18,43 @@ from config import AUDIO_DIR, TTS_PROVIDER, TTS_API_KEY, DEFAULT_TTS_VOICE, OPEN
 from utils.files import get_media_duration
 
 
+# Cosmic Entity Voice Profiles (Microsoft Edge Neural TTS + SSML Modulation + DSP Audio Filters)
+COSMIC_VOICE_PROFILES = {
+    "quantum": {
+        "name": "QUANTUM",
+        "voice": "es-ES-AlvaroNeural",
+        "rate": "-5%",
+        "pitch": "-4Hz",
+        "volume": "+0%",
+        "role": "La Mente Fundamental del Vacío",
+        "description": "Profunda, analítica, serena y pausada. Resonancia grave estelar.",
+        "dsp_filter": (
+            "highpass=f=85,"
+            "equalizer=f=140:width_type=h:width=60:g=2.5,"
+            "equalizer=f=4200:width_type=h:width=1200:g=2.2,"
+            "compand=attacks=0.01:decays=0.1:points=-60/-60|-20/-10|0/-3:soft-knee=6,"
+            "aecho=0.8:0.88:40:0.08"
+        )
+    },
+    "solar": {
+        "name": "SOLAR",
+        "voice": "es-ES-ElviraNeural",
+        "rate": "+1%",
+        "pitch": "+2Hz",
+        "volume": "+0%",
+        "role": "El Núcleo Estelar Radiante",
+        "description": "Cálida, brillante, dinámica y envolvente. Shimmer estelar de plasma.",
+        "dsp_filter": (
+            "highpass=f=95,"
+            "equalizer=f=2200:width_type=h:width=800:g=2.2,"
+            "equalizer=f=6500:width_type=h:width=2000:g=2.8,"
+            "compand=attacks=0.01:decays=0.1:points=-60/-60|-20/-10|0/-3:soft-knee=6,"
+            "aecho=0.8:0.88:25:0.06"
+        )
+    }
+}
+
+
 class BaseTTSProvider(abc.ABC):
     """Abstract base class for TTS engines."""
 
@@ -28,42 +65,117 @@ class BaseTTSProvider(abc.ABC):
 
 
 class EdgeTTSProvider(BaseTTSProvider):
-    """Microsoft Edge Neural TTS (Free, high-grade documentary quality voices)."""
+    """Microsoft Edge Neural TTS with SSML Prosody (Rate/Pitch) & Acoustic DSP Enhancement."""
 
     def __init__(self, default_voice: str = DEFAULT_TTS_VOICE):
         self.default_voice = (default_voice or "es-ES-AlvaroNeural").strip().strip("'\"").strip()
 
-    def synthesize_text(self, text: str, output_path: Path, voice: Optional[str] = None) -> bool:
+    def synthesize_text(
+        self,
+        text: str,
+        output_path: Path,
+        voice: Optional[str] = None,
+        rate: str = "+0%",
+        pitch: str = "+0Hz",
+        volume: str = "+0%",
+        apply_dsp: bool = False,
+        dsp_filter: Optional[str] = None
+    ) -> bool:
         selected_voice = (voice or self.default_voice or "es-ES-AlvaroNeural").strip().strip("'\"").strip()
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        raw_output_path = output_path.parent / f"_raw_{output_path.name}" if apply_dsp else output_path
+
+        synthesized = False
 
         # 1. Try python edge-tts library if installed
         try:
             import edge_tts
 
             async def _run():
-                communicate = edge_tts.Communicate(text, selected_voice)
-                await communicate.save(str(output_path))
+                communicate = edge_tts.Communicate(
+                    text,
+                    selected_voice,
+                    rate=rate,
+                    pitch=pitch,
+                    volume=volume
+                )
+                await communicate.save(str(raw_output_path))
 
             asyncio.run(_run())
-            if output_path.exists() and output_path.stat().st_size > 0:
-                return True
+            if raw_output_path.exists() and raw_output_path.stat().st_size > 0:
+                synthesized = True
         except ImportError:
             pass
         except Exception as e:
             print(f"  ⚠️ edge-tts python call error: {e}")
 
-        # 2. Try edge-tts CLI tool if available
-        try:
-            cmd = ["edge-tts", "--voice", selected_voice, "--text", text, "--write-media", str(output_path)]
-            subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-            if output_path.exists() and output_path.stat().st_size > 0:
-                return True
-        except Exception:
-            pass
+        # 2. Try edge-tts CLI tool if available (Fallback)
+        if not synthesized:
+            try:
+                cmd = [
+                    "edge-tts",
+                    "--voice", selected_voice,
+                    "--rate", rate,
+                    "--pitch", pitch,
+                    "--volume", volume,
+                    "--text", text,
+                    "--write-media", str(raw_output_path)
+                ]
+                subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+                if raw_output_path.exists() and raw_output_path.stat().st_size > 0:
+                    synthesized = True
+            except Exception:
+                pass
 
-        return False
+        if not synthesized:
+            return False
+
+        # 3. Apply Acoustic Post-Processing DSP filter via FFmpeg if requested
+        if apply_dsp and dsp_filter:
+            try:
+                cmd_dsp = [
+                    "ffmpeg", "-y",
+                    "-i", str(raw_output_path),
+                    "-af", dsp_filter,
+                    "-acodec", "libmp3lame",
+                    "-b:a", "192k",
+                    str(output_path)
+                ]
+                subprocess.run(cmd_dsp, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+                raw_output_path.unlink(missing_ok=True)
+                return output_path.exists() and output_path.stat().st_size > 0
+            except Exception as e:
+                print(f"  ⚠️ Voice DSP filter error: {e}, keeping raw synthesis.")
+                if raw_output_path.exists():
+                    raw_output_path.rename(output_path)
+                return output_path.exists()
+
+        return True
+
+    def synthesize_cosmic_entity(
+        self,
+        text: str,
+        output_path: Path,
+        entity: str = "quantum",
+        apply_dsp: bool = True
+    ) -> bool:
+        """
+        Synthesize voice for a cosmic entity (quantum or solar) with tuned SSML prosody and DSP filters.
+        """
+        profile = COSMIC_VOICE_PROFILES.get(entity.lower(), COSMIC_VOICE_PROFILES["quantum"])
+        return self.synthesize_text(
+            text=text,
+            output_path=output_path,
+            voice=profile["voice"],
+            rate=profile["rate"],
+            pitch=profile["pitch"],
+            volume=profile["volume"],
+            apply_dsp=apply_dsp,
+            dsp_filter=profile["dsp_filter"]
+        )
+
 
 
 class OpenAITTSProvider(BaseTTSProvider):

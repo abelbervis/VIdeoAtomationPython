@@ -540,20 +540,23 @@ def render_orb_test_preview(
         from audio.sfx import synthesize_camera_servo_sfx, synthesize_space_ambient_pad
         from audio.music import MusicManager
 
-        tts_q = EdgeTTSProvider(default_voice="es-ES-AlvaroNeural")
-        tts_s = EdgeTTSProvider(default_voice="es-ES-ElviraNeural")
+        tts_edge = EdgeTTSProvider()
         
         # Test a brief call to see if edge neural is online, else fallback
         test_file = output_path.parent / "_test_probe.mp3"
-        if not tts_q.synthesize_text("Hola", test_file):
-            tts_q = GoogleTTSProvider(language="es")
-            tts_s = GoogleTTSProvider(language="es")
+        use_cosmic_edge = tts_edge.synthesize_text("Hola", test_file)
         if test_file.exists():
             test_file.unlink()
 
-        syn1 = tts_q.synthesize_text("¡Hola! Bienvenidos a este nuevo debate espacial.", part1_path)
-        syn2 = tts_q.synthesize_text("Hoy exploraremos los límites y misterios de la física cuántica.", part2_path)
-        syn3 = tts_s.synthesize_text("¡Excelente! Y yo aportaré los secretos de la física solar.", part3_path)
+        if use_cosmic_edge:
+            syn1 = tts_edge.synthesize_cosmic_entity("¡Hola! Bienvenidos a este nuevo debate espacial.", part1_path, entity="quantum")
+            syn2 = tts_edge.synthesize_cosmic_entity("Hoy exploraremos los límites y misterios de la física cuántica.", part2_path, entity="quantum")
+            syn3 = tts_edge.synthesize_cosmic_entity("¡Excelente! Y yo aportaré los secretos de la física solar.", part3_path, entity="solar")
+        else:
+            tts_fallback = GoogleTTSProvider(language="es")
+            syn1 = tts_fallback.synthesize_text("¡Hola! Bienvenidos a este nuevo debate espacial.", part1_path)
+            syn2 = tts_fallback.synthesize_text("Hoy exploraremos los límites y misterios de la física cuántica.", part2_path)
+            syn3 = tts_fallback.synthesize_text("¡Excelente! Y yo aportaré los secretos de la física solar.", part3_path)
 
         # Synthesize camera transition SFX
         synthesize_camera_servo_sfx(sfx_intro_path, duration=0.8, sfx_type="intro")
