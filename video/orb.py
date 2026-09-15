@@ -423,10 +423,13 @@ class GradientOrbManager:
         if speech_intervals:
             conds = [f"between(t,{start:.2f},{end:.2f})" for start, end in speech_intervals]
             speech_mask = f"min(1,{'+'.join(conds)})"
-            speech_cadence = f"(max(0,sin(2*PI*t/0.48))*{speech_mask})"
+            # Audio pulse: speech cadence modulation on top of active voice intervals
+            speech_cadence = f"((0.55 * max(0, sin(2*PI*t/0.45)) + 0.45) * {speech_mask})"
 
-            eq_expr = f"brightness='0.07*{speech_cadence}':contrast='1.0 + 0.14*{speech_mask}'"
-            hue_expr = f"h='18*{speech_cadence} + 8*sin(2*PI*t/2.4)':s='1.0 + 0.16*{speech_mask}'"
+            # Option 1: Speech-driven Ambient Light & Intensity Modulation
+            # Spells +0.14 brightness and +0.22 contrast during speech, returning to baseline on silence pause
+            eq_expr = f"brightness='0.14*{speech_cadence}':contrast='1.0 + 0.22*{speech_mask}'"
+            hue_expr = f"h='14*{speech_cadence} + 6*sin(2*PI*t/2.4)':s='1.0 + 0.28*{speech_mask}'"
 
             filters.append(f"[{input_idx}:v]scale={scale_expr}")
             filters.append(f"eq={eq_expr}")
@@ -450,7 +453,7 @@ def render_orb_test_preview(
     size: str = "medium",
     animation: str = "speaking",
     opacity: float = 0.95,
-    duration: float = 4.0,
+    duration: float = 6.5,
     output_path: Optional[Path] = None,
     width: int = 1080,
     height: int = 1920,
@@ -475,13 +478,41 @@ def render_orb_test_preview(
     resolved_audio: Optional[Path] = sample_audio
 
     if not resolved_audio:
-        temp_test_audio = output_path.parent / "_temp_test_voice.mp3"
-        speech_text = "NEXUS ORBE BIO REACTIVO. El universo se expande a velocidades astronómicas."
+        temp_test_audio = output_path.parent / "_temp_test_voice_paused.mp3"
+        part1_path = output_path.parent / "_temp_part1.mp3"
+        part2_path = output_path.parent / "_temp_part2.mp3"
+        
         from audio.tts import GoogleTTSProvider
         g_tts = GoogleTTSProvider(language="es")
-        synthesized = g_tts.synthesize_text(speech_text, temp_test_audio)
-        if synthesized and temp_test_audio.exists():
-            resolved_audio = temp_test_audio
+        syn1 = g_tts.synthesize_text("NEXUS Orbe Bio Reactivo en acción.", part1_path)
+        syn2 = g_tts.synthesize_text("El universo expande sus fronteras sin límite.", part2_path)
+        
+        if syn1 and syn2 and part1_path.exists() and part2_path.exists():
+            # Stitch part1 + 1.8s silence + part2 using FFmpeg
+            concat_cmd = [
+                "ffmpeg", "-y",
+                "-i", str(part1_path),
+                "-f", "lavfi", "-i", "anullsrc=r=24000:cl=mono:d=1.8",
+                "-i", str(part2_path),
+                "-filter_complex", "[0:a][1:a][2:a]concat=n=3:v=0:a=1[aout]",
+                "-map", "[aout]",
+                "-c:a", "libmp3lame",
+                str(temp_test_audio)
+            ]
+            try:
+                subprocess.run(concat_cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                if temp_test_audio.exists():
+                    resolved_audio = temp_test_audio
+            except Exception as e:
+                print(f"  ⚠️ Test audio concat notice: {e}")
+                resolved_audio = part1_path
+            
+            for p in [part1_path, part2_path]:
+                if p.exists():
+                    try:
+                        p.unlink()
+                    except Exception:
+                        pass
 
     mgr = GradientOrbManager(
         palette=palette,
