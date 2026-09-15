@@ -218,6 +218,30 @@ def generate_animated_orb_loop(
             spot2_rx = int(r_sphere * 0.44 + 5 * math.cos(2 * tau))
             spot2_ry = int(r_sphere * 0.40 + 4 * math.sin(2 * tau))
 
+            # 5. Bioluminescent Floating Particle Swarm (24 Particles in Seamless Loop)
+            particle_elements = []
+            num_particles = 26
+            for p in range(num_particles):
+                angle_base = (p * (2 * math.pi / num_particles)) + (p * 0.42)
+                orbit_speed = 1.0 if (p % 2 == 0) else -1.0
+                radius_base = r_sphere + 14 + ((p * 17) % 72)  # Floating around aura and ring
+                p_size = 1.2 + ((p * 9) % 3) * 0.8              # Sizes from 1.2px to 2.8px
+                
+                angle = angle_base + orbit_speed * tau
+                radial_drift = 9 * math.sin(2 * tau + p * 0.6)
+                r_curr = radius_base + radial_drift
+                
+                px = c + r_curr * math.cos(angle)
+                py = c + r_curr * math.sin(angle)
+                
+                p_opacity = 0.30 + 0.60 * (0.5 + 0.5 * math.sin(3 * tau + p * 1.2))
+                p_color = palette['spot1_core'] if (p % 3 == 0) else (palette['aura_bright'] if (p % 3 == 1) else palette['body_c0'])
+                
+                particle_elements.append(
+                    f'<circle cx="{px:.1f}" cy="{py:.1f}" r="{p_size:.1f}" fill="{p_color}" opacity="{p_opacity:.2f}" filter="url(#particleGlow_{i})" />'
+                )
+            particles_svg = "\n  ".join(particle_elements)
+
             svg = f"""<svg width="{canvas_size}" height="{canvas_size}" viewBox="0 0 {canvas_size} {canvas_size}" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <filter id="auraGlowDeep_{i}" x="-60%" y="-60%" width="220%" height="220%">
@@ -234,6 +258,9 @@ def generate_animated_orb_loop(
     </filter>
     <filter id="ringGlow_{i}" x="-40%" y="-40%" width="180%" height="180%">
       <feGaussianBlur stdDeviation="8" />
+    </filter>
+    <filter id="particleGlow_{i}" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="1.5" />
     </filter>
 
     <clipPath id="sphereClip_{i}">
@@ -308,6 +335,9 @@ def generate_animated_orb_loop(
 
   <!-- 5. Inner Concentric Rim Light -->
   <circle cx="{c}" cy="{c}" r="{r_sphere - 2}" fill="none" stroke="{palette['aura_inner']}" stroke-width="3" opacity="0.75" />
+
+  <!-- 6. Bioluminescent Floating Particle Swarm -->
+  {particles_svg}
 </svg>"""
             (frames_dir / f"frame_{i:03d}.svg").write_text(svg, encoding="utf-8")
 
