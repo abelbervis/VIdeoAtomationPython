@@ -151,9 +151,10 @@ def parse_args() -> argparse.Namespace:
         "--provider",
         type=str,
         default=MEDIA_PROVIDER,
-        choices=["auto", "nasa", "pexels", "pixabay", "pollinations"],
+        choices=["auto", "nasa", "pexels", "pixabay", "pollinations", "orb"],
         help="Media source provider:\n"
              "  'auto'         : Intelligent cascade (NASA -> Pexels -> Pixabay -> Pollinations FLUX)\n"
+             "  'orb'          : Synthetic dark cosmic background canvas for Gradient Orb videos (bypasses stock media search)\n"
              "  'pollinations' : Pollinations.ai FLUX (Photorealistic AI text-to-image generation for impossible visuals)\n"
              "  'nasa'         : Official NASA Image & Video Library (public domain space media)\n"
              "  'pexels'       : Pexels API (high-definition vertical 9:16 stock videos & photos)\n"

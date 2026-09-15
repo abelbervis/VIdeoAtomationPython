@@ -3,10 +3,11 @@ Media Collector & Provider Router.
 Orchestrates downloading and allocating visual media assets from NASA, Pexels, and Pixabay.
 """
 
+import subprocess
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-from config import ASSETS_DIR, ENABLE_AI_IMAGE_FALLBACK, ENABLE_BROLL_SPLIT, BROLL_SPLIT_THRESHOLD
+from config import ASSETS_DIR, TEMP_DIR, ENABLE_AI_IMAGE_FALLBACK, ENABLE_BROLL_SPLIT, BROLL_SPLIT_THRESHOLD
 from providers.nasa import NASAProvider
 from providers.pexels import PexelsProvider
 from providers.pixabay import PixabayProvider
@@ -344,3 +345,65 @@ def collect_scene_assets(
             })
 
     return scene_assets, assets_metadata
+
+
+def collect_dark_canvas_assets(
+    scenes: List[Dict[str, Any]],
+    scene_timings: List[Dict[str, Any]],
+    topic: str,
+    temp_dir: Path = TEMP_DIR,
+    width: int = 1080,
+    height: int = 1920
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    """
+    Generates synthetic dark space/cosmic background video clips for all scenes directly,
+    bypassing all remote media API queries (NASA, Pexels, Pixabay, Pollinations).
+    Used specifically when Orb video mode is active.
+    """
+    print(f"\n🔮 Modo Orbe activo: Generando fondos oscuros sintéticos para las escenas (búsqueda externa omitida)...")
+    scene_assets = []
+    assets_metadata = []
+
+    temp_dir = Path(temp_dir)
+    temp_dir.mkdir(parents=True, exist_ok=True)
+
+    for idx, (scene, timing) in enumerate(zip(scenes, scene_timings), start=1):
+        duration = timing.get("duration", 4.0)
+        bg_clip_path = temp_dir / f"orb_bg_scene_{idx:02d}.mp4"
+
+        cmd = [
+            "ffmpeg", "-y",
+            "-f", "lavfi",
+            "-i", f"color=c=0x07090E:s={width}x{height}:d={duration:.2f}",
+            "-c:v", "libx264",
+            "-pix_fmt", "yuv420p",
+            str(bg_clip_path)
+        ]
+        try:
+            subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        except Exception as e:
+            print(f"  ⚠️ Error creando fondo oscuro para escena {idx}: {e}")
+
+        scene_assets.append({
+            "scene_idx": idx,
+            "duration": duration,
+            "file": bg_clip_path if bg_clip_path.exists() else None,
+            "is_video": True,
+            "secondary_file": None,
+            "secondary_is_video": False,
+            "secondary_meta": None
+        })
+
+        meta = {
+            "scene_index": idx,
+            "provider": "dark_canvas",
+            "title": f"Fondo Oscuro Orbe - Escena {idx}",
+            "description": "Fondo oscuro sintético para el Orbe Gradiente.",
+            "attribution_text": "",
+            "media_type": "video",
+            "local_file": str(bg_clip_path.name) if bg_clip_path.exists() else ""
+        }
+        assets_metadata.append(meta)
+
+    return scene_assets, assets_metadata
+

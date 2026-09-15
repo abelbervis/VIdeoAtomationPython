@@ -35,7 +35,7 @@ from config import (
     VIDEO_FPS,
     resolve_video_format,
 )
-from providers.collector import collect_scene_assets, prepare_primary_discovery_asset
+from providers.collector import collect_scene_assets, prepare_primary_discovery_asset, collect_dark_canvas_assets
 from providers.nasa import NASAProvider
 from providers.pexels import PexelsProvider
 from providers.pixabay import PixabayProvider
@@ -150,6 +150,10 @@ def main():
     pollinations = PollinationsProvider(api_key=pollinations_key, default_model=pollinations_model)
 
     chosen_provider = args.provider.lower()
+    is_orb_mode = (chosen_provider == "orb" or getattr(args, "orb", False))
+    if is_orb_mode:
+        args.orb = True
+
     if chosen_provider == "pexels" and not pexels.is_configured():
         print("\n❌ Error: PEXELS_API_KEY is required when using '--provider pexels'.")
         print("👉 You can get a free API key in 30 seconds at: https://www.pexels.com/api/")
@@ -162,13 +166,16 @@ def main():
         sys.exit(1)
 
     # 4. Download Authentic NASA Primary Discovery Asset (Scene 1) if Running Trending Topic
-    primary_asset_file, primary_asset_meta, nasa_grounded_context = prepare_primary_discovery_asset(
-        nasa=nasa,
-        trending_metadata=trending_metadata,
-        topic=args.topic,
-        orientation=vid_orientation,
-        nasa_grounded_context=nasa_grounded_context
-    )
+    if is_orb_mode:
+        primary_asset_file, primary_asset_meta = None, None
+    else:
+        primary_asset_file, primary_asset_meta, nasa_grounded_context = prepare_primary_discovery_asset(
+            nasa=nasa,
+            trending_metadata=trending_metadata,
+            topic=args.topic,
+            orientation=vid_orientation,
+            nasa_grounded_context=nasa_grounded_context
+        )
 
     # 5. Generate Structured AI Script or Load Custom Pre-edited Script
     if getattr(args, "custom_script", None):
@@ -219,22 +226,31 @@ def main():
     tts_mgr = TTSManager(provider_type=TTS_PROVIDER, voice=args.voice, language=args.language)
     narration_audio, scene_timings, total_duration = tts_mgr.synthesize_script(script)
 
-    # 7. Collect Scene Visual Media (NASA, Pexels, or Pixabay)
-    scene_assets, assets_metadata = collect_scene_assets(
-        scenes=scenes,
-        scene_timings=scene_timings,
-        topic=args.topic,
-        chosen_provider=chosen_provider,
-        nasa=nasa,
-        pexels=pexels,
-        orientation=vid_orientation,
-        primary_asset_file=primary_asset_file,
-        primary_asset_meta=primary_asset_meta,
-        pixabay=pixabay,
-        pollinations=pollinations,
-        enable_ai_fallback=getattr(args, "ai_fallback", True),
-        enable_broll_split=getattr(args, "broll_split", True)
-    )
+    # 7. Collect Scene Visual Media (Dark canvas if Orb mode, otherwise stock media search)
+    if is_orb_mode:
+        scene_assets, assets_metadata = collect_dark_canvas_assets(
+            scenes=scenes,
+            scene_timings=scene_timings,
+            topic=args.topic,
+            width=vid_width,
+            height=vid_height
+        )
+    else:
+        scene_assets, assets_metadata = collect_scene_assets(
+            scenes=scenes,
+            scene_timings=scene_timings,
+            topic=args.topic,
+            chosen_provider=chosen_provider,
+            nasa=nasa,
+            pexels=pexels,
+            orientation=vid_orientation,
+            primary_asset_file=primary_asset_file,
+            primary_asset_meta=primary_asset_meta,
+            pixabay=pixabay,
+            pollinations=pollinations,
+            enable_ai_fallback=getattr(args, "ai_fallback", True),
+            enable_broll_split=getattr(args, "broll_split", True)
+        )
 
     # 7.5. Audit & Testing Step (Visual Storyboard & Interactive Refinement)
     video_folder, output_filename = resolve_video_output_folder(args.output, args.topic)
