@@ -122,47 +122,63 @@ class DebateScriptGenerator:
         placeholders = ["your_key", "demo_key", "placeholder", "xxx"]
         return not any(p in key.lower() for p in placeholders)
 
-    def generate(self, topic: str, language: str = "es") -> Dict[str, Any]:
-        """Generate a complete debate script for the given topic."""
+    def generate(self, topic: str, language: str = "es", allow_fallback: bool = False) -> Optional[Dict[str, Any]]:
+        """Generate a complete debate script for the given topic.
+        
+        Args:
+            topic: The debate theme or title.
+            language: Target language ('es', 'en').
+            allow_fallback: If False, returns None when AI providers fail, preventing unwanted renders.
+        """
         clean_topic = topic.strip().strip("'\"")
         print(f"\n🤖 [Debate Express AI] Generando guion dialéctico para: '{clean_topic}'...")
+        print(f"   • Proveedor prioritario: {self.provider.upper()}")
 
-        # 1. Try Gemini
-        if self._is_valid_key(self.gemini_key):
-            try:
-                print("  ⚡ Solicitando guion de debate a Google Gemini...")
-                script = self._call_gemini(clean_topic, language)
-                if script and self._validate_debate_script(script):
-                    print(f"  ✨ Guion de debate generado con éxito por Gemini!")
-                    return script
-            except Exception as e:
-                print(f"  ⚠️ Gemini debate generation error: {e}")
+        # Build prioritized provider list based on self.provider (default: groq)
+        if self.provider == "gemini":
+            providers = ["gemini", "groq", "openai"]
+        elif self.provider == "openai":
+            providers = ["openai", "groq", "gemini"]
+        else: # "groq" or "auto"
+            providers = ["groq", "gemini", "openai"]
 
-        # 2. Try Groq
-        if self._is_valid_key(self.groq_key):
-            try:
-                print("  ⚡ Solicitando guion de debate a Groq LPU...")
-                script = self._call_groq(clean_topic, language)
-                if script and self._validate_debate_script(script):
-                    print(f"  ✨ Guion de debate generado con éxito por Groq!")
-                    return script
-            except Exception as e:
-                print(f"  ⚠️ Groq debate generation error: {e}")
+        for prov in providers:
+            if prov == "groq" and self._is_valid_key(self.groq_key):
+                try:
+                    print("  ⚡ Solicitando guion de debate a Groq LPU (llama-3.3-70b-versatile)...")
+                    script = self._call_groq(clean_topic, language)
+                    if script and self._validate_debate_script(script):
+                        print(f"  ✨ Guion de debate generado con éxito por Groq!")
+                        return script
+                except Exception as e:
+                    print(f"  ⚠️ Groq debate generation error: {e}")
+            elif prov == "gemini" and self._is_valid_key(self.gemini_key):
+                try:
+                    print("  ⚡ Solicitando guion de debate a Google Gemini...")
+                    script = self._call_gemini(clean_topic, language)
+                    if script and self._validate_debate_script(script):
+                        print(f"  ✨ Guion de debate generado con éxito por Gemini!")
+                        return script
+                except Exception as e:
+                    print(f"  ⚠️ Gemini debate generation error: {e}")
+            elif prov == "openai" and self._is_valid_key(self.openai_key):
+                try:
+                    print("  ⚡ Solicitando guion de debate a OpenAI (gpt-4o-mini)...")
+                    script = self._call_openai(clean_topic, language)
+                    if script and self._validate_debate_script(script):
+                        print(f"  ✨ Guion de debate generado con éxito por OpenAI!")
+                        return script
+                except Exception as e:
+                    print(f"  ⚠️ OpenAI debate generation error: {e}")
 
-        # 3. Try OpenAI
-        if self._is_valid_key(self.openai_key):
-            try:
-                print("  ⚡ Solicitando guion de debate a OpenAI...")
-                script = self._call_openai(clean_topic, language)
-                if script and self._validate_debate_script(script):
-                    print(f"  ✨ Guion de debate generado con éxito por OpenAI!")
-                    return script
-            except Exception as e:
-                print(f"  ⚠️ OpenAI debate generation error: {e}")
+        # If fallback is explicitly allowed
+        if allow_fallback:
+            print("  🛰️ Generando guion dialéctico con el motor científico especializado (Fallback)...")
+            return self._generate_scientific_fallback(clean_topic, language)
 
-        # 4. Built-in Dynamic Scientific Debate Generator Fallback
-        print("  🛰️ Generando guion dialéctico con el motor científico especializado...")
-        return self._generate_scientific_fallback(clean_topic, language)
+        print("\n❌ [Debate Express AI] No se pudo generar el guion con ninguno de los proveedores de IA configurados.")
+        print("   💡 Verifica que tu GROQ_API_KEY o GEMINI_API_KEY esté configurada en el archivo .env o pásala vía CLI (--groq-key / --gemini-key).")
+        return None
 
     def _call_gemini(self, topic: str, language: str) -> Optional[Dict[str, Any]]:
         full_prompt = (
@@ -175,7 +191,7 @@ class DebateScriptGenerator:
         headers = {
             "Content-Type": "application/json",
             "Accept": "application/json",
-            "User-Agent": "NASA-Shorts-Generator/1.0",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             "Connection": "close"
         }
         for model in models_to_try:
@@ -195,16 +211,17 @@ class DebateScriptGenerator:
                     headers=headers,
                     method="POST"
                 )
-                with urllib.request.urlopen(req, timeout=15) as response:
+                with urllib.request.urlopen(req, timeout=40) as response:
                     res = json.loads(response.read().decode("utf-8"))
                     text = res["candidates"][0]["content"]["parts"][0]["text"]
                     return self._parse_json(text)
             except urllib.error.HTTPError as e:
                 if e.code == 404:
                     continue
+                print(f"  ⚠️ Gemini HTTP Error {e.code}: {e.reason}")
                 return None
             except Exception as e:
-                print(f"  ⚠️ Gemini debate API ({model}) failed ({e})")
+                print(f"  ⚠️ Gemini debate API ({model}) failed: {e}")
                 continue
         return None
 
@@ -219,13 +236,17 @@ class DebateScriptGenerator:
             "response_format": {"type": "json_object"},
             "temperature": 0.7
         }
+        headers = {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Authorization": f"Bearer {self.groq_key}",
+            "Connection": "close"
+        }
         req = urllib.request.Request(
             url,
             data=json.dumps(payload).encode("utf-8"),
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {self.groq_key}"
-            },
+            headers=headers,
             method="POST"
         )
         with urllib.request.urlopen(req, timeout=30) as response:
@@ -244,13 +265,17 @@ class DebateScriptGenerator:
             "response_format": {"type": "json_object"},
             "temperature": 0.7
         }
+        headers = {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Authorization": f"Bearer {self.openai_key}",
+            "Connection": "close"
+        }
         req = urllib.request.Request(
             url,
             data=json.dumps(payload).encode("utf-8"),
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {self.openai_key}"
-            },
+            headers=headers,
             method="POST"
         )
         with urllib.request.urlopen(req, timeout=30) as response:

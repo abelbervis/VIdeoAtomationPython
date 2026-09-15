@@ -65,12 +65,20 @@ def main():
         fmt_cfg = resolve_video_format(args.format)
         target_topic = getattr(args, "debate_topic", None) or args.topic or "Física Cuántica vs Astrofísica Solar"
         out_path = Path(args.output) if args.output else None
-        render_cohost_debate_video(
+        llm_prov = getattr(args, "llm", "groq")
+        res_video = render_cohost_debate_video(
             topic=target_topic,
             output_path=out_path,
             width=fmt_cfg["width"],
             height=fmt_cfg["height"],
+            llm_provider=llm_prov,
+            gemini_key=getattr(args, "gemini_key", None),
+            groq_key=getattr(args, "groq_key", None),
+            openai_key=getattr(args, "openai_key", None),
         )
+        if res_video is None:
+            print("\n❌ [Debate Express] El proceso se detuvo sin renderizar video debido a la ausencia de guion de IA.")
+            sys.exit(1)
         return
 
     # If --test-orb mode is selected, render instant orb preview video and exit

@@ -194,15 +194,16 @@ def parse_args() -> argparse.Namespace:
         help="Custom Pixabay API key (or set PIXABAY_API_KEY in .env file)"
     )
     parser.add_argument(
-        "--llm",
+        "--llm", "--llm-provider",
+        dest="llm",
         type=str,
         default=LLM_PROVIDER,
-        choices=["auto", "groq", "gemini", "openai"],
+        choices=["groq", "gemini", "openai", "auto"],
         help="AI LLM provider to write the script:\n"
-             "  'auto'   : Tries configured keys in priority order (Groq -> Gemini -> OpenAI)\n"
-             "  'groq'   : Groq LPU (llama-3.3-70b-versatile, ultra-fast)\n"
+             "  'groq'   : Groq LPU (llama-3.3-70b-versatile, ultra-fast) [DEFAULT]\n"
              "  'gemini' : Google Gemini (gemini-2.5-flash)\n"
-             "  'openai' : OpenAI (gpt-4o-mini)"
+             "  'openai' : OpenAI (gpt-4o-mini)\n"
+             "  'auto'   : Tries configured keys in priority order (Groq -> Gemini -> OpenAI)"
     )
     parser.add_argument(
         "--groq-key",

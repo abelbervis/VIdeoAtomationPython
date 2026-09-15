@@ -463,8 +463,27 @@ def render_orb_test_preview(
     headline_hook: str = "⚡ PARADOJA CUÁNTICA VS FÍSICA SOLAR ⚡",
     topic: Optional[str] = None,
     debate_script: Optional[Dict[str, Any]] = None,
-) -> Path:
+    llm_provider: str = "groq",
+    gemini_key: Optional[str] = None,
+    groq_key: Optional[str] = None,
+    openai_key: Optional[str] = None,
+) -> Optional[Path]:
     """Renders a stunning co-host conversation video with two bio-reactive orbs and dynamic camera cuts."""
+    # 1. If topic is provided and debate_script is not provided, generate with AI
+    if not debate_script and topic:
+        from ai.debate_generator import DebateScriptGenerator
+        gen = DebateScriptGenerator(
+            preferred_provider=llm_provider,
+            gemini_key=gemini_key,
+            groq_key=groq_key,
+            openai_key=openai_key
+        )
+        debate_script = gen.generate(topic, language="es", allow_fallback=False)
+        if not debate_script:
+            print("\n❌ [Debate Express] Generación de guion fallida o cancelada.")
+            print("   🚫 Cancelando renderizado para evitar generar un video inconsistente.")
+            return None
+
     if output_path is None:
         out_dir = Path("output") / "orb_previews"
         out_dir.mkdir(parents=True, exist_ok=True)
@@ -476,12 +495,6 @@ def render_orb_test_preview(
     else:
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
-
-    # 1. If topic or debate_script is provided, generate or use the AI dialectic script
-    if not debate_script and topic:
-        from ai.debate_generator import DebateScriptGenerator
-        gen = DebateScriptGenerator()
-        debate_script = gen.generate(topic)
 
     # Extract dynamic script values if available
     q_part1 = "¡Hola! Bienvenidos a este nuevo debate espacial."
