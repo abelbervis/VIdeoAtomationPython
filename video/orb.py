@@ -798,34 +798,17 @@ def render_orb_test_preview(
 
     escaped_headline_hook = headline_hook.replace(":", "\\:").replace("'", "\\'")
 
-    # Clean subtitle text files for flawless UTF-8 accents and multiline linebreaks
-    sub1_path = output_path.parent / "_temp_sub1.txt"
-    sub2_path = output_path.parent / "_temp_sub2.txt"
-    sub3_path = output_path.parent / "_temp_sub3.txt"
-    sub4_path = output_path.parent / "_temp_sub4.txt"
-
-    def _wrap_sub_text(speaker: str, txt: str, max_chars_per_line: int = 42) -> str:
-        full = f"{speaker}: {txt}" if speaker else txt
-        words = full.split()
-        lines = []
-        curr = []
-        curr_len = 0
-        for w in words:
-            if curr_len + len(w) + 1 > max_chars_per_line and curr:
-                lines.append(" ".join(curr))
-                curr = [w]
-                curr_len = len(w)
-            else:
-                curr.append(w)
-                curr_len += len(w) + 1
-        if curr:
-            lines.append(" ".join(curr))
-        return "\n".join(lines[:3])
-
-    sub1_path.write_text(_wrap_sub_text("Quantum", q_part1), encoding="utf-8")
-    sub2_path.write_text(_wrap_sub_text("Quantum", q_part2), encoding="utf-8")
-    sub3_path.write_text(_wrap_sub_text("Solar", s_part3), encoding="utf-8")
-    sub4_path.write_text(_wrap_sub_text("", both_part4), encoding="utf-8")
+    # High-Performance Futuristic ASS Karaoke Subtitles (Entity Palettes, Pop-In Animation & Word Glow)
+    from subtitles.generator import generate_cosmic_debate_karaoke_ass
+    ass_sub_path = output_path.parent / "_temp_debate_karaoke.ass"
+    scenes_sub_data = [
+        {"speaker": "Quantum", "entity": "quantum", "text": q_part1, "start": 0.0, "end": t1},
+        {"speaker": "Quantum", "entity": "quantum", "text": q_part2, "start": t1, "end": t2},
+        {"speaker": "Solar", "entity": "solar", "text": s_part3, "start": t2, "end": t3},
+        {"speaker": "Ambos", "entity": "both", "text": both_part4, "start": t3, "end": total_duration},
+    ]
+    generate_cosmic_debate_karaoke_ass(scenes_sub_data, ass_sub_path, width=width, height=height)
+    escaped_ass_path = str(ass_sub_path.resolve()).replace("\\", "/").replace(":", "\\:").replace("'", "\\'")
 
     bg_input = f"color=c=0x08090f:s={width}x{height}:r=30:d={total_duration}"
 
@@ -883,11 +866,8 @@ def render_orb_test_preview(
         # 7. Outro Verdict Header Badge Overlay (Top Center t3 -> total_duration)
         f"[v_hook]drawtext=text='⚡ VEREDICTO CÓSMICO ⚡':{font_param}:fontcolor=white:fontsize=34:box=1:boxcolor=0x08101e@0.92:boxborderw=20:borderw=2:bordercolor=0xffb300:x=(w-text_w)/2:y=140:enable='between(t,{t3},{total_duration})'[v_outro_badge]",
 
-        # 8. Subtitles dialogue overlays (Clean UTF-8 text files, exact multi-line formatting, safe vertical margin y=h-310)
-        f"[v_outro_badge]drawtext=textfile='{sub1_path}':{font_param}:fontcolor=0x00f0ff:fontsize=30:line_spacing=8:box=1:boxcolor=0x060c18@0.90:boxborderw=18:borderw=1:bordercolor=0x00f0ff@0.60:x=(w-text_w)/2:y=h-310:enable='between(t,0,{t1})'[sub1]",
-        f"[sub1]drawtext=textfile='{sub2_path}':{font_param}:fontcolor=0x00f0ff:fontsize=30:line_spacing=8:box=1:boxcolor=0x060c18@0.90:boxborderw=18:borderw=1:bordercolor=0x00f0ff@0.60:x=(w-text_w)/2:y=h-310:enable='between(t,{t1},{t2})'[sub2]",
-        f"[sub2]drawtext=textfile='{sub3_path}':{font_param}:fontcolor=0xffb300:fontsize=30:line_spacing=8:box=1:boxcolor=0x181006@0.90:boxborderw=18:borderw=1:bordercolor=0xffb300@0.60:x=(w-text_w)/2:y=h-310:enable='between(t,{t2},{t3})'[sub3]",
-        f"[sub3]drawtext=textfile='{sub4_path}':{font_param}:fontcolor=0xffffff:fontsize=31:line_spacing=8:box=1:boxcolor=0x0a1424@0.92:boxborderw=20:borderw=2:bordercolor=0x00f0ff@0.85:x=(w-text_w)/2:y=h-310:enable='between(t,{t3},{total_duration})'[vout]"
+        # 8. High-Performance Futuristic ASS Karaoke Subtitles (Word-by-word glow active highlights & speaker palettes)
+        f"[v_outro_badge]ass='{escaped_ass_path}'[vout]"
     ]
     filter_str = ";".join(filter_complex)
 
@@ -927,7 +907,7 @@ def render_orb_test_preview(
         print(f"  ❌ FFmpeg render error: {e.stderr.decode('utf-8') if e.stderr else str(e)}")
         raise e
     finally:
-        for p in [temp_test_audio, sub1_path, sub2_path, sub3_path, sub4_path]:
+        for p in [temp_test_audio, ass_sub_path]:
             if p and p.exists():
                 try:
                     p.unlink()

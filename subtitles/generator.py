@@ -605,3 +605,139 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
                             f.write(f"Dialogue: 0,{format_timestamp_ass(cur_w_start)},{format_timestamp_ass(w_end)},ShortsDefault,,0,0,0,,{line_text}\n")
                             cur_w_start = w_end
 
+
+def generate_cosmic_debate_karaoke_ass(
+    scenes_data: List[Dict[str, Any]],
+    output_path: Path,
+    width: int = 1080,
+    height: int = 1920,
+    custom_font: Optional[str] = None,
+    max_words_per_cue: int = 3,
+) -> Path:
+    """
+    Generates a futuristic, high-retention karaoke .ass subtitle track designed
+    specifically for the AI Co-Host Cosmic Debate Express series.
+    
+    Features:
+      - Custom distinct cybernetic palettes for Quantum (Electric Cyan) and Solar (Amber Plasma)
+      - Word-by-word active highlight sync with energetic pop-in entrance tags
+      - Speaker entity badges and high-contrast glowing outlines for maximum short-form retention
+      - Mobile safe-zone positioning (MarginV=260) floating smoothly beneath the holographic HUD
+    """
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    
+    font_family = custom_font if custom_font else SUBTITLE_FONT
+    if "," in font_family:
+        font_family = font_family.split(",")[0].strip()
+
+    # Font sizing adapted to vertical mobile canvas
+    font_size = 44 if width < height else 36
+    badge_fs = 26 if width < height else 22
+    outline_val = 5.8
+    margin_v = 260 if width < height else 120
+    margin_side = 80 if width < height else 60
+
+    header = f"""[Script Info]
+ScriptType: v4.00+
+PlayResX: {width}
+PlayResY: {height}
+WrapStyle: 0
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: QuantumKaraoke,{font_family},{font_size},&H00F8FFFF,&H000000FF,&H00241400,&HA0000000,-1,0,0,0,100,100,1.2,0,1,{outline_val},2.6,2,{margin_side},{margin_side},{margin_v},1
+Style: SolarKaraoke,{font_family},{font_size},&H00F5FFFF,&H000000FF,&H00001026,&HA0000000,-1,0,0,0,100,100,1.2,0,1,{outline_val},2.6,2,{margin_side},{margin_side},{margin_v},1
+Style: DualKaraoke,{font_family},{font_size},&H00FFFFFF,&H000000FF,&H00201004,&HA0000000,-1,0,0,0,100,100,1.2,0,1,{outline_val + 0.4},2.8,2,{margin_side},{margin_side},{margin_v},1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+"""
+
+    emoji_cleaner = re.compile(r'[\U00010000-\U0010ffff\u200d\u2600-\u26ff\u2700-\u27bf\ufe0f]')
+
+    with open(output_path, "w", encoding="utf-8") as f:
+        f.write(header)
+
+        for sc in scenes_data:
+            speaker = str(sc.get("speaker", "")).strip().lower()
+            entity = str(sc.get("entity", "")).strip().lower()
+            raw_text = str(sc.get("text", "")).strip()
+            s_start = max(0.0, float(sc.get("start", 0.0)))
+            s_end = max(s_start + 0.5, float(sc.get("end", s_start + 3.0)))
+            s_dur = s_end - s_start
+
+            # Strip brackets and emojis for spoken dialogue
+            clean_text = emoji_cleaner.sub('', raw_text).strip()
+            clean_text = re.sub(r'\[.*?\]', '', clean_text).strip()
+            clean_text = clean_text.replace("...", ",").replace("..", ".")
+            if not clean_text:
+                continue
+
+            # Determine speaker style palette
+            if "solar" in speaker or "solar" in entity:
+                style_name = "SolarKaraoke"
+                hl_color = "&H0000C4FF&"  # Vibrant Solar Amber/Gold (ASS BGR)
+                badge_str = rf"{{\c&H0000C4FF&\b1\fs{badge_fs}}}[ SOLAR ]\N{{\r{style_name}}}"
+            elif "ambos" in speaker or "both" in entity or "dual" in speaker:
+                style_name = "DualKaraoke"
+                hl_color = "&H0000E5FF&"  # Cosmic Resonance Gold-Cyan
+                badge_str = rf"{{\c&H0000E5FF&\b1\fs{badge_fs}}}[ VEREDICTO CÓSMICO ]\N{{\r{style_name}}}"
+            else:
+                style_name = "QuantumKaraoke"
+                hl_color = "&H00FFFF00&"  # Pure Electric Neon Cyan (ASS BGR)
+                badge_str = rf"{{\c&H00FFFF00&\b1\fs{badge_fs}}}[ QUANTUM ]\N{{\r{style_name}}}"
+
+            words = clean_text.split()
+            if not words:
+                continue
+
+            # Group into punchy 2-3 word chunks
+            total_words = len(words)
+            chunk_size = max(1, min(max_words_per_cue, math.ceil(total_words / max(1, s_dur / 1.0))))
+            word_groups = [words[i:i + chunk_size] for i in range(0, total_words, chunk_size)]
+            
+            # Duration per chunk weighted by total characters in chunk
+            group_weights = [max(2, sum(len(w) for w in grp)) for grp in word_groups]
+            tot_grp_weight = sum(group_weights)
+            
+            cur_grp_start = s_start
+            for g_idx, grp in enumerate(word_groups):
+                grp_dur = (group_weights[g_idx] / tot_grp_weight) * s_dur
+                grp_end = min(s_end, cur_grp_start + grp_dur)
+                
+                # Active word timings inside the chunk
+                w_weights = [max(2, len(w)) for w in grp]
+                tot_w_weight = sum(w_weights)
+                cur_w_start = cur_grp_start
+
+                for w_idx, w in enumerate(grp):
+                    w_slice = (w_weights[w_idx] / tot_w_weight) * grp_dur
+                    w_end = min(grp_end, cur_w_start + w_slice)
+                    if w_idx == len(grp) - 1:
+                        w_end = grp_end
+
+                    # Elastic pop-in entrance on the first word of each cue
+                    pop_tag = r"{\fscx88\fscy88\t(0,70,\fscx114\fscy114)\t(70,140,\fscx100\fscy100)}" if w_idx == 0 else ""
+
+                    line_parts = []
+                    for j, other_w in enumerate(grp):
+                        upper_w = other_w.upper()
+                        if j == w_idx:
+                            # Highlight active word with bright futuristic aura & scale accent
+                            line_parts.append(rf"{{\c{hl_color}\b1\fscx110\fscy110}}{upper_w}{{\r{style_name}}}")
+                        else:
+                            line_parts.append(upper_w)
+
+                    full_line = f"{badge_str}{pop_tag}{' '.join(line_parts)}"
+                    f.write(
+                        f"Dialogue: 0,{format_timestamp_ass(cur_w_start)},{format_timestamp_ass(w_end)},{style_name},,0,0,0,,{full_line}\n"
+                    )
+                    cur_w_start = w_end
+
+                cur_grp_start = grp_end
+
+    return output_path
+
+
