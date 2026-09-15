@@ -481,9 +481,12 @@ def render_orb_test_preview(
     orb_solar = get_or_create_orb_asset(palette="solar", force_refresh=True)
 
     # Generate Holographic Floating Reference Cards (Modern Apple/Vercel Frosted Glass)
-    from video.hologram import generate_hologram_card_svg
+    from video.hologram import generate_hologram_card_svg, generate_presenter_badge_svg
     holo_q_path = output_path.parent / "_holo_q.svg"
     holo_s_path = output_path.parent / "_holo_s.svg"
+    badge_q_path = output_path.parent / "_badge_q.svg"
+    badge_s_path = output_path.parent / "_badge_s.svg"
+
     generate_hologram_card_svg(
         title="FÍSICA CUÁNTICA",
         subtitle="Estado: Superposición |ψ⟩ = α|0⟩ + β|1⟩",
@@ -502,6 +505,23 @@ def render_orb_test_preview(
         height=240,
         output_path=holo_s_path
     )
+    generate_presenter_badge_svg(
+        name="QUANTUM",
+        role="IA Física Cuántica",
+        color_theme="cyan",
+        width=380,
+        height=110,
+        output_path=badge_q_path
+    )
+    generate_presenter_badge_svg(
+        name="SOLAR",
+        role="IA Astrofísica Solar",
+        color_theme="amber",
+        width=380,
+        height=110,
+        output_path=badge_s_path
+    )
+
 
     temp_test_audio: Optional[Path] = output_path.parent / "_temp_cohost_debate.mp3"
     resolved_audio: Optional[Path] = sample_audio
@@ -642,9 +662,11 @@ def render_orb_test_preview(
     bg_input = f"color=c=0x08090f:s={width}x{height}:r=30:d=12.0"
 
     filter_complex = [
-        # 0. Hologram Reference Card Pre-scaling (Modern Floating Card Proportions)
+        # 0. Hologram Reference Card & Presenter Badge Pre-scaling
         "[3:v]scale=540:-2,format=yuva420p[holo_q]",
         "[4:v]scale=540:-2,format=yuva420p[holo_s]",
+        "[5:v]scale=340:-2,format=yuva420p[badge_q]",
+        "[6:v]scale=340:-2,format=yuva420p[badge_s]",
 
         # 1. Split streams to apply physical static transparency to separate active/resting layers
         "[1:v]split=4[q_wa][q_wp][q_ca][q_glow]",
@@ -669,9 +691,11 @@ def render_orb_test_preview(
         f"[bg_glowed_1][bg_glow_s]overlay=eval=frame:enable='between(t,6.2,12.0)'[bg_ambient]",
         
         # 5. Sequentially overlay the foreground orbs with power ignition snap on frame 0 and matching drifts
-        # Toma 1 (0-3.2s): Wide Shot. Power ignition snap, Quantum active takes stage (Z-forward). Solar passive leans left towards Quantum
+        # Toma 1 (0-3.2s): Wide Shot. Power ignition snap + Presenter Badges Floating below each orb (0.4s-3.0s)
         f"[bg_ambient][orb_q_wide_active]overlay=eval=frame:x='W*0.25-w/2 + {drift_q_active_x} + {drift_intro_x}':y='H*0.42-h/2 + {drift_q_active_y} + {drift_intro_y}':enable='between(t,0,3.2)'[v1]",
-        f"[v1][orb_s_wide_passive]overlay=eval=frame:x='W*0.75-w/2 - 28 + {drift_s_resting_x} + {drift_intro_x}':y='H*0.43-h/2 + {drift_s_resting_y} + {drift_intro_y}':enable='between(t,0,3.2)'[v2]",
+        f"[v1][orb_s_wide_passive]overlay=eval=frame:x='W*0.75-w/2 - 28 + {drift_s_resting_x} + {drift_intro_x}':y='H*0.43-h/2 + {drift_s_resting_y} + {drift_intro_y}':enable='between(t,0,3.2)'[v1_orbs]",
+        f"[v1_orbs][badge_q]overlay=eval=frame:x='W*0.25-w/2 + 5.0*sin(2*PI*(t-0.4)/2.2)':y='H*0.57-h/2 + 4.0*cos(2*PI*(t-0.4)/2.2)':enable='between(t,0.4,3.0)'[v1_bdg_q]",
+        f"[v1_bdg_q][badge_s]overlay=eval=frame:x='W*0.75-w/2 - 28 + 5.0*cos(2*PI*(t-0.4)/2.4)':y='H*0.57-h/2 + 4.0*sin(2*PI*(t-0.4)/2.4)':enable='between(t,0.4,3.0)'[v2]",
         
         # Toma 2 (3.2s-6.2s): Close Up Quantum active + Floating Sci-Fi Hologram Card 1
         f"[v2][orb_q_close_active]overlay=eval=frame:x='W/2-w/2 + {drift_q_active_x} + 25.0*exp(-6.5*(t-3.2))*cos(16.0*(t-3.2))':y='H*0.40-h/2 + {drift_q_active_y} + 30.0*exp(-6.5*(t-3.2))*sin(16.0*(t-3.2))':enable='between(t,3.2,6.2)'[v3]",
@@ -699,10 +723,10 @@ def render_orb_test_preview(
     audio_input_args = []
     if resolved_audio and resolved_audio.exists():
         audio_input_args = ["-i", str(resolved_audio)]
-        audio_map = ["-map", "5:a"]
+        audio_map = ["-map", "7:a"]
     else:
         audio_input_args = ["-f", "lavfi", "-i", "anullsrc=r=44100:cl=stereo"]
-        audio_map = ["-map", "5:a"]
+        audio_map = ["-map", "7:a"]
 
     cmd = [
         "ffmpeg", "-y",
@@ -711,6 +735,8 @@ def render_orb_test_preview(
         "-stream_loop", "-1", "-i", str(orb_solar),
         "-stream_loop", "-1", "-i", str(holo_q_path),
         "-stream_loop", "-1", "-i", str(holo_s_path),
+        "-stream_loop", "-1", "-i", str(badge_q_path),
+        "-stream_loop", "-1", "-i", str(badge_s_path),
         *audio_input_args,
         "-filter_complex", filter_str,
         "-map", "[vout]",
@@ -723,6 +749,7 @@ def render_orb_test_preview(
         "-movflags", "+faststart",
         str(output_path)
     ]
+
 
 
     try:
