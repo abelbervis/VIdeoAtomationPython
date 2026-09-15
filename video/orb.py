@@ -188,8 +188,8 @@ def generate_animated_orb_loop(
 
     c = canvas_size // 2
     r_sphere_base = int(canvas_size * 0.27)
-    r_aura_outer_base = int(canvas_size * 0.54)
-    r_aura_inner_base = int(canvas_size * 0.42)
+    r_aura_outer_base = int(canvas_size * 0.48)
+    r_aura_inner_base = int(canvas_size * 0.38)
 
     try:
         for i in range(loop_frames):
@@ -206,7 +206,7 @@ def generate_animated_orb_loop(
             # 3. Rich atmospheric volumetric aura swells dynamically (+/- 18px)
             r_aura_outer = int(r_aura_outer_base + 18 * math.sin(tau))
             r_aura_inner = int(r_aura_inner_base + 14 * math.sin(tau))
-            r_ambient_spill = int((canvas_size * 0.52) + 22 * math.sin(tau))
+            r_ambient_spill = int((canvas_size * 0.46) + 22 * math.sin(tau))
 
             # 4. Core light spot breathing (Primary Top-Left Spot)
             spot1_x = int(c - r_sphere * 0.32 + 8 * math.sin(tau))
@@ -223,14 +223,14 @@ def generate_animated_orb_loop(
             svg = f"""<svg width="{canvas_size}" height="{canvas_size}" viewBox="0 0 {canvas_size} {canvas_size}" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <!-- Enhanced Ultra-Wide Environmental Ambient Illumination Filter -->
-    <filter id="ambientSpillBlur_{i}" x="-110%" y="-110%" width="320%" height="320%">
-      <feGaussianBlur stdDeviation="88" />
+    <filter id="ambientSpillBlur_{i}" x="-90%" y="-90%" width="280%" height="280%">
+      <feGaussianBlur stdDeviation="70" />
     </filter>
-    <filter id="auraGlowDeep_{i}" x="-80%" y="-80%" width="260%" height="260%">
-      <feGaussianBlur stdDeviation="48" />
+    <filter id="auraGlowDeep_{i}" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="34" />
     </filter>
-    <filter id="auraGlowMid_{i}" x="-60%" y="-60%" width="220%" height="220%">
-      <feGaussianBlur stdDeviation="24" />
+    <filter id="auraGlowMid_{i}" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="20" />
     </filter>
     <filter id="coreBlur_{i}" x="-30%" y="-30%" width="160%" height="160%">
       <feGaussianBlur stdDeviation="11" />
@@ -248,25 +248,25 @@ def generate_animated_orb_loop(
 
     <!-- Environmental Ambient Light Spill (High-Intensity Radial Wash) -->
     <radialGradient id="ambientSpill_{i}" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="{palette['spot1_glow']}" stop-opacity="0.98" />
-      <stop offset="35%" stop-color="{palette['aura_inner']}" stop-opacity="0.85" />
-      <stop offset="65%" stop-color="{palette['aura_mid']}" stop-opacity="0.65" />
-      <stop offset="88%" stop-color="{palette['aura_outer']}" stop-opacity="0.35" />
+      <stop offset="0%" stop-color="{palette['spot1_glow']}" stop-opacity="0.95" />
+      <stop offset="25%" stop-color="{palette['aura_inner']}" stop-opacity="0.75" />
+      <stop offset="55%" stop-color="{palette['aura_outer']}" stop-opacity="0.45" />
+      <stop offset="82%" stop-color="{palette['body_c3']}" stop-opacity="0.20" />
       <stop offset="100%" stop-color="#000000" stop-opacity="0.0" />
     </radialGradient>
 
     <!-- Expansive Multi-Stop Atmospheric Neon Volumetric Aura -->
     <radialGradient id="outerAuraDeep_{i}" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="{palette['aura_inner']}" stop-opacity="0.98" />
-      <stop offset="42%" stop-color="{palette['aura_mid']}" stop-opacity="0.85" />
-      <stop offset="76%" stop-color="{palette['aura_outer']}" stop-opacity="0.55" />
-      <stop offset="92%" stop-color="{palette['body_c3']}" stop-opacity="0.25" />
+      <stop offset="0%" stop-color="{palette['aura_inner']}" stop-opacity="0.95" />
+      <stop offset="35%" stop-color="{palette['aura_mid']}" stop-opacity="0.75" />
+      <stop offset="68%" stop-color="{palette['aura_outer']}" stop-opacity="0.38" />
+      <stop offset="88%" stop-color="{palette['body_c3']}" stop-opacity="0.15" />
       <stop offset="100%" stop-color="#000000" stop-opacity="0.0" />
     </radialGradient>
 
     <radialGradient id="innerAuraBright_{i}" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="{palette['aura_bright']}" stop-opacity="0.95" />
-      <stop offset="55%" stop-color="{palette['aura_inner']}" stop-opacity="0.75" />
+      <stop offset="0%" stop-color="{palette['aura_bright']}" stop-opacity="0.90" />
+      <stop offset="45%" stop-color="{palette['aura_inner']}" stop-opacity="0.60" />
       <stop offset="100%" stop-color="#000000" stop-opacity="0.0" />
     </radialGradient>
 
