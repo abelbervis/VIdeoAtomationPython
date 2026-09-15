@@ -480,7 +480,7 @@ def render_orb_test_preview(
     orb_quantum = get_or_create_orb_asset(palette="quantum", force_refresh=True)
     orb_solar = get_or_create_orb_asset(palette="solar", force_refresh=True)
 
-    # Generate Holographic Floating Reference Cards
+    # Generate Holographic Floating Reference Cards (Modern Apple/Vercel Frosted Glass)
     from video.hologram import generate_hologram_card_svg
     holo_q_path = output_path.parent / "_holo_q.svg"
     holo_s_path = output_path.parent / "_holo_s.svg"
@@ -489,17 +489,17 @@ def render_orb_test_preview(
         subtitle="Estado: Superposición |ψ⟩ = α|0⟩ + β|1⟩",
         category="CONCEPTO",
         color_theme="cyan",
-        width=540,
-        height=320,
+        width=620,
+        height=240,
         output_path=holo_q_path
     )
     generate_hologram_card_svg(
         title="FÍSICA SOLAR",
-        subtitle="Núcleo: 15,000,000 K | Plasma Cromatico",
+        subtitle="Núcleo: 15,000,000 K | Plasma Cromático",
         category="DATO REAL",
         color_theme="amber",
-        width=540,
-        height=320,
+        width=620,
+        height=240,
         output_path=holo_s_path
     )
 
@@ -642,9 +642,9 @@ def render_orb_test_preview(
     bg_input = f"color=c=0x08090f:s={width}x{height}:r=30:d=12.0"
 
     filter_complex = [
-        # 0. Hologram Reference Card Pre-scaling (Modern Apple/Vercel Floating Card)
-        "[3:v]scale=500:160,format=yuva420p[holo_q]",
-        "[4:v]scale=500:160,format=yuva420p[holo_s]",
+        # 0. Hologram Reference Card Pre-scaling (Modern Apple/Vercel Floating Glass Card)
+        "[3:v]scale=520:-2,format=yuva420p[holo_q]",
+        "[4:v]scale=520:-2,format=yuva420p[holo_s]",
 
         # 1. Split streams to apply physical static transparency to separate active/resting layers
         "[1:v]split=4[q_wa][q_wp][q_ca][q_glow]",
