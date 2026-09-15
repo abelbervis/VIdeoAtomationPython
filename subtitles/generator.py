@@ -635,7 +635,7 @@ def generate_cosmic_debate_karaoke_ass(
     font_size = 44 if width < height else 36
     badge_fs = 26 if width < height else 22
     outline_val = 5.8
-    margin_v = 260 if width < height else 120
+    margin_v = 380 if width < height else 160
     margin_side = 80 if width < height else 60
 
     header = f"""[Script Info]
@@ -718,17 +718,16 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
                     if w_idx == len(grp) - 1:
                         w_end = grp_end
 
-                    # Elastic pop-in entrance on the first word of each cue
-                    pop_tag = r"{\fscx88\fscy88\t(0,70,\fscx114\fscy114)\t(70,140,\fscx100\fscy100)}" if w_idx == 0 else ""
+                    # Smooth cinematic fade and gentle scale entrance on the first word of each cue
+                    pop_tag = r"{\fad(80,60)\fscx96\fscy96\t(0,100,\fscx100\fscy100)}" if w_idx == 0 else ""
 
                     line_parts = []
                     for j, other_w in enumerate(grp):
-                        upper_w = other_w.upper()
                         if j == w_idx:
-                            # Highlight active word with bright futuristic aura & scale accent
-                            line_parts.append(rf"{{\c{hl_color}\b1\fscx110\fscy110}}{upper_w}{{\r{style_name}}}")
+                            # Highlight active word with smooth aura & subtle scale accent
+                            line_parts.append(rf"{{\c{hl_color}\b1\fscx106\fscy106}}{other_w}{{\r{style_name}}}")
                         else:
-                            line_parts.append(upper_w)
+                            line_parts.append(other_w)
 
                     full_line = f"{badge_str}{pop_tag}{' '.join(line_parts)}"
                     f.write(

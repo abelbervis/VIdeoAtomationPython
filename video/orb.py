@@ -502,15 +502,23 @@ def render_orb_test_preview(
 
     if output_path is None:
         out_dir = Path("output") / "orb_previews"
-        out_dir.mkdir(parents=True, exist_ok=True)
-        topic_slug = ""
+        topic_slug = "debate_express"
         if topic:
             clean_s = "".join(c if c.isalnum() else "_" for c in topic.lower())[:24].strip("_")
-            topic_slug = f"_{clean_s}"
-        output_path = out_dir / f"debate_express{topic_slug}.mp4"
+            topic_slug = f"debate_{clean_s}"
+        video_folder = out_dir / topic_slug
+        video_folder.mkdir(parents=True, exist_ok=True)
+        output_path = video_folder / "video.mp4"
     else:
         output_path = Path(output_path)
-        output_path.parent.mkdir(parents=True, exist_ok=True)
+        if output_path.suffix:
+            video_folder = output_path.parent / output_path.stem
+            video_folder.mkdir(parents=True, exist_ok=True)
+            output_path = video_folder / "video.mp4"
+        else:
+            output_path.mkdir(parents=True, exist_ok=True)
+            video_folder = output_path
+            output_path = video_folder / "video.mp4"
 
     # Extract dynamic script values if available
     q_part1 = "El tiempo no existe a escala cuántica: todo ocurre al mismo tiempo."
@@ -550,6 +558,9 @@ def render_orb_test_preview(
             s_part3 = scenes[2]["text"]
         if len(scenes) > 3 and scenes[3].get("text"):
             both_part4 = scenes[3]["text"]
+
+        script_json_path = output_path.parent / "script.json"
+        script_json_path.write_text(json.dumps(debate_script, ensure_ascii=False, indent=2), encoding="utf-8")
 
     print(f"\n🔮 [AI Co-Host Debate Express] Renderizando video con Doble Orbe y Multi-Cámara...")
     print(f"   • Orbe 1: QUANTUM (Azul Eléctrico / Cyan) | Orbe 2: SOLAR (Ámbar / Oro)")
