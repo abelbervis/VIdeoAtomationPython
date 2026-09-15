@@ -562,13 +562,13 @@ def render_orb_test_preview(
         "[1:v]split=4[q_wa][q_wp][q_ca][q_glow]",
         "[2:v]split=4[s_wa][s_wp][s_ca][s_glow]",
         
-        # 2. Render each state independently with pre-baked alpha levels to avoid FFmpeg evaluate parser issues
-        f"[q_wa]scale=340:340,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.95[orb_q_wide_active]",
-        f"[q_wp]scale=340:340,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.32[orb_q_wide_passive]",
+        # 2. Render each state independently with pre-baked alpha levels and size depth differences (Z-Axis)
+        f"[q_wa]scale=355:355,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.95[orb_q_wide_active]",
+        f"[q_wp]scale=310:310,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.32[orb_q_wide_passive]",
         f"[q_ca]scale=550:550,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.95[orb_q_close_active]",
         
-        f"[s_wp]scale=340:340,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.52[orb_s_wide_passive]",
-        f"[s_wa]scale=340:340,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.95[orb_s_wide_active]",
+        f"[s_wp]scale=310:310,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.52[orb_s_wide_passive]",
+        f"[s_wa]scale=355:355,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.95[orb_s_wide_active]",
         f"[s_ca]scale=550:550,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.95[orb_s_close_active]",
         
         # 3. Render dynamic ambient glow backplates using the ultra-fast pre-scaled blur technique
@@ -581,9 +581,9 @@ def render_orb_test_preview(
         f"[bg_glowed_1][bg_glow_s]overlay=eval=frame:enable='between(t,6.2,12.0)'[bg_ambient]",
         
         # 5. Sequentially overlay the foreground orbs using conditional enabling (enable parameter) and matching drifts
-        # Toma 1 (0-3.2s): Wide Shot. Quantum active (drift_active), Solar passive (drift_resting)
+        # Toma 1 (0-3.2s): Wide Shot. Quantum active takes stage (Z-forward). Solar passive leans left towards Quantum (Z-back + leaning offset)
         f"[bg_ambient][orb_q_wide_active]overlay=eval=frame:x='W*0.25-w/2 + {drift_q_active_x}':y='H*0.42-h/2 + {drift_q_active_y}':enable='between(t,0,3.2)'[v1]",
-        f"[v1][orb_s_wide_passive]overlay=eval=frame:x='W*0.75-w/2 + {drift_s_resting_x}':y='H*0.42-h/2 + {drift_s_resting_y}':enable='between(t,0,3.2)'[v2]",
+        f"[v1][orb_s_wide_passive]overlay=eval=frame:x='W*0.75-w/2 - 28 + {drift_s_resting_x}':y='H*0.43-h/2 + {drift_s_resting_y}':enable='between(t,0,3.2)'[v2]",
         
         # Toma 2 (3.2s-6.2s): Close Up Quantum active with organic spring camera damping transition
         f"[v2][orb_q_close_active]overlay=eval=frame:x='W/2-w/2 + {drift_q_active_x} + 25.0*exp(-6.5*(t-3.2))*cos(16.0*(t-3.2))':y='H*0.40-h/2 + {drift_q_active_y} + 30.0*exp(-6.5*(t-3.2))*sin(16.0*(t-3.2))':enable='between(t,3.2,6.2)'[v3]",
@@ -591,8 +591,8 @@ def render_orb_test_preview(
         # Toma 3 (6.2s-9.2s): Close Up Solar active with organic spring camera damping transition
         f"[v3][orb_s_close_active]overlay=eval=frame:x='W/2-w/2 + {drift_s_active_x} + 25.0*exp(-6.5*(t-6.2))*cos(16.0*(t-6.2))':y='H*0.40-h/2 + {drift_s_active_y} + 30.0*exp(-6.5*(t-6.2))*sin(16.0*(t-6.2))':enable='between(t,6.2,9.2)'[v4]",
         
-        # Toma 4 (9.2s-12.0s): Wide Shot with spring pan out camera damping transitions for both orbs
-        f"[v4][orb_q_wide_passive]overlay=eval=frame:x='W*0.25-w/2 + {drift_q_resting_x} + 15.0*exp(-6.5*(t-9.2))*cos(16.0*(t-9.2))':y='H*0.42-h/2 + {drift_q_resting_y} + 18.0*exp(-6.5*(t-9.2))*sin(16.0*(t-9.2))':enable='between(t,9.2,12.0)'[v5]",
+        # Toma 4 (9.2s-12.0s): Wide Shot. Solar active takes stage (Z-forward). Quantum passive leans right towards Solar (Z-back + leaning offset)
+        f"[v4][orb_q_wide_passive]overlay=eval=frame:x='W*0.25-w/2 + 28 + {drift_q_resting_x} + 15.0*exp(-6.5*(t-9.2))*cos(16.0*(t-9.2))':y='H*0.43-h/2 + {drift_q_resting_y} + 18.0*exp(-6.5*(t-9.2))*sin(16.0*(t-9.2))':enable='between(t,9.2,12.0)'[v5]",
         f"[v5][orb_s_wide_active]overlay=eval=frame:x='W*0.75-w/2 + {drift_s_active_x} + 15.0*exp(-6.5*(t-9.2))*cos(16.0*(t-9.2))':y='H*0.42-h/2 + {drift_s_active_y} + 18.0*exp(-6.5*(t-9.2))*sin(16.0*(t-9.2))':enable='between(t,9.2,12.0)'[v6]",
         
         # 6. Subtitles dialogue overlays (Bottom)
