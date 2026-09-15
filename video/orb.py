@@ -642,9 +642,9 @@ def render_orb_test_preview(
     bg_input = f"color=c=0x08090f:s={width}x{height}:r=30:d=12.0"
 
     filter_complex = [
-        # 0. Hologram Reference Card Pre-scaling (Modern Apple/Vercel Floating Glass Card)
-        "[3:v]scale=520:-2,format=yuva420p[holo_q]",
-        "[4:v]scale=520:-2,format=yuva420p[holo_s]",
+        # 0. Hologram Reference Card Pre-scaling (Modern Floating Card Proportions)
+        "[3:v]scale=540:-2,format=yuva420p[holo_q]",
+        "[4:v]scale=540:-2,format=yuva420p[holo_s]",
 
         # 1. Split streams to apply physical static transparency to separate active/resting layers
         "[1:v]split=4[q_wa][q_wp][q_ca][q_glow]",
@@ -675,11 +675,11 @@ def render_orb_test_preview(
         
         # Toma 2 (3.2s-6.2s): Close Up Quantum active + Floating Sci-Fi Hologram Card 1
         f"[v2][orb_q_close_active]overlay=eval=frame:x='W/2-w/2 + {drift_q_active_x} + 25.0*exp(-6.5*(t-3.2))*cos(16.0*(t-3.2))':y='H*0.40-h/2 + {drift_q_active_y} + 30.0*exp(-6.5*(t-3.2))*sin(16.0*(t-3.2))':enable='between(t,3.2,6.2)'[v3]",
-        f"[v3][holo_q]overlay=eval=frame:x='(W-w)/2':y='H*0.15-h/2 + 8.0*sin(2*PI*t/2.2)':enable='between(t,3.4,6.0)'[v3_holo]",
+        f"[v3][holo_q]overlay=eval=frame:x='(W-w)/2':y='H*0.14-h/2 + 6.0*sin(2*PI*(t-3.3)/2.4)':enable='between(t,3.3,6.0)'[v3_holo]",
         
         # Toma 3 (6.2s-9.2s): Close Up Solar active + Floating Sci-Fi Hologram Card 2
         f"[v3_holo][orb_s_close_active]overlay=eval=frame:x='W/2-w/2 + {drift_s_active_x} + 25.0*exp(-6.5*(t-6.2))*cos(16.0*(t-6.2))':y='H*0.40-h/2 + {drift_s_active_y} + 30.0*exp(-6.5*(t-6.2))*sin(16.0*(t-6.2))':enable='between(t,6.2,9.2)'[v4]",
-        f"[v4][holo_s]overlay=eval=frame:x='(W-w)/2':y='H*0.15-h/2 + 8.0*cos(2*PI*t/2.4)':enable='between(t,6.4,9.0)'[v4_holo]",
+        f"[v4][holo_s]overlay=eval=frame:x='(W-w)/2':y='H*0.14-h/2 + 6.0*cos(2*PI*(t-6.3)/2.6)':enable='between(t,6.3,9.0)'[v4_holo]",
         
         # Toma 4 (9.2s-12.0s): Wide Shot. Solar active takes stage (Z-forward). Quantum passive leans right towards Solar
         f"[v4_holo][orb_q_wide_passive]overlay=eval=frame:x='W*0.25-w/2 + 28 + {drift_q_resting_x} + 15.0*exp(-6.5*(t-9.2))*cos(16.0*(t-9.2))':y='H*0.43-h/2 + {drift_q_resting_y} + 18.0*exp(-6.5*(t-9.2))*sin(16.0*(t-9.2))':enable='between(t,9.2,12.0)'[v5]",
