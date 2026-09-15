@@ -558,7 +558,10 @@ class VideoRenderer:
 
             orb_asset_path = get_or_create_orb_asset(palette=palette, target_dir=ASSETS_DIR / "orbs")
 
-            cmd.extend(["-loop", "1", "-i", str(orb_asset_path)])
+            if orb_asset_path.suffix.lower() in (".mov", ".webm", ".mp4"):
+                cmd.extend(["-stream_loop", "-1", "-i", str(orb_asset_path)])
+            else:
+                cmd.extend(["-loop", "1", "-i", str(orb_asset_path)])
             orb_input_idx = curr_idx
             curr_idx += 1
 
