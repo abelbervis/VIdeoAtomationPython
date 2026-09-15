@@ -551,6 +551,20 @@ def parse_args() -> argparse.Namespace:
         help="Background style to preview the Orb against: 'bright' (simulates bright/daylight stock footage), 'cosmic' (deep space), 'nature' (green scenery), or 'dark' (default: 'bright')"
     )
 
+    # AI Co-Host Debate Express
+    parser.add_argument(
+        "--debate", "--cohost-debate", "--debate-express",
+        dest="debate",
+        action="store_true",
+        help="AI Co-Host Debate Express: Generates an automatic dialectic debate between Quantum (Cyan) and Solar (Amber) orbs with holographic HUDs, multi-camera switching, SFX stingers, and renders the complete video MP4."
+    )
+    parser.add_argument(
+        "--debate-topic",
+        type=str,
+        default=None,
+        help="Topic for the AI Co-Host Debate Express (e.g. '¿Es el universo una simulación?', 'IA vs Cerebro Humano'). Automatically triggers --debate mode."
+    )
+
     # Custom Script Option (Pre-edited scenes JSON)
     parser.add_argument(
         "--script", "--custom-script",

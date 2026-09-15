@@ -461,19 +461,72 @@ def render_orb_test_preview(
     bg_style: str = "cosmic",
     sample_audio: Optional[Path] = None,
     headline_hook: str = "⚡ PARADOJA CUÁNTICA VS FÍSICA SOLAR ⚡",
+    topic: Optional[str] = None,
+    debate_script: Optional[Dict[str, Any]] = None,
 ) -> Path:
     """Renders a stunning co-host conversation video with two bio-reactive orbs and dynamic camera cuts."""
     if output_path is None:
         out_dir = Path("output") / "orb_previews"
         out_dir.mkdir(parents=True, exist_ok=True)
-        output_path = out_dir / f"test_orb_{palette}_presenter.mp4"
+        topic_slug = ""
+        if topic:
+            clean_s = "".join(c if c.isalnum() else "_" for c in topic.lower())[:24].strip("_")
+            topic_slug = f"_{clean_s}"
+        output_path = out_dir / f"debate_express{topic_slug}.mp4"
     else:
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    print(f"\n🔮 [AI Co-Host Debate] Generando demo interactiva de Doble Orbe y Multi-Cámara...")
-    print(f"   • Orbe 1: Quantum (Azul Eléctrico) | Orbe 2: Solar (Ámbar Fuego)")
+    # 1. If topic or debate_script is provided, generate or use the AI dialectic script
+    if not debate_script and topic:
+        from ai.debate_generator import DebateScriptGenerator
+        gen = DebateScriptGenerator()
+        debate_script = gen.generate(topic)
+
+    # Extract dynamic script values if available
+    q_part1 = "¡Hola! Bienvenidos a este nuevo debate espacial."
+    q_part2 = "Hoy exploraremos los límites y misterios de la física cuántica."
+    s_part3 = "¡Excelente! Y yo aportaré los secretos de la física solar."
+    both_part4 = "[Ambos Orbes en Resonancia Cósmica]"
+
+    holo_q_title = "FÍSICA CUÁNTICA"
+    holo_q_sub = "Estado: Superposición |ψ⟩ = α|0⟩ + β|1⟩"
+    holo_q_cat = "CONCEPTO"
+
+    holo_s_title = "FÍSICA SOLAR"
+    holo_s_sub = "Núcleo: 15,000,000 K | Plasma Cromático"
+    holo_s_cat = "DATO REAL"
+
+    if debate_script:
+        if debate_script.get("headline_hook"):
+            headline_hook = debate_script["headline_hook"]
+        holograms = debate_script.get("holograms", {})
+        if "quantum" in holograms:
+            hq = holograms["quantum"]
+            holo_q_title = str(hq.get("title", holo_q_title)).upper()
+            holo_q_sub = str(hq.get("subtitle", holo_q_sub))
+            holo_q_cat = str(hq.get("category", holo_q_cat))
+        if "solar" in holograms:
+            hs = holograms["solar"]
+            holo_s_title = str(hs.get("title", holo_s_title)).upper()
+            holo_s_sub = str(hs.get("subtitle", holo_s_sub))
+            holo_s_cat = str(hs.get("category", holo_s_cat))
+
+        scenes = debate_script.get("scenes", [])
+        if len(scenes) > 0 and scenes[0].get("text"):
+            q_part1 = scenes[0]["text"]
+        if len(scenes) > 1 and scenes[1].get("text"):
+            q_part2 = scenes[1]["text"]
+        if len(scenes) > 2 and scenes[2].get("text"):
+            s_part3 = scenes[2]["text"]
+        if len(scenes) > 3 and scenes[3].get("text"):
+            both_part4 = scenes[3]["text"]
+
+    print(f"\n🔮 [AI Co-Host Debate Express] Renderizando video con Doble Orbe y Multi-Cámara...")
+    print(f"   • Orbe 1: QUANTUM (Azul Eléctrico / Cyan) | Orbe 2: SOLAR (Ámbar / Oro)")
     print(f"   • Hook: {headline_hook}")
+    print(f"   • HUD Holográfico Q: [{holo_q_cat}] {holo_q_title} -> {holo_q_sub}")
+    print(f"   • HUD Holográfico S: [{holo_s_cat}] {holo_s_title} -> {holo_s_sub}")
     print(f"   • Duración: 12.0s | Resolución: {width}x{height} | 4 Cortes de Cámara")
 
     # Generate both assets
@@ -488,18 +541,18 @@ def render_orb_test_preview(
     badge_s_path = output_path.parent / "_badge_s.svg"
 
     generate_hologram_card_svg(
-        title="FÍSICA CUÁNTICA",
-        subtitle="Estado: Superposición |ψ⟩ = α|0⟩ + β|1⟩",
-        category="CONCEPTO",
+        title=holo_q_title,
+        subtitle=holo_q_sub,
+        category=holo_q_cat,
         color_theme="cyan",
         width=620,
         height=240,
         output_path=holo_q_path
     )
     generate_hologram_card_svg(
-        title="FÍSICA SOLAR",
-        subtitle="Núcleo: 15,000,000 K | Plasma Cromático",
-        category="DATO REAL",
+        title=holo_s_title,
+        subtitle=holo_s_sub,
+        category=holo_s_cat,
         color_theme="amber",
         width=620,
         height=240,
@@ -549,14 +602,14 @@ def render_orb_test_preview(
             test_file.unlink()
 
         if use_cosmic_edge:
-            syn1 = tts_edge.synthesize_cosmic_entity("¡Hola! Bienvenidos a este nuevo debate espacial.", part1_path, entity="quantum")
-            syn2 = tts_edge.synthesize_cosmic_entity("Hoy exploraremos los límites y misterios de la física cuántica.", part2_path, entity="quantum")
-            syn3 = tts_edge.synthesize_cosmic_entity("¡Excelente! Y yo aportaré los secretos de la física solar.", part3_path, entity="solar")
+            syn1 = tts_edge.synthesize_cosmic_entity(q_part1, part1_path, entity="quantum")
+            syn2 = tts_edge.synthesize_cosmic_entity(q_part2, part2_path, entity="quantum")
+            syn3 = tts_edge.synthesize_cosmic_entity(s_part3, part3_path, entity="solar")
         else:
             tts_fallback = GoogleTTSProvider(language="es")
-            syn1 = tts_fallback.synthesize_text("¡Hola! Bienvenidos a este nuevo debate espacial.", part1_path)
-            syn2 = tts_fallback.synthesize_text("Hoy exploraremos los límites y misterios de la física cuántica.", part2_path)
-            syn3 = tts_fallback.synthesize_text("¡Excelente! Y yo aportaré los secretos de la física solar.", part3_path)
+            syn1 = tts_fallback.synthesize_text(q_part1, part1_path)
+            syn2 = tts_fallback.synthesize_text(q_part2, part2_path)
+            syn3 = tts_fallback.synthesize_text(s_part3, part3_path)
 
         # Synthesize camera transition SFX & entity stingers
         sfx_q_hum_path = output_path.parent / "_temp_sfx_q_hum.wav"
@@ -678,10 +731,29 @@ def render_orb_test_preview(
     sub2_path = output_path.parent / "_temp_sub2.txt"
     sub3_path = output_path.parent / "_temp_sub3.txt"
     sub4_path = output_path.parent / "_temp_sub4.txt"
-    sub1_path.write_text("Quantum: ¡Hola! Bienvenidos a este\nnuevo debate espacial.", encoding="utf-8")
-    sub2_path.write_text("Quantum: Hoy exploraremos los límites\ny misterios de la física cuántica.", encoding="utf-8")
-    sub3_path.write_text("Solar: ¡Excelente! Y yo aportaré\nlos secretos de la física solar.", encoding="utf-8")
-    sub4_path.write_text("[Ambos Orbes en Armonía y Resonancia]", encoding="utf-8")
+
+    def _wrap_sub_text(speaker: str, txt: str, max_chars_per_line: int = 36) -> str:
+        full = f"{speaker}: {txt}" if speaker else txt
+        words = full.split()
+        lines = []
+        curr = []
+        curr_len = 0
+        for w in words:
+            if curr_len + len(w) + 1 > max_chars_per_line and curr:
+                lines.append(" ".join(curr))
+                curr = [w]
+                curr_len = len(w)
+            else:
+                curr.append(w)
+                curr_len += len(w) + 1
+        if curr:
+            lines.append(" ".join(curr))
+        return "\n".join(lines[:2])
+
+    sub1_path.write_text(_wrap_sub_text("Quantum", q_part1), encoding="utf-8")
+    sub2_path.write_text(_wrap_sub_text("Quantum", q_part2), encoding="utf-8")
+    sub3_path.write_text(_wrap_sub_text("Solar", s_part3), encoding="utf-8")
+    sub4_path.write_text(_wrap_sub_text("", both_part4), encoding="utf-8")
 
     bg_input = f"color=c=0x08090f:s={width}x{height}:r=30:d=12.0"
 
@@ -792,3 +864,8 @@ def render_orb_test_preview(
     print(f"\n✨ ¡Vista previa del Orbe Bio-Reactivo generada con éxito!")
     print(f"🎬 Video listo: {output_path.resolve()}\n")
     return output_path
+
+
+# Alias for explicit AI debate generation calls
+render_cohost_debate_video = render_orb_test_preview
+

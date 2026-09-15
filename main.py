@@ -59,6 +59,20 @@ def main():
         print("Please install FFmpeg: https://ffmpeg.org/download.html")
         sys.exit(1)
 
+    # If --debate / --debate-topic mode is selected, generate AI debate and render MP4 video
+    if getattr(args, "debate", False) or getattr(args, "debate_topic", None):
+        from video.orb import render_cohost_debate_video
+        fmt_cfg = resolve_video_format(args.format)
+        target_topic = getattr(args, "debate_topic", None) or args.topic or "Física Cuántica vs Astrofísica Solar"
+        out_path = Path(args.output) if args.output else None
+        render_cohost_debate_video(
+            topic=target_topic,
+            output_path=out_path,
+            width=fmt_cfg["width"],
+            height=fmt_cfg["height"],
+        )
+        return
+
     # If --test-orb mode is selected, render instant orb preview video and exit
     if getattr(args, "test_orb", False):
         from video.orb import render_orb_test_preview

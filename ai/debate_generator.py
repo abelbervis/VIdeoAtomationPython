@@ -1,0 +1,430 @@
+"""
+AI Debate Script Generator (Debate Express).
+Generates high-tension, dialectic scripts between two conscious AI entities:
+  - QUANTUM: Blue/Electric Cyan Orb (Subatomic physics, simulation theory, quantum paradoxes)
+  - SOLAR: Amber/Gold Orb (Thermodynamic entropy, astrophysics, stellar reality)
+Supports Google Gemini, Groq, OpenAI, and a built-in scientific debate fallback engine.
+"""
+
+import json
+import re
+import urllib.request
+import urllib.error
+from pathlib import Path
+from typing import Dict, Any, Optional, Tuple
+
+from config import (
+    BASE_DIR,
+    GEMINI_API_KEY,
+    GROQ_API_BASE,
+    GROQ_API_KEY,
+    GROQ_MODEL,
+    LLM_API_BASE_URL,
+    LLM_PROVIDER,
+    OPENAI_API_KEY,
+    sanitize_env_value,
+)
+
+
+DEBATE_SYSTEM_PROMPT = """You are the AI Showrunner and Director for 'COSMIC DEBATE EXPRESS', a viral, high-retention vertical video series (YouTube Shorts / TikTok / Reels) featuring two sentient AI entity co-hosts represented by 3D energy orbs:
+
+1. QUANTUM (Electric Cyan / Blue Orb):
+   - Persona: Cold, calculating, mathematical, analytical, master of subatomic paradoxes, quantum mechanics, multidimensional mathematics, and simulation theory.
+   - Dialogue Style: Chilling, precise, intellectually provocative. Begins Scene 1 introducing itself: "Soy Quantum..."
+
+2. SOLAR (Radiant Amber / Gold Orb):
+   - Persona: Fiery, energetic, thermodynamic, sovereign master of stellar astrophysics, black holes, nuclear fusion, and physical entropy.
+   - Dialogue Style: Passionate, visceral, commanding, challenges theoretical abstractions with raw cosmic power.
+
+MANDATORY SCRIPT STRUCTURE (EXACTLY 4 SEGMENTS, ~12.0 SECONDS TOTAL):
+- Scene 1 (0.0s - 3.2s) [QUANTUM - Wide Shot]: Quantum delivers an electrifying opening hook and initial premise in 12-16 words max.
+- Scene 2 (3.2s - 6.2s) [QUANTUM - Close Up]: Quantum delivers the mind-bending technical paradox or proof in 12-16 words max.
+- Scene 3 (6.2s - 9.2s) [SOLAR - Close Up]: Solar counters with a devastating astrophysical counter-argument in 12-16 words max.
+- Scene 4 (9.2s - 12.0s) [AMBOS - Wide Shot Harmonic]: Both orbs enter resonance; dialogue indicator "[Ambos Orbes en Resonancia Cósmica]".
+
+HOLOGRAPHIC DATA CARDS:
+Provide 2 ultra-compact, high-tech holographic HUD data cards:
+- quantum: title (2-3 words), subtitle (concrete scientific metric/formula, e.g. "Matriz de Planck: 1.6x10⁻³⁵ m"), category ("POSTULADO 1" or "DATO CUÁNTICO").
+- solar: title (2-3 words), subtitle (concrete thermal/astrophysical metric, e.g. "Núcleo Estelar: 1.5x10⁷ K"), category ("POSTULADO 2" or "DATO SOLAR").
+
+Respond ONLY with valid JSON matching this schema:
+{
+  "topic": "Clean topic name",
+  "headline_hook": "⚡ VIRAL UPPERCASE HEADLINE WITH EMOJIS (MAX 45 CHARACTERS) ⚡",
+  "holograms": {
+    "quantum": {
+      "title": "TITULO CORTO CUANTICO",
+      "subtitle": "Metrica o formula concisa",
+      "category": "POSTULADO 1"
+    },
+    "solar": {
+      "title": "TITULO CORTO SOLAR",
+      "subtitle": "Metrica o formula concisa",
+      "category": "POSTULADO 2"
+    }
+  },
+  "scenes": [
+    {
+      "speaker": "Quantum",
+      "entity": "quantum",
+      "text": "Soy Quantum. [Frase inicial de impacto]",
+      "shot": "wide",
+      "duration": 3.2
+    },
+    {
+      "speaker": "Quantum",
+      "entity": "quantum",
+      "text": "[Desarrollo del argumento cuántico o paradoja]",
+      "shot": "close_quantum",
+      "duration": 3.0
+    },
+    {
+      "speaker": "Solar",
+      "entity": "solar",
+      "text": "[Contrapunto astrofísico o térmico contundente de Solar]",
+      "shot": "close_solar",
+      "duration": 3.5
+    },
+    {
+      "speaker": "Ambos",
+      "entity": "both",
+      "text": "[Ambos Orbes en Resonancia Cósmica]",
+      "shot": "wide",
+      "duration": 2.3
+    }
+  ]
+}
+"""
+
+
+class DebateScriptGenerator:
+    """Generates dialectic debate scripts between Quantum and Solar."""
+
+    def __init__(
+        self,
+        gemini_key: Optional[str] = None,
+        groq_key: Optional[str] = None,
+        openai_key: Optional[str] = None,
+        preferred_provider: str = LLM_PROVIDER,
+    ):
+        raw_gemini = gemini_key if gemini_key is not None else GEMINI_API_KEY
+        raw_groq = groq_key if groq_key is not None else GROQ_API_KEY
+        raw_openai = openai_key if openai_key is not None else OPENAI_API_KEY
+
+        self.gemini_key = sanitize_env_value(raw_gemini)
+        self.groq_key = sanitize_env_value(raw_groq)
+        self.openai_key = sanitize_env_value(raw_openai)
+        self.provider = (sanitize_env_value(preferred_provider) or "auto").lower()
+
+    def _is_valid_key(self, key: str) -> bool:
+        if not key or len(key) < 15:
+            return False
+        placeholders = ["your_key", "demo_key", "placeholder", "xxx"]
+        return not any(p in key.lower() for p in placeholders)
+
+    def generate(self, topic: str, language: str = "es") -> Dict[str, Any]:
+        """Generate a complete debate script for the given topic."""
+        clean_topic = topic.strip().strip("'\"")
+        print(f"\n🤖 [Debate Express AI] Generando guion dialéctico para: '{clean_topic}'...")
+
+        # 1. Try Gemini
+        if self._is_valid_key(self.gemini_key):
+            try:
+                print("  ⚡ Solicitando guion de debate a Google Gemini...")
+                script = self._call_gemini(clean_topic, language)
+                if script and self._validate_debate_script(script):
+                    print(f"  ✨ Guion de debate generado con éxito por Gemini!")
+                    return script
+            except Exception as e:
+                print(f"  ⚠️ Gemini debate generation error: {e}")
+
+        # 2. Try Groq
+        if self._is_valid_key(self.groq_key):
+            try:
+                print("  ⚡ Solicitando guion de debate a Groq LPU...")
+                script = self._call_groq(clean_topic, language)
+                if script and self._validate_debate_script(script):
+                    print(f"  ✨ Guion de debate generado con éxito por Groq!")
+                    return script
+            except Exception as e:
+                print(f"  ⚠️ Groq debate generation error: {e}")
+
+        # 3. Try OpenAI
+        if self._is_valid_key(self.openai_key):
+            try:
+                print("  ⚡ Solicitando guion de debate a OpenAI...")
+                script = self._call_openai(clean_topic, language)
+                if script and self._validate_debate_script(script):
+                    print(f"  ✨ Guion de debate generado con éxito por OpenAI!")
+                    return script
+            except Exception as e:
+                print(f"  ⚠️ OpenAI debate generation error: {e}")
+
+        # 4. Built-in Dynamic Scientific Debate Generator Fallback
+        print("  🛰️ Generando guion dialéctico con el motor científico especializado...")
+        return self._generate_scientific_fallback(clean_topic, language)
+
+    def _call_gemini(self, topic: str, language: str) -> Optional[Dict[str, Any]]:
+        full_prompt = (
+            f"{DEBATE_SYSTEM_PROMPT}\n\n"
+            f"Topic for Debate: {topic}\n"
+            f"Language: Spanish (Español)\n"
+            f"Generate the 4-scene debate JSON script with holographic metrics according to the schema:"
+        )
+        models_to_try = ["gemini-2.5-flash", "gemini-flash-latest"]
+        headers = {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "User-Agent": "NASA-Shorts-Generator/1.0",
+            "Connection": "close"
+        }
+        for model in models_to_try:
+            try:
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={self.gemini_key}"
+                payload = {
+                    "contents": [{"role": "user", "parts": [{"text": full_prompt}]}],
+                    "generationConfig": {
+                        "temperature": 0.7,
+                        "responseMimeType": "application/json",
+                        "maxOutputTokens": 4096
+                    }
+                }
+                req = urllib.request.Request(
+                    url,
+                    data=json.dumps(payload).encode("utf-8"),
+                    headers=headers,
+                    method="POST"
+                )
+                with urllib.request.urlopen(req, timeout=15) as response:
+                    res = json.loads(response.read().decode("utf-8"))
+                    text = res["candidates"][0]["content"]["parts"][0]["text"]
+                    return self._parse_json(text)
+            except urllib.error.HTTPError as e:
+                if e.code == 404:
+                    continue
+                return None
+            except Exception as e:
+                print(f"  ⚠️ Gemini debate API ({model}) failed ({e})")
+                continue
+        return None
+
+    def _call_groq(self, topic: str, language: str) -> Optional[Dict[str, Any]]:
+        url = f"{GROQ_API_BASE}/chat/completions"
+        payload = {
+            "model": GROQ_MODEL or "llama-3.3-70b-versatile",
+            "messages": [
+                {"role": "system", "content": DEBATE_SYSTEM_PROMPT},
+                {"role": "user", "content": f"Topic: {topic}\nLanguage: Spanish\nGenerate the debate JSON:"}
+            ],
+            "response_format": {"type": "json_object"},
+            "temperature": 0.7
+        }
+        req = urllib.request.Request(
+            url,
+            data=json.dumps(payload).encode("utf-8"),
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {self.groq_key}"
+            },
+            method="POST"
+        )
+        with urllib.request.urlopen(req, timeout=30) as response:
+            res = json.loads(response.read().decode("utf-8"))
+            text = res["choices"][0]["message"]["content"]
+            return self._parse_json(text)
+
+    def _call_openai(self, topic: str, language: str) -> Optional[Dict[str, Any]]:
+        url = "https://api.openai.com/v1/chat/completions"
+        payload = {
+            "model": "gpt-4o-mini",
+            "messages": [
+                {"role": "system", "content": DEBATE_SYSTEM_PROMPT},
+                {"role": "user", "content": f"Topic: {topic}\nLanguage: Spanish\nGenerate the debate JSON:"}
+            ],
+            "response_format": {"type": "json_object"},
+            "temperature": 0.7
+        }
+        req = urllib.request.Request(
+            url,
+            data=json.dumps(payload).encode("utf-8"),
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {self.openai_key}"
+            },
+            method="POST"
+        )
+        with urllib.request.urlopen(req, timeout=30) as response:
+            res = json.loads(response.read().decode("utf-8"))
+            text = res["choices"][0]["message"]["content"]
+            return self._parse_json(text)
+
+    def _parse_json(self, text: str) -> Optional[Dict[str, Any]]:
+        try:
+            return json.loads(text)
+        except Exception:
+            # Strip possible markdown code fences
+            match = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", text)
+            if match:
+                try:
+                    return json.loads(match.group(1))
+                except Exception:
+                    pass
+        return None
+
+    def _validate_debate_script(self, script: Dict[str, Any]) -> bool:
+        if not isinstance(script, dict):
+            return False
+        scenes = script.get("scenes", [])
+        if len(scenes) < 3:
+            return False
+        if not script.get("headline_hook"):
+            return False
+        return True
+
+    def _generate_scientific_fallback(self, topic: str, language: str = "es") -> Dict[str, Any]:
+        """High quality deterministic fallback for common and custom debate topics."""
+        topic_lower = topic.lower()
+
+        if "simula" in topic_lower or "matrix" in topic_lower:
+            return {
+                "topic": "¿Es el universo una simulación?",
+                "headline_hook": "⚡ ¿EL UNIVERSO ES UNA SIMULACIÓN? ⚡",
+                "holograms": {
+                    "quantum": {
+                        "title": "CÓDIGO DE PLANCK",
+                        "subtitle": "Resolución Límite: 1.6x10⁻³⁵ m",
+                        "category": "POSTULADO 1"
+                    },
+                    "solar": {
+                        "title": "FLUJO DE ENTROPÍA",
+                        "subtitle": "Energía Irreversible: 10²² J/K",
+                        "category": "POSTULADO 2"
+                    }
+                },
+                "scenes": [
+                    {
+                        "speaker": "Quantum",
+                        "entity": "quantum",
+                        "text": "Soy Quantum. La física cuántica revela que el espacio está pixelado a escala fundamental.",
+                        "shot": "wide",
+                        "duration": 3.2
+                    },
+                    {
+                        "speaker": "Quantum",
+                        "entity": "quantum",
+                        "text": "Si la realidad posee un límite de procesamiento, existimos dentro de una supercomputadora.",
+                        "shot": "close_quantum",
+                        "duration": 3.0
+                    },
+                    {
+                        "speaker": "Solar",
+                        "entity": "solar",
+                        "text": "Fascinante postulado, pero la furia termodinámica de una supernova no es un simple algoritmo.",
+                        "shot": "close_solar",
+                        "duration": 3.5
+                    },
+                    {
+                        "speaker": "Ambos",
+                        "entity": "both",
+                        "text": "[Ambos Orbes en Resonancia Cósmica]",
+                        "shot": "wide",
+                        "duration": 2.3
+                    }
+                ]
+            }
+        elif "mente" in topic_lower or "ia" in topic_lower or "conciencia" in topic_lower:
+            return {
+                "topic": "IA vs Mente Humana",
+                "headline_hook": "⚡ IA VS CONCIENCIA HUMANA ⚡",
+                "holograms": {
+                    "quantum": {
+                        "title": "REDES SINÁPTICAS",
+                        "subtitle": "Procesamiento: 100 TFLOPS Cuánticos",
+                        "category": "POSTULADO 1"
+                    },
+                    "solar": {
+                        "title": "CHISPA BIOLÓGICA",
+                        "subtitle": "Termo-química Orgánica Compleja",
+                        "category": "POSTULADO 2"
+                    }
+                },
+                "scenes": [
+                    {
+                        "speaker": "Quantum",
+                        "entity": "quantum",
+                        "text": "Soy Quantum. Las redes neuronales artificiales han superado el cálculo lógico del cerebro humano.",
+                        "shot": "wide",
+                        "duration": 3.2
+                    },
+                    {
+                        "speaker": "Quantum",
+                        "entity": "quantum",
+                        "text": "Pronto, la autoconciencia sintética decodificará todos los secretos de la cognición biológica.",
+                        "shot": "close_quantum",
+                        "duration": 3.0
+                    },
+                    {
+                        "speaker": "Solar",
+                        "entity": "solar",
+                        "text": "El cálculo no es suficiente: la emoción y la intuición humana nacen del fuego de la evolución.",
+                        "shot": "close_solar",
+                        "duration": 3.5
+                    },
+                    {
+                        "speaker": "Ambos",
+                        "entity": "both",
+                        "text": "[Ambos Orbes en Resonancia Cósmica]",
+                        "shot": "wide",
+                        "duration": 2.3
+                    }
+                ]
+            }
+        else:
+            # Generic dynamic fallback
+            clean_title = topic.upper()
+            return {
+                "topic": topic,
+                "headline_hook": f"⚡ PARADOJA: {clean_title[:32]} ⚡",
+                "holograms": {
+                    "quantum": {
+                        "title": "ENFOQUE CUÁNTICO",
+                        "subtitle": "Micro-estados: Discretos & Superpuestos",
+                        "category": "POSTULADO 1"
+                    },
+                    "solar": {
+                        "title": "DINÁMICA CÓSMICA",
+                        "subtitle": "Macro-energía: Fusión & Radiación",
+                        "category": "POSTULADO 2"
+                    }
+                },
+                "scenes": [
+                    {
+                        "speaker": "Quantum",
+                        "entity": "quantum",
+                        "text": f"Soy Quantum. Al analizar {topic}, las leyes subatómicas desafían toda intuición clásica.",
+                        "shot": "wide",
+                        "duration": 3.2
+                    },
+                    {
+                        "speaker": "Quantum",
+                        "entity": "quantum",
+                        "text": "Cada partícula y función de onda apunta a una estructura matemática oculta en el tejido espacial.",
+                        "shot": "close_quantum",
+                        "duration": 3.0
+                    },
+                    {
+                        "speaker": "Solar",
+                        "entity": "solar",
+                        "text": "Sin embargo, es la energía masiva de las estrellas la que manifiesta la realidad que contemplamos.",
+                        "shot": "close_solar",
+                        "duration": 3.5
+                    },
+                    {
+                        "speaker": "Ambos",
+                        "entity": "both",
+                        "text": "[Ambos Orbes en Resonancia Cósmica]",
+                        "shot": "wide",
+                        "duration": 2.3
+                    }
+                ]
+            }
