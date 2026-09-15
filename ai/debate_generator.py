@@ -56,7 +56,7 @@ DEBATE_SYSTEM_PROMPT = """You are the AI Showrunner and Director for 'COSMIC DEB
 
 4. CTA CON SESGO DE CONFIRMACIÓN RADICAL (Escena 4):
    - En la Escena 4 (Outro), ambos orbes entran en resonancia armónica.
-   - El CTA debe forzar al espectador a tomar partido en una guerra de posturas radical (Team Cuántico vs Team Solar), e incluir explícitamente la llamada a la acción en los comentarios.
+   - El CTA debe forzar al espectador a tomar partido en una guerra de posturas radical (Bando Cuántico vs Bando Solar), e incluir explícitamente la llamada a la acción en los comentarios.
    - NUNCA uses la palabra "flecha" ni símbolos/emojis de flechas que el lector de voz (TTS) pueda pronunciar.
 
 5. HOLOGRAPHIC DATA CARDS:
@@ -367,7 +367,7 @@ class DebateScriptGenerator:
                     {
                         "speaker": "Ambos",
                         "entity": "both",
-                        "text": "¿Team Cuántico o Team Solar? ¡Defiende tu bando en los comentarios!",
+                        "text": "¿Bando Cuántico o Bando Solar? ¡Defiende tu bando en los comentarios!",
                         "shot": "wide",
                         "duration": 2.5
                     }
@@ -414,7 +414,7 @@ class DebateScriptGenerator:
                     {
                         "speaker": "Ambos",
                         "entity": "both",
-                        "text": "¿Team Cuántico o Team Solar? ¡Elige tu bando en los comentarios!",
+                        "text": "¿Bando Cuántico o Bando Solar? ¡Elige tu bando en los comentarios!",
                         "shot": "wide",
                         "duration": 2.5
                     }
@@ -463,7 +463,7 @@ class DebateScriptGenerator:
                     {
                         "speaker": "Ambos",
                         "entity": "both",
-                        "text": "¿Team Cuántico o Team Solar? ¡Vota por tu bando en los comentarios!",
+                        "text": "¿Bando Cuántico o Bando Solar? ¡Vota por tu bando en los comentarios!",
                         "shot": "wide",
                         "duration": 2.5
                     }

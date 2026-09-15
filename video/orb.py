@@ -516,7 +516,7 @@ def render_orb_test_preview(
     q_part1 = "El tiempo no existe a escala cuántica: todo ocurre al mismo tiempo."
     q_part2 = "La realidad entera es un cálculo esperando a ser observado."
     s_part3 = "¡Falso! La gravedad de una estrella aplasta cualquier cálculo en cenizas."
-    both_part4 = "¿Team Cuántico o Team Solar? ¡Defiende tu bando en los comentarios!"
+    both_part4 = "¿Bando Cuántico o Bando Solar? ¡Defiende tu bando en los comentarios!"
 
     holo_q_title = "PARADOJA CUÁNTICA"
     holo_q_sub = "Superposición: |ψ⟩ = α|0⟩ + β|1⟩"
