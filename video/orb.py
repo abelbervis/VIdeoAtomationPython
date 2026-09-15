@@ -607,6 +607,10 @@ def render_orb_test_preview(
     drift_s_resting_x = "4.0*sin(2*PI*t/3.2)"
     drift_s_resting_y = "5.0*sin(2*PI*t/2.8)"
 
+    # Power ignition spring on intro (0-0.8s)
+    drift_intro_x = "30.0*exp(-7.0*t)*cos(16.0*t)"
+    drift_intro_y = "35.0*exp(-7.0*t)*sin(16.0*t)"
+
     bg_input = f"color=c=0x08090f:s={width}x{height}:r=30:d=12.0"
 
     filter_complex = [
@@ -633,10 +637,6 @@ def render_orb_test_preview(
         f"[bg_glowed_1][bg_glow_s]overlay=eval=frame:enable='between(t,6.2,12.0)'[bg_ambient]",
         
         # 5. Sequentially overlay the foreground orbs with power ignition snap on frame 0 and matching drifts
-        # Power ignition spring on intro (0-0.8s)
-        drift_intro_x = "30.0*exp(-7.0*t)*cos(16.0*t)"
-        drift_intro_y = "35.0*exp(-7.0*t)*sin(16.0*t)"
-
         # Toma 1 (0-3.2s): Wide Shot. Power ignition snap, Quantum active takes stage (Z-forward). Solar passive leans left towards Quantum
         f"[bg_ambient][orb_q_wide_active]overlay=eval=frame:x='W*0.25-w/2 + {drift_q_active_x} + {drift_intro_x}':y='H*0.42-h/2 + {drift_q_active_y} + {drift_intro_y}':enable='between(t,0,3.2)'[v1]",
         f"[v1][orb_s_wide_passive]overlay=eval=frame:x='W*0.75-w/2 - 28 + {drift_s_resting_x} + {drift_intro_x}':y='H*0.43-h/2 + {drift_s_resting_y} + {drift_intro_y}':enable='between(t,0,3.2)'[v2]",
