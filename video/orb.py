@@ -187,7 +187,7 @@ def generate_animated_orb_loop(
     frames_dir.mkdir(parents=True, exist_ok=True)
 
     c = canvas_size // 2
-    r_sphere = int(canvas_size * 0.27)
+    r_sphere_base = int(canvas_size * 0.27)
     r_aura_outer_base = int(canvas_size * 0.48)
     r_aura_inner_base = int(canvas_size * 0.38)
 
@@ -196,65 +196,41 @@ def generate_animated_orb_loop(
             t = i / loop_frames
             tau = 2 * math.pi * t
 
-            # 1. Concentric surrounding ring expands & contracts until touching the sphere body (2x faster speed)
-            # At t=0 & t=0.5, ring_r = r_sphere + 4 (touches sphere edge!)
-            # At t=0.25 & t=0.75, ring_r = r_sphere + 36 (expands far outward!)
-            ring_r = int(r_sphere + 20 - 16 * math.cos(2.0 * tau))
+            # 1. Subtle Organic Breathing Scale Animation (Sphere swells and shrinks like a living organism)
+            r_sphere = int(r_sphere_base + 10 * math.sin(tau))
+
+            # 2. Concentric surrounding ring expands & contracts in sync with breathing
+            ring_r = int(r_sphere + 22 - 16 * math.cos(2.0 * tau))
             ring_r_outer_glow = ring_r + 5
 
-            # 2. Rich atmospheric volumetric aura swells (+/- 14px)
-            r_aura_outer = int(r_aura_outer_base + 14 * math.sin(tau))
-            r_aura_inner = int(r_aura_inner_base + 10 * math.sin(tau))
+            # 3. Rich atmospheric volumetric aura swells dynamically (+/- 18px)
+            r_aura_outer = int(r_aura_outer_base + 18 * math.sin(tau))
+            r_aura_inner = int(r_aura_inner_base + 14 * math.sin(tau))
+            r_ambient_spill = int((canvas_size * 0.46) + 22 * math.sin(tau))
 
-            # 3. Core light spot breathing (Primary Top-Left Spot)
+            # 4. Core light spot breathing (Primary Top-Left Spot)
             spot1_x = int(c - r_sphere * 0.32 + 8 * math.sin(tau))
             spot1_y = int(c - r_sphere * 0.28 + 6 * math.cos(tau))
             spot1_rx = int(r_sphere * 0.52 + 6 * math.sin(2 * tau))
             spot1_ry = int(r_sphere * 0.48 + 5 * math.cos(2 * tau))
 
-            # 4. Secondary Counter-Tone Light Spot (Bottom-Right Cyan/Azure Flare)
+            # 5. Secondary Counter-Tone Light Spot (Bottom-Right Flare)
             spot2_x = int(c + r_sphere * 0.30 - 8 * math.sin(tau))
             spot2_y = int(c + r_sphere * 0.28 - 6 * math.cos(tau))
             spot2_rx = int(r_sphere * 0.44 + 5 * math.cos(2 * tau))
             spot2_ry = int(r_sphere * 0.40 + 4 * math.sin(2 * tau))
 
-            # 5. Bioluminescent Floating Particle Swarm (20 Subtle Ethereal Particles - Sweet Spot)
-            particle_elements = []
-            num_particles = 20
-            for p in range(num_particles):
-                angle_base = (p * (2 * math.pi / num_particles)) + (p * 0.42)
-                orbit_speed = 1.0 if (p % 2 == 0) else -1.0
-                radius_base = r_sphere + 18 + ((p * 19) % 85)  # Floating gracefully around the inner/outer halo
-                p_size = 2.0 + ((p * 7) % 4) * 0.5              # Refined sizes from 2.0px to 3.5px
-                
-                angle = angle_base + orbit_speed * tau
-                radial_drift = 8 * math.sin(2 * tau + p * 0.7)
-                r_curr = radius_base + radial_drift
-                
-                px = c + r_curr * math.cos(angle)
-                py = c + r_curr * math.sin(angle)
-                
-                p_opacity = 0.35 + 0.35 * (0.5 + 0.5 * math.sin(3 * tau + p * 1.1))
-                p_color = palette['spot1_core'] if (p % 3 == 0) else (palette['aura_bright'] if (p % 3 == 1) else palette['body_c0'])
-                
-                # Balanced dual layer: soft atmospheric glow + delicate luminous core
-                particle_elements.append(
-                    f'<circle cx="{px:.1f}" cy="{py:.1f}" r="{p_size + 2.0:.1f}" fill="{p_color}" opacity="{p_opacity * 0.45:.2f}" filter="url(#particleGlow_{i})" />\n'
-                    f'  <circle cx="{px:.1f}" cy="{py:.1f}" r="{p_size:.1f}" fill="{p_color}" opacity="{p_opacity * 0.85:.2f}" />'
-                )
-            particles_svg = "\n  ".join(particle_elements)
-
             svg = f"""<svg width="{canvas_size}" height="{canvas_size}" viewBox="0 0 {canvas_size} {canvas_size}" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <!-- Ultra-Wide Soft Ambient Environment Illumination Filter -->
-    <filter id="ambientSpillBlur_{i}" x="-80%" y="-80%" width="260%" height="260%">
-      <feGaussianBlur stdDeviation="55" />
+    <!-- Enhanced Ultra-Wide Environmental Ambient Illumination Filter -->
+    <filter id="ambientSpillBlur_{i}" x="-90%" y="-90%" width="280%" height="280%">
+      <feGaussianBlur stdDeviation="70" />
     </filter>
     <filter id="auraGlowDeep_{i}" x="-60%" y="-60%" width="220%" height="220%">
-      <feGaussianBlur stdDeviation="30" />
+      <feGaussianBlur stdDeviation="34" />
     </filter>
     <filter id="auraGlowMid_{i}" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="18" />
+      <feGaussianBlur stdDeviation="20" />
     </filter>
     <filter id="coreBlur_{i}" x="-30%" y="-30%" width="160%" height="160%">
       <feGaussianBlur stdDeviation="11" />
@@ -263,22 +239,19 @@ def generate_animated_orb_loop(
       <feGaussianBlur stdDeviation="14" />
     </filter>
     <filter id="ringGlow_{i}" x="-40%" y="-40%" width="180%" height="180%">
-      <feGaussianBlur stdDeviation="8" />
-    </filter>
-    <filter id="particleGlow_{i}" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="1.5" />
+      <feGaussianBlur stdDeviation="9" />
     </filter>
 
     <clipPath id="sphereClip_{i}">
       <circle cx="{c}" cy="{c}" r="{r_sphere}" />
     </clipPath>
 
-    <!-- Environmental Ambient Light Spill (Expansive Radial Wash) -->
+    <!-- Environmental Ambient Light Spill (High-Intensity Radial Wash) -->
     <radialGradient id="ambientSpill_{i}" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="{palette['spot1_glow']}" stop-opacity="0.75" />
-      <stop offset="28%" stop-color="{palette['aura_inner']}" stop-opacity="0.55" />
-      <stop offset="60%" stop-color="{palette['aura_outer']}" stop-opacity="0.28" />
-      <stop offset="85%" stop-color="{palette['body_c3']}" stop-opacity="0.10" />
+      <stop offset="0%" stop-color="{palette['spot1_glow']}" stop-opacity="0.95" />
+      <stop offset="25%" stop-color="{palette['aura_inner']}" stop-opacity="0.75" />
+      <stop offset="55%" stop-color="{palette['aura_outer']}" stop-opacity="0.45" />
+      <stop offset="82%" stop-color="{palette['body_c3']}" stop-opacity="0.20" />
       <stop offset="100%" stop-color="#000000" stop-opacity="0.0" />
     </radialGradient>
 
@@ -353,9 +326,6 @@ def generate_animated_orb_loop(
 
   <!-- 5. Inner Concentric Rim Light -->
   <circle cx="{c}" cy="{c}" r="{r_sphere - 2}" fill="none" stroke="{palette['aura_inner']}" stroke-width="3" opacity="0.75" />
-
-  <!-- 6. Bioluminescent Floating Particle Swarm -->
-  {particles_svg}
 </svg>"""
             (frames_dir / f"frame_{i:03d}.svg").write_text(svg, encoding="utf-8")
 
