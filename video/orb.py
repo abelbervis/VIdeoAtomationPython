@@ -533,48 +533,64 @@ def render_orb_test_preview(
                         pass
 
     # Build advanced video filter chains for double overlays & scale changes (Virtual Camera)
-    # Quantum (Left) configuration & speech reactivity
+    # Drift and eq structures with static opacities split by role and shot
     voice_ripple_q = "(0.5 + 0.5 * sin(2*PI*t/0.38))"
     speech_mask_q = "between(t,0,6.2)"
-    eq_q = f"brightness='-0.12 + (0.28 + 0.08*{voice_ripple_q})*{speech_mask_q}':contrast='0.80 + (0.35 + 0.15*{voice_ripple_q})*{speech_mask_q}'"
-    hue_q = f"h='(12 + 4*{voice_ripple_q})*{speech_mask_q} + 6*sin(2*PI*t/2.4)':s='0.75 + (0.45 + 0.20*{voice_ripple_q})*{speech_mask_q}'"
+    eq_q = f"brightness='-0.18 + (0.34 + 0.08*{voice_ripple_q})*{speech_mask_q}':contrast='0.70 + (0.55 + 0.15*{voice_ripple_q})*{speech_mask_q}'"
+    hue_q = f"h='(12 + 4*{voice_ripple_q})*{speech_mask_q} + 6*sin(2*PI*t/2.4)':s='0.60 + (0.65 + 0.20*{voice_ripple_q})*{speech_mask_q}'"
     
-    # Solar (Right) configuration & speech reactivity
     voice_ripple_s = "(0.5 + 0.5 * sin(2*PI*t/0.36))"
     speech_mask_s = "between(t,6.2,9.7)"
-    eq_s = f"brightness='-0.03 + (0.32 + 0.10*{voice_ripple_s})*{speech_mask_s}':contrast='1.0 + (0.40 + 0.15*{voice_ripple_s})*{speech_mask_s}'"
-    hue_s = f"h='(12 + 4*{voice_ripple_s})*{speech_mask_s} + 6*sin(2*PI*t/2.4)':s='1.10 + (0.50 + 0.20*{voice_ripple_s})*{speech_mask_s}'"
+    eq_s = f"brightness='-0.18 + (0.34 + 0.08*{voice_ripple_s})*{speech_mask_s}':contrast='0.70 + (0.55 + 0.15*{voice_ripple_s})*{speech_mask_s}'"
+    hue_s = f"h='(12 + 4*{voice_ripple_s})*{speech_mask_s} + 6*sin(2*PI*t/2.4)':s='0.60 + (0.65 + 0.20*{voice_ripple_s})*{speech_mask_s}'"
 
-    # Organic floating drifts
-    drift_q_x = "14*sin(2*PI*t/3.6)"
-    drift_q_y = "18*sin(2*PI*t/2.4)"
-    drift_s_x = "14*sin(2*PI*t/3.2)"
-    drift_s_y = "18*sin(2*PI*t/2.8)"
+    # Precise structural drift controls (Calm when passive/resting, full dynamic swing when active)
+    drift_q_active_x = "14.0*sin(2*PI*t/3.6)"
+    drift_q_active_y = "18.0*sin(2*PI*t/2.4)"
+    drift_q_resting_x = "4.0*sin(2*PI*t/3.6)"
+    drift_q_resting_y = "5.0*sin(2*PI*t/2.4)"
+
+    drift_s_active_x = "14.0*sin(2*PI*t/3.2)"
+    drift_s_active_y = "18.0*sin(2*PI*t/2.8)"
+    drift_s_resting_x = "4.0*sin(2*PI*t/3.2)"
+    drift_s_resting_y = "5.0*sin(2*PI*t/2.8)"
 
     bg_input = f"color=c=0x08090f:s={width}x{height}:r=30:d=12.0"
 
     filter_complex = [
-        # 1. Split input streams to avoid dynamic resolution changes
-        "[1:v]split=2[q1][q2]",
-        "[2:v]split=2[s1][s2]",
+        # 1. Split streams to apply physical static transparency to separate active/resting layers
+        "[1:v]split=3[q_wa][q_wp][q_ca]",
+        "[2:v]split=3[s_wa][s_wp][s_ca]",
         
-        # 2. Process wide and close variations with static resolutions
-        f"[q1]scale=340:340,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.95[orb_q_wide]",
-        f"[q2]scale=550:550,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.95[orb_q_close]",
-        f"[s1]scale=340:340,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.95[orb_s_wide]",
-        f"[s2]scale=550:550,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.95[orb_s_close]",
+        # 2. Render each state independently with pre-baked alpha levels to avoid FFmpeg evaluate parser issues
+        f"[q_wa]scale=340:340,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.95[orb_q_wide_active]",
+        f"[q_wp]scale=340:340,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.32[orb_q_wide_passive]",
+        f"[q_ca]scale=550:550,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.95[orb_q_close_active]",
+        
+        f"[s_wp]scale=340:340,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.32[orb_s_wide_passive]",
+        f"[s_wa]scale=340:340,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.75[orb_s_wide_active]",
+        f"[s_ca]scale=550:550,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.95[orb_s_close_active]",
         
         # 3. Apply background grading
         f"[0:v]eq=brightness=-0.01:contrast=1.05[bg_graded]",
         
-        # 4. Sequentially overlay using conditional enabling (enable parameter)
-        f"[bg_graded][orb_q_wide]overlay=eval=frame:x='W*0.25-w/2 + {drift_q_x}':y='H*0.42-h/2 + {drift_q_y}':enable='between(t,0,3.2)+between(t,9.2,12.0)'[v1]",
-        f"[v1][orb_s_wide]overlay=eval=frame:x='W*0.75-w/2 + {drift_s_x}':y='H*0.42-h/2 + {drift_s_y}':enable='between(t,0,3.2)+between(t,9.2,12.0)'[v2]",
-        f"[v2][orb_q_close]overlay=eval=frame:x='W/2-w/2 + {drift_q_x}':y='H*0.40-h/2 + {drift_q_y}':enable='between(t,3.2,6.2)'[v3]",
-        f"[v3][orb_s_close]overlay=eval=frame:x='W/2-w/2 + {drift_s_x}':y='H*0.40-h/2 + {drift_s_y}':enable='between(t,6.2,9.2)'[v4]",
+        # 4. Sequentially overlay using conditional enabling (enable parameter) and matching drifts
+        # Toma 1 (0-3.2s): Wide Shot. Quantum active (drift_active), Solar passive (drift_resting)
+        f"[bg_graded][orb_q_wide_active]overlay=eval=frame:x='W*0.25-w/2 + {drift_q_active_x}':y='H*0.42-h/2 + {drift_q_active_y}':enable='between(t,0,3.2)'[v1]",
+        f"[v1][orb_s_wide_passive]overlay=eval=frame:x='W*0.75-w/2 + {drift_s_resting_x}':y='H*0.42-h/2 + {drift_s_resting_y}':enable='between(t,0,3.2)'[v2]",
+        
+        # Toma 2 (3.2s-6.2s): Close Up Quantum active (drift_active), Solar is off-screen
+        f"[v2][orb_q_close_active]overlay=eval=frame:x='W/2-w/2 + {drift_q_active_x}':y='H*0.40-h/2 + {drift_q_active_y}':enable='between(t,3.2,6.2)'[v3]",
+        
+        # Toma 3 (6.2s-9.2s): Close Up Solar active (drift_active), Quantum is off-screen
+        f"[v3][orb_s_close_active]overlay=eval=frame:x='W/2-w/2 + {drift_s_active_x}':y='H*0.40-h/2 + {drift_s_active_y}':enable='between(t,6.2,9.2)'[v4]",
+        
+        # Toma 4 (9.2s-12.0s): Wide Shot. Quantum passive (drift_resting), Solar active/resonance (drift_active)
+        f"[v4][orb_q_wide_passive]overlay=eval=frame:x='W*0.25-w/2 + {drift_q_resting_x}':y='H*0.42-h/2 + {drift_q_resting_y}':enable='between(t,9.2,12.0)'[v5]",
+        f"[v5][orb_s_wide_active]overlay=eval=frame:x='W*0.75-w/2 + {drift_s_active_x}':y='H*0.42-h/2 + {drift_s_active_y}':enable='between(t,9.2,12.0)'[v6]",
         
         # 5. Camera Shot indicator text overlays (Top)
-        f"[v4]drawtext=text='TOMA 1\\: PLANO GENERAL (WIDE SHOT)':fontcolor=0x00f0ff:fontsize=32:fontfile=Arial:box=1:boxcolor=black@0.65:boxborderw=10:x=(w-text_w)/2:y=180:enable='between(t,0,3.2)'[sh1]",
+        f"[v6]drawtext=text='TOMA 1\\: PLANO GENERAL (WIDE SHOT)':fontcolor=0x00f0ff:fontsize=32:fontfile=Arial:box=1:boxcolor=black@0.65:boxborderw=10:x=(w-text_w)/2:y=180:enable='between(t,0,3.2)'[sh1]",
         f"[sh1]drawtext=text='TOMA 2\\: PRIMER PLANO (ORBE QUANTUM)':fontcolor=0x00f0ff:fontsize=32:fontfile=Arial:box=1:boxcolor=black@0.65:boxborderw=10:x=(w-text_w)/2:y=180:enable='between(t,3.2,6.2)'[sh2]",
         f"[sh2]drawtext=text='TOMA 3\\: PRIMER PLANO (ORBE SOLAR)':fontcolor=0xffaa00:fontsize=32:fontfile=Arial:box=1:boxcolor=black@0.65:boxborderw=10:x=(w-text_w)/2:y=180:enable='between(t,6.2,9.2)'[sh3]",
         f"[sh3]drawtext=text='TOMA 4\\: CONCLUSIONAL CO-HOST (WIDE)':fontcolor=white:fontsize=32:fontfile=Arial:box=1:boxcolor=black@0.65:boxborderw=10:x=(w-text_w)/2:y=180:enable='between(t,9.2,12.0)'[sh4]",
