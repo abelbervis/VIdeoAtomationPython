@@ -66,18 +66,20 @@ def main():
         thumb_script_arg = getattr(args, "thumbnail_script", None)
         custom_topic = getattr(args, "topic", None) or getattr(args, "debate_topic", None)
         out_target = Path(args.output) if getattr(args, "output", None) else None
+        cosmic_theme = getattr(args, "cosmic_theme", None)
 
         if thumb_script_arg:
-            thumb_gen.generate_thumbnail_for_script(Path(thumb_script_arg), out_target)
+            thumb_gen.generate_thumbnail_for_script(Path(thumb_script_arg), out_target, theme_name=cosmic_theme)
         elif custom_topic:
             dest = out_target or Path("output") / "thumbnail.jpg"
             thumb_gen.render_studio_poster(
                 hook=custom_topic,
                 topic=custom_topic,
-                output_path=dest
+                output_path=dest,
+                theme_name=cosmic_theme,
             )
         else:
-            thumb_gen.batch_generate_thumbnails()
+            thumb_gen.batch_generate_thumbnails(theme_name=cosmic_theme)
         return
 
     # If --debate / --debate-topic / --script mode is selected, render AI debate video

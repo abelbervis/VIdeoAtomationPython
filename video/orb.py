@@ -155,7 +155,95 @@ ORB_PALETTES: Dict[str, Dict[str, Any]] = {
         "aura_bright": "#ff80ab", # Neon Rose Bright Core
         "ring_stroke": "#ffd54f", # Radiant Gold Ring
         "rim_stroke": "#ff4081",  # Hot Pink/Rose Rim Accent
-    }
+    },
+    "emerald": {
+        "name": "Emerald Matrix Bio-Reactive",
+        "description": "Cyber mint and neon jade sphere, electric cyan reflections, bio-aurora aura",
+        "body_c0": "#00ff9d",     # Neon Mint
+        "body_c1": "#00e676",     # Electric Green
+        "body_c2": "#00b0ff",     # Cyan Blue
+        "body_c3": "#004d40",     # Deep Emerald Teal
+        "body_c4": "#1de9b6",     # Aquamarine Rim
+        "body_c5": "#00140e",     # Matrix Void
+        "spot1_core": "#ffffff",  # Incandescent White Core
+        "spot1_glow": "#69f0ae",  # Neon Mint Flare
+        "spot1_outer": "#00e5ff", # Cyan Edge
+        "spot2_core": "#00ff9d",  # Secondary Mint Flare
+        "spot2_mid": "#00b0ff",   # Cyan Mid
+        "spot2_outer": "#004d40", # Deep Teal
+        "aura_inner": "#00e676",  # Emerald Aura
+        "aura_mid": "#00b0ff",   # Cyan Mid Aura
+        "aura_outer": "#004d40",  # Teal Outer Aura
+        "aura_bright": "#b9f6ca", # Soft Mint Core
+        "ring_stroke": "#00ff9d", # Radiant Mint Ring
+        "rim_stroke": "#69f0ae",  # Neon Green Rim Accent
+    },
+    "singularity": {
+        "name": "Singularity Violet Bio-Reactive",
+        "description": "Deep ultraviolet and void purple sphere, electric magenta flare and cosmic rift aura",
+        "body_c0": "#d500f9",     # Electric Violet-Magenta
+        "body_c1": "#7c4dff",     # Royal Purple
+        "body_c2": "#304ffe",     # Deep Ultramarine
+        "body_c3": "#651fff",     # Ultraviolet
+        "body_c4": "#ea80fc",     # Neon Lilac Rim
+        "body_c5": "#0c0214",     # Event Horizon Void
+        "spot1_core": "#ffffff",  # Incandescent White Core
+        "spot1_glow": "#e040fb",  # Neon Magenta Flare
+        "spot1_outer": "#7c4dff", # Purple Edge
+        "spot2_core": "#651fff",  # Secondary Ultraviolet Flare
+        "spot2_mid": "#304ffe",   # Ultramarine Mid
+        "spot2_outer": "#1a0033", # Void Edge
+        "aura_inner": "#d500f9",  # Violet Aura
+        "aura_mid": "#7c4dff",   # Purple Deep Aura
+        "aura_outer": "#304ffe",  # Blue Outer Aura
+        "aura_bright": "#ea80fc", # Lilac Bright Core
+        "ring_stroke": "#ea80fc", # Radiant Lilac Ring
+        "rim_stroke": "#d500f9",  # Violet Rim Accent
+    },
+    "supernova": {
+        "name": "Supernova Crimson Bio-Reactive",
+        "description": "Incandescent magma ruby sphere, molten gold corona, intense thermal explosion aura",
+        "body_c0": "#ff1744",     # Electric Crimson
+        "body_c1": "#ff5252",     # Plasma Red
+        "body_c2": "#ff9100",     # Solar Amber
+        "body_c3": "#b71c1c",     # Deep Blood Ruby
+        "body_c4": "#ffd600",     # Gold Rim
+        "body_c5": "#1f0003",     # Magma Void
+        "spot1_core": "#ffffff",  # Pure White Core
+        "spot1_glow": "#ffea00",  # Molten Gold Flare
+        "spot1_outer": "#ff6d00", # Orange Edge
+        "spot2_core": "#ff1744",  # Crimson Flare
+        "spot2_mid": "#d50000",   # Ruby Mid
+        "spot2_outer": "#3e0007", # Deep Dark Edge
+        "aura_inner": "#ff1744",  # Crimson Aura
+        "aura_mid": "#ff6d00",   # Amber Mid Aura
+        "aura_outer": "#b71c1c",  # Blood Ruby Outer
+        "aura_bright": "#ff8a80", # Radiant Coral Core
+        "ring_stroke": "#ffd700", # Pure Gold Ring
+        "rim_stroke": "#ff5252",  # Flame Rim Accent
+    },
+    "antimatter": {
+        "name": "Antimatter Rift Bio-Reactive",
+        "description": "Hyper-saturated fuchsia and electric azure sphere, high energy particle clash aura",
+        "body_c0": "#ff007f",     # Neon Fuchsia
+        "body_c1": "#e040fb",     # Electric Violet
+        "body_c2": "#00e5ff",     # Electric Azure
+        "body_c3": "#4a148c",     # Dark Indigo
+        "body_c4": "#ff4081",     # Rose Neon Rim
+        "body_c5": "#120024",     # Antimatter Void
+        "spot1_core": "#ffffff",  # Pure White Core
+        "spot1_glow": "#00e5ff",  # Azure Flare
+        "spot1_outer": "#ff007f", # Fuchsia Edge
+        "spot2_core": "#ff007f",  # Fuchsia Flare
+        "spot2_mid": "#7c4dff",   # Purple Mid
+        "spot2_outer": "#00e5ff", # Cyan Edge
+        "aura_inner": "#ff007f",  # Fuchsia Aura
+        "aura_mid": "#7c4dff",   # Purple Aura
+        "aura_outer": "#00e5ff",  # Azure Outer Aura
+        "aura_bright": "#ff80ab", # Hot Pink Core
+        "ring_stroke": "#00e5ff", # Radiant Azure Ring
+        "rim_stroke": "#ff007f",  # Fuchsia Rim Accent
+    },
 }
 
 

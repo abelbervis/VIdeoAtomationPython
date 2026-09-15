@@ -589,6 +589,14 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Path to a specific script.json file to generate a thumbnail for. If omitted with --thumbnail, scans and generates thumbnails for all existing project folders."
     )
+    parser.add_argument(
+        "--theme", "--cosmic-theme",
+        dest="cosmic_theme",
+        type=str,
+        default=None,
+        choices=["cyber", "supernova", "singularity", "antimatter", "chrono", "aurora", "random", "auto"],
+        help="Cosmic aesthetic theme for thumbnails: 'cyber' (Matrix Mint), 'supernova' (Solar Magma), 'singularity' (Ultraviolet Void), 'antimatter' (Neon Fuchsia/Cyan), 'chrono' (Cobalt Relativist), 'aurora' (Prismatic Multiverse), or 'auto' (detect from topic)."
+    )
 
     # Tester & Audit Mode Options
     parser.add_argument(
