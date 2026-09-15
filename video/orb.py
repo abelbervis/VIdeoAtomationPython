@@ -426,11 +426,11 @@ class GradientOrbManager:
             # Active voice pulse (peaks with spoken cadence, drops to 0 on silence pauses)
             voice_pulse = f"((0.35 + 0.65 * max(0, sin(2*PI*t/0.42))) * {speech_mask})"
 
-            # Dynamic Speech Reactivity:
-            # - Silence Pause (voice_pulse = 0): Light spill & orb dim down to resting state (brightness -0.22, contrast 0.70)
-            # - Active Speech (voice_pulse = 1): Light spill & orb surge into brilliant glow (brightness +0.18, contrast 1.30)
-            eq_expr = f"brightness='-0.22 + 0.40*{voice_pulse}':contrast='0.70 + 0.60*{voice_pulse}'"
-            hue_expr = f"h='16*{voice_pulse} + 6*sin(2*PI*t/2.4)':s='0.65 + 0.70*{voice_pulse}'"
+            # Dynamic Speech Reactivity (Balanced & Luminous Baseline):
+            # - Silence Pause (voice_pulse = 0): Orb remains bright, vibrant, and luminous at rest (brightness -0.02, contrast 0.95)
+            # - Active Speech (voice_pulse = 1): Energy surge with glowing intensity (brightness +0.22, contrast 1.25)
+            eq_expr = f"brightness='-0.02 + 0.24*{voice_pulse}':contrast='0.95 + 0.30*{voice_pulse}'"
+            hue_expr = f"h='12*{voice_pulse} + 6*sin(2*PI*t/2.4)':s='0.95 + 0.35*{voice_pulse}'"
 
             filters.append(f"[{input_idx}:v]scale={scale_expr}")
             filters.append(f"eq={eq_expr}")
