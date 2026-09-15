@@ -542,8 +542,8 @@ def render_orb_test_preview(
     # Solar (Right) configuration & speech reactivity
     voice_ripple_s = "(0.5 + 0.5 * sin(2*PI*t/0.36))"
     speech_mask_s = "between(t,6.2,9.7)"
-    eq_s = f"brightness='-0.12 + (0.28 + 0.08*{voice_ripple_s})*{speech_mask_s}':contrast='0.80 + (0.35 + 0.15*{voice_ripple_s})*{speech_mask_s}'"
-    hue_s = f"h='(12 + 4*{voice_ripple_s})*{speech_mask_s} + 6*sin(2*PI*t/2.4)':s='0.75 + (0.45 + 0.20*{voice_ripple_s})*{speech_mask_s}'"
+    eq_s = f"brightness='-0.03 + (0.32 + 0.10*{voice_ripple_s})*{speech_mask_s}':contrast='1.0 + (0.40 + 0.15*{voice_ripple_s})*{speech_mask_s}'"
+    hue_s = f"h='(12 + 4*{voice_ripple_s})*{speech_mask_s} + 6*sin(2*PI*t/2.4)':s='1.10 + (0.50 + 0.20*{voice_ripple_s})*{speech_mask_s}'"
 
     # Organic floating drifts
     drift_q_x = "14*sin(2*PI*t/3.6)"
