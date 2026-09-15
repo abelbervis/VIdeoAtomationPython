@@ -1,7 +1,7 @@
 """
 Futuristic Sci-Fi Hologram & Floating Reference Card Generator.
-Generates SVG vector hologram overlays with scanlines, corner reticles, glowing borders,
-diagrams, and projector light beams.
+Generates ultra-minimalist, elegant glassmorphism projection overlays
+inspired by Google / Apple / ElevenLabs futuristic ads.
 """
 
 from pathlib import Path
@@ -10,112 +10,117 @@ from typing import Optional
 
 def generate_hologram_card_svg(
     title: str = "FÍSICA CUÁNTICA",
-    subtitle: str = "Estado: Superposición |ψ⟩ = α|0⟩ + β|1⟩",
+    subtitle: str = "Estado: Superposición  |ψ⟩ = α|0⟩ + β|1⟩",
     category: str = "CONCEPTO",
     color_theme: str = "cyan",  # "cyan", "amber", "purple"
-    width: int = 540,
-    height: int = 320,
+    width: int = 560,
+    height: int = 240,
     output_path: Optional[Path] = None,
 ) -> Path:
     """
-    Generates a high-tech sci-fi glassmorphism hologram SVG card with scanlines,
-    glowing borders, corner crosshairs, and dynamic vector icons.
+    Generates a minimalist, ultra-elegant holographic projection card.
+    Uses clean typography, subtle frosted glass luminosity, glowing accent lines,
+    and light projector beams instead of heavy boxy HUD frames.
     """
     if color_theme == "amber":
         primary_color = "#ffb300"
-        secondary_color = "#ff6d00"
-        bg_glow = "#ff9100"
+        secondary_color = "#ff8f00"
+        glow_color = "#ff6d00"
     elif color_theme == "purple":
-        primary_color = "#d500f9"
-        secondary_color = "#651fff"
-        bg_glow = "#aa00ff"
+        primary_color = "#e040fb"
+        secondary_color = "#7c4dff"
+        glow_color = "#aa00ff"
     else:  # cyan
         primary_color = "#00f0ff"
-        secondary_color = "#0077ff"
-        bg_glow = "#00e5ff"
+        secondary_color = "#00b0ff"
+        glow_color = "#00e5ff"
 
     svg_content = f"""<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">
   <defs>
-    <!-- Background Glass Glow Gradient -->
-    <radialGradient id="holoBg" cx="50%" cy="50%" r="70%">
-      <stop offset="0%" stop-color="{primary_color}" stop-opacity="0.18" />
-      <stop offset="60%" stop-color="#070d1a" stop-opacity="0.75" />
-      <stop offset="100%" stop-color="#04070f" stop-opacity="0.90" />
-    </radialGradient>
-
-    <!-- Border Glow Filter -->
-    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="6" result="blur" />
+    <!-- Soft Neon Glow Filter -->
+    <filter id="holoGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="8" result="blur1" />
+      <feGaussianBlur stdDeviation="3" result="blur2" />
       <feMerge>
-        <feMergeNode in="blur" />
+        <feMergeNode in="blur1" />
+        <feMergeNode in="blur2" />
         <feMergeNode in="SourceGraphic" />
       </feMerge>
     </filter>
 
-    <!-- Scanlines Pattern -->
-    <pattern id="scanlines" width="100" height="6" patternUnits="userSpaceOnUse">
-      <line x1="0" y1="0" x2="100" y2="0" stroke="{primary_color}" stroke-opacity="0.12" stroke-width="1.5" />
-    </pattern>
+    <!-- Subtle Radial Core Glow -->
+    <radialGradient id="cardRadialGlow" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="{primary_color}" stop-opacity="0.15" />
+      <stop offset="70%" stop-color="{primary_color}" stop-opacity="0.04" />
+      <stop offset="100%" stop-color="#050a14" stop-opacity="0.65" />
+    </radialGradient>
 
-    <!-- Holographic Beam Cone (Bottom Projector) -->
-    <linearGradient id="beamGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="{primary_color}" stop-opacity="0.45" />
+    <!-- Bottom Hologram Emitter Light Beam -->
+    <linearGradient id="emitterBeam" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="{primary_color}" stop-opacity="0.8" />
+      <stop offset="40%" stop-color="{primary_color}" stop-opacity="0.25" />
+      <stop offset="100%" stop-color="{primary_color}" stop-opacity="0.0" />
+    </linearGradient>
+
+    <!-- Horizontal Projection Accent Line -->
+    <linearGradient id="lineGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="{primary_color}" stop-opacity="0.0" />
+      <stop offset="20%" stop-color="{primary_color}" stop-opacity="0.9" />
+      <stop offset="50%" stop-color="#ffffff" stop-opacity="1.0" />
+      <stop offset="80%" stop-color="{primary_color}" stop-opacity="0.9" />
       <stop offset="100%" stop-color="{primary_color}" stop-opacity="0.0" />
     </linearGradient>
   </defs>
 
-  <!-- Main Hologram Container Card -->
-  <rect x="12" y="12" width="{width - 24}" height="{height - 36}" rx="16" ry="16" 
-        fill="url(#holoBg)" stroke="{primary_color}" stroke-width="2" stroke-opacity="0.85" filter="url(#glow)" />
+  <!-- Ethereal Projection Light Pedestal (Bottom Emitter Cone) -->
+  <polygon points="{width//2 - 60},{height - 18} {width//2 + 60},{height - 18} {width//2 + 130},{height} {width//2 - 130},{height}" 
+           fill="url(#emitterBeam)" />
 
-  <!-- Inner Scanline Texture -->
-  <rect x="12" y="12" width="{width - 24}" height="{height - 36}" rx="16" ry="16" 
-        fill="url(#scanlines)" />
+  <!-- Main Ultra-Minimalist Glass Card Body -->
+  <rect x="16" y="16" width="{width - 32}" height="{height - 40}" rx="20" ry="20" 
+        fill="url(#cardRadialGlow)" 
+        stroke="{primary_color}" stroke-width="1.2" stroke-opacity="0.55" 
+        filter="url(#holoGlow)" />
 
-  <!-- Corner Tech Reticles (+) -->
-  <g stroke="{primary_color}" stroke-width="2" stroke-opacity="0.9">
-    <!-- Top Left -->
-    <path d="M 24 28 L 40 28 M 28 24 L 28 40" />
-    <!-- Top Right -->
-    <path d="M {width - 40} 28 L {width - 24} 28 M {width - 28} 24 L {width - 28} 40" />
-    <!-- Bottom Left -->
-    <path d="M 24 {height - 52} L 40 {height - 52} M 28 {height - 56} L 28 {height - 40}" />
-    <!-- Bottom Right -->
-    <path d="M {width - 40} {height - 52} L {width - 24} {height - 52} M {width - 28} {height - 56} L {width - 28} {height - 40}" />
+  <!-- Top Accent Glowing Blade Line -->
+  <path d="M 40 16 L {width - 40} 16" stroke="url(#lineGlow)" stroke-width="2" />
+
+  <!-- Category Tag (Minimalist Glowing Pill with Bullet) -->
+  <g transform="translate(40, 42)">
+    <rect x="0" y="0" width="110" height="20" rx="10" 
+          fill="{primary_color}" fill-opacity="0.12" 
+          stroke="{primary_color}" stroke-width="1" stroke-opacity="0.4" />
+    <circle cx="12" cy="10" r="3" fill="{primary_color}" filter="url(#holoGlow)" />
+    <text x="24" y="14" font-family="'Montserrat', 'Inter', 'Roboto', 'Arial', sans-serif" 
+          font-size="10" font-weight="700" fill="{primary_color}" letter-spacing="1.8">
+      {category}
+    </text>
   </g>
 
-  <!-- Top Category Tag -->
-  <rect x="36" y="32" width="120" height="22" rx="4" fill="{primary_color}" fill-opacity="0.2" stroke="{primary_color}" stroke-width="1" stroke-opacity="0.6"/>
-  <text x="96" y="47" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="{primary_color}" letter-spacing="1.5" text-anchor="middle">
-    {category}
-  </text>
-
-  <!-- Central Atom / Holographic Diagram Icon -->
-  <g transform="translate(70, 160)" filter="url(#glow)">
-    <!-- Central Nucleus -->
-    <circle cx="0" cy="0" r="10" fill="{primary_color}" />
-    <!-- Orbit 1 -->
-    <ellipse cx="0" cy="0" rx="38" ry="14" fill="none" stroke="{primary_color}" stroke-width="1.8" stroke-dasharray="4,2" transform="rotate(30)" opacity="0.85" />
-    <!-- Orbit 2 -->
-    <ellipse cx="0" cy="0" rx="38" ry="14" fill="none" stroke="{secondary_color}" stroke-width="1.8" transform="rotate(-30)" opacity="0.85" />
-    <!-- Electron Dots -->
-    <circle cx="28" cy="-12" r="3.5" fill="#ffffff" />
-    <circle cx="-25" cy="14" r="3.5" fill="{primary_color}" />
+  <!-- Minimalist Orbital Hologram Icon -->
+  <g transform="translate(68, 128)" filter="url(#holoGlow)">
+    <circle cx="0" cy="0" r="7" fill="#ffffff" />
+    <circle cx="0" cy="0" r="14" fill="none" stroke="{primary_color}" stroke-width="1" stroke-opacity="0.6" />
+    <ellipse cx="0" cy="0" rx="32" ry="11" fill="none" stroke="{primary_color}" stroke-width="1.5" transform="rotate(-25)" opacity="0.9" />
+    <ellipse cx="0" cy="0" rx="32" ry="11" fill="none" stroke="{secondary_color}" stroke-width="1.5" transform="rotate(35)" opacity="0.7" />
+    <circle cx="24" cy="-8" r="3" fill="{primary_color}" />
   </g>
 
   <!-- Main Title Text -->
-  <text x="140" y="140" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#ffffff" filter="url(#glow)" letter-spacing="1">
+  <text x="124" y="118" font-family="'Montserrat', 'Inter', 'Roboto', 'Arial', sans-serif" 
+        font-size="26" font-weight="800" fill="#ffffff" filter="url(#holoGlow)" letter-spacing="1.2">
     {title}
   </text>
 
-  <!-- Subtitle / Formula Text -->
-  <text x="140" y="180" font-family="Arial, sans-serif" font-size="16" fill="{primary_color}" fill-opacity="0.95">
+  <!-- Subtitle / Data Formula Text -->
+  <text x="124" y="152" font-family="'Inter', 'Roboto', 'Arial', sans-serif" 
+        font-size="14" font-weight="500" fill="{primary_color}" fill-opacity="0.9" letter-spacing="0.5">
     {subtitle}
   </text>
 
-  <!-- Bottom Holographic Light Beam Cone -->
-  <polygon points="{width//2 - 40},{height - 24} {width//2 + 40},{height - 24} {width//2 + 90},{height} {width//2 - 90},{height}" 
-           fill="url(#beamGrad)" />
+  <!-- Bottom Accent Light Line Base -->
+  <path d="M {width//2 - 90} {height - 24} L {width//2 + 90} {height - 24}" 
+        stroke="url(#lineGlow)" stroke-width="2.5" />
 </svg>
 """
 
