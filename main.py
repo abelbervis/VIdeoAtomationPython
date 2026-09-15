@@ -59,15 +59,32 @@ def main():
         print("Please install FFmpeg: https://ffmpeg.org/download.html")
         sys.exit(1)
 
-    # If --debate / --debate-topic mode is selected, generate AI debate and render MP4 video
-    if getattr(args, "debate", False) or getattr(args, "debate_topic", None):
+    # If --debate / --debate-topic / --script mode is selected, render AI debate video
+    script_file_arg = getattr(args, "custom_script", None)
+    if script_file_arg or getattr(args, "debate", False) or getattr(args, "debate_topic", None):
         from video.orb import render_cohost_debate_video
         fmt_cfg = resolve_video_format(args.format)
-        target_topic = getattr(args, "debate_topic", None) or args.topic or "Física Cuántica vs Astrofísica Solar"
+        
+        debate_script = None
+        if script_file_arg:
+            p = Path(script_file_arg)
+            if p.exists():
+                try:
+                    debate_script = json.loads(p.read_text(encoding="utf-8"))
+                    print(f"\n📂 [Debate Express] Cargando guión revisado y editado desde: {p}")
+                except Exception as e:
+                    print(f"\n❌ Error leyendo el archivo de guión {p}: {e}")
+                    sys.exit(1)
+            else:
+                print(f"\n❌ No se encontró el archivo de guión especificado: {p}")
+                sys.exit(1)
+
+        target_topic = getattr(args, "debate_topic", None) or (debate_script.get("topic") if debate_script else None) or args.topic or "Física Cuántica vs Astrofísica Solar"
         out_path = Path(args.output) if args.output else None
         llm_prov = getattr(args, "llm", "groq")
         res_video = render_cohost_debate_video(
             topic=target_topic,
+            debate_script=debate_script,
             output_path=out_path,
             width=fmt_cfg["width"],
             height=fmt_cfg["height"],
