@@ -99,6 +99,108 @@ def synthesize_procedural_boom(
     return output_path
 
 
+def synthesize_camera_servo_sfx(
+    output_path: Path,
+    duration: float = 0.50,
+    sample_rate: int = 44100,
+    sfx_type: str = "zoom_in"
+) -> Path:
+    """Synthesize a high-tech sci-fi optical camera servo, pan, or pull-back sound effect."""
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    total_samples = int(duration * sample_rate)
+    samples = []
+
+    for i in range(total_samples):
+        t = i / total_samples
+        sec = i / sample_rate
+
+        if sfx_type == "intro":
+            env = math.exp(-t * 3.5)
+            chime = 0.35 * math.sin(2.0 * math.pi * 523.25 * sec) + 0.25 * math.sin(2.0 * math.pi * 783.99 * sec)
+            sub = 0.40 * math.sin(2.0 * math.pi * 65.41 * (1.0 - 0.3 * t) * sec)
+            noise = 0.15 * random.uniform(-1.0, 1.0) * math.exp(-t * 6.0)
+            val = (chime + sub + noise) * env
+            l_val, r_val = val, val
+        elif sfx_type == "zoom_in":
+            env = math.exp(-((t - 0.42) ** 2) / (2 * (0.12 ** 2)))
+            servo_freq = 420.0 + 850.0 * (t ** 1.5)
+            servo = 0.30 * math.sin(2.0 * math.pi * servo_freq * sec) + 0.15 * math.sin(4.0 * math.pi * servo_freq * sec)
+            noise = 0.45 * random.uniform(-1.0, 1.0)
+            click = 0.25 * math.exp(-((t - 0.78) ** 2) / (2 * (0.02 ** 2))) * math.sin(2.0 * math.pi * 1400.0 * sec)
+            val = (servo + noise) * env + click
+            l_val = val * (0.7 + 0.3 * math.sin(t * math.pi))
+            r_val = val * (0.7 + 0.3 * math.cos(t * math.pi))
+        elif sfx_type == "pan":
+            env = math.exp(-((t - 0.50) ** 2) / (2 * (0.14 ** 2)))
+            pan_freq = 800.0 - 450.0 * t
+            synth = 0.30 * math.sin(2.0 * math.pi * pan_freq * sec)
+            noise = 0.50 * random.uniform(-1.0, 1.0)
+            val = (synth + noise) * env
+            l_val = val * (1.0 - t * 0.7)
+            r_val = val * (0.3 + t * 0.7)
+        else:  # "pull_back" / wide
+            env = math.exp(-((t - 0.45) ** 2) / (2 * (0.16 ** 2)))
+            sub = 0.40 * math.sin(2.0 * math.pi * 110.0 * (1.0 - 0.5 * t) * sec)
+            noise = 0.45 * random.uniform(-1.0, 1.0)
+            lock = 0.30 * math.exp(-((t - 0.85) ** 2) / (2 * (0.03 ** 2))) * math.sin(2.0 * math.pi * 320.0 * sec)
+            val = (sub + noise) * env + lock
+            l_val, r_val = val, val
+
+        l_val = max(-1.0, min(1.0, l_val * 0.85))
+        r_val = max(-1.0, min(1.0, r_val * 0.85))
+        samples.append(struct.pack("<hh", int(l_val * 32767), int(r_val * 32767)))
+
+    with wave.open(str(output_path), "wb") as wav_file:
+        wav_file.setnchannels(2)
+        wav_file.setsampwidth(2)
+        wav_file.setframerate(sample_rate)
+        wav_file.writeframes(b"".join(samples))
+
+    return output_path
+
+
+def synthesize_space_ambient_pad(
+    output_path: Path,
+    duration: float = 12.0,
+    sample_rate: int = 44100
+) -> Path:
+    """Synthesize a lush, cinematic sci-fi ambient space drone soundtrack."""
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    total_samples = int(duration * sample_rate)
+    samples = []
+
+    for i in range(total_samples):
+        sec = i / sample_rate
+        fade_in = min(1.0, sec / 1.2)
+        fade_out = min(1.0, (duration - sec) / 2.0) if sec > duration - 2.0 else 1.0
+        env = fade_in * fade_out
+
+        f1, f2, f3, f4 = 65.41, 130.81, 196.00, 329.63
+        lfo_slow = math.sin(2.0 * math.pi * 0.18 * sec)
+        lfo_phase = math.cos(2.0 * math.pi * 0.12 * sec)
+
+        osc1 = 0.35 * math.sin(2.0 * math.pi * f1 * sec)
+        osc2 = 0.25 * math.sin(2.0 * math.pi * (f2 + 0.4 * lfo_slow) * sec)
+        osc3 = 0.20 * math.sin(2.0 * math.pi * (f3 + 0.6 * lfo_phase) * sec)
+        osc4 = 0.12 * math.sin(2.0 * math.pi * f4 * sec)
+        space_air = 0.08 * random.uniform(-1.0, 1.0) * (0.7 + 0.3 * lfo_slow)
+
+        val_l = (osc1 + osc2 * 1.1 + osc3 * 0.8 + osc4 + space_air) * env * 0.40
+        val_r = (osc1 + osc2 * 0.8 + osc3 * 1.1 + osc4 + space_air) * env * 0.40
+
+        val_l = max(-1.0, min(1.0, val_l))
+        val_r = max(-1.0, min(1.0, val_r))
+        samples.append(struct.pack("<hh", int(val_l * 32767), int(val_r * 32767)))
+
+    with wave.open(str(output_path), "wb") as wav_file:
+        wav_file.setnchannels(2)
+        wav_file.setsampwidth(2)
+        wav_file.setframerate(sample_rate)
+        wav_file.writeframes(b"".join(samples))
+
+    return output_path
+
+
 class SFXManager:
     """Manages sound effect assets and timeline synchronization."""
 

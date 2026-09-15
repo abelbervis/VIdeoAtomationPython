@@ -485,8 +485,16 @@ def render_orb_test_preview(
         part1_path = output_path.parent / "_temp_q_part1.mp3"
         part2_path = output_path.parent / "_temp_q_part2.mp3"
         part3_path = output_path.parent / "_temp_s_part3.mp3"
+        sfx_intro_path = output_path.parent / "_temp_sfx_intro.wav"
+        sfx_zoom_path = output_path.parent / "_temp_sfx_zoom.wav"
+        sfx_pan_path = output_path.parent / "_temp_sfx_pan.wav"
+        sfx_wide_path = output_path.parent / "_temp_sfx_wide.wav"
+        music_bg_path = output_path.parent / "_temp_music_ambient.wav"
         
         from audio.tts import EdgeTTSProvider, GoogleTTSProvider
+        from audio.sfx import synthesize_camera_servo_sfx, synthesize_space_ambient_pad
+        from audio.music import MusicManager
+
         tts_q = EdgeTTSProvider(default_voice="es-ES-AlvaroNeural")
         tts_s = EdgeTTSProvider(default_voice="es-ES-ElviraNeural")
         
@@ -501,20 +509,56 @@ def render_orb_test_preview(
         syn1 = tts_q.synthesize_text("¡Hola! Bienvenidos a este nuevo debate espacial.", part1_path)
         syn2 = tts_q.synthesize_text("Hoy exploraremos los límites y misterios de la física cuántica.", part2_path)
         syn3 = tts_s.synthesize_text("¡Excelente! Y yo aportaré los secretos de la física solar.", part3_path)
+
+        # Synthesize camera transition SFX
+        synthesize_camera_servo_sfx(sfx_intro_path, duration=0.8, sfx_type="intro")
+        synthesize_camera_servo_sfx(sfx_zoom_path, duration=0.45, sfx_type="zoom_in")
+        synthesize_camera_servo_sfx(sfx_pan_path, duration=0.45, sfx_type="pan")
+        synthesize_camera_servo_sfx(sfx_wide_path, duration=0.55, sfx_type="pull_back")
+
+        # Prepare background soundtrack (custom asset or procedural space ambient pad)
+        music_mgr = MusicManager()
+        bg_track = music_mgr.get_background_track()
+        if bg_track and bg_track.exists():
+            music_bg_path = bg_track
+        else:
+            synthesize_space_ambient_pad(music_bg_path, duration=12.0)
         
         if syn1 and syn2 and syn3 and part1_path.exists() and part2_path.exists() and part3_path.exists():
-            # Stitch: 
-            # Part 1 starts at 0.0s (Quantum)
-            # Part 2 starts at 3.2s (Quantum)
-            # Part 3 starts at 6.2s (Solar)
+            # Multitrack Audio Mixing Pipeline:
+            # Inputs:
+            # 0: Voice Part 1 (Quantum - 0.0s)
+            # 1: Voice Part 2 (Quantum - 3.2s)
+            # 2: Voice Part 3 (Solar - 6.2s)
+            # 3: SFX Intro (0.0s)
+            # 4: SFX Zoom (3.2s)
+            # 5: SFX Pan (6.2s)
+            # 6: SFX Wide Pan Out (9.2s)
+            # 7: Sci-Fi Ambient Soundtrack Pad (0.0s - 12.0s)
             concat_cmd = [
                 "ffmpeg", "-y",
                 "-i", str(part1_path),
                 "-i", str(part2_path),
                 "-i", str(part3_path),
-                "-filter_complex", "[0:a]adelay=0|0[a1];[1:a]adelay=3200|3200[a2];[2:a]adelay=6200|6200[a3];[a1][a2][a3]amix=inputs=3:dropout_transition=0[aout]",
+                "-i", str(sfx_intro_path),
+                "-i", str(sfx_zoom_path),
+                "-i", str(sfx_pan_path),
+                "-i", str(sfx_wide_path),
+                "-stream_loop", "-1", "-i", str(music_bg_path),
+                "-filter_complex",
+                "[0:a]adelay=0|0,volume=1.0[v1];"
+                "[1:a]adelay=3200|3200,volume=1.0[v2];"
+                "[2:a]adelay=6200|6200,volume=1.0[v3];"
+                "[3:a]adelay=50|50,volume=0.35[sfx0];"
+                "[4:a]adelay=3180|3180,volume=0.40[sfx1];"
+                "[5:a]adelay=6180|6180,volume=0.40[sfx2];"
+                "[6:a]adelay=9180|9180,volume=0.45[sfx3];"
+                "[7:a]volume=0.18,afade=t=in:st=0:d=1.0,afade=t=out:st=10.2:d=1.8[bgm];"
+                "[v1][v2][v3][sfx0][sfx1][sfx2][sfx3][bgm]amix=inputs=8:dropout_transition=0:normalize=0[aout]",
                 "-map", "[aout]",
+                "-t", "12.0",
                 "-c:a", "libmp3lame",
+                "-b:a", "192k",
                 str(temp_test_audio)
             ]
             try:
@@ -525,12 +569,18 @@ def render_orb_test_preview(
                 print(f"  ⚠️ Test co-host audio concat error: {e}")
                 resolved_audio = part1_path
             
-            for p in [part1_path, part2_path, part3_path]:
+            for p in [part1_path, part2_path, part3_path, sfx_intro_path, sfx_zoom_path, sfx_pan_path, sfx_wide_path]:
                 if p.exists():
                     try:
                         p.unlink()
                     except Exception:
                         pass
+            if music_bg_path.name == "_temp_music_ambient.wav" and music_bg_path.exists():
+                try:
+                    music_bg_path.unlink()
+                except Exception:
+                    pass
+
 
     # Build advanced video filter chains for double overlays & scale changes (Virtual Camera)
     # Drift and eq structures with static opacities split by role and shot
