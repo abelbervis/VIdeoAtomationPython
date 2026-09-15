@@ -176,26 +176,33 @@ def generate_animated_orb_loop(
     r_sphere = int(canvas_size * 0.27)
     r_aura_outer_base = int(canvas_size * 0.48)
     r_aura_inner_base = int(canvas_size * 0.38)
-    r_ring_base = int(r_sphere * 1.18)
 
     try:
         for i in range(loop_frames):
             t = i / loop_frames
             tau = 2 * math.pi * t
 
-            # 1. Concentric surrounding ring expands and contracts (+/- 6.5px breathing)
-            ring_r = int(r_ring_base + 6.5 * math.sin(tau))
-            ring_r_outer_glow = ring_r + 4
+            # 1. Concentric surrounding ring expands & contracts until touching the sphere body (2x faster speed)
+            # At t=0 & t=0.5, ring_r = r_sphere + 4 (touches sphere edge!)
+            # At t=0.25 & t=0.75, ring_r = r_sphere + 36 (expands far outward!)
+            ring_r = int(r_sphere + 20 - 16 * math.cos(2.0 * tau))
+            ring_r_outer_glow = ring_r + 5
 
             # 2. Rich atmospheric volumetric aura swells (+/- 14px)
             r_aura_outer = int(r_aura_outer_base + 14 * math.sin(tau))
             r_aura_inner = int(r_aura_inner_base + 10 * math.sin(tau))
 
-            # 3. Core light spot breathing
-            spot_x = int(c - r_sphere * 0.32 + 10 * math.sin(tau))
-            spot_y = int(c - r_sphere * 0.28 + 8 * math.cos(tau))
-            spot_rx = int(r_sphere * 0.52 + 7 * math.sin(2 * tau))
-            spot_ry = int(r_sphere * 0.48 + 6 * math.cos(2 * tau))
+            # 3. Core light spot breathing (Primary Top-Left Spot)
+            spot1_x = int(c - r_sphere * 0.32 + 8 * math.sin(tau))
+            spot1_y = int(c - r_sphere * 0.28 + 6 * math.cos(tau))
+            spot1_rx = int(r_sphere * 0.52 + 6 * math.sin(2 * tau))
+            spot1_ry = int(r_sphere * 0.48 + 5 * math.cos(2 * tau))
+
+            # 4. Secondary Counter-Tone Light Spot (Bottom-Right Cyan/Azure Flare)
+            spot2_x = int(c + r_sphere * 0.30 - 8 * math.sin(tau))
+            spot2_y = int(c + r_sphere * 0.28 - 6 * math.cos(tau))
+            spot2_rx = int(r_sphere * 0.44 + 5 * math.cos(2 * tau))
+            spot2_ry = int(r_sphere * 0.40 + 4 * math.sin(2 * tau))
 
             svg = f"""<svg width="{canvas_size}" height="{canvas_size}" viewBox="0 0 {canvas_size} {canvas_size}" xmlns="http://www.w3.org/2000/svg">
   <defs>
@@ -208,9 +215,16 @@ def generate_animated_orb_loop(
     <filter id="coreBlur_{i}" x="-30%" y="-30%" width="160%" height="160%">
       <feGaussianBlur stdDeviation="11" />
     </filter>
+    <filter id="secondaryBlur_{i}" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="14" />
+    </filter>
     <filter id="ringGlow_{i}" x="-40%" y="-40%" width="180%" height="180%">
       <feGaussianBlur stdDeviation="8" />
     </filter>
+
+    <clipPath id="sphereClip_{i}">
+      <circle cx="{c}" cy="{c}" r="{r_sphere}" />
+    </clipPath>
 
     <!-- Expansive Multi-Stop Atmospheric Neon Volumetric Aura -->
     <radialGradient id="outerAuraDeep_{i}" cx="50%" cy="50%" r="50%">
@@ -227,20 +241,30 @@ def generate_animated_orb_loop(
       <stop offset="100%" stop-color="#000000" stop-opacity="0.0" />
     </radialGradient>
 
-    <!-- Sphere Body Gradient -->
-    <radialGradient id="sphereBody_{i}" cx="45%" cy="42%" r="58%">
-      <stop offset="0%" stop-color="{palette['body_center']}" />
-      <stop offset="55%" stop-color="{palette['body_mid']}" />
-      <stop offset="85%" stop-color="{palette['body_edge']}" />
-      <stop offset="100%" stop-color="{palette['body_rim']}" />
+    <!-- Multi-Spectral Chromatic Sphere Body Gradient -->
+    <radialGradient id="sphereBody_{i}" cx="42%" cy="38%" r="62%">
+      <stop offset="0%" stop-color="#00f0ff" />
+      <stop offset="22%" stop-color="#0284c7" />
+      <stop offset="48%" stop-color="#3b82f6" />
+      <stop offset="72%" stop-color="#8a2be2" />
+      <stop offset="88%" stop-color="#d946ef" />
+      <stop offset="100%" stop-color="#1e0836" />
     </radialGradient>
 
-    <!-- Off-Center Light Spot (White Center to Pink/Purple Glow) -->
-    <radialGradient id="lightSpot_{i}" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="{palette['spot_core']}" stop-opacity="1.0" />
-      <stop offset="28%" stop-color="{palette['spot_glow']}" stop-opacity="0.95" />
-      <stop offset="65%" stop-color="{palette['spot_outer']}" stop-opacity="0.60" />
-      <stop offset="100%" stop-color="{palette['body_center']}" stop-opacity="0.0" />
+    <!-- Primary Off-Center Light Spot (White Center to Magenta/Pink Flare) -->
+    <radialGradient id="primarySpot_{i}" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="1.0" />
+      <stop offset="26%" stop-color="#f472b6" stop-opacity="0.95" />
+      <stop offset="60%" stop-color="#c084fc" stop-opacity="0.65" />
+      <stop offset="100%" stop-color="#8a2be2" stop-opacity="0.0" />
+    </radialGradient>
+
+    <!-- Secondary Counter-Tone Light Spot (Cyan/Electric Blue Flare) -->
+    <radialGradient id="secondarySpot_{i}" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#00f0ff" stop-opacity="0.90" />
+      <stop offset="40%" stop-color="#0284c7" stop-opacity="0.65" />
+      <stop offset="80%" stop-color="#3b82f6" stop-opacity="0.30" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.0" />
     </radialGradient>
   </defs>
 
@@ -248,19 +272,28 @@ def generate_animated_orb_loop(
   <circle cx="{c}" cy="{c}" r="{r_aura_outer}" fill="url(#outerAuraDeep_{i})" filter="url(#auraGlowDeep_{i})" />
   <circle cx="{c}" cy="{c}" r="{r_aura_inner}" fill="url(#innerAuraBright_{i})" filter="url(#auraGlowMid_{i})" />
 
-  <!-- 2. Concentric Surrounding Ring (Expanding and Contracting Subtly) -->
+  <!-- 2. Concentric Surrounding Ring (Expanding & Contracting Fast until touching sphere edge) -->
   <circle cx="{c}" cy="{c}" r="{ring_r_outer_glow}" fill="none" stroke="{palette['aura_inner']}" stroke-width="7" opacity="0.85" filter="url(#ringGlow_{i})" />
   <circle cx="{c}" cy="{c}" r="{ring_r}" fill="none" stroke="{palette['ring_stroke']}" stroke-width="2.8" opacity="0.95" />
 
   <!-- 3. Sphere Body -->
   <circle cx="{c}" cy="{c}" r="{r_sphere}" fill="url(#sphereBody_{i})" />
 
-  <!-- 4. Inner Concentric Rim Light -->
-  <circle cx="{c}" cy="{c}" r="{r_sphere - 2}" fill="none" stroke="{palette['aura_inner']}" stroke-width="3" opacity="0.70" />
+  <!-- 4. Multi-Spectral Interior Light Layers -->
+  <g clip-path="url(#sphereClip_{i})">
+    <!-- Secondary Cyan/Azure Flare (Bottom-Right) -->
+    <ellipse cx="{spot2_x}" cy="{spot2_y}" rx="{spot2_rx}" ry="{spot2_ry}" fill="url(#secondarySpot_{i})" filter="url(#secondaryBlur_{i})" />
 
-  <!-- 5. Bioluminescent Core Light Spot -->
-  <ellipse cx="{spot_x}" cy="{spot_y}" rx="{spot_rx}" ry="{spot_ry}" fill="url(#lightSpot_{i})" filter="url(#coreBlur_{i})" />
-  <circle cx="{spot_x}" cy="{spot_y}" r="{int(spot_rx * 0.45)}" fill="{palette['spot_core']}" opacity="0.98" filter="url(#coreBlur_{i})" />
+    <!-- Primary White/Magenta Flare (Top-Left) -->
+    <ellipse cx="{spot1_x}" cy="{spot1_y}" rx="{spot1_rx}" ry="{spot1_ry}" fill="url(#primarySpot_{i})" filter="url(#coreBlur_{i})" />
+    <circle cx="{spot1_x}" cy="{spot1_y}" r="{int(spot1_rx * 0.45)}" fill="#ffffff" opacity="0.98" filter="url(#coreBlur_{i})" />
+
+    <!-- Subsurface Magenta Rim Accent -->
+    <circle cx="{c}" cy="{c}" r="{r_sphere - 3}" fill="none" stroke="#d946ef" stroke-width="4" opacity="0.55" filter="url(#coreBlur_{i})" />
+  </g>
+
+  <!-- 5. Inner Concentric Rim Light -->
+  <circle cx="{c}" cy="{c}" r="{r_sphere - 2}" fill="none" stroke="{palette['aura_inner']}" stroke-width="3" opacity="0.75" />
 </svg>"""
             (frames_dir / f"frame_{i:03d}.svg").write_text(svg, encoding="utf-8")
 
