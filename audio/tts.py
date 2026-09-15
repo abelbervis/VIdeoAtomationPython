@@ -18,7 +18,7 @@ from config import AUDIO_DIR, TTS_PROVIDER, TTS_API_KEY, DEFAULT_TTS_VOICE, OPEN
 from utils.files import get_media_duration
 
 
-# Cosmic Entity Voice Profiles (Microsoft Edge Neural TTS + SSML Prosody + 4-Tier DSP Acoustic Engineering)
+# Cosmic Entity Voice Profiles (Microsoft Edge Neural TTS + SSML Prosody + Cell DBZ Double Tracking + 4-Tier DSP)
 COSMIC_VOICE_PROFILES = {
     "quantum": {
         "name": "QUANTUM",
@@ -27,17 +27,13 @@ COSMIC_VOICE_PROFILES = {
         "pitch": "-4Hz",
         "volume": "+0%",
         "role": "La Mente Fundamental del Vacío",
-        "description": "Profunda, analítica, serena y pausada. Sub-octava estelar + dimensión binaural 3D.",
+        "description": "Profunda, analítica, serena. Double tracking grave (-0.3 semitonos, 14ms, -11dB) + dimensión 3D.",
         "drone_freq": 48,
-        "filter_complex": (
-            "[0:a]asplit=2[main_q][sub_q];"
-            "[sub_q]asetrate=22050,atempo=2.0,lowpass=f=120,volume=0.15[sub_bass];"
-            "[main_q][sub_bass]amix=inputs=2:weights=1.0 0.2:duration=first[mixed_q];"
-            "[mixed_q]highpass=f=80,equalizer=f=140:width_type=h:width=60:g=3.0,equalizer=f=3800:width_type=h:width=1200:g=2.5,compand=attacks=0.01:decays=0.1:points=-60/-60|-20/-10|0/-3:soft-knee=6[eq_q];"
-            "[eq_q]aformat=channel_layouts=stereo,asplit=2[center_q][wide_q];"
-            "[wide_q]adelay=14|14,highpass=f=300,volume=0.20[wide_delayed_q];"
-            "[center_q][wide_delayed_q]amix=inputs=2:weights=1.0 0.15:duration=first,volume=2.2[out_q]"
-        )
+        "double_tracking": {
+            "delay_ms": 14,
+            "double_vol_db": -11.0,
+            "detune_semitones": -0.3
+        }
     },
     "solar": {
         "name": "SOLAR",
@@ -46,20 +42,62 @@ COSMIC_VOICE_PROFILES = {
         "pitch": "+2Hz",
         "volume": "+0%",
         "role": "El Núcleo Estelar Radiante",
-        "description": "Cálida, brillante, envolvente. Saturación plasma estelar + expansión 3D Haas.",
+        "description": "Cálida, brillante, envolvente. Double tracking plasma (+0.3 semitonos, 12ms, -11.5dB) + expansión 3D.",
         "drone_freq": 58,
-        "filter_complex": (
-            "[0:a]asplit=2[main_s][plasma_s];"
-            "[plasma_s]highpass=f=3200,volume=0.18,aecho=0.8:0.7:16:0.25[shimmer_s];"
-            "[main_s][shimmer_s]amix=inputs=2:weights=1.0 0.2:duration=first[mixed_s];"
-            "[mixed_s]highpass=f=90,equalizer=f=2200:width_type=h:width=800:g=2.5,equalizer=f=6200:width_type=h:width=2000:g=2.8,compand=attacks=0.01:decays=0.1:points=-60/-60|-20/-10|0/-3:soft-knee=6[eq_s];"
-            "[eq_s]aformat=channel_layouts=stereo,asplit=2[center_s][wide_s];"
-            "[wide_s]adelay=10|10,highpass=f=350,volume=0.18[wide_delayed_s];"
-            "[center_s][wide_delayed_s]amix=inputs=2:weights=1.0 0.15:duration=first,volume=2.2[out_s]"
-        )
-
+        "double_tracking": {
+            "delay_ms": 12,
+            "double_vol_db": -11.5,
+            "detune_semitones": 0.3
+        }
     }
 }
+
+
+def build_cell_double_tracking_filter(
+    entity: str,
+    delay_ms: int = 14,
+    double_vol_db: float = -11.0,
+    detune_semitones: float = -0.3
+) -> str:
+    """
+    Generates a reusable FFmpeg filtergraph for DBZ Cell-style Double Tracking.
+    Duplicates the lead voice with a short micro-delay (10-20ms), attenuated volume (-11dB resonance),
+    and pitch detune (+/- 0.3 semitones) to create a subtle supernatural entity voice.
+    """
+    rate_mult = 2.0 ** (detune_semitones / 12.0)
+    new_sample_rate = int(round(44100 * rate_mult))
+    tempo_corr = 1.0 / rate_mult
+    vol_factor = 10.0 ** (double_vol_db / 20.0)
+    
+    tag = "q" if "quantum" in entity.lower() else "s"
+    
+    filter_graph = (
+        f"[0:a]asplit=2[lead_{tag}][clone_raw_{tag}];"
+        f"[clone_raw_{tag}]adelay={delay_ms}|{delay_ms},asetrate={new_sample_rate},atempo={tempo_corr:.4f},volume={vol_factor:.3f}[clone_{tag}];"
+        f"[lead_{tag}][clone_{tag}]amix=inputs=2:weights=1.0 {vol_factor:.3f}:duration=first[double_{tag}];"
+    )
+    if "quantum" in entity.lower():
+        filter_graph += (
+            f"[double_{tag}]asplit=2[main_q][sub_q];"
+            f"[sub_q]asetrate=22050,atempo=2.0,lowpass=f=120,volume=0.15[sub_bass];"
+            f"[main_q][sub_bass]amix=inputs=2:weights=1.0 0.2:duration=first[mixed_q];"
+            f"[mixed_q]highpass=f=80,equalizer=f=140:width_type=h:width=60:g=3.0,equalizer=f=3800:width_type=h:width=1200:g=2.5,compand=attacks=0.01:decays=0.1:points=-60/-60|-20/-10|0/-3:soft-knee=6[eq_q];"
+            f"[eq_q]aformat=channel_layouts=stereo,asplit=2[center_q][wide_q];"
+            f"[wide_q]adelay=14|14,highpass=f=300,volume=0.20[wide_delayed_q];"
+            f"[center_q][wide_delayed_q]amix=inputs=2:weights=1.0 0.15:duration=first,volume=2.2[out_q]"
+        )
+    else:
+        filter_graph += (
+            f"[double_{tag}]asplit=2[main_s][plasma_s];"
+            f"[plasma_s]highpass=f=3200,volume=0.18,aecho=0.8:0.7:16:0.25[shimmer_s];"
+            f"[main_s][shimmer_s]amix=inputs=2:weights=1.0 0.2:duration=first[mixed_s];"
+            f"[mixed_s]highpass=f=90,equalizer=f=2200:width_type=h:width=800:g=2.5,equalizer=f=6200:width_type=h:width=2000:g=2.8,compand=attacks=0.01:decays=0.1:points=-60/-60|-20/-10|0/-3:soft-knee=6[eq_s];"
+            f"[eq_s]aformat=channel_layouts=stereo,asplit=2[center_s][wide_s];"
+            f"[wide_s]adelay=10|10,highpass=f=350,volume=0.18[wide_delayed_s];"
+            f"[center_s][wide_delayed_s]amix=inputs=2:weights=1.0 0.15:duration=first,volume=2.2[out_s]"
+        )
+    return filter_graph
+
 
 
 def prepare_cosmic_pacing_text(text: str) -> str:
@@ -197,15 +235,23 @@ class EdgeTTSProvider(BaseTTSProvider):
         text: str,
         output_path: Path,
         entity: str = "quantum",
-        apply_dsp: bool = True
+        apply_dsp: bool = True,
+        delay_ms: Optional[int] = None,
+        double_vol_db: Optional[float] = None,
+        detune_semitones: Optional[float] = None
     ) -> bool:
         """
         Synthesize voice for a cosmic entity (quantum or solar) with tuned SSML prosody,
-        psychophysical pacing, 3D Haas binaural width, sub-harmonics, and resonant sub-bass drone.
+        DBZ Cell-style Double Tracking (detuned micro-delay), 3D Haas binaural width, and sub-harmonics.
         """
         entity_key = entity.lower()
         profile = COSMIC_VOICE_PROFILES.get(entity_key, COSMIC_VOICE_PROFILES["quantum"])
+        dt_cfg = profile.get("double_tracking", {"delay_ms": 14, "double_vol_db": -11.0, "detune_semitones": -0.3})
         
+        d_ms = delay_ms if delay_ms is not None else dt_cfg["delay_ms"]
+        d_vol = double_vol_db if double_vol_db is not None else dt_cfg["double_vol_db"]
+        d_pitch = detune_semitones if detune_semitones is not None else dt_cfg["detune_semitones"]
+
         # 1. Pacing & SSML pre-processing
         paced_text = prepare_cosmic_pacing_text(text)
         
@@ -226,10 +272,14 @@ class EdgeTTSProvider(BaseTTSProvider):
         if not synthesized or not apply_dsp:
             return synthesized
 
-        # 3. Apply 4-tier Cosmic DSP Filtergraph (Sub-harmonics + Plasma Saturation + 3D Haas + Resonant Drone)
+        # 3. Apply Cell Double Tracking + Acoustic DSP Filtergraph
         try:
-            dur = get_media_duration(raw_tmp_path) or 3.0
-            filter_graph = profile["filter_complex"].format(duration=f"{dur:.2f}")
+            filter_graph = build_cell_double_tracking_filter(
+                entity=entity_key,
+                delay_ms=d_ms,
+                double_vol_db=d_vol,
+                detune_semitones=d_pitch
+            )
 
             cmd = [
                 "ffmpeg", "-y",
@@ -244,10 +294,11 @@ class EdgeTTSProvider(BaseTTSProvider):
             raw_tmp_path.unlink(missing_ok=True)
             return output_path.exists() and output_path.stat().st_size > 0
         except Exception as e:
-            print(f"  ⚠️ Cosmic DSP Filter Error: {e}, falling back to raw synthesis.")
+            print(f"  ⚠️ Cosmic Double-Tracking DSP Filter Error: {e}, falling back to raw synthesis.")
             if raw_tmp_path.exists():
                 raw_tmp_path.rename(output_path)
             return output_path.exists()
+
 
 
 
