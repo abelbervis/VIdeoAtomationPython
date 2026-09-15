@@ -1,0 +1,132 @@
+<svg width="1000" height="1000" viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Soft Volumetric Blurs -->
+    <filter id="vortexDeepBlur" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="14" result="blurDeep" />
+    </filter>
+
+    <filter id="vortexSharpBlur" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="6" result="blurSharp" />
+    </filter>
+
+    <filter id="ringGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="4" result="glow" />
+    </filter>
+
+    <!-- Clip path defining the spherical plasma glass body -->
+    <clipPath id="coreClip">
+      <circle cx="500" cy="500" r="230" />
+    </clipPath>
+
+    <!-- Layer 0: Radiance Aura -->
+    <radialGradient id="outerRadiance" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#8a2be2" stop-opacity="0.82" />
+      <stop offset="35%" stop-color="#00f0ff" stop-opacity="0.45" />
+      <stop offset="68%" stop-color="#ff007f" stop-opacity="0.18" />
+      <stop offset="90%" stop-color="#8a2be2" stop-opacity="0.04" />
+      <stop offset="100%" stop-color="#8a2be2" stop-opacity="0.0" />
+    </radialGradient>
+
+    <!-- Layer 1: Radiant Coronal Plasma Flare -->
+    <radialGradient id="coronalHalo" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.90" />
+      <stop offset="28%" stop-color="#00f0ff" stop-opacity="0.70" />
+      <stop offset="62%" stop-color="#8a2be2" stop-opacity="0.30" />
+      <stop offset="92%" stop-color="#ff007f" stop-opacity="0.04" />
+      <stop offset="100%" stop-color="#ff007f" stop-opacity="0.0" />
+    </radialGradient>
+
+    <!-- Layer 2: 3D Quantum Body -->
+    <radialGradient id="orbVolumetric" cx="36%" cy="32%" r="68%" fx="30%" fy="26%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="1.0" />
+      <stop offset="15%" stop-color="#00f0ff" stop-opacity="0.96" />
+      <stop offset="40%" stop-color="#8a2be2" stop-opacity="0.95" />
+      <stop offset="74%" stop-color="#ff007f" stop-opacity="0.98" />
+      <stop offset="94%" stop-color="#090314" stop-opacity="1.0" />
+      <stop offset="100%" stop-color="#020008" stop-opacity="1.0" />
+    </radialGradient>
+
+    <!-- Sentient Orbital Energy Ring Gradients -->
+    <linearGradient id="haloRingGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f0ff" stop-opacity="0.95" />
+      <stop offset="50%" stop-color="#ffffff" stop-opacity="1.0" />
+      <stop offset="100%" stop-color="#ff007f" stop-opacity="0.20" />
+    </linearGradient>
+
+    <linearGradient id="haloRingGrad2" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#00f0ff" stop-opacity="0.90" />
+      <stop offset="60%" stop-color="#8a2be2" stop-opacity="0.60" />
+      <stop offset="100%" stop-color="#090314" stop-opacity="0.10" />
+    </linearGradient>
+
+    <!-- Internal Caustic Resonance Ribbons -->
+    <linearGradient id="ringGrad1" x1="10%" y1="20%" x2="90%" y2="80%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95" />
+      <stop offset="30%" stop-color="#00f0ff" stop-opacity="0.82" />
+      <stop offset="70%" stop-color="#8a2be2" stop-opacity="0.45" />
+      <stop offset="100%" stop-color="#090314" stop-opacity="0.0" />
+    </linearGradient>
+
+    <!-- Singularity Eye -->
+    <radialGradient id="vortexEye" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="1.0" />
+      <stop offset="25%" stop-color="#ffffff" stop-opacity="0.98" />
+      <stop offset="55%" stop-color="#00f0ff" stop-opacity="0.85" />
+      <stop offset="85%" stop-color="#8a2be2" stop-opacity="0.30" />
+      <stop offset="100%" stop-color="#090314" stop-opacity="0.0" />
+    </radialGradient>
+
+    <!-- 3D Specular Crown -->
+    <radialGradient id="specularGleam" cx="30%" cy="26%" r="48%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="1.0" />
+      <stop offset="22%" stop-color="#ffffff" stop-opacity="0.85" />
+      <stop offset="50%" stop-color="#00f0ff" stop-opacity="0.48" />
+      <stop offset="80%" stop-color="#8a2be2" stop-opacity="0.10" />
+      <stop offset="100%" stop-color="#8a2be2" stop-opacity="0.0" />
+    </radialGradient>
+  </defs>
+
+  <!-- Stage 1: Soft Atmospheric Radiance -->
+  <circle cx="500" cy="500" r="420" fill="url(#outerRadiance)" />
+
+  <!-- Stage 2: Sentient Orbital Energy Halo Ring (Outer 3D Ellipse) -->
+  <g transform="rotate(-22 500 500)">
+    <ellipse cx="500" cy="500" rx="379" ry="96" fill="none" stroke="url(#haloRingGrad1)" stroke-width="6.5" filter="url(#ringGlow)" opacity="0.88" />
+    <ellipse cx="500" cy="500" rx="379" ry="96" fill="none" stroke="#ffffff" stroke-width="2.5" opacity="0.92" />
+  </g>
+
+  <!-- Stage 3: Radiant Corona Ring -->
+  <circle cx="500" cy="500" r="300" fill="url(#coronalHalo)" />
+
+  <!-- Stage 4: 3D Volumetric Body -->
+  <circle cx="500" cy="500" r="230" fill="url(#orbVolumetric)" />
+
+  <!-- Stage 5: Living Internal Fluid Core -->
+  <g clip-path="url(#coreClip)">
+    <ellipse cx="426" cy="442" rx="202" ry="133" fill="url(#ringGrad1)" filter="url(#vortexDeepBlur)" transform="rotate(35 426 442)" opacity="0.90" />
+    <ellipse cx="569" cy="550" rx="184" ry="115" fill="url(#haloRingGrad2)" filter="url(#vortexDeepBlur)" transform="rotate(-30 569 550)" opacity="0.85" />
+
+    <!-- Interlocking Quantum Ribbons -->
+    <path d="M 328 527 C 431 339, 557 385, 672 482 C 569 638, 454 661, 328 527 Z" fill="url(#ringGrad1)" filter="url(#vortexSharpBlur)" opacity="0.88" />
+
+    <!-- Living Singularity Eye -->
+    <circle cx="500" cy="500" r="78" fill="url(#vortexEye)" filter="url(#vortexSharpBlur)" opacity="0.98" />
+    <circle cx="500" cy="500" r="32" fill="#ffffff" filter="url(#vortexSharpBlur)" opacity="0.98" />
+
+    <!-- Bioluminescent Nodes -->
+    <circle cx="431" cy="464" r="9" fill="#ffffff" filter="url(#vortexSharpBlur)" opacity="0.92" />
+    <circle cx="578" cy="532" r="8" fill="#00f0ff" filter="url(#vortexSharpBlur)" opacity="0.94" />
+  </g>
+
+  <!-- Stage 6: Inner Sentient Ring Foreground Overlap -->
+  <g transform="rotate(28 500 500)">
+    <ellipse cx="500" cy="500" rx="310" ry="73" fill="none" stroke="url(#haloRingGrad2)" stroke-width="4.5" filter="url(#ringGlow)" opacity="0.78" />
+  </g>
+
+  <!-- Stage 7: Fixed 3D Specular Crown -->
+  <ellipse cx="435" cy="435" rx="103" ry="70" fill="url(#specularGleam)" transform="rotate(-28 435 435)" />
+
+  <!-- Stage 8: Optical Edge Refraction -->
+  <circle cx="500" cy="500" r="230" fill="none" stroke="#000000" stroke-width="2.0" opacity="0.85" />
+  <circle cx="500" cy="500" r="229" fill="none" stroke="#ffffff" stroke-width="0.9" opacity="0.65" />
+</svg>

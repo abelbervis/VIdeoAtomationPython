@@ -398,10 +398,10 @@ HOOK_TITLE_COLOR = clean_env("HOOK_TITLE_COLOR", "&H00FFFFFF&")
 
 # Gradient Orb Overlay (Pulsing glowing aesthetic sphere for high-retention visuals)
 ENABLE_ORB = clean_env("ENABLE_ORB", "false").lower() in ("true", "1", "yes")
-ORB_PALETTE = clean_env("ORB_PALETTE", "cosmic").lower()
+ORB_PALETTE = clean_env("ORB_PALETTE", "quantum").lower()
 ORB_POSITION = clean_env("ORB_POSITION", "presenter").lower()
 ORB_SIZE = clean_env("ORB_SIZE", "medium").lower()
-ORB_OPACITY = float(clean_env("ORB_OPACITY", "0.90"))
+ORB_OPACITY = float(clean_env("ORB_OPACITY", "0.95"))
 ORB_ANIMATION = clean_env("ORB_ANIMATION", "speaking").lower()
 
 

@@ -495,8 +495,8 @@ def parse_args() -> argparse.Namespace:
         "--orb-palette",
         type=str,
         default=ORB_PALETTE,
-        choices=["cosmic", "cyberpunk", "solar", "aurora", "nebula", "monochrome"],
-        help=f"Color palette for the Gradient Orb (default: '{ORB_PALETTE}')"
+        choices=["quantum", "solar"],
+        help=f"Master palette for the Presenter Orb: 'quantum' (default) or 'solar'"
     )
     parser.add_argument(
         "--orb-position",

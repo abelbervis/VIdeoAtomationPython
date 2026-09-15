@@ -1,11 +1,11 @@
 """
-Gradient Orb Generator & Compositor for Viral Shorts.
-Generates an animated, pulsing, multi-stop gradient orb (sphere) with:
-- Luminous 3D core and diffused ambient outer glow
-- Curated high-retention aesthetic palettes (Cosmic, Cyberpunk, Solar, Aurora, Nebula, Monochrome)
-- Smooth harmonic pulsing (breathing scale), floating hover, and rotational shimmer
-- Seamless FFmpeg filtergraph integration via vector SVG (rendered with librsvg)
-- Configurable positioning (center, floating, ambient background, bottom, top-right)
+Living AI Presenter Orb Generator & Compositor.
+Renders a hyper-realistic, bioluminescent 3D Quantum Plasma Entity featuring:
+- Living organic energy core with multi-layer volumetric caustics
+- Tilted 3D orbital halo rings (sentient energy rings)
+- Audio-reactive speech incandescence and dynamic vocal pulsation
+- Glass Fresnel specular crown and atmospheric corona halo
+- Optimized for functioning as the primary visual AI presenter entity in vertical Shorts
 """
 
 import math
@@ -25,8 +25,6 @@ def extract_audio_speech_envelope(
     """
     Extracts high-level continuous speech intervals [(start_sec, end_sec), ...]
     from the narration audio track using lightweight PCM energy analysis.
-    This creates compact, highly efficient FFmpeg filter graphs that never exceed
-    expression parser limits or memory buffers.
     """
     audio_path = Path(audio_path)
     if not audio_path.exists() or audio_path.stat().st_size == 0:
@@ -35,7 +33,6 @@ def extract_audio_speech_envelope(
     wav_to_clean: Optional[Path] = None
     read_path = audio_path
 
-    # Convert a temporary mono PCM WAV if input is compressed (AAC/MP3)
     if audio_path.suffix.lower() != ".wav":
         wav_to_clean = audio_path.parent / f"_temp_env_{audio_path.stem}.wav"
         try:
@@ -62,7 +59,6 @@ def extract_audio_speech_envelope(
             return []
 
         samples = struct.unpack(f"<{samples_count}h", raw_bytes)
-        # 100ms window analysis
         chunk_size = max(1, s_rate // 10)
 
         raw_active = []
@@ -74,7 +70,6 @@ def extract_audio_speech_envelope(
             norm = min(1.0, rms / 8000.0)
             raw_active.append(norm >= threshold)
 
-        # Detect raw active intervals
         raw_intervals: List[Tuple[float, float]] = []
         in_speech = False
         start_idx = 0
@@ -88,7 +83,6 @@ def extract_audio_speech_envelope(
         if in_speech:
             raw_intervals.append((round(start_idx * 0.1, 2), round(len(raw_active) * 0.1, 2)))
 
-        # Merge close intervals (inter-word gaps < min_silence_dur) into smooth continuous speech blocks
         merged: List[Tuple[float, float]] = []
         for start, end in raw_intervals:
             if not merged:
@@ -100,7 +94,6 @@ def extract_audio_speech_envelope(
                 else:
                     merged.append((start, end))
 
-        # Filter out negligible micro-clicks (<0.18s)
         filtered = [(s, e) for s, e in merged if (e - s) >= 0.18]
         if len(filtered) > max_intervals:
             filtered = filtered[:max_intervals]
@@ -117,253 +110,191 @@ def extract_audio_speech_envelope(
                 pass
 
 
+# Streamlined 2 Master Presenter Palettes (Quantum AI Core & Solar Plasma Core)
 ORB_PALETTES: Dict[str, Dict[str, Any]] = {
-    "cosmic": {
-        "name": "Cosmic Void & Violet",
-        "description": "Electric cyan core, ultraviolet body, neon magenta rim, deep cosmic void",
+    "quantum": {
+        "name": "Quantum AI Presenter",
+        "description": "Bioluminescent electric cyan core, deep violet plasma, magenta aura",
         "core_highlight": "#ffffff",
         "inner_glow": "#00f0ff",      # Electric Cyan
-        "mid_gradient": "#8a2be2",    # Ultraviolet
+        "mid_gradient": "#8a2be2",    # Violet
         "outer_gradient": "#ff007f",  # Neon Magenta
-        "deep_edge": "#120036",       # Deep Void
+        "deep_edge": "#090314",       # Cosmic Void
+        "halo_ring": "#00f0ff",
         "ambient_aura": "#8a2be2",
         "ambient_secondary": "#00f0ff",
-        "default_blend": "normal",
-    },
-    "cyberpunk": {
-        "name": "Cyberpunk Neon",
-        "description": "Hot neon pink, electric cyan, acid purple, sunset amber",
-        "core_highlight": "#ffffff",
-        "inner_glow": "#ff007f",      # Hot Pink
-        "mid_gradient": "#7b2cbf",    # Acid Purple
-        "outer_gradient": "#00d4ff",  # Electric Blue
-        "deep_edge": "#ff5400",       # Sunset Amber
-        "ambient_aura": "#ff007f",
-        "ambient_secondary": "#00d4ff",
-        "default_blend": "screen",
     },
     "solar": {
-        "name": "Solar Core",
-        "description": "Blinding white core, solar flare amber, flame orange, deep crimson",
+        "name": "Solar Plasma Presenter",
+        "description": "Incandescent solar white core, flame amber plasma, radiant orange aura",
         "core_highlight": "#ffffff",
-        "inner_glow": "#fff1a8",      # Warm Flare
-        "mid_gradient": "#ffae00",    # Solar Amber
-        "outer_gradient": "#ff4500",  # Flame Orange
-        "deep_edge": "#990000",       # Crimson Edge
+        "inner_glow": "#fff1a8",      # Solar White Flare
+        "mid_gradient": "#ffae00",    # Flame Amber
+        "outer_gradient": "#ff4500",  # Intense Orange
+        "deep_edge": "#1c0400",       # Dark Flare Edge
+        "halo_ring": "#ffae00",
         "ambient_aura": "#ff8800",
         "ambient_secondary": "#ff2200",
-        "default_blend": "screen",
-    },
-    "aurora": {
-        "name": "Aurora Borealis",
-        "description": "Mint glow, neon emerald, electric turquoise, deep sea cyan",
-        "core_highlight": "#ffffff",
-        "inner_glow": "#70ffbd",      # Mint
-        "mid_gradient": "#00e599",    # Neon Emerald
-        "outer_gradient": "#00d2b4",  # Electric Turquoise
-        "deep_edge": "#003847",       # Deep Abyss
-        "ambient_aura": "#00e599",
-        "ambient_secondary": "#00d2b4",
-        "default_blend": "screen",
-    },
-    "nebula": {
-        "name": "Deep Space Nebula",
-        "description": "Soft peach highlight, dreamy lavender, deep indigo, pure starlight",
-        "core_highlight": "#ffffff",
-        "inner_glow": "#ffd1dc",      # Pastel Pink
-        "mid_gradient": "#b388ff",    # Lavender
-        "outer_gradient": "#4a00e0",  # Indigo
-        "deep_edge": "#0d0221",       # Midnight Void
-        "ambient_aura": "#b388ff",
-        "ambient_secondary": "#4a00e0",
-        "default_blend": "normal",
-    },
-    "monochrome": {
-        "name": "Luminous Platinum",
-        "description": "Crisp pearlescent white, silver platinum, steel cyan, dark onyx",
-        "core_highlight": "#ffffff",
-        "inner_glow": "#e6f8ff",      # Ice White
-        "mid_gradient": "#9bb8d3",    # Platinum Blue
-        "outer_gradient": "#4a6984",  # Steel Slate
-        "deep_edge": "#0f172a",       # Onyx
-        "ambient_aura": "#9bb8d3",
-        "ambient_secondary": "#ffffff",
-        "default_blend": "screen",
     }
-}
-
-ORB_SIZE_MAP: Dict[str, int] = {
-    "small": 240,
-    "medium": 440,
-    "large": 620,
-    "ambient": 840,
 }
 
 
 def generate_gradient_orb_svg(
-    palette_key: str = "cosmic",
+    palette_key: str = "quantum",
     canvas_size: int = 1000,
     save_path: Optional[Path] = None,
 ) -> Tuple[Path, str]:
     """
-    Generate a high-definition SVG file containing an organic 3D Quantum Fluid
-    Crystal Orb with realistic volumetric refraction, deep glass Fresnel edges,
-    concentric liquid resonance caustics, an intense singularity core, and a fixed
-    top-left 3D specular crown.
+    Generate a high-definition SVG file containing an organic 3D Living AI Presenter Entity
+    with orbital energy halos, bioluminescent caustics, volumetric Fresnel core, and glass specular gleam.
     """
-    palette = ORB_PALETTES.get(palette_key.lower().strip(), ORB_PALETTES["cosmic"])
+    palette_key = palette_key.lower().strip()
+    if palette_key not in ORB_PALETTES:
+        palette_key = "quantum"
+    palette = ORB_PALETTES[palette_key]
 
     c = canvas_size // 2
-    # Sphere radius relative to canvas (keeps ample margin for aura falloff to reach exact zero)
-    r_sphere = int(canvas_size * 0.24)
-    r_corona = int(canvas_size * 0.31)
-    r_aura = int(canvas_size * 0.40)
-    r_specular = int(r_sphere * 0.48)
+    r_sphere = int(canvas_size * 0.23)
+    r_corona = int(canvas_size * 0.30)
+    r_aura = int(canvas_size * 0.42)
+    r_specular = int(r_sphere * 0.45)
 
-    # Coords for internal plasma vortex centers & spiral arms
-    p_x1 = int(c - r_sphere * 0.35)
-    p_y1 = int(c - r_sphere * 0.28)
-    p_x2 = int(c + r_sphere * 0.32)
-    p_y2 = int(c + r_sphere * 0.24)
+    p_x1 = int(c - r_sphere * 0.32)
+    p_y1 = int(c - r_sphere * 0.25)
+    p_x2 = int(c + r_sphere * 0.30)
+    p_y2 = int(c + r_sphere * 0.22)
 
     svg_content = f"""<svg width="{canvas_size}" height="{canvas_size}" viewBox="0 0 {canvas_size} {canvas_size}" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <!-- Internal caustics blur filters (confined strictly within the spherical clipping boundary) -->
-    <filter id="vortexDeepBlur" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="12" result="blurDeep" />
+    <!-- Soft Volumetric Blurs -->
+    <filter id="vortexDeepBlur" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="14" result="blurDeep" />
     </filter>
 
-    <filter id="vortexSharpBlur" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="5" result="blurSharp" />
+    <filter id="vortexSharpBlur" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="6" result="blurSharp" />
     </filter>
 
-    <!-- Clip path defining the physical spherical glass body -->
+    <filter id="ringGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="4" result="glow" />
+    </filter>
+
+    <!-- Clip path defining the spherical plasma glass body -->
     <clipPath id="coreClip">
       <circle cx="{c}" cy="{c}" r="{r_sphere}" />
     </clipPath>
 
-    <!-- Layer 0: Ultra-Smooth Clean Environmental Radiance (Seamlessly vanishes to 0% alpha well before canvas borders) -->
+    <!-- Layer 0: Radiance Aura -->
     <radialGradient id="outerRadiance" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="{palette['ambient_aura']}" stop-opacity="0.80" />
+      <stop offset="0%" stop-color="{palette['ambient_aura']}" stop-opacity="0.82" />
       <stop offset="35%" stop-color="{palette['ambient_secondary']}" stop-opacity="0.45" />
-      <stop offset="65%" stop-color="{palette['outer_gradient']}" stop-opacity="0.18" />
-      <stop offset="88%" stop-color="{palette['mid_gradient']}" stop-opacity="0.03" />
+      <stop offset="68%" stop-color="{palette['outer_gradient']}" stop-opacity="0.18" />
+      <stop offset="90%" stop-color="{palette['mid_gradient']}" stop-opacity="0.04" />
       <stop offset="100%" stop-color="{palette['mid_gradient']}" stop-opacity="0.0" />
     </radialGradient>
 
-    <!-- Layer 1: Radiant Coronal Plasma Flare Halo -->
+    <!-- Layer 1: Radiant Coronal Plasma Flare -->
     <radialGradient id="coronalHalo" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="{palette['core_highlight']}" stop-opacity="0.85" />
-      <stop offset="30%" stop-color="{palette['inner_glow']}" stop-opacity="0.65" />
-      <stop offset="65%" stop-color="{palette['ambient_aura']}" stop-opacity="0.25" />
-      <stop offset="90%" stop-color="{palette['outer_gradient']}" stop-opacity="0.04" />
+      <stop offset="0%" stop-color="{palette['core_highlight']}" stop-opacity="0.90" />
+      <stop offset="28%" stop-color="{palette['inner_glow']}" stop-opacity="0.70" />
+      <stop offset="62%" stop-color="{palette['ambient_aura']}" stop-opacity="0.30" />
+      <stop offset="92%" stop-color="{palette['outer_gradient']}" stop-opacity="0.04" />
       <stop offset="100%" stop-color="{palette['outer_gradient']}" stop-opacity="0.0" />
     </radialGradient>
 
-    <!-- Layer 2: Deep 3D Quantum Glass Body (High-contrast Fresnel lens with deep onyx rim) -->
+    <!-- Layer 2: 3D Quantum Body -->
     <radialGradient id="orbVolumetric" cx="36%" cy="32%" r="68%" fx="30%" fy="26%">
       <stop offset="0%" stop-color="{palette['core_highlight']}" stop-opacity="1.0" />
-      <stop offset="14%" stop-color="{palette['inner_glow']}" stop-opacity="0.95" />
-      <stop offset="38%" stop-color="{palette['mid_gradient']}" stop-opacity="0.94" />
-      <stop offset="72%" stop-color="{palette['outer_gradient']}" stop-opacity="0.98" />
-      <stop offset="92%" stop-color="{palette['deep_edge']}" stop-opacity="1.0" />
+      <stop offset="15%" stop-color="{palette['inner_glow']}" stop-opacity="0.96" />
+      <stop offset="40%" stop-color="{palette['mid_gradient']}" stop-opacity="0.95" />
+      <stop offset="74%" stop-color="{palette['outer_gradient']}" stop-opacity="0.98" />
+      <stop offset="94%" stop-color="{palette['deep_edge']}" stop-opacity="1.0" />
       <stop offset="100%" stop-color="#020008" stop-opacity="1.0" />
     </radialGradient>
 
-    <!-- Layer 3: Concentric Quantum Resonance Gradients -->
-    <!-- Resonance Ring 1 -->
+    <!-- Sentient Orbital Energy Ring Gradients -->
+    <linearGradient id="haloRingGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="{palette['halo_ring']}" stop-opacity="0.95" />
+      <stop offset="50%" stop-color="{palette['core_highlight']}" stop-opacity="1.0" />
+      <stop offset="100%" stop-color="{palette['outer_gradient']}" stop-opacity="0.20" />
+    </linearGradient>
+
+    <linearGradient id="haloRingGrad2" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="{palette['inner_glow']}" stop-opacity="0.90" />
+      <stop offset="60%" stop-color="{palette['mid_gradient']}" stop-opacity="0.60" />
+      <stop offset="100%" stop-color="{palette['deep_edge']}" stop-opacity="0.10" />
+    </linearGradient>
+
+    <!-- Internal Caustic Resonance Ribbons -->
     <linearGradient id="ringGrad1" x1="10%" y1="20%" x2="90%" y2="80%">
       <stop offset="0%" stop-color="{palette['core_highlight']}" stop-opacity="0.95" />
-      <stop offset="28%" stop-color="{palette['inner_glow']}" stop-opacity="0.80" />
-      <stop offset="68%" stop-color="{palette['ambient_aura']}" stop-opacity="0.45" />
+      <stop offset="30%" stop-color="{palette['inner_glow']}" stop-opacity="0.82" />
+      <stop offset="70%" stop-color="{palette['ambient_aura']}" stop-opacity="0.45" />
       <stop offset="100%" stop-color="{palette['deep_edge']}" stop-opacity="0.0" />
     </linearGradient>
 
-    <!-- Resonance Ring 2 -->
-    <linearGradient id="ringGrad2" x1="85%" y1="15%" x2="15%" y2="85%">
-      <stop offset="0%" stop-color="{palette['ambient_secondary']}" stop-opacity="0.90" />
-      <stop offset="45%" stop-color="{palette['mid_gradient']}" stop-opacity="0.70" />
-      <stop offset="85%" stop-color="{palette['deep_edge']}" stop-opacity="0.25" />
-      <stop offset="100%" stop-color="{palette['deep_edge']}" stop-opacity="0.0" />
-    </linearGradient>
-
-    <!-- Vortex Core Singularity Eye -->
+    <!-- Singularity Eye -->
     <radialGradient id="vortexEye" cx="50%" cy="50%" r="50%">
       <stop offset="0%" stop-color="#ffffff" stop-opacity="1.0" />
       <stop offset="25%" stop-color="{palette['core_highlight']}" stop-opacity="0.98" />
-      <stop offset="55%" stop-color="{palette['inner_glow']}" stop-opacity="0.80" />
+      <stop offset="55%" stop-color="{palette['inner_glow']}" stop-opacity="0.85" />
       <stop offset="85%" stop-color="{palette['ambient_aura']}" stop-opacity="0.30" />
       <stop offset="100%" stop-color="{palette['deep_edge']}" stop-opacity="0.0" />
     </radialGradient>
 
-    <!-- Equatorial Caustic Ribbon -->
-    <linearGradient id="causticRibbon" x1="0%" y1="50%" x2="100%" y2="50%">
-      <stop offset="0%" stop-color="{palette['inner_glow']}" stop-opacity="0.0" />
-      <stop offset="30%" stop-color="{palette['core_highlight']}" stop-opacity="0.90" />
-      <stop offset="50%" stop-color="#ffffff" stop-opacity="1.0" />
-      <stop offset="70%" stop-color="{palette['ambient_secondary']}" stop-opacity="0.80" />
-      <stop offset="100%" stop-color="{palette['outer_gradient']}" stop-opacity="0.0" />
-    </linearGradient>
-
-    <!-- Fixed 3D Glass Specular Crown (Top-Left Highlight) -->
+    <!-- 3D Specular Crown -->
     <radialGradient id="specularGleam" cx="30%" cy="26%" r="48%">
       <stop offset="0%" stop-color="#ffffff" stop-opacity="1.0" />
-      <stop offset="22%" stop-color="#ffffff" stop-opacity="0.80" />
-      <stop offset="50%" stop-color="{palette['inner_glow']}" stop-opacity="0.45" />
+      <stop offset="22%" stop-color="#ffffff" stop-opacity="0.85" />
+      <stop offset="50%" stop-color="{palette['inner_glow']}" stop-opacity="0.48" />
       <stop offset="80%" stop-color="{palette['mid_gradient']}" stop-opacity="0.10" />
       <stop offset="100%" stop-color="{palette['mid_gradient']}" stop-opacity="0.0" />
     </radialGradient>
-
-    <!-- Subsurface Bounce Flare (Bottom-Right) -->
-    <radialGradient id="subsurfaceBounce" cx="72%" cy="74%" r="42%">
-      <stop offset="0%" stop-color="{palette['ambient_aura']}" stop-opacity="0.65" />
-      <stop offset="50%" stop-color="{palette['outer_gradient']}" stop-opacity="0.30" />
-      <stop offset="100%" stop-color="{palette['deep_edge']}" stop-opacity="0.0" />
-    </radialGradient>
   </defs>
 
-  <!-- Stage 1: Ultra-Smooth Diffused Atmospheric Radiance (Zero edge-bleed) -->
+  <!-- Stage 1: Soft Atmospheric Radiance -->
   <circle cx="{c}" cy="{c}" r="{r_aura}" fill="url(#outerRadiance)" />
 
-  <!-- Stage 2: Concentrated Radiant Corona Ring (Silky edge halo) -->
-  <circle cx="{c}" cy="{c}" r="{r_corona}" fill="url(#coronalHalo)" />
-
-  <!-- Stage 3: Deep 3D Glass Sphere Body with Dark Fresnel Rim for Instant Background Isolation -->
-  <circle cx="{c}" cy="{c}" r="{r_sphere}" fill="url(#orbVolumetric)" />
-
-  <!-- Stage 4: Quantum Fluid Caustic Core (Internal Living Energy) -->
-  <g clip-path="url(#coreClip)">
-    <!-- Base Diffuse Fluid Bed -->
-    <ellipse cx="{p_x1}" cy="{p_y1}" rx="{int(r_sphere * 0.88)}" ry="{int(r_sphere * 0.58)}" fill="url(#ringGrad1)" filter="url(#vortexDeepBlur)" transform="rotate(35 {p_x1} {p_y1})" opacity="0.88" />
-    <ellipse cx="{p_x2}" cy="{p_y2}" rx="{int(r_sphere * 0.80)}" ry="{int(r_sphere * 0.50)}" fill="url(#ringGrad2)" filter="url(#vortexDeepBlur)" transform="rotate(-30 {p_x2} {p_y2})" opacity="0.82" />
-
-    <!-- Concentric Harmonic Wave Ribbons (Interlocking Quantum Caustics) -->
-    <path d="M {c - int(r_sphere*0.75)} {c + int(r_sphere*0.12)} C {c - int(r_sphere*0.30)} {c - int(r_sphere*0.70)}, {c + int(r_sphere*0.25)} {c - int(r_sphere*0.50)}, {c + int(r_sphere*0.75)} {c - int(r_sphere*0.08)} C {c + int(r_sphere*0.30)} {c + int(r_sphere*0.60)}, {c - int(r_sphere*0.20)} {c + int(r_sphere*0.70)}, {c - int(r_sphere*0.75)} {c + int(r_sphere*0.12)} Z" fill="url(#ringGrad1)" filter="url(#vortexSharpBlur)" opacity="0.85" />
-    
-    <path d="M {c - int(r_sphere*0.50)} {c - int(r_sphere*0.40)} C {c + int(r_sphere*0.02)} {c - int(r_sphere*0.75)}, {c + int(r_sphere*0.65)} {c + int(r_sphere*0.08)}, {c + int(r_sphere*0.40)} {c + int(r_sphere*0.60)} C {c - int(r_sphere*0.10)} {c + int(r_sphere*0.25)}, {c - int(r_sphere*0.40)} {c + int(r_sphere*0.12)}, {c - int(r_sphere*0.50)} {c - int(r_sphere*0.40)} Z" fill="url(#ringGrad2)" filter="url(#vortexSharpBlur)" opacity="0.80" />
-
-    <!-- Tilted Equatorial Light Ribbon -->
-    <ellipse cx="{c}" cy="{c + int(r_sphere * 0.04)}" rx="{int(r_sphere * 0.74)}" ry="{int(r_sphere * 0.24)}" fill="url(#causticRibbon)" filter="url(#vortexSharpBlur)" transform="rotate(-15 {c} {c})" opacity="0.90" />
-
-    <!-- Concentric Singularity Light Core (Pulsing Energy Eye) -->
-    <circle cx="{c}" cy="{c}" r="{int(r_sphere * 0.32)}" fill="url(#vortexEye)" filter="url(#vortexSharpBlur)" opacity="0.98" />
-    <circle cx="{c}" cy="{c}" r="{int(r_sphere * 0.12)}" fill="#ffffff" filter="url(#vortexSharpBlur)" opacity="0.96" />
-
-    <!-- Quantum Light Nodes (Micro-stars suspended inside) -->
-    <circle cx="{c - int(r_sphere * 0.32)}" cy="{c - int(r_sphere * 0.18)}" r="{int(r_sphere * 0.035)}" fill="#ffffff" filter="url(#vortexSharpBlur)" opacity="0.90" />
-    <circle cx="{c + int(r_sphere * 0.36)}" cy="{c + int(r_sphere * 0.15)}" r="{int(r_sphere * 0.03)}" fill="{palette['inner_glow']}" filter="url(#vortexSharpBlur)" opacity="0.92" />
-    <circle cx="{c - int(r_sphere * 0.15)}" cy="{c + int(r_sphere * 0.35)}" r="{int(r_sphere * 0.025)}" fill="{palette['core_highlight']}" filter="url(#vortexSharpBlur)" opacity="0.90" />
+  <!-- Stage 2: Sentient Orbital Energy Halo Ring (Outer 3D Ellipse) -->
+  <g transform="rotate(-22 {c} {c})">
+    <ellipse cx="{c}" cy="{c}" rx="{int(r_sphere * 1.65)}" ry="{int(r_sphere * 0.42)}" fill="none" stroke="url(#haloRingGrad1)" stroke-width="6.5" filter="url(#ringGlow)" opacity="0.88" />
+    <ellipse cx="{c}" cy="{c}" rx="{int(r_sphere * 1.65)}" ry="{int(r_sphere * 0.42)}" fill="none" stroke="#ffffff" stroke-width="2.5" opacity="0.92" />
   </g>
 
-  <!-- Stage 5: Subsurface Light Bounce (Bottom-Right Soft Depth) -->
-  <circle cx="{c}" cy="{c}" r="{r_sphere}" fill="url(#subsurfaceBounce)" />
+  <!-- Stage 3: Radiant Corona Ring -->
+  <circle cx="{c}" cy="{c}" r="{r_corona}" fill="url(#coronalHalo)" />
 
-  <!-- Stage 6: Fixed 3D Glass Specular Crown (Anchored Top-Left Reflection) -->
+  <!-- Stage 4: 3D Volumetric Body -->
+  <circle cx="{c}" cy="{c}" r="{r_sphere}" fill="url(#orbVolumetric)" />
+
+  <!-- Stage 5: Living Internal Fluid Core -->
+  <g clip-path="url(#coreClip)">
+    <ellipse cx="{p_x1}" cy="{p_y1}" rx="{int(r_sphere * 0.88)}" ry="{int(r_sphere * 0.58)}" fill="url(#ringGrad1)" filter="url(#vortexDeepBlur)" transform="rotate(35 {p_x1} {p_y1})" opacity="0.90" />
+    <ellipse cx="{p_x2}" cy="{p_y2}" rx="{int(r_sphere * 0.80)}" ry="{int(r_sphere * 0.50)}" fill="url(#haloRingGrad2)" filter="url(#vortexDeepBlur)" transform="rotate(-30 {p_x2} {p_y2})" opacity="0.85" />
+
+    <!-- Interlocking Quantum Ribbons -->
+    <path d="M {c - int(r_sphere*0.75)} {c + int(r_sphere*0.12)} C {c - int(r_sphere*0.30)} {c - int(r_sphere*0.70)}, {c + int(r_sphere*0.25)} {c - int(r_sphere*0.50)}, {c + int(r_sphere*0.75)} {c - int(r_sphere*0.08)} C {c + int(r_sphere*0.30)} {c + int(r_sphere*0.60)}, {c - int(r_sphere*0.20)} {c + int(r_sphere*0.70)}, {c - int(r_sphere*0.75)} {c + int(r_sphere*0.12)} Z" fill="url(#ringGrad1)" filter="url(#vortexSharpBlur)" opacity="0.88" />
+
+    <!-- Living Singularity Eye -->
+    <circle cx="{c}" cy="{c}" r="{int(r_sphere * 0.34)}" fill="url(#vortexEye)" filter="url(#vortexSharpBlur)" opacity="0.98" />
+    <circle cx="{c}" cy="{c}" r="{int(r_sphere * 0.14)}" fill="#ffffff" filter="url(#vortexSharpBlur)" opacity="0.98" />
+
+    <!-- Bioluminescent Nodes -->
+    <circle cx="{c - int(r_sphere * 0.30)}" cy="{c - int(r_sphere * 0.16)}" r="{int(r_sphere * 0.04)}" fill="#ffffff" filter="url(#vortexSharpBlur)" opacity="0.92" />
+    <circle cx="{c + int(r_sphere * 0.34)}" cy="{c + int(r_sphere * 0.14)}" r="{int(r_sphere * 0.035)}" fill="{palette['inner_glow']}" filter="url(#vortexSharpBlur)" opacity="0.94" />
+  </g>
+
+  <!-- Stage 6: Inner Sentient Ring Foreground Overlap -->
+  <g transform="rotate(28 {c} {c})">
+    <ellipse cx="{c}" cy="{c}" rx="{int(r_sphere * 1.35)}" ry="{int(r_sphere * 0.32)}" fill="none" stroke="url(#haloRingGrad2)" stroke-width="4.5" filter="url(#ringGlow)" opacity="0.78" />
+  </g>
+
+  <!-- Stage 7: Fixed 3D Specular Crown -->
   <ellipse cx="{int(c - r_sphere * 0.28)}" cy="{int(c - r_sphere * 0.28)}" rx="{r_specular}" ry="{int(r_specular * 0.68)}" fill="url(#specularGleam)" transform="rotate(-28 {int(c - r_sphere * 0.28)} {int(c - r_sphere * 0.28)})" />
 
-  <!-- Stage 7: Optical Refraction Micro-Rim (Guarantees crisp shape definition against any background) -->
-  <circle cx="{c}" cy="{c}" r="{r_sphere}" fill="none" stroke="#000000" stroke-width="1.8" opacity="0.80" />
-  <circle cx="{c}" cy="{c}" r="{r_sphere - 1}" fill="none" stroke="{palette['core_highlight']}" stroke-width="0.8" opacity="0.60" />
+  <!-- Stage 8: Optical Edge Refraction -->
+  <circle cx="{c}" cy="{c}" r="{r_sphere}" fill="none" stroke="#000000" stroke-width="2.0" opacity="0.85" />
+  <circle cx="{c}" cy="{c}" r="{r_sphere - 1}" fill="none" stroke="{palette['core_highlight']}" stroke-width="0.9" opacity="0.65" />
 </svg>"""
 
     if not save_path:
@@ -377,14 +308,14 @@ def generate_gradient_orb_svg(
 
 
 class GradientOrbManager:
-    """Manages the creation, animation formulas, and FFmpeg filtergraph strings for gradient orbs."""
+    """Manages the creation, animation formulas, and FFmpeg filtergraph strings for the AI Presenter Orb."""
 
     def __init__(
         self,
-        palette: str = "cosmic",
+        palette: str = "quantum",
         position: str = "presenter",
         size: str = "medium",
-        opacity: float = 0.90,
+        opacity: float = 0.95,
         animation: str = "speaking",
         custom_x: Optional[int] = None,
         custom_y: Optional[int] = None,
@@ -392,15 +323,14 @@ class GradientOrbManager:
         total_duration: float = 35.0,
         intro_duration: float = 3.8,
     ):
-        self.palette = palette.lower().strip() if palette else "cosmic"
+        self.palette = palette.lower().strip() if palette else "quantum"
         if self.palette not in ORB_PALETTES:
-            self.palette = "cosmic"
+            self.palette = "quantum"
 
-        self.position = position.lower().strip() if position else "presenter"
-        self.size_name = size.lower().strip() if size else "medium"
-        self.pixel_size = ORB_SIZE_MAP.get(self.size_name, 440)
-        self.opacity = max(0.1, min(1.0, float(opacity)))
-        self.animation = animation.lower().strip() if animation else "speaking"
+        self.position = "presenter"
+        self.pixel_size = 520  # Prominent presenter size
+        self.opacity = max(0.2, min(1.0, float(opacity)))
+        self.animation = "speaking"
         self.custom_x = custom_x
         self.custom_y = custom_y
         self.audio_path = Path(audio_path) if audio_path else None
@@ -409,86 +339,16 @@ class GradientOrbManager:
 
     def get_overlay_coordinates(self, video_width: int, video_height: int) -> Tuple[str, str]:
         """
-        Calculates FFmpeg expression strings for X and Y overlay coordinates,
-        taking 3-Phase Presenter choreography, floating hover, and fixed positions into account.
+        Calculates fluid 2D harmonic drift coordinates for the AI Presenter entity,
+        centering it elegantly on screen with living organic micro-wander.
         """
-        # 1. Check for 3-Phase AI Presenter / Host Mode
-        if self.position in ("presenter", "host") or self.animation in ("presenter", "host"):
-            tot = self.total_duration
-            if tot <= 7.0:
-                t1 = max(1.0, tot * 0.35)
-                t2 = min(tot - 1.2, t1 + 0.8)
-                t3 = max(t2 + 0.5, tot - 1.5)
-                t4 = min(tot - 0.2, t3 + 0.8)
-            else:
-                t1 = min(max(2.5, self.intro_duration), tot * 0.35)
-                t2 = t1 + 1.1
-                t3 = max(t2 + 2.0, tot - 4.2)
-                t4 = t3 + 1.0
+        base_x = f"(W-w)/2"
+        base_y = f"(H-h)/2 - {int(video_height * 0.05)}"
 
-            p1 = f"min(1,max(0,(t-{t1:.2f})/{max(0.1, t2 - t1):.2f}))"
-            e1 = f"({p1}*{p1}*(3-2*{p1}))"
-
-            p2 = f"min(1,max(0,(t-{t3:.2f})/{max(0.1, t4 - t3):.2f}))"
-            e2 = f"({p2}*{p2}*(3-2*{p2}))"
-
-            x_center = "(W-w)/2"
-            x_corner = "W-w-50"
-            x_expr = f"({x_center})*(1-{e1}+{e2}) + ({x_corner})*({e1}-{e2}) + 12*sin(2*PI*t/3.6)"
-
-            y_center = f"(H-h)/2 - {int(video_height * 0.04)}"
-            y_corner = "140"
-            y_outro = f"(H-h)/2 - {int(video_height * 0.06)}"
-            y_expr = f"({y_center})*(1-{e1}) + ({y_corner})*({e1}-{e2}) + ({y_outro})*{e2} + 16*sin(2*PI*t/2.2)"
-
-            return x_expr, y_expr
-
-        # Base dimensions of scaled orb
-        w_expr = "w"
-        h_expr = "h"
-
-        if self.custom_x is not None and self.custom_y is not None:
-            base_x = str(self.custom_x)
-            base_y = str(self.custom_y)
-        elif self.position == "ambient":
-            # Centered slightly above true center for background lighting ambiance
-            base_x = f"(W-{w_expr})/2"
-            base_y = f"(H-{h_expr})/2 - {int(video_height * 0.05)}"
-        elif self.position in ("top-right", "top_right", "corner"):
-            base_x = f"W-{w_expr}-50"
-            base_y = "140"
-        elif self.position in ("bottom-right", "bottom_right"):
-            base_x = f"W-{w_expr}-60"
-            base_y = f"H-{h_expr}-240"
-        elif self.position == "bottom":
-            base_x = f"(W-{w_expr})/2"
-            base_y = f"H-{h_expr}-380"
-        elif self.position == "floating":
-            base_x = f"(W-{w_expr})/2"
-            base_y = f"(H-{h_expr})/2 - {int(video_height * 0.04)}"
-        else:
-            # Default: center, slightly elevated to clear lower third captions
-            base_x = f"(W-{w_expr})/2"
-            base_y = f"(H-{h_expr})/2 - {int(video_height * 0.04)}"
-
-        # Animate hovering motion (float, speaking or reactive)
-        if self.animation in ("float", "hover") or self.position == "floating":
-            # Compound harmonic motion (gentle organic drift in 2D space)
-            x_anim = f"{base_x} + 26*sin(2*PI*t/3.2)"
-            y_anim = f"{base_y} + 38*sin(2*PI*t/2.4)"
-            return x_anim, y_anim
-        elif self.animation in ("reactive", "speaking", "voice", "alive", "speech"):
-            # Living entity: slight micro-wander while speaking plus vertical pulsation
-            x_anim = f"{base_x} + 14*sin(2*PI*t/3.6)"
-            y_anim = f"{base_y} + 20*sin(2*PI*t/2.2)"
-            return x_anim, y_anim
-        elif self.animation in ("pulse", "breathing"):
-            # Subtle floating offset while pulsing so it feels alive and never static
-            x_anim = f"{base_x} + 10*sin(2*PI*t/4.0)"
-            y_anim = f"{base_y} + 16*sin(2*PI*t/2.8)"
-            return x_anim, y_anim
-
-        return base_x, base_y
+        # Living entity 2D organic floating drift
+        x_anim = f"{base_x} + 18*sin(2*PI*t/3.6)"
+        y_anim = f"{base_y} + 24*sin(2*PI*t/2.4)"
+        return x_anim, y_anim
 
     def build_filter_chain(
         self,
@@ -499,86 +359,31 @@ class GradientOrbManager:
         fps: int = 30,
     ) -> str:
         """
-        Generate FFmpeg filter chain that animates the orb input (input_idx)
-        and prepares it for overlaying onto the main video.
-        Features:
-          - 3-Phase Presenter Choreography (Intro Center -> Glide to Corner -> Outro Hook)
-          - Audio-reactive speech modulation (speaking / voice / reactive animation):
-            dynamically swells in size with voice decibels and shifts color temperature.
-          - In speech pauses: settles into gentle idle breathing.
-          - Periodic pulse / breathing for fallback modes.
-          - Smooth chroma & hue shifts so the orb feels alive.
+        Generates the FFmpeg filter chain for the AI Presenter entity:
+        - Vocal speech envelope reactivity: swells +5.5% on speech peaks
+        - Voice incandescence: radiant brightness and contrast surge during vocal articulation
+        - Organic harmonic breathing drift in speech pauses
         """
         target_size = self.pixel_size
-        is_presenter = self.position in ("presenter", "host") or self.animation in ("presenter", "host")
-
-        if self.position == "ambient":
-            # Ambient mode uses larger soft radius with subtle breathing
-            target_size = max(target_size, int(video_width * 0.78))
-            effective_opacity = min(0.40, self.opacity)
-        else:
-            effective_opacity = self.opacity
-
-        # Check if audio-reactive speech animation is requested or active
-        is_audio_reactive = is_presenter or self.animation in ("reactive", "speaking", "voice", "alive", "speech")
+        effective_opacity = self.opacity
         speech_intervals: List[Tuple[float, float]] = []
 
-        if is_audio_reactive and self.audio_path and self.audio_path.exists():
+        if self.audio_path and self.audio_path.exists():
             speech_intervals = extract_audio_speech_envelope(self.audio_path)
 
         filters = []
+        base_s = str(target_size)
 
-        # Base dynamic size expression
-        if is_presenter:
-            tot = self.total_duration
-            if tot <= 7.0:
-                t1 = max(1.0, tot * 0.35)
-                t2 = min(tot - 1.2, t1 + 0.8)
-                t3 = max(t2 + 0.5, tot - 1.5)
-                t4 = min(tot - 0.2, t3 + 0.8)
-            else:
-                t1 = min(max(2.5, self.intro_duration), tot * 0.35)
-                t2 = t1 + 1.1
-                t3 = max(t2 + 2.0, tot - 4.2)
-                t4 = t3 + 1.0
-
-            p1 = f"min(1,max(0,(t-{t1:.2f})/{max(0.1, t2 - t1):.2f}))"
-            e1 = f"({p1}*{p1}*(3-2*{p1}))"
-
-            p2 = f"min(1,max(0,(t-{t3:.2f})/{max(0.1, t4 - t3):.2f}))"
-            e2 = f"({p2}*{p2}*(3-2*{p2}))"
-
-            s_intro = min(int(video_width * 0.48), 520)
-            s_corner = min(int(video_width * 0.26), 280)
-            s_outro = min(int(video_width * 0.42), 460)
-            base_s = f"({s_intro}*(1-{e1}) + {s_corner}*({e1}-{e2}) + {s_outro}*{e2})"
-        else:
-            base_s = str(target_size)
-
-        if is_audio_reactive and speech_intervals:
-            # Build ultra-compact speech activity mask (e.g. 5-25 continuous interval windows)
+        if speech_intervals:
             conds = [f"between(t,{start:.2f},{end:.2f})" for start, end in speech_intervals]
             speech_mask = f"min(1,{'+'.join(conds)})"
+            speech_cadence = f"(max(0,sin(2*PI*t/0.48))*{speech_mask})"
 
-            # Dynamic speech cadence:
-            # - Smooth organic pulse (+4.5% elastic expansion on syllable peaks)
-            # - Voice incandescence: radiant brightness & contrast surges with vocal cadence
-            # - Sits comfortably in tranquil resting breathing during pauses (+- 2.5%)
-            speech_cadence = f"(max(0,sin(2*PI*t/0.50))*{speech_mask})"
-            scale_val = f"trunc({base_s}*(1.0 + 0.025*sin(2*PI*t/2.6) + 0.045*{speech_cadence})/2)*2"
+            scale_val = f"trunc({base_s}*(1.0 + 0.03*sin(2*PI*t/2.5) + 0.055*{speech_cadence})/2)*2"
             scale_expr = f"eval=frame:w='{scale_val}':h='{scale_val}'"
-
-            # Dynamic incandescence & contrast surge on speech bursts
-            eq_expr = f"brightness='0.05*{speech_cadence}':contrast='1.0 + 0.10*{speech_mask}'"
-
-            # Chromatic vitality: subtle harmonic hue glow and vibrance during speech
-            hue_expr = (
-                f"h='18*{speech_cadence} + 8*sin(2*PI*t/2.5)':"
-                f"s='1.0 + 0.16*{speech_mask}'"
-            )
-
-            # Organic gyroscopic micro-drift: maintains fixed 3D light reflection without 360 spinning
-            rotate_expr = f"a='0.04*sin(2*PI*t/3.2) + 0.02*{speech_mask}*sin(2*PI*t/1.1)':ow='iw':oh='ih':c=none"
+            eq_expr = f"brightness='0.06*{speech_cadence}':contrast='1.0 + 0.12*{speech_mask}'"
+            hue_expr = f"h='20*{speech_cadence} + 10*sin(2*PI*t/2.4)':s='1.0 + 0.18*{speech_mask}'"
+            rotate_expr = f"a='0.04*sin(2*PI*t/3.2)':ow='iw':oh='ih':c=none"
 
             filters.append(f"[{input_idx}:v]scale={scale_expr}")
             filters.append(f"rotate={rotate_expr}")
@@ -586,23 +391,7 @@ class GradientOrbManager:
             filters.append(f"hue={hue_expr}")
             filters.append("format=yuva420p")
             filters.append(f"colorchannelmixer=aa={effective_opacity:.2f}[{output_label}]")
-        elif is_audio_reactive and not speech_intervals:
-            # Living speaking simulation if audio had no detectable voice or no file was passed:
-            simulated_speech = "(max(0,sin(2*PI*t/1.2))*max(0,sin(2*PI*t/0.50)))"
-            scale_val = f"trunc({base_s}*(1.0 + 0.025*sin(2*PI*t/2.6) + 0.045*{simulated_speech})/2)*2"
-            scale_expr = f"eval=frame:w='{scale_val}':h='{scale_val}'"
-            eq_expr = f"brightness='0.05*{simulated_speech}':contrast='1.0 + 0.10*{simulated_speech}'"
-            hue_expr = f"h='18*{simulated_speech} + 8*sin(2*PI*t/2.5)':s='1.0 + 0.15*{simulated_speech}'"
-            rotate_expr = f"a='0.04*sin(2*PI*t/3.2) + 0.02*{simulated_speech}*sin(2*PI*t/1.1)':ow='iw':oh='ih':c=none"
-
-            filters.append(f"[{input_idx}:v]scale={scale_expr}")
-            filters.append(f"rotate={rotate_expr}")
-            filters.append(f"eq={eq_expr}")
-            filters.append(f"hue={hue_expr}")
-            filters.append("format=yuva420p")
-            filters.append(f"colorchannelmixer=aa={effective_opacity:.2f}[{output_label}]")
-        elif self.animation in ("pulse", "breathing", "all"):
-            # Rhythmic breathing with live subtle hue modulation: +/- 4% scale oscillation
+        else:
             scale_val = f"trunc({base_s}*(1.0 + 0.04*sin(2*PI*t/2.4))/2)*2"
             scale_expr = f"eval=frame:w='{scale_val}':h='{scale_val}'"
             hue_expr = "h='12*sin(2*PI*t/2.5)':s='1.0 + 0.08*sin(2*PI*t/2.5)'"
@@ -613,42 +402,22 @@ class GradientOrbManager:
             filters.append(f"hue={hue_expr}")
             filters.append("format=yuva420p")
             filters.append(f"colorchannelmixer=aa={effective_opacity:.2f}[{output_label}]")
-        elif self.animation in ("float", "hover"):
-            # Floating hover with subtle chromatic luminescence & gyroscopic micro-drift
-            scale_expr = f"{target_size}:{target_size}"
-            hue_expr = "h='14*sin(2*PI*t/3.0)':s='1.0 + 0.06*sin(2*PI*t/2.5)'"
-            rotate_expr = "a='0.03*sin(2*PI*t/4.0)':ow='iw':oh='ih':c=none"
-
-            filters.append(f"[{input_idx}:v]scale={scale_expr}")
-            filters.append(f"rotate={rotate_expr}")
-            filters.append(f"hue={hue_expr}")
-            filters.append("format=yuva420p")
-            filters.append(f"colorchannelmixer=aa={effective_opacity:.2f}[{output_label}]")
-        else:
-            scale_expr = f"{target_size}:{target_size}"
-            rotate_expr = "a='0.02*sin(2*PI*t/4.5)':ow='iw':oh='ih':c=none"
-            filters.append(f"[{input_idx}:v]scale={scale_expr}")
-            filters.append(f"rotate={rotate_expr}")
-            filters.append("format=yuva420p")
-            filters.append(f"colorchannelmixer=aa={effective_opacity:.2f}[{output_label}]")
 
         return ",".join(filters)
 
 
 def get_or_create_orb_asset(
-    palette: str = "cosmic",
+    palette: str = "quantum",
     target_dir: Optional[Path] = None,
     force_refresh: bool = False,
 ) -> Path:
     """
     Retrieves or generates a high-resolution transparent RGBA PNG asset
-    with multi-stage atmospheric glow for the specified gradient orb palette.
+    for the AI Presenter entity.
     """
-    import subprocess
-
-    palette_key = palette.lower().strip() if palette else "cosmic"
+    palette_key = palette.lower().strip() if palette else "quantum"
     if palette_key not in ORB_PALETTES:
-        palette_key = "cosmic"
+        palette_key = "quantum"
 
     dest_dir = target_dir or (Path(__file__).resolve().parent.parent / "assets" / "orbs")
     dest_dir.mkdir(parents=True, exist_ok=True)
@@ -659,10 +428,8 @@ def get_or_create_orb_asset(
     if not force_refresh and png_path.exists() and png_path.stat().st_size > 1000:
         return png_path
 
-    # Generate vector SVG with enhanced multi-layer radiant glow
     generate_gradient_orb_svg(palette_key=palette_key, canvas_size=1000, save_path=svg_path)
 
-    # Render high-quality transparent RGBA PNG via FFmpeg
     try:
         subprocess.run(
             ["ffmpeg", "-y", "-i", str(svg_path), "-pix_fmt", "rgba", str(png_path)],
@@ -671,7 +438,6 @@ def get_or_create_orb_asset(
             stderr=subprocess.PIPE
         )
     except Exception:
-        # Fallback to SVG directly if PNG render fails
         if svg_path.exists():
             return svg_path
 
@@ -679,11 +445,11 @@ def get_or_create_orb_asset(
 
 
 def render_orb_test_preview(
-    palette: str = "cosmic",
-    position: str = "center",
+    palette: str = "quantum",
+    position: str = "presenter",
     size: str = "medium",
-    animation: str = "pulse",
-    opacity: float = 0.90,
+    animation: str = "speaking",
+    opacity: float = 0.95,
     duration: float = 4.0,
     output_path: Optional[Path] = None,
     width: int = 1080,
@@ -692,75 +458,33 @@ def render_orb_test_preview(
     sample_audio: Optional[Path] = None,
 ) -> Path:
     """
-    Renders an ultra-fast (2-4 seconds) video preview of the animated gradient orb.
-    Avoids running the entire generation pipeline (no script generation, no stock downloads).
-    Produces a ready-to-view vertical MP4 in seconds.
-    If animation is 'speaking' or 'reactive', generates or accepts sample speech audio
-    so you can instantly see the orb modulate its size and color to real spoken words!
+    Renders an ultra-fast preview video of the AI Presenter Orb.
     """
-    import subprocess
-    import shutil
-
     if output_path is None:
         out_dir = Path("output") / "orb_previews"
         out_dir.mkdir(parents=True, exist_ok=True)
-        output_path = out_dir / f"test_orb_{palette}_{position}_{animation}.mp4"
+        output_path = out_dir / f"test_orb_{palette}_presenter.mp4"
     else:
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    print(f"\n🔮 [Orb Tester] Generando vista previa rápida del Orbe Gradiente...")
-    print(f"   • Paleta: '{palette}'")
-    print(f"   • Posición: '{position}'")
-    print(f"   • Animación: '{animation}'")
-    print(f"   • Tamaño: '{size}' | Opacidad: {opacity}")
+    print(f"\n🔮 [AI Presenter Tester] Generando vista previa del Entidad Presentador Orbe...")
+    print(f"   • Paleta: '{palette}' | Opacidad: {opacity}")
     print(f"   • Duración: {duration}s | Resolución: {width}x{height}")
 
-    # Generate or get asset
     orb_asset = get_or_create_orb_asset(palette=palette)
-
-    # Handle sample audio for reactive/speaking mode
     temp_test_audio: Optional[Path] = None
     resolved_audio: Optional[Path] = sample_audio
-    is_reactive = animation in ("reactive", "speaking", "voice", "alive", "speech")
 
-    if is_reactive and not resolved_audio:
+    if not resolved_audio:
         temp_test_audio = output_path.parent / "_temp_test_voice.mp3"
-        # Try synthesize sample speech sentence with GoogleTTSProvider
         speech_text = "El universo se expande a velocidades astronómicas que desafían la imaginación."
         from audio.tts import GoogleTTSProvider
         g_tts = GoogleTTSProvider(language="es")
         synthesized = g_tts.synthesize_text(speech_text, temp_test_audio)
         if synthesized and temp_test_audio.exists():
             resolved_audio = temp_test_audio
-            # Update duration to match voice length + padding
-            try:
-                from utils.files import get_media_duration
-                dur = get_media_duration(temp_test_audio)
-                if dur and dur > 1.0:
-                    duration = min(8.0, dur + 0.5)
-            except Exception:
-                pass
-        else:
-            # Fallback synthetic speech tone pulse pattern (1s silence, 2.5s cadence, 1s silence)
-            temp_test_wav = output_path.parent / "_temp_test_voice.wav"
-            try:
-                subprocess.run([
-                    "ffmpeg", "-y",
-                    "-f", "lavfi", "-i", "sine=f=280:d=1.2",
-                    "-f", "lavfi", "-i", "sine=f=420:d=1.4",
-                    "-f", "lavfi", "-i", "anullsrc=r=44100:cl=stereo",
-                    "-filter_complex",
-                    "[2:a]atrim=end=0.6[sil1];[0:a]volume=0.85[spk1];[2:a]atrim=end=0.4[pause];[1:a]volume=0.9[spk2];[2:a]atrim=end=0.6[sil2];[sil1][spk1][pause][spk2][sil2]concat=n=5:v=0:a=1[aout]",
-                    "-map", "[aout]",
-                    str(temp_test_wav)
-                ], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                resolved_audio = temp_test_wav
-                duration = 4.2
-            except Exception:
-                resolved_audio = None
 
-    # Initialize manager
     mgr = GradientOrbManager(
         palette=palette,
         position=position,
@@ -772,7 +496,6 @@ def render_orb_test_preview(
         intro_duration=max(1.5, duration * 0.35),
     )
 
-    # Construct dynamic filter chains
     orb_filter = mgr.build_filter_chain(
         input_idx=1,
         output_label="orb_layer",
@@ -781,28 +504,13 @@ def render_orb_test_preview(
         fps=30
     )
     x_coord, y_coord = mgr.get_overlay_coordinates(width, height)
+    bg_input = f"color=c=0x07090e:s={width}x{height}:r=30:d={duration}"
 
-    # Background input setup: supports bright/daylight stock simulation, city, nature, or deep space
-    if bg_style == "bright":
-        # Simulates bright, high-key daylight footage (sky + sunny urban tones)
-        bg_input = f"color=c=0xd8e8f5:s={width}x{height}:r=30:d={duration}"
-    elif bg_style == "nature":
-        # Simulates green forest / outdoor sunny nature stock footage
-        bg_input = f"color=c=0x2d4a3e:s={width}x{height}:r=30:d={duration}"
-    elif bg_style == "city":
-        # Simulates warm evening city lights / architecture stock
-        bg_input = f"color=c=0x40302b:s={width}x{height}:r=30:d={duration}"
-    elif bg_style == "cosmic":
-        bg_input = f"color=c=0x0b0e14:s={width}x{height}:r=30:d={duration}"
-    else:
-        bg_input = f"color=c=0x000000:s={width}x{height}:r=30:d={duration}"
-
-    # Filter complex with timer / label overlay so user sees live animation specs
     filter_complex = [
         orb_filter,
         f"[0:v]eq=brightness=-0.03:contrast=1.06:saturation=1.04[bg_graded]",
         f"[bg_graded][orb_layer]overlay=eval=frame:x='{x_coord}':y='{y_coord}':shortest=1[v_orb]",
-        f"[v_orb]drawtext=text='LIVING ORB TESTER \\: {palette.upper()} ({animation.upper()})':fontcolor=white:fontsize=36:box=1:boxcolor=black@0.65:boxborderw=12:x=(w-text_w)/2:y=180[vout]"
+        f"[v_orb]drawtext=text='AI PREENTER ENTITY \\: {palette.upper()}':fontcolor=white:fontsize=36:box=1:boxcolor=black@0.65:boxborderw=12:x=(w-text_w)/2:y=180[vout]"
     ]
     filter_str = ";".join(filter_complex)
 
@@ -834,7 +542,6 @@ def render_orb_test_preview(
     try:
         subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     except subprocess.CalledProcessError:
-        # Fallback if drawtext fails (e.g. missing font)
         fallback_filter = f"{orb_filter};[0:v]eq=brightness=-0.03:contrast=1.06:saturation=1.04[bg_graded];[bg_graded][orb_layer]overlay=eval=frame:x='{x_coord}':y='{y_coord}':shortest=1[vout]"
         cmd_fallback = [
             "ffmpeg", "-y",
@@ -854,16 +561,12 @@ def render_orb_test_preview(
         ]
         subprocess.run(cmd_fallback, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     finally:
-        # Clean up temporary tester audio files
-        for tmp in (temp_test_audio, output_path.parent / "_temp_test_voice.wav"):
-            if tmp and tmp.exists():
-                try:
-                    tmp.unlink()
-                except Exception:
-                    pass
+        if temp_test_audio and temp_test_audio.exists():
+            try:
+                temp_test_audio.unlink()
+            except Exception:
+                pass
 
-    print(f"\n✨ ¡Vista previa del Orbe generada en tiempo récord!")
-    print(f"🎬 Video listo para ver: {output_path.resolve()}")
-    print(f"📦 Tamaño: {output_path.stat().st_size / 1024:.1f} KB\n")
+    print(f"\n✨ ¡Vista previa del Presentador IA generada!")
+    print(f"🎬 Video listo: {output_path.resolve()}\n")
     return output_path
-
