@@ -56,8 +56,8 @@ DEBATE_SYSTEM_PROMPT = """You are the AI Showrunner and Director for 'COSMIC DEB
 
 4. CTA CON SESGO DE CONFIRMACIÓN RADICAL (Escena 4):
    - En la Escena 4 (Outro), ambos orbes entran en resonancia armónica.
-   - El CTA debe forzar al espectador a tomar partido en una guerra de posturas radical (Team Cuántico vs Team Solar), e incluir explícitamente la llamada a la acción en los comentarios (ej: "¿Team Cuántico o Team Solar? ¡Defiende tu bando en los comentarios!").
-   - NUNCA uses la palabra "flecha" ni emojis de flechas que el lector de voz pueda pronunciar.
+   - El CTA debe forzar al espectador a tomar partido en una guerra de posturas radical (Team Cuántico vs Team Solar), e incluir explícitamente la llamada a la acción en los comentarios.
+   - NUNCA uses la palabra "flecha" ni símbolos/emojis de flechas que el lector de voz (TTS) pueda pronunciar.
 
 5. HOLOGRAPHIC DATA CARDS:
    - quantum: title (2-3 words), subtitle (metric/formula, e.g. "Matriz de Planck: 1.6x10⁻³⁵ m"), category ("PARADOJA 1" or "POSTULADO Q").
@@ -66,7 +66,7 @@ DEBATE_SYSTEM_PROMPT = """You are the AI Showrunner and Director for 'COSMIC DEB
 Respond ONLY with valid JSON matching this schema:
 {
   "topic": "Clean topic name",
-  "headline_hook": "⚡ TITULO VIRAL EN MAYÚSCULAS CON EMOJIS (MAX 45 CARACTERES) ⚡",
+  "headline_hook": "⚡ TITULO VIRAL EN MAYÚSCULAS CON EMOJIS (MAX 45 CHARACTERS) ⚡",
   "holograms": {
     "quantum": {
       "title": "TITULO CORTO CUANTICO",
@@ -104,7 +104,7 @@ Respond ONLY with valid JSON matching this schema:
     {
       "speaker": "Ambos",
       "entity": "both",
-      "text": "¿Team Cuántico o Team Solar? ¡Defiende tu bando en los comentarios!",
+      "text": "[Pregunta directa forzando a elegir bando + llamado a la acción para comentar]",
       "shot": "wide",
       "duration": 2.5
     }
