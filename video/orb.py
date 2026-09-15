@@ -1,11 +1,11 @@
 """
-Procedural 3D Living AI Presenter Entity Generator & Compositor.
-Generates a seamless 60-frame (30 FPS) transparent video loop (QuickTime MOV with ARGB alpha)
-containing a dynamic 3D Quantum Energy Organism with:
-- Continuously swirling liquid plasma core
-- Continuously rotating 3D orbital energy rings
-- Orbiting bioluminescent light nodes
-- Audio-reactive speech incandescence and dynamic vocal pulsation
+Ultra-Clean Bio-Reactive Presenter Orb Generator & Compositor.
+Renders a pristine bioluminescent energy sphere matching the user's reference design:
+- Vibrant cyan-to-violet gradient body
+- Off-center glowing white/magenta core light spot
+- Soft neon purple atmospheric aura & crisp glowing edge ring
+- Smooth 60-frame procedural loop (QuickTime MOV with ARGB alpha)
+- Speech envelope audio reactivity (brightness, scale, & color surges on speech)
 """
 
 import math
@@ -108,29 +108,37 @@ def extract_audio_speech_envelope(
                 pass
 
 
-# 2 Master Signature Palettes
+# Palettes matching exact visual references
 ORB_PALETTES: Dict[str, Dict[str, Any]] = {
     "quantum": {
-        "name": "Quantum AI Presenter",
-        "description": "Electric cyan core, deep violet plasma, magenta aura",
-        "core_highlight": "#ffffff",
-        "inner_glow": "#00f0ff",      # Electric Cyan
-        "mid_gradient": "#8a2be2",    # Violet
-        "outer_gradient": "#ff007f",  # Neon Magenta
-        "deep_edge": "#090314",       # Cosmic Void
-        "halo_ring": "#00f0ff",
-        "halo_ring2": "#ff007f",
+        "name": "Quantum Bio-Reactive",
+        "description": "Vibrant cyan sphere, white/magenta core highlight, soft neon purple aura",
+        "body_center": "#06b6d4",    # Electric Cyan
+        "body_mid": "#0284c7",       # Blue
+        "body_edge": "#3b82f6",      # Deep Blue
+        "body_rim": "#4f46e5",       # Indigo Rim
+        "spot_core": "#ffffff",      # White Core
+        "spot_glow": "#f472b6",      # Magenta/Pink Glow
+        "spot_outer": "#c084fc",     # Purple Glow
+        "aura_inner": "#a855f7",     # Neon Purple Aura
+        "aura_mid": "#7c3aed",
+        "aura_outer": "#3b82f6",
+        "ring_stroke": "#c084fc",
     },
     "solar": {
-        "name": "Solar Plasma Presenter",
-        "description": "Incandescent solar white core, flame amber plasma, radiant orange aura",
-        "core_highlight": "#ffffff",
-        "inner_glow": "#fff1a8",      # Solar White
-        "mid_gradient": "#ffae00",    # Flame Amber
-        "outer_gradient": "#ff4500",  # Intense Orange
-        "deep_edge": "#1c0400",       # Dark Edge
-        "halo_ring": "#ffae00",
-        "halo_ring2": "#ff4500",
+        "name": "Solar Bio-Reactive",
+        "description": "Incandescent solar amber sphere, warm flare highlight, golden aura",
+        "body_center": "#ffb700",
+        "body_mid": "#ff7700",
+        "body_edge": "#e65100",
+        "body_rim": "#d84315",
+        "spot_core": "#ffffff",
+        "spot_glow": "#ffe066",
+        "spot_outer": "#ff9800",
+        "aura_inner": "#ff9800",
+        "aura_mid": "#f57c00",
+        "aura_outer": "#e65100",
+        "ring_stroke": "#ffe066",
     }
 }
 
@@ -145,8 +153,7 @@ def generate_animated_orb_loop(
 ) -> Path:
     """
     Generates a 60-frame (2.0s @ 30FPS) seamless, transparent QuickTime MOV loop (qtrle codec)
-    containing a dynamic 3D Quantum Energy Organism with rotating orbital rings, swirling liquid plasma,
-    and orbiting light nodes.
+    containing an ultra-clean bio-reactive bioluminescent sphere matching the user's reference image.
     """
     palette_key = palette_key.lower().strip()
     if palette_key not in ORB_PALETTES:
@@ -160,119 +167,80 @@ def generate_animated_orb_loop(
     if not force_refresh and mov_path.exists() and mov_path.stat().st_size > 10000:
         return mov_path
 
-    print(f"  🔮 Generando bucle animado 3D para la Entidad Presentador Orbe ('{palette_key}')...")
+    print(f"  🔮 Generando orbe bio-reactivo 3D ('{palette_key}')...")
 
     frames_dir = dest_dir / f"_temp_frames_{palette_key}"
     frames_dir.mkdir(parents=True, exist_ok=True)
 
     c = canvas_size // 2
-    r_sphere = int(canvas_size * 0.24)
-    r_aura = int(canvas_size * 0.42)
-    r_specular = int(r_sphere * 0.45)
+    r_sphere = int(canvas_size * 0.28)
+    r_aura_base = int(canvas_size * 0.42)
 
     try:
         for i in range(loop_frames):
             t = i / loop_frames
             tau = 2 * math.pi * t
 
-            a1 = int(t * 360)
-            a2 = int(-t * 360 + 35)
-
-            # Fluid wave control points
-            w1_x1 = int(c - r_sphere * 0.70 + 18 * math.sin(tau))
-            w1_y1 = int(c + r_sphere * 0.15 + 14 * math.cos(tau))
-            w1_cx1 = int(c - r_sphere * 0.30 + 22 * math.cos(tau))
-            w1_cy1 = int(c - r_sphere * 0.65 + 18 * math.sin(tau))
-            w1_cx2 = int(c + r_sphere * 0.25 + 26 * math.sin(2 * tau))
-            w1_cy2 = int(c - r_sphere * 0.45 + 16 * math.cos(2 * tau))
-            w1_x2 = int(c + r_sphere * 0.75 + 14 * math.cos(tau))
-            w1_y2 = int(c - r_sphere * 0.10 + 18 * math.sin(tau))
-
-            # Orbiting light nodes
-            n1_x = int(c + r_sphere * 0.38 * math.cos(tau))
-            n1_y = int(c + r_sphere * 0.25 * math.sin(tau))
-            n2_x = int(c + r_sphere * 0.32 * math.cos(tau + math.pi / 2))
-            n2_y = int(c + r_sphere * 0.35 * math.sin(tau + math.pi / 2))
-            n3_x = int(c + r_sphere * 0.42 * math.cos(-tau + math.pi))
-            n3_y = int(c + r_sphere * 0.22 * math.sin(-tau + math.pi))
+            # Breathing movement for core light spot
+            spot_x = int(c - r_sphere * 0.32 + 10 * math.sin(tau))
+            spot_y = int(c - r_sphere * 0.28 + 8 * math.cos(tau))
+            spot_rx = int(r_sphere * 0.52 + 6 * math.sin(2 * tau))
+            spot_ry = int(r_sphere * 0.48 + 5 * math.cos(2 * tau))
+            r_aura = int(r_aura_base + 8 * math.sin(tau))
 
             svg = f"""<svg width="{canvas_size}" height="{canvas_size}" viewBox="0 0 {canvas_size} {canvas_size}" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <filter id="deepBlur_{i}" x="-30%" y="-30%" width="160%" height="160%">
+    <filter id="auraGlow_{i}" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="16" />
+    </filter>
+    <filter id="coreBlur_{i}" x="-30%" y="-30%" width="160%" height="160%">
       <feGaussianBlur stdDeviation="12" />
     </filter>
-    <filter id="sharpBlur_{i}" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="5" />
-    </filter>
-    <filter id="glow_{i}" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="4" />
+    <filter id="ringGlow_{i}" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="6" />
     </filter>
 
-    <clipPath id="coreClip_{i}">
-      <circle cx="{c}" cy="{c}" r="{r_sphere}" />
-    </clipPath>
-
-    <radialGradient id="aura_{i}" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="{palette['mid_gradient']}" stop-opacity="0.80" />
-      <stop offset="40%" stop-color="{palette['inner_glow']}" stop-opacity="0.40" />
-      <stop offset="75%" stop-color="{palette['outer_gradient']}" stop-opacity="0.15" />
+    <!-- Outer Soft Neon Aura -->
+    <radialGradient id="outerAura_{i}" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="{palette['aura_inner']}" stop-opacity="0.85" />
+      <stop offset="50%" stop-color="{palette['aura_mid']}" stop-opacity="0.45" />
+      <stop offset="80%" stop-color="{palette['aura_outer']}" stop-opacity="0.12" />
       <stop offset="100%" stop-color="#000000" stop-opacity="0.0" />
     </radialGradient>
 
-    <radialGradient id="body_{i}" cx="36%" cy="32%" r="68%">
-      <stop offset="0%" stop-color="{palette['core_highlight']}" stop-opacity="1.0" />
-      <stop offset="18%" stop-color="{palette['inner_glow']}" stop-opacity="0.95" />
-      <stop offset="45%" stop-color="{palette['mid_gradient']}" stop-opacity="0.92" />
-      <stop offset="80%" stop-color="{palette['outer_gradient']}" stop-opacity="0.95" />
-      <stop offset="100%" stop-color="{palette['deep_edge']}" stop-opacity="1.0" />
+    <!-- Sphere Body Gradient -->
+    <radialGradient id="sphereBody_{i}" cx="45%" cy="42%" r="58%">
+      <stop offset="0%" stop-color="{palette['body_center']}" />
+      <stop offset="55%" stop-color="{palette['body_mid']}" />
+      <stop offset="85%" stop-color="{palette['body_edge']}" />
+      <stop offset="100%" stop-color="{palette['body_rim']}" />
     </radialGradient>
 
-    <linearGradient id="ringGrad1_{i}" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="{palette['halo_ring']}" stop-opacity="0.95" />
-      <stop offset="50%" stop-color="{palette['core_highlight']}" stop-opacity="1.0" />
-      <stop offset="100%" stop-color="{palette['outer_gradient']}" stop-opacity="0.30" />
-    </linearGradient>
-
-    <linearGradient id="ringGrad2_{i}" x1="100%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="{palette['halo_ring2']}" stop-opacity="0.90" />
-      <stop offset="60%" stop-color="{palette['mid_gradient']}" stop-opacity="0.60" />
-      <stop offset="100%" stop-color="{palette['inner_glow']}" stop-opacity="0.10" />
-    </linearGradient>
+    <!-- Off-Center Light Spot (White Center to Pink/Purple Glow) -->
+    <radialGradient id="lightSpot_{i}" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="{palette['spot_core']}" stop-opacity="1.0" />
+      <stop offset="28%" stop-color="{palette['spot_glow']}" stop-opacity="0.92" />
+      <stop offset="65%" stop-color="{palette['spot_outer']}" stop-opacity="0.55" />
+      <stop offset="100%" stop-color="{palette['body_center']}" stop-opacity="0.0" />
+    </radialGradient>
   </defs>
 
-  <!-- Atmospheric Corona Aura -->
-  <circle cx="{c}" cy="{c}" r="{r_aura}" fill="url(#aura_{i})" />
+  <!-- 1. Soft Atmospheric Neon Glow -->
+  <circle cx="{c}" cy="{c}" r="{r_aura}" fill="url(#outerAura_{i})" />
 
-  <!-- Outer 3D Orbital Energy Ring (Spinning Clockwise) -->
-  <g transform="rotate({a1} {c} {c})">
-    <ellipse cx="{c}" cy="{c}" rx="{int(r_sphere * 1.62)}" ry="{int(r_sphere * 0.44)}" fill="none" stroke="url(#ringGrad1_{i})" stroke-width="6" filter="url(#glow_{i})" opacity="0.88" />
-    <ellipse cx="{c}" cy="{c}" rx="{int(r_sphere * 1.62)}" ry="{int(r_sphere * 0.44)}" fill="none" stroke="#ffffff" stroke-width="2" opacity="0.92" />
-  </g>
+  <!-- 2. Concentric Outer Glowing Ring -->
+  <circle cx="{c}" cy="{c}" r="{r_sphere + 7}" fill="none" stroke="{palette['aura_inner']}" stroke-width="5" opacity="0.80" filter="url(#ringGlow_{i})" />
+  <circle cx="{c}" cy="{c}" r="{r_sphere + 4}" fill="none" stroke="{palette['ring_stroke']}" stroke-width="2.5" opacity="0.90" />
 
-  <!-- 3D Volumetric Body -->
-  <circle cx="{c}" cy="{c}" r="{r_sphere}" fill="url(#body_{i})" />
+  <!-- 3. Sphere Body -->
+  <circle cx="{c}" cy="{c}" r="{r_sphere}" fill="url(#sphereBody_{i})" />
 
-  <!-- Swirling Fluid Core -->
-  <g clip-path="url(#coreClip_{i})">
-    <path d="M {w1_x1} {w1_y1} C {w1_cx1} {w1_cy1}, {w1_cx2} {w1_cy2}, {w1_x2} {w1_y2} C {c + int(r_sphere*0.3)} {c + int(r_sphere*0.5)}, {c - int(r_sphere*0.2)} {c + int(r_sphere*0.6)}, {w1_x1} {w1_y1} Z" fill="url(#ringGrad1_{i})" filter="url(#sharpBlur_{i})" opacity="0.85" />
-    
-    <!-- Orbiting Light Nodes -->
-    <circle cx="{n1_x}" cy="{n1_y}" r="14" fill="#ffffff" filter="url(#sharpBlur_{i})" opacity="0.95" />
-    <circle cx="{n2_x}" cy="{n2_y}" r="11" fill="{palette['inner_glow']}" filter="url(#sharpBlur_{i})" opacity="0.90" />
-    <circle cx="{n3_x}" cy="{n3_y}" r="9" fill="{palette['outer_gradient']}" filter="url(#sharpBlur_{i})" opacity="0.88" />
-  </g>
+  <!-- 4. Inner Concentric Rim Light -->
+  <circle cx="{c}" cy="{c}" r="{r_sphere - 2}" fill="none" stroke="{palette['aura_inner']}" stroke-width="3" opacity="0.65" />
 
-  <!-- Inner 3D Orbital Ring (Counter Spinning) -->
-  <g transform="rotate({a2} {c} {c})">
-    <ellipse cx="{c}" cy="{c}" rx="{int(r_sphere * 1.35)}" ry="{int(r_sphere * 0.32)}" fill="none" stroke="url(#ringGrad2_{i})" stroke-width="4.5" filter="url(#glow_{i})" opacity="0.80" />
-  </g>
-
-  <!-- 3D Glass Specular Crown -->
-  <ellipse cx="{int(c - r_sphere*0.28)}" cy="{int(c - r_sphere*0.28)}" rx="{r_specular}" ry="{int(r_specular*0.68)}" fill="#ffffff" transform="rotate(-28 {int(c - r_sphere*0.28)} {int(c - r_sphere*0.28)})" opacity="0.55" filter="url(#sharpBlur_{i})" />
-
-  <!-- Refraction Edge -->
-  <circle cx="{c}" cy="{c}" r="{r_sphere}" fill="none" stroke="#000000" stroke-width="2.0" opacity="0.85" />
-  <circle cx="{c}" cy="{c}" r="{r_sphere - 1}" fill="none" stroke="{palette['core_highlight']}" stroke-width="0.9" opacity="0.65" />
+  <!-- 5. Bioluminescent Core Light Spot -->
+  <ellipse cx="{spot_x}" cy="{spot_y}" rx="{spot_rx}" ry="{spot_ry}" fill="url(#lightSpot_{i})" filter="url(#coreBlur_{i})" />
+  <circle cx="{spot_x}" cy="{spot_y}" r="{int(spot_rx * 0.45)}" fill="{palette['spot_core']}" opacity="0.98" filter="url(#coreBlur_{i})" />
 </svg>"""
             (frames_dir / f"frame_{i:03d}.svg").write_text(svg, encoding="utf-8")
 
@@ -355,7 +323,7 @@ class GradientOrbManager:
     ) -> str:
         """
         Builds the FFmpeg filter chain that applies speech-envelope audio reactivity
-        on top of the continuously swirling/spinning transparent MOV loop stream.
+        on top of the continuously breathing transparent MOV loop stream.
         """
         target_size = self.pixel_size
         effective_opacity = self.opacity
@@ -372,8 +340,8 @@ class GradientOrbManager:
             speech_mask = f"min(1,{'+'.join(conds)})"
             speech_cadence = f"(max(0,sin(2*PI*t/0.48))*{speech_mask})"
 
-            eq_expr = f"brightness='0.06*{speech_cadence}':contrast='1.0 + 0.12*{speech_mask}'"
-            hue_expr = f"h='20*{speech_cadence} + 10*sin(2*PI*t/2.4)':s='1.0 + 0.18*{speech_mask}'"
+            eq_expr = f"brightness='0.07*{speech_cadence}':contrast='1.0 + 0.14*{speech_mask}'"
+            hue_expr = f"h='18*{speech_cadence} + 8*sin(2*PI*t/2.4)':s='1.0 + 0.16*{speech_mask}'"
 
             filters.append(f"[{input_idx}:v]scale={scale_expr}")
             filters.append(f"eq={eq_expr}")
@@ -381,7 +349,7 @@ class GradientOrbManager:
             filters.append("format=yuva420p")
             filters.append(f"colorchannelmixer=aa={effective_opacity:.2f}[{output_label}]")
         else:
-            hue_expr = "h='12*sin(2*PI*t/2.5)':s='1.0 + 0.08*sin(2*PI*t/2.5)'"
+            hue_expr = "h='10*sin(2*PI*t/2.5)':s='1.0 + 0.08*sin(2*PI*t/2.5)'"
 
             filters.append(f"[{input_idx}:v]scale={scale_expr}")
             filters.append(f"hue={hue_expr}")
@@ -404,7 +372,7 @@ def render_orb_test_preview(
     bg_style: str = "cosmic",
     sample_audio: Optional[Path] = None,
 ) -> Path:
-    """Renders a fast preview video of the dynamic 3D Living Presenter Entity."""
+    """Renders a fast preview video matching the reference bio-reactive orb."""
     if output_path is None:
         out_dir = Path("output") / "orb_previews"
         out_dir.mkdir(parents=True, exist_ok=True)
@@ -413,7 +381,7 @@ def render_orb_test_preview(
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    print(f"\n🔮 [AI Presenter Tester] Generando vista previa de la Entidad Presentador 3D...")
+    print(f"\n🔮 [AI Presenter Tester] Generando vista previa del Orbe Bio-Reactivo...")
     print(f"   • Paleta: '{palette}' | Opacidad: {opacity}")
     print(f"   • Duración: {duration}s | Resolución: {width}x{height}")
 
@@ -423,7 +391,7 @@ def render_orb_test_preview(
 
     if not resolved_audio:
         temp_test_audio = output_path.parent / "_temp_test_voice.mp3"
-        speech_text = "El universo se expande a velocidades astronómicas que desafían la imaginación."
+        speech_text = "NEXUS ORBE BIO REACTIVO. El universo se expande a velocidades astronómicas."
         from audio.tts import GoogleTTSProvider
         g_tts = GoogleTTSProvider(language="es")
         synthesized = g_tts.synthesize_text(speech_text, temp_test_audio)
@@ -449,13 +417,13 @@ def render_orb_test_preview(
         fps=30
     )
     x_coord, y_coord = mgr.get_overlay_coordinates(width, height)
-    bg_input = f"color=c=0x07090e:s={width}x{height}:r=30:d={duration}"
+    bg_input = f"color=c=0x0b0d14:s={width}x{height}:r=30:d={duration}"
 
     filter_complex = [
         orb_filter,
-        f"[0:v]eq=brightness=-0.03:contrast=1.06:saturation=1.04[bg_graded]",
+        f"[0:v]eq=brightness=-0.02:contrast=1.05[bg_graded]",
         f"[bg_graded][orb_layer]overlay=eval=frame:x='{x_coord}':y='{y_coord}':shortest=1[v_orb]",
-        f"[v_orb]drawtext=text='LIVING 3D AI ENTITY \\: {palette.upper()}':fontcolor=white:fontsize=36:box=1:boxcolor=black@0.65:boxborderw=12:x=(w-text_w)/2:y=180[vout]"
+        f"[v_orb]drawtext=text='NEXUS - ORBE BIO REACTIVO':fontcolor=white:fontsize=36:box=1:boxcolor=black@0.65:boxborderw=12:x=(w-text_w)/2:y=180[vout]"
     ]
     filter_str = ";".join(filter_complex)
 
@@ -487,7 +455,7 @@ def render_orb_test_preview(
     try:
         subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     except subprocess.CalledProcessError:
-        fallback_filter = f"{orb_filter};[0:v]eq=brightness=-0.03:contrast=1.06:saturation=1.04[bg_graded];[bg_graded][orb_layer]overlay=eval=frame:x='{x_coord}':y='{y_coord}':shortest=1[vout]"
+        fallback_filter = f"{orb_filter};[0:v]eq=brightness=-0.02:contrast=1.05[bg_graded];[bg_graded][orb_layer]overlay=eval=frame:x='{x_coord}':y='{y_coord}':shortest=1[vout]"
         cmd_fallback = [
             "ffmpeg", "-y",
             "-f", "lavfi", "-i", bg_input,
@@ -512,6 +480,6 @@ def render_orb_test_preview(
             except Exception:
                 pass
 
-    print(f"\n✨ ¡Vista previa de la Entidad 3D en movimiento generada!")
+    print(f"\n✨ ¡Vista previa del Orbe Bio-Reactivo generada con éxito!")
     print(f"🎬 Video listo: {output_path.resolve()}\n")
     return output_path
