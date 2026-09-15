@@ -18,7 +18,7 @@ from config import AUDIO_DIR, TTS_PROVIDER, TTS_API_KEY, DEFAULT_TTS_VOICE, OPEN
 from utils.files import get_media_duration
 
 
-# Cosmic Entity Voice Profiles (Microsoft Edge Neural TTS + SSML Modulation + DSP Audio Filters)
+# Cosmic Entity Voice Profiles (Microsoft Edge Neural TTS + SSML Prosody + 4-Tier DSP Acoustic Engineering)
 COSMIC_VOICE_PROFILES = {
     "quantum": {
         "name": "QUANTUM",
@@ -27,13 +27,18 @@ COSMIC_VOICE_PROFILES = {
         "pitch": "-4Hz",
         "volume": "+0%",
         "role": "La Mente Fundamental del Vacío",
-        "description": "Profunda, analítica, serena y pausada. Resonancia grave estelar.",
-        "dsp_filter": (
-            "highpass=f=85,"
-            "equalizer=f=140:width_type=h:width=60:g=2.5,"
-            "equalizer=f=4200:width_type=h:width=1200:g=2.2,"
-            "compand=attacks=0.01:decays=0.1:points=-60/-60|-20/-10|0/-3:soft-knee=6,"
-            "aecho=0.8:0.88:40:0.08"
+        "description": "Profunda, analítica, serena y pausada. Sub-octava estelar + dimensión binaural 3D.",
+        "drone_freq": 48,
+        "filter_complex": (
+            "[0:a]asplit=2[main_q][sub_q];"
+            "[sub_q]asetrate=22050,atempo=2.0,lowpass=f=120,volume=0.18[sub_bass];"
+            "[main_q][sub_bass]amix=inputs=2:duration=first[mixed_q];"
+            "[mixed_q]highpass=f=80,equalizer=f=140:width_type=h:width=60:g=2.5,equalizer=f=4200:width_type=h:width=1200:g=2.2,compand=attacks=0.01:decays=0.1:points=-60/-60|-20/-10|0/-3:soft-knee=6[eq_q];"
+            "[eq_q]aformat=channel_layouts=stereo,asplit=2[center_q][wide_q];"
+            "[wide_q]adelay=14|14,highpass=f=300,volume=0.22[wide_delayed_q];"
+            "[center_q][wide_delayed_q]amix=inputs=2:duration=first[spatial_q];"
+            "aevalsrc=0.04*sin(2*PI*48*t):d={duration}[drone_q];"
+            "[spatial_q][drone_q]amix=inputs=2:duration=first[out_q]"
         )
     },
     "solar": {
@@ -43,16 +48,44 @@ COSMIC_VOICE_PROFILES = {
         "pitch": "+2Hz",
         "volume": "+0%",
         "role": "El Núcleo Estelar Radiante",
-        "description": "Cálida, brillante, dinámica y envolvente. Shimmer estelar de plasma.",
-        "dsp_filter": (
-            "highpass=f=95,"
-            "equalizer=f=2200:width_type=h:width=800:g=2.2,"
-            "equalizer=f=6500:width_type=h:width=2000:g=2.8,"
-            "compand=attacks=0.01:decays=0.1:points=-60/-60|-20/-10|0/-3:soft-knee=6,"
-            "aecho=0.8:0.88:25:0.06"
+        "description": "Cálida, brillante, envolvente. Saturación plasma estelar + expansión 3D Haas.",
+        "drone_freq": 58,
+        "filter_complex": (
+            "[0:a]asplit=2[main_s][plasma_s];"
+            "[plasma_s]highpass=f=3200,volume=0.22,aecho=0.8:0.7:16:0.25[shimmer_s];"
+            "[main_s][shimmer_s]amix=inputs=2:duration=first[mixed_s];"
+            "[mixed_s]highpass=f=90,equalizer=f=2200:width_type=h:width=800:g=2.2,equalizer=f=6500:width_type=h:width=2000:g=2.8,compand=attacks=0.01:decays=0.1:points=-60/-60|-20/-10|0/-3:soft-knee=6[eq_s];"
+            "[eq_s]aformat=channel_layouts=stereo,asplit=2[center_s][wide_s];"
+            "[wide_s]adelay=10|10,highpass=f=350,volume=0.20[wide_delayed_s];"
+            "[center_s][wide_delayed_s]amix=inputs=2:duration=first[spatial_s];"
+            "aevalsrc=0.03*sin(2*PI*58*t):d={duration}[drone_s];"
+            "[spatial_s][drone_s]amix=inputs=2:duration=first[out_s]"
         )
     }
 }
+
+
+def prepare_cosmic_pacing_text(text: str) -> str:
+    """
+    Inserts psychophysical micro-pauses before key concepts to create a measured,
+    ancient intelligence cadence rather than rapid robotic TTS delivery.
+    """
+    replacements = {
+        " cuántica": "... cuántica",
+        "cuántica": "cuántica",
+        " universo": "... universo",
+        " espacio": "... espacio",
+        " tiempo": "... tiempo",
+        " partículas": "... partículas",
+        " energía": "... energía",
+        " misterios": "... misterios",
+    }
+    processed = text
+    for target, rep in replacements.items():
+        if target in processed and not processed.startswith("..."):
+            processed = processed.replace(target, rep, 1)
+    return processed
+
 
 
 class BaseTTSProvider(abc.ABC):
@@ -129,6 +162,14 @@ class EdgeTTSProvider(BaseTTSProvider):
             except Exception:
                 pass
 
+        # 3. Fallback to GoogleTTS if edge-tts is not installed in local environment
+        if not synthesized:
+            try:
+                gtts_provider = GoogleTTSProvider(language="es")
+                synthesized = gtts_provider.synthesize_text(text, raw_output_path)
+            except Exception as e:
+                print(f"  ⚠️ gTTS fallback error: {e}")
+
         if not synthesized:
             return False
 
@@ -162,19 +203,55 @@ class EdgeTTSProvider(BaseTTSProvider):
         apply_dsp: bool = True
     ) -> bool:
         """
-        Synthesize voice for a cosmic entity (quantum or solar) with tuned SSML prosody and DSP filters.
+        Synthesize voice for a cosmic entity (quantum or solar) with tuned SSML prosody,
+        psychophysical pacing, 3D Haas binaural width, sub-harmonics, and resonant sub-bass drone.
         """
-        profile = COSMIC_VOICE_PROFILES.get(entity.lower(), COSMIC_VOICE_PROFILES["quantum"])
-        return self.synthesize_text(
-            text=text,
-            output_path=output_path,
+        entity_key = entity.lower()
+        profile = COSMIC_VOICE_PROFILES.get(entity_key, COSMIC_VOICE_PROFILES["quantum"])
+        
+        # 1. Pacing & SSML pre-processing
+        paced_text = prepare_cosmic_pacing_text(text)
+        
+        output_path = Path(output_path)
+        raw_tmp_path = output_path.parent / f"_raw_cosmic_{output_path.name}"
+
+        # 2. Base Neural Synthesis via Edge TTS
+        synthesized = self.synthesize_text(
+            text=paced_text,
+            output_path=raw_tmp_path if apply_dsp else output_path,
             voice=profile["voice"],
             rate=profile["rate"],
             pitch=profile["pitch"],
             volume=profile["volume"],
-            apply_dsp=apply_dsp,
-            dsp_filter=profile["dsp_filter"]
+            apply_dsp=False
         )
+
+        if not synthesized or not apply_dsp:
+            return synthesized
+
+        # 3. Apply 4-tier Cosmic DSP Filtergraph (Sub-harmonics + Plasma Saturation + 3D Haas + Resonant Drone)
+        try:
+            dur = get_media_duration(raw_tmp_path) or 3.0
+            filter_graph = profile["filter_complex"].format(duration=f"{dur:.2f}")
+
+            cmd = [
+                "ffmpeg", "-y",
+                "-i", str(raw_tmp_path),
+                "-filter_complex", filter_graph,
+                "-map", f"[out_{'q' if 'quantum' in entity_key else 's'}]",
+                "-acodec", "libmp3lame",
+                "-b:a", "192k",
+                str(output_path)
+            ]
+            subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+            raw_tmp_path.unlink(missing_ok=True)
+            return output_path.exists() and output_path.stat().st_size > 0
+        except Exception as e:
+            print(f"  ⚠️ Cosmic DSP Filter Error: {e}, falling back to raw synthesis.")
+            if raw_tmp_path.exists():
+                raw_tmp_path.rename(output_path)
+            return output_path.exists()
+
 
 
 
