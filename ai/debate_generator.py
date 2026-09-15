@@ -347,13 +347,6 @@ class DebateScriptGenerator:
                         "text": "Fascinante postulado, pero la furia termodinámica de una supernova no es un simple algoritmo.",
                         "shot": "close_solar",
                         "duration": 3.5
-                    },
-                    {
-                        "speaker": "Ambos",
-                        "entity": "both",
-                        "text": "[Ambos Orbes en Resonancia Cósmica]",
-                        "shot": "wide",
-                        "duration": 2.3
                     }
                 ]
             }
@@ -394,13 +387,6 @@ class DebateScriptGenerator:
                         "text": "El cálculo no es suficiente: la emoción y la intuición humana nacen del fuego de la evolución.",
                         "shot": "close_solar",
                         "duration": 3.5
-                    },
-                    {
-                        "speaker": "Ambos",
-                        "entity": "both",
-                        "text": "[Ambos Orbes en Resonancia Cósmica]",
-                        "shot": "wide",
-                        "duration": 2.3
                     }
                 ]
             }
@@ -443,13 +429,6 @@ class DebateScriptGenerator:
                         "text": "Sin embargo, es la energía masiva de las estrellas la que manifiesta la realidad que contemplamos.",
                         "shot": "close_solar",
                         "duration": 3.5
-                    },
-                    {
-                        "speaker": "Ambos",
-                        "entity": "both",
-                        "text": "[Ambos Orbes en Resonancia Cósmica]",
-                        "shot": "wide",
-                        "duration": 2.3
                     }
                 ]
             }

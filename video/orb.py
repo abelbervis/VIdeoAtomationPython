@@ -448,6 +448,22 @@ class GradientOrbManager:
         return ",".join(filters)
 
 
+def _get_audio_duration_secs(file_path: Path, default_fallback: float = 3.0) -> float:
+    """Accurately measures media duration using ffprobe."""
+    try:
+        cmd = [
+            "ffprobe", "-v", "error",
+            "-show_entries", "format=duration",
+            "-of", "default=noprint_wrappers=1:nokey=1",
+            str(file_path)
+        ]
+        res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
+        val = float(res.stdout.strip())
+        return max(0.5, val)
+    except Exception:
+        return default_fallback
+
+
 def render_orb_test_preview(
     palette: str = "quantum",
     position: str = "presenter",
@@ -500,7 +516,6 @@ def render_orb_test_preview(
     q_part1 = "¡Hola! Bienvenidos a este nuevo debate espacial."
     q_part2 = "Hoy exploraremos los límites y misterios de la física cuántica."
     s_part3 = "¡Excelente! Y yo aportaré los secretos de la física solar."
-    both_part4 = "[Ambos Orbes en Resonancia Cósmica]"
 
     holo_q_title = "FÍSICA CUÁNTICA"
     holo_q_sub = "Estado: Superposición |ψ⟩ = α|0⟩ + β|1⟩"
@@ -532,15 +547,12 @@ def render_orb_test_preview(
             q_part2 = scenes[1]["text"]
         if len(scenes) > 2 and scenes[2].get("text"):
             s_part3 = scenes[2]["text"]
-        if len(scenes) > 3 and scenes[3].get("text"):
-            both_part4 = scenes[3]["text"]
 
     print(f"\n🔮 [AI Co-Host Debate Express] Renderizando video con Doble Orbe y Multi-Cámara...")
     print(f"   • Orbe 1: QUANTUM (Azul Eléctrico / Cyan) | Orbe 2: SOLAR (Ámbar / Oro)")
     print(f"   • Hook: {headline_hook}")
     print(f"   • HUD Holográfico Q: [{holo_q_cat}] {holo_q_title} -> {holo_q_sub}")
     print(f"   • HUD Holográfico S: [{holo_s_cat}] {holo_s_title} -> {holo_s_sub}")
-    print(f"   • Duración: 12.0s | Resolución: {width}x{height} | 4 Cortes de Cámara")
 
     # Generate both assets
     orb_quantum = get_or_create_orb_asset(palette="quantum", force_refresh=True)
@@ -588,9 +600,15 @@ def render_orb_test_preview(
         output_path=badge_s_path
     )
 
-
     temp_test_audio: Optional[Path] = output_path.parent / "_temp_cohost_debate.mp3"
     resolved_audio: Optional[Path] = sample_audio
+
+    # Dynamic timeline variables
+    t0 = 0.0
+    t1 = 3.2
+    t2 = 6.4
+    t3 = 9.8
+    total_duration = 12.0
 
     if not resolved_audio:
         part1_path = output_path.parent / "_temp_q_part1.mp3"
@@ -624,6 +642,20 @@ def render_orb_test_preview(
             syn2 = tts_fallback.synthesize_text(q_part2, part2_path)
             syn3 = tts_fallback.synthesize_text(s_part3, part3_path)
 
+        # Accurately measure each speech part duration to PREVENT ANY AUDIO OVERLAP
+        dur1 = _get_audio_duration_secs(part1_path, 3.0)
+        dur2 = _get_audio_duration_secs(part2_path, 3.0)
+        dur3 = _get_audio_duration_secs(part3_path, 3.2)
+
+        pause = 0.22  # Natural speech boundary pause in seconds
+        t0 = 0.0
+        t1 = round(dur1 + pause, 2)
+        t2 = round(t1 + dur2 + pause, 2)
+        t3 = round(t2 + dur3 + pause, 2)
+        total_duration = round(max(t3 + 2.0, 12.0), 2)
+
+        print(f"   • Línea de Tiempo Dialéctica: T1={t1}s | T2={t2}s | T3={t3}s | Total={total_duration}s")
+
         # Synthesize camera transition SFX & entity stingers
         sfx_q_hum_path = output_path.parent / "_temp_sfx_q_hum.wav"
         sfx_s_flare_path = output_path.parent / "_temp_sfx_s_flare.wav"
@@ -635,27 +667,25 @@ def render_orb_test_preview(
         synthesize_camera_servo_sfx(sfx_q_hum_path, duration=1.2, sfx_type="quantum_hum")
         synthesize_camera_servo_sfx(sfx_s_flare_path, duration=0.9, sfx_type="solar_flare")
 
-        # Prepare background soundtrack (custom asset or procedural space ambient pad)
+        # Prepare background soundtrack
         music_mgr = MusicManager()
         bg_track = music_mgr.get_background_track()
         if bg_track and bg_track.exists():
             music_bg_path = bg_track
         else:
-            synthesize_space_ambient_pad(music_bg_path, duration=12.0)
+            synthesize_space_ambient_pad(music_bg_path, duration=total_duration)
         
         if syn1 and syn2 and syn3 and part1_path.exists() and part2_path.exists() and part3_path.exists():
-            # Multitrack Audio Mixing Pipeline:
-            # Inputs:
-            # 0: Voice Part 1 (Quantum - 0.0s)
-            # 1: Voice Part 2 (Quantum - 3.2s)
-            # 2: Voice Part 3 (Solar - 6.2s)
-            # 3: SFX Intro Heavy Sub Drop + Shimmer (0.0s)
-            # 4: SFX Whoosh Quantum (Haas stereo whip) (3.15s)
-            # 5: SFX Whoosh Solar (Plasma sweep) (6.15s)
-            # 6: SFX Wide Pan Out (9.15s)
-            # 7: SFX Quantum Sub-Bass Revelation Hum (3.20s)
-            # 8: SFX Solar Flare Plasma Stinger (6.20s)
-            # 9: Sci-Fi Ambient Soundtrack Pad (0.0s - 12.0s)
+            v1_delay = 0
+            v2_delay = int(t1 * 1000)
+            v3_delay = int(t2 * 1000)
+            sfx0_delay = 20
+            sfx1_delay = int(max(0.0, t1 - 0.08) * 1000)
+            sfx2_delay = int(max(0.0, t2 - 0.08) * 1000)
+            sfx3_delay = int(max(0.0, t3 - 0.08) * 1000)
+            sfx_q_hum_delay = int(t1 * 1000)
+            sfx_s_flare_delay = int(t2 * 1000)
+
             concat_cmd = [
                 "ffmpeg", "-y",
                 "-i", str(part1_path),
@@ -669,19 +699,19 @@ def render_orb_test_preview(
                 "-i", str(sfx_s_flare_path),
                 "-stream_loop", "-1", "-i", str(music_bg_path),
                 "-filter_complex",
-                "[0:a]adelay=0|0,volume=1.0[v1];"
-                "[1:a]adelay=3200|3200,volume=1.0[v2];"
-                "[2:a]adelay=6200|6200,volume=1.0[v3];"
-                "[3:a]adelay=20|20,volume=0.42[sfx0];"
-                "[4:a]adelay=3120|3120,volume=0.38[sfx1];"
-                "[5:a]adelay=6120|6120,volume=0.38[sfx2];"
-                "[6:a]adelay=9120|9120,volume=0.42[sfx3];"
-                "[7:a]adelay=3200|3200,volume=0.32[sfx_q_hum];"
-                "[8:a]adelay=6200|6200,volume=0.28[sfx_s_flare];"
-                "[9:a]volume=0.16,afade=t=in:st=0:d=1.0,afade=t=out:st=10.2:d=1.8[bgm];"
+                f"[0:a]adelay={v1_delay}|{v1_delay},volume=1.0[v1];"
+                f"[1:a]adelay={v2_delay}|{v2_delay},volume=1.0[v2];"
+                f"[2:a]adelay={v3_delay}|{v3_delay},volume=1.0[v3];"
+                f"[3:a]adelay={sfx0_delay}|{sfx0_delay},volume=0.42[sfx0];"
+                f"[4:a]adelay={sfx1_delay}|{sfx1_delay},volume=0.38[sfx1];"
+                f"[5:a]adelay={sfx2_delay}|{sfx2_delay},volume=0.38[sfx2];"
+                f"[6:a]adelay={sfx3_delay}|{sfx3_delay},volume=0.42[sfx3];"
+                f"[7:a]adelay={sfx_q_hum_delay}|{sfx_q_hum_delay},volume=0.32[sfx_q_hum];"
+                f"[8:a]adelay={sfx_s_flare_delay}|{sfx_s_flare_delay},volume=0.28[sfx_s_flare];"
+                f"[9:a]volume=0.16,afade=t=in:st=0:d=1.0,afade=t=out:st={round(total_duration - 1.8, 2)}:d=1.8[bgm];"
                 "[v1][v2][v3][sfx0][sfx1][sfx2][sfx3][sfx_q_hum][sfx_s_flare][bgm]amix=inputs=10:dropout_transition=0:normalize=0[aout]",
                 "-map", "[aout]",
-                "-t", "12.0",
+                "-t", str(total_duration),
                 "-c:a", "libmp3lame",
                 "-b:a", "192k",
                 str(temp_test_audio)
@@ -705,17 +735,21 @@ def render_orb_test_preview(
                     music_bg_path.unlink()
                 except Exception:
                     pass
-
+    else:
+        total_duration = _get_audio_duration_secs(resolved_audio, 12.0)
+        t1 = round(total_duration * 0.27, 2)
+        t2 = round(total_duration * 0.54, 2)
+        t3 = round(total_duration * 0.80, 2)
 
     # Build advanced video filter chains for double overlays & scale changes (Virtual Camera)
     # Audio-reactive speech cadence ripple (Dynamic pulsing & physical expansion on speech peaks)
     voice_pulse_q = "(0.5 + 0.35*sin(2*PI*t/0.16) + 0.15*cos(2*PI*t/0.28))"
-    speech_mask_q = "between(t,0,6.2)"
+    speech_mask_q = f"between(t,0,{t2})"
     eq_q = f"brightness='-0.18 + (0.36 + 0.12*{voice_pulse_q})*{speech_mask_q}':contrast='0.70 + (0.60 + 0.22*{voice_pulse_q})*{speech_mask_q}'"
     hue_q = f"h='(14 + 6*{voice_pulse_q})*{speech_mask_q} + 6*sin(2*PI*t/2.4)':s='0.60 + (0.70 + 0.25*{voice_pulse_q})*{speech_mask_q}'"
     
     voice_pulse_s = "(0.5 + 0.35*sin(2*PI*t/0.14) + 0.15*cos(2*PI*t/0.26))"
-    speech_mask_s = "between(t,6.2,12.0)"
+    speech_mask_s = f"between(t,{t2},{t3 + 0.3})"
     eq_s = f"brightness='-0.04 + (0.22 + 0.10*{voice_pulse_s})*{speech_mask_s}':contrast='0.92 + (0.28 + 0.14*{voice_pulse_s})*{speech_mask_s}'"
     hue_s = f"h='(14 + 6*{voice_pulse_s})*{speech_mask_s} + 6*sin(2*PI*t/2.4)':s='0.85 + (0.50 + 0.20*{voice_pulse_s})*{speech_mask_s}'"
 
@@ -743,7 +777,6 @@ def render_orb_test_preview(
     sub1_path = output_path.parent / "_temp_sub1.txt"
     sub2_path = output_path.parent / "_temp_sub2.txt"
     sub3_path = output_path.parent / "_temp_sub3.txt"
-    sub4_path = output_path.parent / "_temp_sub4.txt"
 
     def _wrap_sub_text(speaker: str, txt: str, max_chars_per_line: int = 36) -> str:
         full = f"{speaker}: {txt}" if speaker else txt
@@ -766,9 +799,8 @@ def render_orb_test_preview(
     sub1_path.write_text(_wrap_sub_text("Quantum", q_part1), encoding="utf-8")
     sub2_path.write_text(_wrap_sub_text("Quantum", q_part2), encoding="utf-8")
     sub3_path.write_text(_wrap_sub_text("Solar", s_part3), encoding="utf-8")
-    sub4_path.write_text(_wrap_sub_text("", both_part4), encoding="utf-8")
 
-    bg_input = f"color=c=0x08090f:s={width}x{height}:r=30:d=12.0"
+    bg_input = f"color=c=0x08090f:s={width}x{height}:r=30:d={total_duration}"
 
     filter_complex = [
         # 0. Hologram Reference Card & Presenter Badge Pre-scaling
@@ -796,36 +828,35 @@ def render_orb_test_preview(
         
         # 4. Apply background grading and overlay dynamic glows first to make the ambient background
         f"[0:v]eq=brightness=-0.01:contrast=1.05[bg_graded]",
-        f"[bg_graded][bg_glow_q]overlay=eval=frame:enable='between(t,0,6.2)'[bg_glowed_1]",
-        f"[bg_glowed_1][bg_glow_s]overlay=eval=frame:enable='between(t,6.2,12.0)'[bg_ambient]",
+        f"[bg_graded][bg_glow_q]overlay=eval=frame:enable='between(t,0,{t2})'[bg_glowed_1]",
+        f"[bg_glowed_1][bg_glow_s]overlay=eval=frame:enable='between(t,{t2},{total_duration})'[bg_ambient]",
         
         # 5. Sequentially overlay the foreground orbs with power ignition snap on frame 0 and matching drifts
-        # Toma 1 (0-3.2s): Wide Shot. Power ignition snap + Presenter Badges Floating below each orb (0.4s-3.0s)
-        f"[bg_ambient][orb_q_wide_active]overlay=eval=frame:x='W*0.25-w/2 + {drift_q_active_x} + {drift_intro_x}':y='H*0.38-h/2 + {drift_q_active_y} + {drift_intro_y}':enable='between(t,0,3.2)'[v1]",
-        f"[v1][orb_s_wide_passive]overlay=eval=frame:x='W*0.75-w/2 - 28 + {drift_s_resting_x} + {drift_intro_x}':y='H*0.39-h/2 + {drift_s_resting_y} + {drift_intro_y}':enable='between(t,0,3.2)'[v1_orbs]",
-        f"[v1_orbs][badge_q]overlay=eval=frame:x='W*0.25-w/2 + 5.0*sin(2*PI*(t-0.4)/2.2)':y='H*0.52-h/2 + 4.0*cos(2*PI*(t-0.4)/2.2)':enable='between(t,0.4,3.0)'[v1_bdg_q]",
-        f"[v1_bdg_q][badge_s]overlay=eval=frame:x='W*0.75-w/2 - 28 + 5.0*cos(2*PI*(t-0.4)/2.4)':y='H*0.52-h/2 + 4.0*sin(2*PI*(t-0.4)/2.4)':enable='between(t,0.4,3.0)'[v2]",
+        # Toma 1 (0 -> t1): Wide Shot. Power ignition snap + Presenter Badges Floating below each orb
+        f"[bg_ambient][orb_q_wide_active]overlay=eval=frame:x='W*0.25-w/2 + {drift_q_active_x} + {drift_intro_x}':y='H*0.38-h/2 + {drift_q_active_y} + {drift_intro_y}':enable='between(t,0,{t1})'[v1]",
+        f"[v1][orb_s_wide_passive]overlay=eval=frame:x='W*0.75-w/2 - 28 + {drift_s_resting_x} + {drift_intro_x}':y='H*0.39-h/2 + {drift_s_resting_y} + {drift_intro_y}':enable='between(t,0,{t1})'[v1_orbs]",
+        f"[v1_orbs][badge_q]overlay=eval=frame:x='W*0.25-w/2 + 5.0*sin(2*PI*(t-0.4)/2.2)':y='H*0.52-h/2 + 4.0*cos(2*PI*(t-0.4)/2.2)':enable='between(t,0.3,{max(0.4, round(t1-0.2, 2))})'[v1_bdg_q]",
+        f"[v1_bdg_q][badge_s]overlay=eval=frame:x='W*0.75-w/2 - 28 + 5.0*cos(2*PI*(t-0.4)/2.4)':y='H*0.52-h/2 + 4.0*sin(2*PI*(t-0.4)/2.4)':enable='between(t,0.3,{max(0.4, round(t1-0.2, 2))})'[v2]",
         
-        # Toma 2 (3.2s-6.2s): Close Up Quantum active + Floating Sci-Fi Hologram Card 1
-        f"[v2][orb_q_close_active]overlay=eval=frame:x='W/2-w/2 + {drift_q_active_x} + 25.0*exp(-6.5*(t-3.2))*cos(16.0*(t-3.2))':y='H*0.38-h/2 + {drift_q_active_y} + 30.0*exp(-6.5*(t-3.2))*sin(16.0*(t-3.2))':enable='between(t,3.2,6.2)'[v3]",
-        f"[v3][holo_q]overlay=eval=frame:x='(W-w)/2':y='H*0.12-h/2 + 6.0*sin(2*PI*(t-3.3)/2.4)':enable='between(t,3.3,6.0)'[v3_holo]",
+        # Toma 2 (t1 -> t2): Close Up Quantum active + Floating Sci-Fi Hologram Card 1
+        f"[v2][orb_q_close_active]overlay=eval=frame:x='W/2-w/2 + {drift_q_active_x} + 25.0*exp(-6.5*(t-{t1}))*cos(16.0*(t-{t1}))':y='H*0.38-h/2 + {drift_q_active_y} + 30.0*exp(-6.5*(t-{t1}))*sin(16.0*(t-{t1}))':enable='between(t,{t1},{t2})'[v3]",
+        f"[v3][holo_q]overlay=eval=frame:x='(W-w)/2':y='H*0.12-h/2 + 6.0*sin(2*PI*(t-{round(t1+0.1, 2)})/2.4)':enable='between(t,{round(t1+0.1, 2)},{max(round(t1+0.2, 2), round(t2-0.2, 2))})'[v3_holo]",
         
-        # Toma 3 (6.2s-9.2s): Close Up Solar active + Floating Sci-Fi Hologram Card 2
-        f"[v3_holo][orb_s_close_active]overlay=eval=frame:x='W/2-w/2 + {drift_s_active_x} + 25.0*exp(-6.5*(t-6.2))*cos(16.0*(t-6.2))':y='H*0.38-h/2 + {drift_s_active_y} + 30.0*exp(-6.5*(t-6.2))*sin(16.0*(t-6.2))':enable='between(t,6.2,9.2)'[v4]",
-        f"[v4][holo_s]overlay=eval=frame:x='(W-w)/2':y='H*0.12-h/2 + 6.0*cos(2*PI*(t-6.3)/2.6)':enable='between(t,6.3,9.0)'[v4_holo]",
+        # Toma 3 (t2 -> t3): Close Up Solar active + Floating Sci-Fi Hologram Card 2
+        f"[v3_holo][orb_s_close_active]overlay=eval=frame:x='W/2-w/2 + {drift_s_active_x} + 25.0*exp(-6.5*(t-{t2}))*cos(16.0*(t-{t2}))':y='H*0.38-h/2 + {drift_s_active_y} + 30.0*exp(-6.5*(t-{t2}))*sin(16.0*(t-{t2}))':enable='between(t,{t2},{t3})'[v4]",
+        f"[v4][holo_s]overlay=eval=frame:x='(W-w)/2':y='H*0.12-h/2 + 6.0*cos(2*PI*(t-{round(t2+0.1, 2)})/2.6)':enable='between(t,{round(t2+0.1, 2)},{max(round(t2+0.2, 2), round(t3-0.2, 2))})'[v4_holo]",
         
-        # Toma 4 (9.2s-12.0s): Wide Shot. Solar active takes stage (Z-forward). Quantum passive leans right towards Solar
-        f"[v4_holo][orb_q_wide_passive]overlay=eval=frame:x='W*0.25-w/2 + 28 + {drift_q_resting_x} + 15.0*exp(-6.5*(t-9.2))*cos(16.0*(t-9.2))':y='H*0.40-h/2 + {drift_q_resting_y} + 18.0*exp(-6.5*(t-9.2))*sin(16.0*(t-9.2))':enable='between(t,9.2,12.0)'[v5]",
-        f"[v5][orb_s_wide_active]overlay=eval=frame:x='W*0.75-w/2 + {drift_s_active_x} + 15.0*exp(-6.5*(t-9.2))*cos(16.0*(t-9.2))':y='H*0.39-h/2 + {drift_s_active_y} + 18.0*exp(-6.5*(t-9.2))*sin(16.0*(t-9.2))':enable='between(t,9.2,12.0)'[v6]",
+        # Toma 4 (t3 -> total_duration): Wide Shot Harmonic Resonance Outro
+        f"[v4_holo][orb_q_wide_passive]overlay=eval=frame:x='W*0.25-w/2 + 28 + {drift_q_resting_x} + 15.0*exp(-6.5*(t-{t3}))*cos(16.0*(t-{t3}))':y='H*0.40-h/2 + {drift_q_resting_y} + 18.0*exp(-6.5*(t-{t3}))*sin(16.0*(t-{t3}))':enable='between(t,{t3},{total_duration})'[v5]",
+        f"[v5][orb_s_wide_active]overlay=eval=frame:x='W*0.75-w/2 + {drift_s_active_x} + 15.0*exp(-6.5*(t-{t3}))*cos(16.0*(t-{t3}))':y='H*0.39-h/2 + {drift_s_active_y} + 18.0*exp(-6.5*(t-{t3}))*sin(16.0*(t-{t3}))':enable='between(t,{t3},{total_duration})'[v6]",
         
-        # 6. Headline Hook Badge Overlay (Top Center 0.0s - 2.6s - Google / ElevenLabs ad style)
-        f"[v6]drawtext=text='{escaped_headline_hook}':{font_param}:fontcolor=white:fontsize=34:box=1:boxcolor=0x08101e@0.90:boxborderw=20:borderw=2:bordercolor=0x00f0ff:x=(w-text_w)/2:y=140:enable='between(t,0,2.6)'[v_hook]",
+        # 6. Headline Hook Badge Overlay (Top Center 0.0s -> min(t1, 2.8s))
+        f"[v6]drawtext=text='{escaped_headline_hook}':{font_param}:fontcolor=white:fontsize=34:box=1:boxcolor=0x08101e@0.90:boxborderw=20:borderw=2:bordercolor=0x00f0ff:x=(w-text_w)/2:y=140:enable='between(t,0,{min(round(t1, 2), 2.8)})'[v_hook]",
 
         # 7. Subtitles dialogue overlays (Clean UTF-8 text files, exact 2-line formatting, safe vertical margin y=h-300)
-        f"[v_hook]drawtext=textfile='{sub1_path}':{font_param}:fontcolor=0x00f0ff:fontsize=32:line_spacing=10:box=1:boxcolor=0x060c18@0.90:boxborderw=20:borderw=1:bordercolor=0x00f0ff@0.60:x=(w-text_w)/2:y=h-300:enable='between(t,0,3.2)'[sub1]",
-        f"[sub1]drawtext=textfile='{sub2_path}':{font_param}:fontcolor=0x00f0ff:fontsize=32:line_spacing=10:box=1:boxcolor=0x060c18@0.90:boxborderw=20:borderw=1:bordercolor=0x00f0ff@0.60:x=(w-text_w)/2:y=h-300:enable='between(t,3.2,6.2)'[sub2]",
-        f"[sub2]drawtext=textfile='{sub3_path}':{font_param}:fontcolor=0xffb300:fontsize=32:line_spacing=10:box=1:boxcolor=0x181006@0.90:boxborderw=20:borderw=1:bordercolor=0xffb300@0.60:x=(w-text_w)/2:y=h-300:enable='between(t,6.2,9.7)'[sub3]",
-        f"[sub3]drawtext=textfile='{sub4_path}':{font_param}:fontcolor=white:fontsize=32:box=1:boxcolor=0x0c0c16@0.90:boxborderw=20:borderw=1:bordercolor=0xffffff@0.50:x=(w-text_w)/2:y=h-300:enable='between(t,9.7,12.0)'[vout]"
+        f"[v_hook]drawtext=textfile='{sub1_path}':{font_param}:fontcolor=0x00f0ff:fontsize=32:line_spacing=10:box=1:boxcolor=0x060c18@0.90:boxborderw=20:borderw=1:bordercolor=0x00f0ff@0.60:x=(w-text_w)/2:y=h-300:enable='between(t,0,{t1})'[sub1]",
+        f"[sub1]drawtext=textfile='{sub2_path}':{font_param}:fontcolor=0x00f0ff:fontsize=32:line_spacing=10:box=1:boxcolor=0x060c18@0.90:boxborderw=20:borderw=1:bordercolor=0x00f0ff@0.60:x=(w-text_w)/2:y=h-300:enable='between(t,{t1},{t2})'[sub2]",
+        f"[sub2]drawtext=textfile='{sub3_path}':{font_param}:fontcolor=0xffb300:fontsize=32:line_spacing=10:box=1:boxcolor=0x181006@0.90:boxborderw=20:borderw=1:bordercolor=0xffb300@0.60:x=(w-text_w)/2:y=h-300:enable='between(t,{t2},{t3})'[vout]"
     ]
     filter_str = ";".join(filter_complex)
 
@@ -859,15 +890,13 @@ def render_orb_test_preview(
         str(output_path)
     ]
 
-
-
     try:
         subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     except subprocess.CalledProcessError as e:
         print(f"  ❌ FFmpeg render error: {e.stderr.decode('utf-8') if e.stderr else str(e)}")
         raise e
     finally:
-        for p in [temp_test_audio, sub1_path, sub2_path, sub3_path, sub4_path]:
+        for p in [temp_test_audio, sub1_path, sub2_path, sub3_path]:
             if p and p.exists():
                 try:
                     p.unlink()
