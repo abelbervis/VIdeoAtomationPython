@@ -460,6 +460,7 @@ def render_orb_test_preview(
     height: int = 1920,
     bg_style: str = "cosmic",
     sample_audio: Optional[Path] = None,
+    headline_hook: str = "⚡ PARADOJA CUÁNTICA VS FÍSICA SOLAR ⚡",
 ) -> Path:
     """Renders a stunning co-host conversation video with two bio-reactive orbs and dynamic camera cuts."""
     if output_path is None:
@@ -472,6 +473,7 @@ def render_orb_test_preview(
 
     print(f"\n🔮 [AI Co-Host Debate] Generando demo interactiva de Doble Orbe y Multi-Cámara...")
     print(f"   • Orbe 1: Quantum (Azul Eléctrico) | Orbe 2: Solar (Ámbar Fuego)")
+    print(f"   • Hook: {headline_hook}")
     print(f"   • Duración: 12.0s | Resolución: {width}x{height} | 4 Cortes de Cámara")
 
     # Generate both assets
@@ -630,10 +632,14 @@ def render_orb_test_preview(
         f"[bg_graded][bg_glow_q]overlay=eval=frame:enable='between(t,0,6.2)'[bg_glowed_1]",
         f"[bg_glowed_1][bg_glow_s]overlay=eval=frame:enable='between(t,6.2,12.0)'[bg_ambient]",
         
-        # 5. Sequentially overlay the foreground orbs using conditional enabling (enable parameter) and matching drifts
-        # Toma 1 (0-3.2s): Wide Shot. Quantum active takes stage (Z-forward). Solar passive leans left towards Quantum (Z-back + leaning offset)
-        f"[bg_ambient][orb_q_wide_active]overlay=eval=frame:x='W*0.25-w/2 + {drift_q_active_x}':y='H*0.42-h/2 + {drift_q_active_y}':enable='between(t,0,3.2)'[v1]",
-        f"[v1][orb_s_wide_passive]overlay=eval=frame:x='W*0.75-w/2 - 28 + {drift_s_resting_x}':y='H*0.43-h/2 + {drift_s_resting_y}':enable='between(t,0,3.2)'[v2]",
+        # 5. Sequentially overlay the foreground orbs with power ignition snap on frame 0 and matching drifts
+        # Power ignition spring on intro (0-0.8s)
+        drift_intro_x = "30.0*exp(-7.0*t)*cos(16.0*t)"
+        drift_intro_y = "35.0*exp(-7.0*t)*sin(16.0*t)"
+
+        # Toma 1 (0-3.2s): Wide Shot. Power ignition snap, Quantum active takes stage (Z-forward). Solar passive leans left towards Quantum
+        f"[bg_ambient][orb_q_wide_active]overlay=eval=frame:x='W*0.25-w/2 + {drift_q_active_x} + {drift_intro_x}':y='H*0.42-h/2 + {drift_q_active_y} + {drift_intro_y}':enable='between(t,0,3.2)'[v1]",
+        f"[v1][orb_s_wide_passive]overlay=eval=frame:x='W*0.75-w/2 - 28 + {drift_s_resting_x} + {drift_intro_x}':y='H*0.43-h/2 + {drift_s_resting_y} + {drift_intro_y}':enable='between(t,0,3.2)'[v2]",
         
         # Toma 2 (3.2s-6.2s): Close Up Quantum active with organic spring camera damping transition
         f"[v2][orb_q_close_active]overlay=eval=frame:x='W/2-w/2 + {drift_q_active_x} + 25.0*exp(-6.5*(t-3.2))*cos(16.0*(t-3.2))':y='H*0.40-h/2 + {drift_q_active_y} + 30.0*exp(-6.5*(t-3.2))*sin(16.0*(t-3.2))':enable='between(t,3.2,6.2)'[v3]",
@@ -645,8 +651,11 @@ def render_orb_test_preview(
         f"[v4][orb_q_wide_passive]overlay=eval=frame:x='W*0.25-w/2 + 28 + {drift_q_resting_x} + 15.0*exp(-6.5*(t-9.2))*cos(16.0*(t-9.2))':y='H*0.43-h/2 + {drift_q_resting_y} + 18.0*exp(-6.5*(t-9.2))*sin(16.0*(t-9.2))':enable='between(t,9.2,12.0)'[v5]",
         f"[v5][orb_s_wide_active]overlay=eval=frame:x='W*0.75-w/2 + {drift_s_active_x} + 15.0*exp(-6.5*(t-9.2))*cos(16.0*(t-9.2))':y='H*0.42-h/2 + {drift_s_active_y} + 18.0*exp(-6.5*(t-9.2))*sin(16.0*(t-9.2))':enable='between(t,9.2,12.0)'[v6]",
         
-        # 6. Subtitles dialogue overlays (Bottom)
-        f"[v6]drawtext=text='Quantum\\: ¡Hola! Bienvenidos a este nuevo debate espacial.':fontcolor=0x00f0ff:fontsize=36:fontfile=Arial:box=1:boxcolor=black@0.75:boxborderw=12:x=(w-text_w)/2:y=h-240:enable='between(t,0,3.2)'[sub1]",
+        # 6. Headline Hook Badge Overlay (Top Center 0.0s - 2.6s)
+        f"[v6]drawtext=text='{headline_hook.replace(':', '\\\\:').replace('\'', '\\\\\'')}':fontcolor=white:fontsize=36:fontfile=Arial:box=1:boxcolor=0x08101e@0.85:boxborderw=14:borderw=2:bordercolor=0x00f0ff:x=(w-text_w)/2:y=170:enable='between(t,0,2.6)'[v_hook]",
+
+        # 7. Subtitles dialogue overlays (Bottom)
+        f"[v_hook]drawtext=text='Quantum\\: ¡Hola! Bienvenidos a este nuevo debate espacial.':fontcolor=0x00f0ff:fontsize=36:fontfile=Arial:box=1:boxcolor=black@0.75:boxborderw=12:x=(w-text_w)/2:y=h-240:enable='between(t,0,3.2)'[sub1]",
         f"[sub1]drawtext=text='Quantum\\: Hoy exploraremos los limites y misterios de la fisica cuantica.':fontcolor=0x00f0ff:fontsize=36:fontfile=Arial:box=1:boxcolor=black@0.75:boxborderw=12:x=(w-text_w)/2:y=h-240:enable='between(t,3.2,6.2)'[sub2]",
         f"[sub2]drawtext=text='Solar\\: ¡Excelente! Y yo aportare los secretos de la fisica solar.':fontcolor=0xffaa00:fontsize=36:fontfile=Arial:box=1:boxcolor=black@0.75:boxborderw=12:x=(w-text_w)/2:y=h-240:enable='between(t,6.2,9.7)'[sub3]",
         f"[sub3]drawtext=text='[Ambos Orbes en Armonia y Resonancia]':fontcolor=white:fontsize=36:fontfile=Arial:box=1:boxcolor=black@0.75:boxborderw=12:x=(w-text_w)/2:y=h-240:enable='between(t,9.7,12.0)'[vout]"

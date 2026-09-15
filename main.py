@@ -65,6 +65,8 @@ def main():
         fmt_cfg = resolve_video_format(args.format)
         sample_audio_arg = getattr(args, "test_orb_audio", None)
         sample_audio_path = Path(sample_audio_arg) if sample_audio_arg else None
+        custom_hook = getattr(args, "hook_title", None)
+        headline_arg = custom_hook if custom_hook else "⚡ PARADOJA CUÁNTICA VS FÍSICA SOLAR ⚡"
         render_orb_test_preview(
             palette=getattr(args, "orb_palette", "cosmic"),
             position=getattr(args, "orb_position", "center"),
@@ -76,6 +78,7 @@ def main():
             height=fmt_cfg["height"],
             sample_audio=sample_audio_path,
             bg_style=getattr(args, "test_orb_bg", "bright"),
+            headline_hook=headline_arg,
         )
         return
 

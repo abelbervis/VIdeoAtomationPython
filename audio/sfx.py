@@ -115,11 +115,13 @@ def synthesize_camera_servo_sfx(
         sec = i / sample_rate
 
         if sfx_type == "intro":
-            env = math.exp(-t * 3.5)
-            chime = 0.35 * math.sin(2.0 * math.pi * 523.25 * sec) + 0.25 * math.sin(2.0 * math.pi * 783.99 * sec)
-            sub = 0.40 * math.sin(2.0 * math.pi * 65.41 * (1.0 - 0.3 * t) * sec)
-            noise = 0.15 * random.uniform(-1.0, 1.0) * math.exp(-t * 6.0)
-            val = (chime + sub + noise) * env
+            # Cinematic Sub-Bass Impact Punch + Sci-Fi Riser Chime
+            env = math.exp(-t * 3.8)
+            drop_freq = 42.0 + (130.0 - 42.0) * math.exp(-t * 8.0)
+            sub = 0.65 * math.sin(2.0 * math.pi * drop_freq * sec)
+            punch = 0.35 * math.exp(-t * 35.0) * random.uniform(-0.8, 0.8)
+            chime = 0.30 * math.sin(2.0 * math.pi * 659.25 * sec) * math.exp(-t * 2.5) + 0.20 * math.sin(2.0 * math.pi * 987.77 * sec) * math.exp(-t * 3.0)
+            val = (sub + punch + chime) * env
             l_val, r_val = val, val
         elif sfx_type == "zoom_in":
             env = math.exp(-((t - 0.42) ** 2) / (2 * (0.12 ** 2)))
