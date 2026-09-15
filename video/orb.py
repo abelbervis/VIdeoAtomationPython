@@ -498,9 +498,9 @@ def render_orb_test_preview(
         if test_file.exists():
             test_file.unlink()
 
-        syn1 = tts_q.synthesize_text("Hola. Soy Quantum. Desde el vacio subatomico, analizo las leyes fundamentales que rigen la materia.", part1_path)
-        syn2 = tts_q.synthesize_text("Todo lo que podemos ver, desde la luz hasta la gravedad, se origina en las reglas de la mecanica cuantica.", part2_path)
-        syn3 = tts_s.synthesize_text("Es un buen punto, pero es la energia y el calor de las estrellas la que activa y da vida a esas estructuras.", part3_path)
+        syn1 = tts_q.synthesize_text("¡Hola! Bienvenidos a este nuevo debate espacial.", part1_path)
+        syn2 = tts_q.synthesize_text("Hoy exploraremos los límites y misterios de la física cuántica.", part2_path)
+        syn3 = tts_s.synthesize_text("¡Excelente! Y yo aportaré los secretos de la física solar.", part3_path)
         
         if syn1 and syn2 and syn3 and part1_path.exists() and part2_path.exists() and part3_path.exists():
             # Stitch: 
@@ -595,16 +595,10 @@ def render_orb_test_preview(
         f"[v4][orb_q_wide_passive]overlay=eval=frame:x='W*0.25-w/2 + {drift_q_resting_x}':y='H*0.42-h/2 + {drift_q_resting_y}':enable='between(t,9.2,12.0)'[v5]",
         f"[v5][orb_s_wide_active]overlay=eval=frame:x='W*0.75-w/2 + {drift_s_active_x}':y='H*0.42-h/2 + {drift_s_active_y}':enable='between(t,9.2,12.0)'[v6]",
         
-        # 6. Camera Shot indicator text overlays (Top)
-        f"[v6]drawtext=text='TOMA 1\\: PLANO GENERAL (WIDE SHOT)':fontcolor=0x00f0ff:fontsize=32:fontfile=Arial:box=1:boxcolor=black@0.65:boxborderw=10:x=(w-text_w)/2:y=180:enable='between(t,0,3.2)'[sh1]",
-        f"[sh1]drawtext=text='TOMA 2\\: PRIMER PLANO (ORBE QUANTUM)':fontcolor=0x00f0ff:fontsize=32:fontfile=Arial:box=1:boxcolor=black@0.65:boxborderw=10:x=(w-text_w)/2:y=180:enable='between(t,3.2,6.2)'[sh2]",
-        f"[sh2]drawtext=text='TOMA 3\\: PRIMER PLANO (ORBE SOLAR)':fontcolor=0xffaa00:fontsize=32:fontfile=Arial:box=1:boxcolor=black@0.65:boxborderw=10:x=(w-text_w)/2:y=180:enable='between(t,6.2,9.2)'[sh3]",
-        f"[sh3]drawtext=text='TOMA 4\\: CONCLUSIONAL CO-HOST (WIDE)':fontcolor=white:fontsize=32:fontfile=Arial:box=1:boxcolor=black@0.65:boxborderw=10:x=(w-text_w)/2:y=180:enable='between(t,9.2,12.0)'[sh4]",
- 
-        # 7. Subtitles dialogue overlays (Bottom)
-        f"[sh4]drawtext=text='Quantum\\: Hola. Soy Quantum. Desde el vacio subatomico, analizo las leyes fundamentales.':fontcolor=0x00f0ff:fontsize=36:fontfile=Arial:box=1:boxcolor=black@0.75:boxborderw=12:x=(w-text_w)/2:y=h-240:enable='between(t,0,3.2)'[sub1]",
-        f"[sub1]drawtext=text='Quantum\\: Todo se origina en las reglas de la mecanica cuantica.':fontcolor=0x00f0ff:fontsize=36:fontfile=Arial:box=1:boxcolor=black@0.75:boxborderw=12:x=(w-text_w)/2:y=h-240:enable='between(t,3.2,6.2)'[sub2]",
-        f"[sub2]drawtext=text='Solar\\: Es un buen punto, pero el calor de las estrellas da vida a esas estructuras.':fontcolor=0xffaa00:fontsize=36:fontfile=Arial:box=1:boxcolor=black@0.75:boxborderw=12:x=(w-text_w)/2:y=h-240:enable='between(t,6.2,9.7)'[sub3]",
+        # 6. Subtitles dialogue overlays (Bottom)
+        f"[v6]drawtext=text='Quantum\\: ¡Hola! Bienvenidos a este nuevo debate espacial.':fontcolor=0x00f0ff:fontsize=36:fontfile=Arial:box=1:boxcolor=black@0.75:boxborderw=12:x=(w-text_w)/2:y=h-240:enable='between(t,0,3.2)'[sub1]",
+        f"[sub1]drawtext=text='Quantum\\: Hoy exploraremos los limites y misterios de la fisica cuantica.':fontcolor=0x00f0ff:fontsize=36:fontfile=Arial:box=1:boxcolor=black@0.75:boxborderw=12:x=(w-text_w)/2:y=h-240:enable='between(t,3.2,6.2)'[sub2]",
+        f"[sub2]drawtext=text='Solar\\: ¡Excelente! Y yo aportare los secretos de la fisica solar.':fontcolor=0xffaa00:fontsize=36:fontfile=Arial:box=1:boxcolor=black@0.75:boxborderw=12:x=(w-text_w)/2:y=h-240:enable='between(t,6.2,9.7)'[sub3]",
         f"[sub3]drawtext=text='[Ambos Orbes en Armonia y Resonancia]':fontcolor=white:fontsize=36:fontfile=Arial:box=1:boxcolor=black@0.75:boxborderw=12:x=(w-text_w)/2:y=h-240:enable='between(t,9.7,12.0)'[vout]"
     ]
     filter_str = ";".join(filter_complex)
