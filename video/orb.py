@@ -246,6 +246,10 @@ def generate_animated_orb_loop(
 
             svg = f"""<svg width="{canvas_size}" height="{canvas_size}" viewBox="0 0 {canvas_size} {canvas_size}" xmlns="http://www.w3.org/2000/svg">
   <defs>
+    <!-- Ultra-Wide Soft Ambient Environment Illumination Filter -->
+    <filter id="ambientSpillBlur_{i}" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="55" />
+    </filter>
     <filter id="auraGlowDeep_{i}" x="-60%" y="-60%" width="220%" height="220%">
       <feGaussianBlur stdDeviation="30" />
     </filter>
@@ -268,6 +272,15 @@ def generate_animated_orb_loop(
     <clipPath id="sphereClip_{i}">
       <circle cx="{c}" cy="{c}" r="{r_sphere}" />
     </clipPath>
+
+    <!-- Environmental Ambient Light Spill (Expansive Radial Wash) -->
+    <radialGradient id="ambientSpill_{i}" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="{palette['spot1_glow']}" stop-opacity="0.75" />
+      <stop offset="28%" stop-color="{palette['aura_inner']}" stop-opacity="0.55" />
+      <stop offset="60%" stop-color="{palette['aura_outer']}" stop-opacity="0.28" />
+      <stop offset="85%" stop-color="{palette['body_c3']}" stop-opacity="0.10" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.0" />
+    </radialGradient>
 
     <!-- Expansive Multi-Stop Atmospheric Neon Volumetric Aura -->
     <radialGradient id="outerAuraDeep_{i}" cx="50%" cy="50%" r="50%">
@@ -310,6 +323,9 @@ def generate_animated_orb_loop(
       <stop offset="100%" stop-color="#000000" stop-opacity="0.0" />
     </radialGradient>
   </defs>
+
+  <!-- 0. Environmental Ambient Illumination (Radiates soft ambient light into surrounding space) -->
+  <circle cx="{c}" cy="{c}" r="{canvas_size // 2 - 10}" fill="url(#ambientSpill_{i})" filter="url(#ambientSpillBlur_{i})" />
 
   <!-- 1. Rich Atmospheric Neon Bloom (Deep + Mid Layered Aura) -->
   <circle cx="{c}" cy="{c}" r="{r_aura_outer}" fill="url(#outerAuraDeep_{i})" filter="url(#auraGlowDeep_{i})" />
