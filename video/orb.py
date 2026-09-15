@@ -585,15 +585,15 @@ def render_orb_test_preview(
         f"[bg_ambient][orb_q_wide_active]overlay=eval=frame:x='W*0.25-w/2 + {drift_q_active_x}':y='H*0.42-h/2 + {drift_q_active_y}':enable='between(t,0,3.2)'[v1]",
         f"[v1][orb_s_wide_passive]overlay=eval=frame:x='W*0.75-w/2 + {drift_s_resting_x}':y='H*0.42-h/2 + {drift_s_resting_y}':enable='between(t,0,3.2)'[v2]",
         
-        # Toma 2 (3.2s-6.2s): Close Up Quantum active (drift_active), Solar is off-screen
-        f"[v2][orb_q_close_active]overlay=eval=frame:x='W/2-w/2 + {drift_q_active_x}':y='H*0.40-h/2 + {drift_q_active_y}':enable='between(t,3.2,6.2)'[v3]",
+        # Toma 2 (3.2s-6.2s): Close Up Quantum active with organic spring camera damping transition
+        f"[v2][orb_q_close_active]overlay=eval=frame:x='W/2-w/2 + {drift_q_active_x} + 25.0*exp(-6.5*(t-3.2))*cos(16.0*(t-3.2))':y='H*0.40-h/2 + {drift_q_active_y} + 30.0*exp(-6.5*(t-3.2))*sin(16.0*(t-3.2))':enable='between(t,3.2,6.2)'[v3]",
         
-        # Toma 3 (6.2s-9.2s): Close Up Solar active (drift_active), Quantum is off-screen
-        f"[v3][orb_s_close_active]overlay=eval=frame:x='W/2-w/2 + {drift_s_active_x}':y='H*0.40-h/2 + {drift_s_active_y}':enable='between(t,6.2,9.2)'[v4]",
+        # Toma 3 (6.2s-9.2s): Close Up Solar active with organic spring camera damping transition
+        f"[v3][orb_s_close_active]overlay=eval=frame:x='W/2-w/2 + {drift_s_active_x} + 25.0*exp(-6.5*(t-6.2))*cos(16.0*(t-6.2))':y='H*0.40-h/2 + {drift_s_active_y} + 30.0*exp(-6.5*(t-6.2))*sin(16.0*(t-6.2))':enable='between(t,6.2,9.2)'[v4]",
         
-        # Toma 4 (9.2s-12.0s): Wide Shot. Quantum passive (drift_resting), Solar active/resonance (drift_active)
-        f"[v4][orb_q_wide_passive]overlay=eval=frame:x='W*0.25-w/2 + {drift_q_resting_x}':y='H*0.42-h/2 + {drift_q_resting_y}':enable='between(t,9.2,12.0)'[v5]",
-        f"[v5][orb_s_wide_active]overlay=eval=frame:x='W*0.75-w/2 + {drift_s_active_x}':y='H*0.42-h/2 + {drift_s_active_y}':enable='between(t,9.2,12.0)'[v6]",
+        # Toma 4 (9.2s-12.0s): Wide Shot with spring pan out camera damping transitions for both orbs
+        f"[v4][orb_q_wide_passive]overlay=eval=frame:x='W*0.25-w/2 + {drift_q_resting_x} + 15.0*exp(-6.5*(t-9.2))*cos(16.0*(t-9.2))':y='H*0.42-h/2 + {drift_q_resting_y} + 18.0*exp(-6.5*(t-9.2))*sin(16.0*(t-9.2))':enable='between(t,9.2,12.0)'[v5]",
+        f"[v5][orb_s_wide_active]overlay=eval=frame:x='W*0.75-w/2 + {drift_s_active_x} + 15.0*exp(-6.5*(t-9.2))*cos(16.0*(t-9.2))':y='H*0.42-h/2 + {drift_s_active_y} + 18.0*exp(-6.5*(t-9.2))*sin(16.0*(t-9.2))':enable='between(t,9.2,12.0)'[v6]",
         
         # 6. Subtitles dialogue overlays (Bottom)
         f"[v6]drawtext=text='Quantum\\: ¡Hola! Bienvenidos a este nuevo debate espacial.':fontcolor=0x00f0ff:fontsize=36:fontfile=Arial:box=1:boxcolor=black@0.75:boxborderw=12:x=(w-text_w)/2:y=h-240:enable='between(t,0,3.2)'[sub1]",
