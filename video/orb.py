@@ -423,14 +423,14 @@ class GradientOrbManager:
         if speech_intervals:
             conds = [f"between(t,{start:.2f},{end:.2f})" for start, end in speech_intervals]
             speech_mask = f"min(1,{'+'.join(conds)})"
-            # Active voice pulse (peaks with spoken cadence, drops to 0 on silence pauses)
-            voice_pulse = f"((0.35 + 0.65 * max(0, sin(2*PI*t/0.42))) * {speech_mask})"
+            # Active voice ripple (small micro-modulation of speaking intensity)
+            voice_ripple = f"(0.5 + 0.5 * sin(2*PI*t/0.38))"
 
-            # Dynamic Speech Reactivity (Perfect "Sweet Spot"):
-            # - Silence Pause (voice_pulse = 0): Orb dims down gracefully but remains visible and colored (brightness -0.12, contrast 0.80, sat 0.75)
-            # - Active Speech (voice_pulse = 1): Shines with vivid brilliance and energetic color (brightness +0.24 peak, contrast 1.30 peak, sat 1.35)
-            eq_expr = f"brightness='-0.12 + 0.36*{voice_pulse}':contrast='0.80 + 0.50*{voice_pulse}'"
-            hue_expr = f"h='14*{voice_pulse} + 6*sin(2*PI*t/2.4)':s='0.75 + 0.60*{voice_pulse}'"
+            # Dynamic Speech Reactivity (Highly Luminous Active State & Dimmed Rest State):
+            # - Silence Pause (speech_mask = 0): Dims down gracefully (brightness -0.12, contrast 0.80, sat 0.75)
+            # - Active Speech (speech_mask = 1): Maintains a bright glowing baseline (+0.16) with subtle voice ripples (up to +0.24)
+            eq_expr = f"brightness='-0.12 + (0.28 + 0.08*{voice_ripple})*{speech_mask}':contrast='0.80 + (0.35 + 0.15*{voice_ripple})*{speech_mask}'"
+            hue_expr = f"h='(12 + 4*{voice_ripple})*{speech_mask} + 6*sin(2*PI*t/2.4)':s='0.75 + (0.45 + 0.20*{voice_ripple})*{speech_mask}'"
 
             filters.append(f"[{input_idx}:v]scale={scale_expr}")
             filters.append(f"eq={eq_expr}")
