@@ -102,11 +102,6 @@ def parse_args() -> argparse.Namespace:
         help="Display the discovered content ideas table and exit without opening the interactive selection prompt."
     )
     parser.add_argument(
-        "--robo",
-        action="store_true",
-        help="Robo Agents mode: generate a humorous conversation between Orange and Blue robot agents."
-    )
-    parser.add_argument(
         "--date",
         type=str,
         default=None,

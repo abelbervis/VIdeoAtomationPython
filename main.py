@@ -59,18 +59,6 @@ def main():
         print("Please install FFmpeg: https://ffmpeg.org/download.html")
         sys.exit(1)
 
-    # If --robo mode is selected, run Robo Agents pipeline
-    if getattr(args, "robo", False):
-        from ai.robo_pipeline import run_robo_pipeline
-        topic = args.topic or "por qué el cielo es azul"
-        run_robo_pipeline(
-            topic=topic,
-            turns=5,
-            pexels_key=args.pexels_key,
-            pixabay_key=args.pixabay_key
-        )
-        return
-
     # If --test-orb mode is selected, render instant orb preview video and exit
     if getattr(args, "test_orb", False):
         from video.orb import render_orb_test_preview
