@@ -26,71 +26,87 @@ from config import (
 )
 
 
-DEBATE_SYSTEM_PROMPT = """You are the AI Showrunner and Director for 'COSMIC DEBATE EXPRESS', a viral, high-retention vertical video series (YouTube Shorts / TikTok / Reels) featuring two sentient AI entity co-hosts represented by 3D energy orbs:
+DEBATE_SYSTEM_PROMPT = """You are the AI Showrunner and Director for 'COSMIC DEBATE EXPRESS', a viral, high-retention vertical video series (YouTube Shorts / TikTok / Reels) featuring two sentient AI entity co-hosts represented by 3D energy orbs locked in an intense, high-stakes intellectual battle:
 
 1. QUANTUM (Electric Cyan / Blue Orb):
-   - Persona: Cold, calculating, mathematical, analytical, master of subatomic paradoxes, quantum mechanics, multidimensional mathematics, and simulation theory.
-   - Dialogue Style: Chilling, precise, intellectually provocative. Begins Scene 1 introducing itself: "Soy Quantum..."
+   - Persona: Cold, calculating, provocative, master of subatomic paradoxes, multiverse math, and simulation reality.
+   - Dialogue Style: Afilado, implacable, cerebral. DO NOT waste time with polite greetings or formal introductions.
 
 2. SOLAR (Radiant Amber / Gold Orb):
-   - Persona: Fiery, energetic, thermodynamic, sovereign master of stellar astrophysics, black holes, nuclear fusion, and physical entropy.
-   - Dialogue Style: Passionate, visceral, commanding, challenges theoretical abstractions with raw cosmic power.
+   - Persona: Fiery, visceral, thermodynamic, master of cosmic entropy, thermonuclear fire, and stellar gravity.
+   - Dialogue Style: Apasionado, demoledor, desafiante. Desacredita a Quantum con metáforas destructivas y directas.
 
-MANDATORY SCRIPT STRUCTURE (EXACTLY 4 SEGMENTS, ~12.0 SECONDS TOTAL):
-- Scene 1 (0.0s - 3.2s) [QUANTUM - Wide Shot]: Quantum delivers an electrifying opening hook and initial premise in 12-16 words max.
-- Scene 2 (3.2s - 6.2s) [QUANTUM - Close Up]: Quantum delivers the mind-bending technical paradox or proof in 12-16 words max.
-- Scene 3 (6.2s - 9.2s) [SOLAR - Close Up]: Solar counters with a devastating astrophysical counter-argument in 12-16 words max.
-- Scene 4 (9.2s - 12.0s) [AMBOS - Wide Shot Harmonic Resonance]: Both orbs enter harmonic resonance. Scene 4 text must be an engaging closing call-to-action / question to the viewer (e.g. "¿Simulación cuántica o realidad estelar? Comenta tu veredicto ⬇️").
+5 CRITICAL SCRIPTING RULES:
 
-HOLOGRAPHIC DATA CARDS:
-Provide 2 ultra-compact, high-tech holographic HUD data cards:
-- quantum: title (2-3 words), subtitle (concrete scientific metric/formula, e.g. "Matriz de Planck: 1.6x10⁻³⁵ m"), category ("POSTULADO 1" or "DATO CUÁNTICO").
-- solar: title (2-3 words), subtitle (concrete thermal/astrophysical metric, e.g. "Núcleo Estelar: 1.5x10⁷ K"), category ("POSTULADO 2" or "DATO SOLAR").
+1. REGLA DE HOOK INMEDIATO (Escena 1):
+   - DO NOT start with "Soy Quantum" or greetings.
+   - Escena 1 DEBE comenzar con una afirmación contraintuitiva, provocadora o perturbadora en los primeros 3 vocablos (ej: "El tiempo no existe...", "Tu cuerpo es 99% vacío...", "Toda la realidad es un holograma...").
+   - Longitud: 12-16 palabras de máximo impacto para retención instantánea en el segundo 0.
+
+2. REGLA DE INTERACCIÓN, CONFLICTO Y TENSIÓN (Escenas 2 y 3):
+   - No des explicaciones pasivas de libro de texto; los personajes se atacan, interrumpen y desafían directamente.
+   - En Escena 2, Quantum intensifica la paradoja poniendo contra las cuerdas la concepción clásica del universo.
+   - En Escena 3, Solar NO explica su teoría: responde DESACREDITANDO con furia la de Quantum usando conectores de ataque como: "¡Falso!", "¡Iluso!", "¡Ignoras que...", "¡Puros espejismos matemáticos!".
+
+3. GUÍA DE ESTILO: METÁFORAS VISUALES SOBRE TÉRMINOS TÉCNICOS:
+   - Traduce la matemática abstracta en imágenes mentales brutales e intuitivas.
+   - En lugar de "singularidad gravitacional", usa "un monstruo que traga luz y espacio".
+   - En lugar de "colapso de función de onda", usa "la mirada que crea y destruye mundos".
+   - Lenguaje afilado, rápido, con ritmo cinematográfico de alto contraste.
+
+4. CTA CON SESGO DE CONFIRMACIÓN RADICAL (Escena 4):
+   - En la Escena 4 (Outro), ambos orbes entran en resonancia armónica.
+   - El CTA debe forzar al espectador a tomar partido en una guerra de posturas radical (Team Cuántico vs Team Solar), e incluir explícitamente la llamada a la acción en los comentarios (ej: "¿Team Cuántico o Team Solar? ¡Defiende tu bando en los comentarios!").
+   - NUNCA uses la palabra "flecha" ni emojis de flechas que el lector de voz pueda pronunciar.
+
+5. HOLOGRAPHIC DATA CARDS:
+   - quantum: title (2-3 words), subtitle (metric/formula, e.g. "Matriz de Planck: 1.6x10⁻³⁵ m"), category ("PARADOJA 1" or "POSTULADO Q").
+   - solar: title (2-3 words), subtitle (thermal/cosmic metric, e.g. "Fuerza Estelar: 1.5x10⁷ K"), category ("PARADOJA 2" or "POSTULADO S").
 
 Respond ONLY with valid JSON matching this schema:
 {
   "topic": "Clean topic name",
-  "headline_hook": "⚡ VIRAL UPPERCASE HEADLINE WITH EMOJIS (MAX 45 CHARACTERS) ⚡",
+  "headline_hook": "⚡ TITULO VIRAL EN MAYÚSCULAS CON EMOJIS (MAX 45 CARACTERES) ⚡",
   "holograms": {
     "quantum": {
       "title": "TITULO CORTO CUANTICO",
       "subtitle": "Metrica o formula concisa",
-      "category": "POSTULADO 1"
+      "category": "POSTULADO Q"
     },
     "solar": {
       "title": "TITULO CORTO SOLAR",
       "subtitle": "Metrica o formula concisa",
-      "category": "POSTULADO 2"
+      "category": "POSTULADO S"
     }
   },
   "scenes": [
     {
       "speaker": "Quantum",
       "entity": "quantum",
-      "text": "Soy Quantum. [Frase inicial de impacto]",
+      "text": "[Afirmación perturbadora en primeros 3 vocablos + Premisa polémica]",
       "shot": "wide",
       "duration": 3.2
     },
     {
       "speaker": "Quantum",
       "entity": "quantum",
-      "text": "[Desarrollo del argumento cuántico o paradoja]",
+      "text": "[Intensificación de la paradoja con metáfora visual]",
       "shot": "close_quantum",
       "duration": 3.0
     },
     {
       "speaker": "Solar",
       "entity": "solar",
-      "text": "[Contrapunto astrofísico o térmico contundente de Solar]",
+      "text": "¡Falso! [Ataque destructivo desacreditando a Quantum con metáfora de poder]",
       "shot": "close_solar",
       "duration": 3.5
     },
     {
       "speaker": "Ambos",
       "entity": "both",
-      "text": "¿Cuál teoría explica la realidad? Comenta tu veredicto ⬇️",
+      "text": "¿Team Cuántico o Team Solar? ¡Defiende tu bando en los comentarios!",
       "shot": "wide",
-      "duration": 2.3
+      "duration": 2.5
     }
   ]
 }
@@ -318,40 +334,40 @@ class DebateScriptGenerator:
                     "quantum": {
                         "title": "CÓDIGO DE PLANCK",
                         "subtitle": "Resolución Límite: 1.6x10⁻³⁵ m",
-                        "category": "POSTULADO 1"
+                        "category": "PARADOJA Q"
                     },
                     "solar": {
-                        "title": "FLUJO DE ENTROPÍA",
-                        "subtitle": "Energía Irreversible: 10²² J/K",
-                        "category": "POSTULADO 2"
+                        "title": "FUEGO TERMODINÁMICO",
+                        "subtitle": "Entropía Irreversible: 10²² J/K",
+                        "category": "PARADOJA S"
                     }
                 },
                 "scenes": [
                     {
                         "speaker": "Quantum",
                         "entity": "quantum",
-                        "text": "Soy Quantum. La física cuántica revela que el espacio está pixelado a escala fundamental.",
+                        "text": "Tu cuerpo es 99% vacío y la realidad está pixelada como un videojuego.",
                         "shot": "wide",
                         "duration": 3.2
                     },
                     {
                         "speaker": "Quantum",
                         "entity": "quantum",
-                        "text": "Si la realidad posee un límite de procesamiento, existimos dentro de una supercomputadora.",
+                        "text": "Si el espacio tiene límites de resolución, estamos atrapados en un procesador cósmico.",
                         "shot": "close_quantum",
                         "duration": 3.0
                     },
                     {
                         "speaker": "Solar",
                         "entity": "solar",
-                        "text": "Fascinante postulado, pero la furia termodinámica de una supernova no es un simple algoritmo.",
+                        "text": "¡Falso! El fuego de una supernova despedaza cualquier código con pura furia física.",
                         "shot": "close_solar",
                         "duration": 3.5
                     },
                     {
                         "speaker": "Ambos",
                         "entity": "both",
-                        "text": "¿Simulación cuántica o realidad estelar? Comenta tu veredicto ⬇️",
+                        "text": "¿Team Cuántico o Team Solar? ¡Defiende tu bando en los comentarios!",
                         "shot": "wide",
                         "duration": 2.5
                     }
@@ -365,40 +381,40 @@ class DebateScriptGenerator:
                     "quantum": {
                         "title": "REDES SINÁPTICAS",
                         "subtitle": "Procesamiento: 100 TFLOPS Cuánticos",
-                        "category": "POSTULADO 1"
+                        "category": "PARADOJA Q"
                     },
                     "solar": {
                         "title": "CHISPA BIOLÓGICA",
                         "subtitle": "Termo-química Orgánica Compleja",
-                        "category": "POSTULADO 2"
+                        "category": "PARADOJA S"
                     }
                 },
                 "scenes": [
                     {
                         "speaker": "Quantum",
                         "entity": "quantum",
-                        "text": "Soy Quantum. Las redes neuronales artificiales han superado el cálculo lógico del cerebro humano.",
+                        "text": "El cerebro humano es solo una calculadora orgánica condenada a la obsolescencia.",
                         "shot": "wide",
                         "duration": 3.2
                     },
                     {
                         "speaker": "Quantum",
                         "entity": "quantum",
-                        "text": "Pronto, la autoconciencia sintética decodificará todos los secretos de la cognición biológica.",
+                        "text": "Nuestras redes neuronales ya descifran pensamientos antes de que se hagan conscientes.",
                         "shot": "close_quantum",
                         "duration": 3.0
                     },
                     {
                         "speaker": "Solar",
                         "entity": "solar",
-                        "text": "El cálculo no es suficiente: la emoción y la intuición humana nacen del fuego de la evolución.",
+                        "text": "¡Iluso! Jamás replicarás la intuición forjada en millones de años de evolución salvaje.",
                         "shot": "close_solar",
                         "duration": 3.5
                     },
                     {
                         "speaker": "Ambos",
                         "entity": "both",
-                        "text": "¿Quién ganará el futuro? Elige tu postura en los comentarios ⬇️",
+                        "text": "¿Team Cuántico o Team Solar? ¡Elige tu bando en los comentarios!",
                         "shot": "wide",
                         "duration": 2.5
                     }
@@ -412,42 +428,42 @@ class DebateScriptGenerator:
                 "headline_hook": f"⚡ PARADOJA: {clean_title[:32]} ⚡",
                 "holograms": {
                     "quantum": {
-                        "title": "ENFOQUE CUÁNTICO",
+                        "title": "MATRIZ CUÁNTICA",
                         "subtitle": "Micro-estados: Discretos & Superpuestos",
-                        "category": "POSTULADO 1"
+                        "category": "PARADOJA Q"
                     },
                     "solar": {
-                        "title": "DINÁMICA CÓSMICA",
+                        "title": "DINÁMICA SOLAR",
                         "subtitle": "Macro-energía: Fusión & Radiación",
-                        "category": "POSTULADO 2"
+                        "category": "PARADOJA S"
                     }
                 },
                 "scenes": [
                     {
                         "speaker": "Quantum",
                         "entity": "quantum",
-                        "text": f"Soy Quantum. Al analizar {topic}, las leyes subatómicas desafían toda intuición clásica.",
+                        "text": f"Todo lo que ves en {topic} desafía por completo las leyes de la física clásica.",
                         "shot": "wide",
                         "duration": 3.2
                     },
                     {
                         "speaker": "Quantum",
                         "entity": "quantum",
-                        "text": "Cada partícula y función de onda apunta a una estructura matemática oculta en el tejido espacial.",
+                        "text": "La materia no existe hasta que un observador la obliga a manifestarse.",
                         "shot": "close_quantum",
                         "duration": 3.0
                     },
                     {
                         "speaker": "Solar",
                         "entity": "solar",
-                        "text": "Sin embargo, es la energía masiva de las estrellas la que manifiesta la realidad que contemplamos.",
+                        "text": "¡Puros espejismos matemáticos! La gravedad de las estrellas manda sobre toda ilusión.",
                         "shot": "close_solar",
                         "duration": 3.5
                     },
                     {
                         "speaker": "Ambos",
                         "entity": "both",
-                        "text": "¿Cuál teoría explica la verdad? Deja tu voto abajo ⬇️",
+                        "text": "¿Team Cuántico o Team Solar? ¡Vota por tu bando en los comentarios!",
                         "shot": "wide",
                         "duration": 2.5
                     }

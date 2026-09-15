@@ -157,14 +157,38 @@ def build_cell_double_tracking_filter(
 
 
 
+def clean_tts_spoken_text(text: str) -> str:
+    """
+    Cleans text for neural TTS engines so that emojis, arrows, HUD bracket tags,
+    and visual glyphs are NEVER spoken aloud as words (e.g. 'flecha hacia abajo').
+    """
+    if not text:
+        return ""
+    import re
+    cleaned = text
+    # Replace directional / prompt arrows with natural spoken phrasing
+    cleaned = re.sub(r'[⬇️👇↓]', ' en los comentarios', cleaned)
+    # Remove bracketed actions or meta tags like [Ambos Orbes...], [Pausa], etc.
+    cleaned = re.sub(r'\[.*?\]', '', cleaned)
+    # Remove emoji and symbol ranges
+    emoji_pattern = re.compile(
+        r'[\U00010000-\U0010ffff]|[\u2600-\u27ff]|[\u2300-\u23ff]|[\u2b50-\u2b55]|[\u200d\ufe0f]',
+        flags=re.UNICODE
+    )
+    cleaned = emoji_pattern.sub('', cleaned)
+    # Normalize multiple spaces and punctuation
+    cleaned = re.sub(r'\s+', ' ', cleaned).strip()
+    cleaned = cleaned.replace("...", ",").replace("..", ".")
+    # Clean redundant "en los comentarios en los comentarios"
+    cleaned = re.sub(r'(en los comentarios\s*)+', 'en los comentarios', cleaned, flags=re.IGNORECASE)
+    return cleaned.strip()
+
+
 def prepare_cosmic_pacing_text(text: str) -> str:
     """
-    Cleans and normalizes text for natural, authoritative speech cadence without artificial long pauses.
+    Cleans and normalizes text for natural, authoritative speech cadence without artificial long pauses or spoken emoji artifacts.
     """
-    clean = text.strip()
-    # Ensure natural comma spacing without awkward multi-dot pauses
-    clean = clean.replace("...", ",").replace("..", ".")
-    return clean
+    return clean_tts_spoken_text(text)
 
 
 

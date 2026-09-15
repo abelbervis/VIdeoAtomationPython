@@ -513,18 +513,18 @@ def render_orb_test_preview(
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
     # Extract dynamic script values if available
-    q_part1 = "¡Hola! Bienvenidos a este nuevo debate espacial."
-    q_part2 = "Hoy exploraremos los límites y misterios de la física cuántica."
-    s_part3 = "¡Excelente! Y yo aportaré los secretos de la física solar."
-    both_part4 = "¿Cuál teoría explica la realidad? Comenta tu veredicto ⬇️"
+    q_part1 = "El tiempo no existe a escala cuántica: todo ocurre al mismo tiempo."
+    q_part2 = "La realidad entera es un cálculo esperando a ser observado."
+    s_part3 = "¡Falso! La gravedad de una estrella aplasta cualquier cálculo en cenizas."
+    both_part4 = "¿Team Cuántico o Team Solar? ¡Defiende tu bando en los comentarios!"
 
-    holo_q_title = "FÍSICA CUÁNTICA"
-    holo_q_sub = "Estado: Superposición |ψ⟩ = α|0⟩ + β|1⟩"
-    holo_q_cat = "CONCEPTO"
+    holo_q_title = "PARADOJA CUÁNTICA"
+    holo_q_sub = "Superposición: |ψ⟩ = α|0⟩ + β|1⟩"
+    holo_q_cat = "POSTULADO Q"
 
-    holo_s_title = "FÍSICA SOLAR"
-    holo_s_sub = "Núcleo: 15,000,000 K | Plasma Cromático"
-    holo_s_cat = "DATO REAL"
+    holo_s_title = "ENTROPÍA SOLAR"
+    holo_s_sub = "Fusión Nuclear: 15,000,000 K"
+    holo_s_cat = "POSTULADO S"
 
     if debate_script:
         if debate_script.get("headline_hook"):
