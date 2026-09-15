@@ -31,14 +31,12 @@ COSMIC_VOICE_PROFILES = {
         "drone_freq": 48,
         "filter_complex": (
             "[0:a]asplit=2[main_q][sub_q];"
-            "[sub_q]asetrate=22050,atempo=2.0,lowpass=f=120,volume=0.18[sub_bass];"
-            "[main_q][sub_bass]amix=inputs=2:duration=first[mixed_q];"
-            "[mixed_q]highpass=f=80,equalizer=f=140:width_type=h:width=60:g=2.5,equalizer=f=4200:width_type=h:width=1200:g=2.2,compand=attacks=0.01:decays=0.1:points=-60/-60|-20/-10|0/-3:soft-knee=6[eq_q];"
+            "[sub_q]asetrate=22050,atempo=2.0,lowpass=f=120,volume=0.15[sub_bass];"
+            "[main_q][sub_bass]amix=inputs=2:weights=1.0 0.2:duration=first[mixed_q];"
+            "[mixed_q]highpass=f=80,equalizer=f=140:width_type=h:width=60:g=3.0,equalizer=f=3800:width_type=h:width=1200:g=2.5,compand=attacks=0.01:decays=0.1:points=-60/-60|-20/-10|0/-3:soft-knee=6[eq_q];"
             "[eq_q]aformat=channel_layouts=stereo,asplit=2[center_q][wide_q];"
-            "[wide_q]adelay=14|14,highpass=f=300,volume=0.22[wide_delayed_q];"
-            "[center_q][wide_delayed_q]amix=inputs=2:duration=first[spatial_q];"
-            "aevalsrc=0.04*sin(2*PI*48*t):d={duration}[drone_q];"
-            "[spatial_q][drone_q]amix=inputs=2:duration=first[out_q]"
+            "[wide_q]adelay=14|14,highpass=f=300,volume=0.20[wide_delayed_q];"
+            "[center_q][wide_delayed_q]amix=inputs=2:weights=1.0 0.15:duration=first,volume=2.2[out_q]"
         )
     },
     "solar": {
@@ -52,15 +50,14 @@ COSMIC_VOICE_PROFILES = {
         "drone_freq": 58,
         "filter_complex": (
             "[0:a]asplit=2[main_s][plasma_s];"
-            "[plasma_s]highpass=f=3200,volume=0.22,aecho=0.8:0.7:16:0.25[shimmer_s];"
-            "[main_s][shimmer_s]amix=inputs=2:duration=first[mixed_s];"
-            "[mixed_s]highpass=f=90,equalizer=f=2200:width_type=h:width=800:g=2.2,equalizer=f=6500:width_type=h:width=2000:g=2.8,compand=attacks=0.01:decays=0.1:points=-60/-60|-20/-10|0/-3:soft-knee=6[eq_s];"
+            "[plasma_s]highpass=f=3200,volume=0.18,aecho=0.8:0.7:16:0.25[shimmer_s];"
+            "[main_s][shimmer_s]amix=inputs=2:weights=1.0 0.2:duration=first[mixed_s];"
+            "[mixed_s]highpass=f=90,equalizer=f=2200:width_type=h:width=800:g=2.5,equalizer=f=6200:width_type=h:width=2000:g=2.8,compand=attacks=0.01:decays=0.1:points=-60/-60|-20/-10|0/-3:soft-knee=6[eq_s];"
             "[eq_s]aformat=channel_layouts=stereo,asplit=2[center_s][wide_s];"
-            "[wide_s]adelay=10|10,highpass=f=350,volume=0.20[wide_delayed_s];"
-            "[center_s][wide_delayed_s]amix=inputs=2:duration=first[spatial_s];"
-            "aevalsrc=0.03*sin(2*PI*58*t):d={duration}[drone_s];"
-            "[spatial_s][drone_s]amix=inputs=2:duration=first[out_s]"
+            "[wide_s]adelay=10|10,highpass=f=350,volume=0.18[wide_delayed_s];"
+            "[center_s][wide_delayed_s]amix=inputs=2:weights=1.0 0.15:duration=first,volume=2.2[out_s]"
         )
+
     }
 }
 

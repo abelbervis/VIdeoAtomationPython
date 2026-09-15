@@ -695,31 +695,31 @@ def render_orb_test_preview(
         
         # 5. Sequentially overlay the foreground orbs with power ignition snap on frame 0 and matching drifts
         # Toma 1 (0-3.2s): Wide Shot. Power ignition snap + Presenter Badges Floating below each orb (0.4s-3.0s)
-        f"[bg_ambient][orb_q_wide_active]overlay=eval=frame:x='W*0.25-w/2 + {drift_q_active_x} + {drift_intro_x}':y='H*0.42-h/2 + {drift_q_active_y} + {drift_intro_y}':enable='between(t,0,3.2)'[v1]",
-        f"[v1][orb_s_wide_passive]overlay=eval=frame:x='W*0.75-w/2 - 28 + {drift_s_resting_x} + {drift_intro_x}':y='H*0.43-h/2 + {drift_s_resting_y} + {drift_intro_y}':enable='between(t,0,3.2)'[v1_orbs]",
-        f"[v1_orbs][badge_q]overlay=eval=frame:x='W*0.25-w/2 + 5.0*sin(2*PI*(t-0.4)/2.2)':y='H*0.57-h/2 + 4.0*cos(2*PI*(t-0.4)/2.2)':enable='between(t,0.4,3.0)'[v1_bdg_q]",
-        f"[v1_bdg_q][badge_s]overlay=eval=frame:x='W*0.75-w/2 - 28 + 5.0*cos(2*PI*(t-0.4)/2.4)':y='H*0.57-h/2 + 4.0*sin(2*PI*(t-0.4)/2.4)':enable='between(t,0.4,3.0)'[v2]",
+        f"[bg_ambient][orb_q_wide_active]overlay=eval=frame:x='W*0.25-w/2 + {drift_q_active_x} + {drift_intro_x}':y='H*0.38-h/2 + {drift_q_active_y} + {drift_intro_y}':enable='between(t,0,3.2)'[v1]",
+        f"[v1][orb_s_wide_passive]overlay=eval=frame:x='W*0.75-w/2 - 28 + {drift_s_resting_x} + {drift_intro_x}':y='H*0.39-h/2 + {drift_s_resting_y} + {drift_intro_y}':enable='between(t,0,3.2)'[v1_orbs]",
+        f"[v1_orbs][badge_q]overlay=eval=frame:x='W*0.25-w/2 + 5.0*sin(2*PI*(t-0.4)/2.2)':y='H*0.52-h/2 + 4.0*cos(2*PI*(t-0.4)/2.2)':enable='between(t,0.4,3.0)'[v1_bdg_q]",
+        f"[v1_bdg_q][badge_s]overlay=eval=frame:x='W*0.75-w/2 - 28 + 5.0*cos(2*PI*(t-0.4)/2.4)':y='H*0.52-h/2 + 4.0*sin(2*PI*(t-0.4)/2.4)':enable='between(t,0.4,3.0)'[v2]",
         
         # Toma 2 (3.2s-6.2s): Close Up Quantum active + Floating Sci-Fi Hologram Card 1
-        f"[v2][orb_q_close_active]overlay=eval=frame:x='W/2-w/2 + {drift_q_active_x} + 25.0*exp(-6.5*(t-3.2))*cos(16.0*(t-3.2))':y='H*0.40-h/2 + {drift_q_active_y} + 30.0*exp(-6.5*(t-3.2))*sin(16.0*(t-3.2))':enable='between(t,3.2,6.2)'[v3]",
-        f"[v3][holo_q]overlay=eval=frame:x='(W-w)/2':y='H*0.14-h/2 + 6.0*sin(2*PI*(t-3.3)/2.4)':enable='between(t,3.3,6.0)'[v3_holo]",
+        f"[v2][orb_q_close_active]overlay=eval=frame:x='W/2-w/2 + {drift_q_active_x} + 25.0*exp(-6.5*(t-3.2))*cos(16.0*(t-3.2))':y='H*0.38-h/2 + {drift_q_active_y} + 30.0*exp(-6.5*(t-3.2))*sin(16.0*(t-3.2))':enable='between(t,3.2,6.2)'[v3]",
+        f"[v3][holo_q]overlay=eval=frame:x='(W-w)/2':y='H*0.12-h/2 + 6.0*sin(2*PI*(t-3.3)/2.4)':enable='between(t,3.3,6.0)'[v3_holo]",
         
         # Toma 3 (6.2s-9.2s): Close Up Solar active + Floating Sci-Fi Hologram Card 2
-        f"[v3_holo][orb_s_close_active]overlay=eval=frame:x='W/2-w/2 + {drift_s_active_x} + 25.0*exp(-6.5*(t-6.2))*cos(16.0*(t-6.2))':y='H*0.40-h/2 + {drift_s_active_y} + 30.0*exp(-6.5*(t-6.2))*sin(16.0*(t-6.2))':enable='between(t,6.2,9.2)'[v4]",
-        f"[v4][holo_s]overlay=eval=frame:x='(W-w)/2':y='H*0.14-h/2 + 6.0*cos(2*PI*(t-6.3)/2.6)':enable='between(t,6.3,9.0)'[v4_holo]",
+        f"[v3_holo][orb_s_close_active]overlay=eval=frame:x='W/2-w/2 + {drift_s_active_x} + 25.0*exp(-6.5*(t-6.2))*cos(16.0*(t-6.2))':y='H*0.38-h/2 + {drift_s_active_y} + 30.0*exp(-6.5*(t-6.2))*sin(16.0*(t-6.2))':enable='between(t,6.2,9.2)'[v4]",
+        f"[v4][holo_s]overlay=eval=frame:x='(W-w)/2':y='H*0.12-h/2 + 6.0*cos(2*PI*(t-6.3)/2.6)':enable='between(t,6.3,9.0)'[v4_holo]",
         
         # Toma 4 (9.2s-12.0s): Wide Shot. Solar active takes stage (Z-forward). Quantum passive leans right towards Solar
-        f"[v4_holo][orb_q_wide_passive]overlay=eval=frame:x='W*0.25-w/2 + 28 + {drift_q_resting_x} + 15.0*exp(-6.5*(t-9.2))*cos(16.0*(t-9.2))':y='H*0.43-h/2 + {drift_q_resting_y} + 18.0*exp(-6.5*(t-9.2))*sin(16.0*(t-9.2))':enable='between(t,9.2,12.0)'[v5]",
-        f"[v5][orb_s_wide_active]overlay=eval=frame:x='W*0.75-w/2 + {drift_s_active_x} + 15.0*exp(-6.5*(t-9.2))*cos(16.0*(t-9.2))':y='H*0.42-h/2 + {drift_s_active_y} + 18.0*exp(-6.5*(t-9.2))*sin(16.0*(t-9.2))':enable='between(t,9.2,12.0)'[v6]",
+        f"[v4_holo][orb_q_wide_passive]overlay=eval=frame:x='W*0.25-w/2 + 28 + {drift_q_resting_x} + 15.0*exp(-6.5*(t-9.2))*cos(16.0*(t-9.2))':y='H*0.40-h/2 + {drift_q_resting_y} + 18.0*exp(-6.5*(t-9.2))*sin(16.0*(t-9.2))':enable='between(t,9.2,12.0)'[v5]",
+        f"[v5][orb_s_wide_active]overlay=eval=frame:x='W*0.75-w/2 + {drift_s_active_x} + 15.0*exp(-6.5*(t-9.2))*cos(16.0*(t-9.2))':y='H*0.39-h/2 + {drift_s_active_y} + 18.0*exp(-6.5*(t-9.2))*sin(16.0*(t-9.2))':enable='between(t,9.2,12.0)'[v6]",
         
         # 6. Headline Hook Badge Overlay (Top Center 0.0s - 2.6s - Google / ElevenLabs ad style)
-        f"[v6]drawtext=text='{escaped_headline_hook}':{font_param}:fontcolor=white:fontsize=36:box=1:boxcolor=0x08101e@0.88:boxborderw=18:borderw=2:bordercolor=0x00f0ff:x=(w-text_w)/2:y=170:enable='between(t,0,2.6)'[v_hook]",
+        f"[v6]drawtext=text='{escaped_headline_hook}':{font_param}:fontcolor=white:fontsize=34:box=1:boxcolor=0x08101e@0.90:boxborderw=20:borderw=2:bordercolor=0x00f0ff:x=(w-text_w)/2:y=140:enable='between(t,0,2.6)'[v_hook]",
 
-        # 7. Subtitles dialogue overlays (Bottom Cards with role-based neon glow borders)
-        f"[v_hook]drawtext=text='Quantum\\: ¡Hola! Bienvenidos a este nuevo debate espacial.':{font_param}:fontcolor=0x00f0ff:fontsize=36:box=1:boxcolor=0x060c18@0.85:boxborderw=16:borderw=1:bordercolor=0x00f0ff@0.50:x=(w-text_w)/2:y=h-240:enable='between(t,0,3.2)'[sub1]",
-        f"[sub1]drawtext=text='Quantum\\: Hoy exploraremos los limites y misterios de la fisica cuantica.':{font_param}:fontcolor=0x00f0ff:fontsize=36:box=1:boxcolor=0x060c18@0.85:boxborderw=16:borderw=1:bordercolor=0x00f0ff@0.50:x=(w-text_w)/2:y=h-240:enable='between(t,3.2,6.2)'[sub2]",
-        f"[sub2]drawtext=text='Solar\\: ¡Excelente! Y yo aportare los secretos de la fisica solar.':{font_param}:fontcolor=0xffb300:fontsize=36:box=1:boxcolor=0x181006@0.85:boxborderw=16:borderw=1:bordercolor=0xffb300@0.50:x=(w-text_w)/2:y=h-240:enable='between(t,6.2,9.7)'[sub3]",
-        f"[sub3]drawtext=text='[Ambos Orbes en Armonia y Resonancia]':{font_param}:fontcolor=white:fontsize=36:box=1:boxcolor=0x0c0c16@0.85:boxborderw=16:borderw=1:bordercolor=0xffffff@0.40:x=(w-text_w)/2:y=h-240:enable='between(t,9.7,12.0)'[vout]"
+        # 7. Subtitles dialogue overlays (Balanced 2-line formatting, safe vertical margin y=h-300)
+        f"[v_hook]drawtext=text='Quantum\\: ¡Hola! Bienvenidos a este\\nnuevo debate espacial.':{font_param}:fontcolor=0x00f0ff:fontsize=32:line_spacing=10:box=1:boxcolor=0x060c18@0.90:boxborderw=20:borderw=1:bordercolor=0x00f0ff@0.60:x=(w-text_w)/2:y=h-300:enable='between(t,0,3.2)'[sub1]",
+        f"[sub1]drawtext=text='Quantum\\: Hoy exploraremos los límites\\ny misterios de la física cuántica.':{font_param}:fontcolor=0x00f0ff:fontsize=32:line_spacing=10:box=1:boxcolor=0x060c18@0.90:boxborderw=20:borderw=1:bordercolor=0x00f0ff@0.60:x=(w-text_w)/2:y=h-300:enable='between(t,3.2,6.2)'[sub2]",
+        f"[sub2]drawtext=text='Solar\\: ¡Excelente! Y yo aportaré\\nlos secretos de la física solar.':{font_param}:fontcolor=0xffb300:fontsize=32:line_spacing=10:box=1:boxcolor=0x181006@0.90:boxborderw=20:borderw=1:bordercolor=0xffb300@0.60:x=(w-text_w)/2:y=h-300:enable='between(t,6.2,9.7)'[sub3]",
+        f"[sub3]drawtext=text='[Ambos Orbes en Armonía y Resonancia]':{font_param}:fontcolor=white:fontsize=32:box=1:boxcolor=0x0c0c16@0.90:boxborderw=20:borderw=1:bordercolor=0xffffff@0.50:x=(w-text_w)/2:y=h-300:enable='between(t,9.7,12.0)'[vout]"
     ]
     filter_str = ";".join(filter_complex)
 
