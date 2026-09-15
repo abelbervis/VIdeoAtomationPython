@@ -611,6 +611,8 @@ def render_orb_test_preview(
     drift_intro_x = "30.0*exp(-7.0*t)*cos(16.0*t)"
     drift_intro_y = "35.0*exp(-7.0*t)*sin(16.0*t)"
 
+    escaped_headline_hook = headline_hook.replace(":", "\\:").replace("'", "\\'")
+
     bg_input = f"color=c=0x08090f:s={width}x{height}:r=30:d=12.0"
 
     filter_complex = [
@@ -652,7 +654,7 @@ def render_orb_test_preview(
         f"[v5][orb_s_wide_active]overlay=eval=frame:x='W*0.75-w/2 + {drift_s_active_x} + 15.0*exp(-6.5*(t-9.2))*cos(16.0*(t-9.2))':y='H*0.42-h/2 + {drift_s_active_y} + 18.0*exp(-6.5*(t-9.2))*sin(16.0*(t-9.2))':enable='between(t,9.2,12.0)'[v6]",
         
         # 6. Headline Hook Badge Overlay (Top Center 0.0s - 2.6s)
-        f"[v6]drawtext=text='{headline_hook.replace(':', '\\\\:').replace('\'', '\\\\\'')}':fontcolor=white:fontsize=36:fontfile=Arial:box=1:boxcolor=0x08101e@0.85:boxborderw=14:borderw=2:bordercolor=0x00f0ff:x=(w-text_w)/2:y=170:enable='between(t,0,2.6)'[v_hook]",
+        f"[v6]drawtext=text='{escaped_headline_hook}':fontcolor=white:fontsize=36:fontfile=Arial:box=1:boxcolor=0x08101e@0.85:boxborderw=14:borderw=2:bordercolor=0x00f0ff:x=(w-text_w)/2:y=170:enable='between(t,0,2.6)'[v_hook]",
 
         # 7. Subtitles dialogue overlays (Bottom)
         f"[v_hook]drawtext=text='Quantum\\: ¡Hola! Bienvenidos a este nuevo debate espacial.':fontcolor=0x00f0ff:fontsize=36:fontfile=Arial:box=1:boxcolor=black@0.75:boxborderw=12:x=(w-text_w)/2:y=h-240:enable='between(t,0,3.2)'[sub1]",
