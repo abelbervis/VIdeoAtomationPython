@@ -1,0 +1,30 @@
+[
+  {
+    "presenter": "Quantum",
+    "voice": "es-ES-AlvaroNeural",
+    "dialogue": "Hola. Soy Quantum. Desde el vacio subatomico, analizo las leyes fundamentales que rigen la materia.",
+    "camera": "wide",
+    "duration": 3.2
+  },
+  {
+    "presenter": "Quantum",
+    "voice": "es-ES-AlvaroNeural",
+    "dialogue": "Todo lo que podemos ver, desde la luz hasta la gravedad, se origina en las reglas de la mecanica cuantica.",
+    "camera": "close",
+    "duration": 3.0
+  },
+  {
+    "presenter": "Solar",
+    "voice": "es-ES-ElviraNeural",
+    "dialogue": "Es un buen punto, pero es la energia y el calor de las estrellas la que activa y da vida a esas estructuras.",
+    "camera": "close",
+    "duration": 3.5
+  },
+  {
+    "presenter": "Ambos",
+    "voice": "none",
+    "dialogue": "[Ambos Orbes en Armonia y Resonancia]",
+    "camera": "wide",
+    "duration": 2.3
+  }
+]
