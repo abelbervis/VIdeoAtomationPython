@@ -685,18 +685,18 @@ def render_orb_test_preview(
         "[1:v]split=4[q_wa][q_wp][q_ca][q_glow]",
         "[2:v]split=4[s_wa][s_wp][s_ca][s_glow]",
         
-        # 2. Render each state independently with speech-reactive physical scale pulsing & color surges
-        f"[q_wa]scale=eval=frame:w='355*(1.0 + 0.08*{voice_pulse_q}*{speech_mask_q})':h='355*(1.0 + 0.08*{voice_pulse_q}*{speech_mask_q})',eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.95[orb_q_wide_active]",
+        # 2. Render each state independently with speech-reactive color surges, contrast flares and luminescence
+        f"[q_wa]scale=355:355,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.95[orb_q_wide_active]",
         f"[q_wp]scale=310:310,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.32[orb_q_wide_passive]",
-        f"[q_ca]scale=eval=frame:w='550*(1.0 + 0.07*{voice_pulse_q}*{speech_mask_q})':h='550*(1.0 + 0.07*{voice_pulse_q}*{speech_mask_q})',eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.95[orb_q_close_active]",
+        f"[q_ca]scale=550:550,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.95[orb_q_close_active]",
         
         f"[s_wp]scale=310:310,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.52[orb_s_wide_passive]",
-        f"[s_wa]scale=eval=frame:w='355*(1.0 + 0.08*{voice_pulse_s}*{speech_mask_s})':h='355*(1.0 + 0.08*{voice_pulse_s}*{speech_mask_s})',eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.95[orb_s_wide_active]",
-        f"[s_ca]scale=eval=frame:w='550*(1.0 + 0.07*{voice_pulse_s}*{speech_mask_s})':h='550*(1.0 + 0.07*{voice_pulse_s}*{speech_mask_s})',eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.95[orb_s_close_active]",
+        f"[s_wa]scale=355:355,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.95[orb_s_wide_active]",
+        f"[s_ca]scale=550:550,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.95[orb_s_close_active]",
         
-        # 3. Render dynamic ambient glow backplates using the ultra-fast pre-scaled blur technique
-        f"[q_glow]scale=120:120,eq={eq_q},hue={hue_q},boxblur=24:3,scale=eval=frame:w='1080*(1.0 + 0.15*{voice_pulse_q}*{speech_mask_q})':h='1920*(1.0 + 0.15*{voice_pulse_q}*{speech_mask_q})',format=yuva420p,colorchannelmixer=aa=0.25[bg_glow_q]",
-        f"[s_glow]scale=120:120,eq={eq_s},hue={hue_s},boxblur=24:3,scale=eval=frame:w='1080*(1.0 + 0.15*{voice_pulse_s}*{speech_mask_s})':h='1920*(1.0 + 0.15*{voice_pulse_s}*{speech_mask_s})',format=yuva420p,colorchannelmixer=aa=0.25[bg_glow_s]",
+        # 3. Render dynamic ambient glow backplates using ultra-fast pre-scaled blur with audio-reactive intensity
+        f"[q_glow]scale=120:120,eq={eq_q},hue={hue_q},boxblur=24:3,scale=1080:1920,format=yuva420p,colorchannelmixer=aa=0.25[bg_glow_q]",
+        f"[s_glow]scale=120:120,eq={eq_s},hue={hue_s},boxblur=24:3,scale=1080:1920,format=yuva420p,colorchannelmixer=aa=0.25[bg_glow_s]",
         
         # 4. Apply background grading and overlay dynamic glows first to make the ambient background
         f"[0:v]eq=brightness=-0.01:contrast=1.05[bg_graded]",
