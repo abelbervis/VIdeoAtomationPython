@@ -105,7 +105,15 @@ def synthesize_camera_servo_sfx(
     sample_rate: int = 44100,
     sfx_type: str = "zoom_in"
 ) -> Path:
-    """Synthesize a high-tech sci-fi optical camera servo, pan, or pull-back sound effect."""
+    """
+    Synthesizes next-gen cinematic Sci-Fi sound effects:
+      - 'intro' / 'sub_drop': Heavy cinematic 808 sub-bass drop + cosmic shimmer hook
+      - 'zoom_in' / 'whoosh_quantum': High-velocity futuristic swish with stereo Haas panning
+      - 'pan' / 'whoosh_solar': Radiant plasma swoosh with sizzling harmonic overtone
+      - 'pull_back' / 'wide': Deep cosmic suction whoosh with sub-bass tail
+      - 'quantum_hum': Ominous sub-quantum resonant hum with phase modulation
+      - 'solar_flare': Searing solar energy discharge stinger
+    """
     output_path.parent.mkdir(parents=True, exist_ok=True)
     total_samples = int(duration * sample_rate)
     samples = []
@@ -114,42 +122,84 @@ def synthesize_camera_servo_sfx(
         t = i / total_samples
         sec = i / sample_rate
 
-        if sfx_type == "intro":
-            # Cinematic Sub-Bass Impact Punch + Sci-Fi Riser Chime
-            env = math.exp(-t * 3.8)
-            drop_freq = 42.0 + (130.0 - 42.0) * math.exp(-t * 8.0)
-            sub = 0.65 * math.sin(2.0 * math.pi * drop_freq * sec)
-            punch = 0.35 * math.exp(-t * 35.0) * random.uniform(-0.8, 0.8)
-            chime = 0.30 * math.sin(2.0 * math.pi * 659.25 * sec) * math.exp(-t * 2.5) + 0.20 * math.sin(2.0 * math.pi * 987.77 * sec) * math.exp(-t * 3.0)
+        if sfx_type in ("intro", "sub_drop"):
+            # Cinematic Sub-Bass Impact Drop (808 style) + Sci-Fi Ethereal Chime Hook
+            env = math.exp(-t * 3.4)
+            # Pitch sweep downwards rapidly: 140Hz -> 38Hz
+            drop_freq = 38.0 + (140.0 - 38.0) * math.exp(-t * 9.0)
+            sub = 0.72 * math.sin(2.0 * math.pi * drop_freq * sec) + 0.22 * math.sin(4.0 * math.pi * drop_freq * sec)
+            punch = 0.40 * math.exp(-t * 40.0) * random.uniform(-0.9, 0.9)
+            # High crystalline harmonics
+            chime = (
+                0.25 * math.sin(2.0 * math.pi * 587.33 * sec) * math.exp(-t * 3.2) +
+                0.20 * math.sin(2.0 * math.pi * 880.00 * sec) * math.exp(-t * 4.0) +
+                0.15 * math.sin(2.0 * math.pi * 1174.66 * sec) * math.exp(-t * 4.8)
+            )
             val = (sub + punch + chime) * env
             l_val, r_val = val, val
-        elif sfx_type == "zoom_in":
-            env = math.exp(-((t - 0.42) ** 2) / (2 * (0.12 ** 2)))
-            servo_freq = 420.0 + 850.0 * (t ** 1.5)
-            servo = 0.30 * math.sin(2.0 * math.pi * servo_freq * sec) + 0.15 * math.sin(4.0 * math.pi * servo_freq * sec)
-            noise = 0.45 * random.uniform(-1.0, 1.0)
-            click = 0.25 * math.exp(-((t - 0.78) ** 2) / (2 * (0.02 ** 2))) * math.sin(2.0 * math.pi * 1400.0 * sec)
-            val = (servo + noise) * env + click
-            l_val = val * (0.7 + 0.3 * math.sin(t * math.pi))
-            r_val = val * (0.7 + 0.3 * math.cos(t * math.pi))
-        elif sfx_type == "pan":
+
+        elif sfx_type in ("zoom_in", "whoosh_quantum"):
+            # High-velocity futuristic Sci-Fi Woosh / Swish (Left-to-Right Haas whip)
+            env = math.exp(-((t - 0.48) ** 2) / (2 * (0.13 ** 2)))
+            # Frequency acceleration curve
+            sweep_freq = 220.0 + 1400.0 * (t ** 2.2)
+            synth = 0.35 * math.sin(2.0 * math.pi * sweep_freq * sec) + 0.18 * math.sin(3.0 * math.pi * sweep_freq * sec)
+            filtered_noise = 0.55 * random.uniform(-1.0, 1.0) * (0.6 + 0.4 * math.sin(t * math.pi))
+            sub_tail = 0.28 * math.sin(2.0 * math.pi * 65.0 * sec) * math.exp(-((t - 0.65) ** 2) / 0.05)
+            # High-tech laser lock snap at the end
+            snap = 0.30 * math.exp(-((t - 0.72) ** 2) / (2 * (0.015 ** 2))) * math.sin(2.0 * math.pi * 1800.0 * sec)
+            raw = (synth + filtered_noise + sub_tail) * env + snap
+            # Dynamic stereo pan (Left -> Right sweeping swish)
+            l_val = raw * (1.1 - 0.85 * t)
+            r_val = raw * (0.25 + 0.85 * t)
+
+        elif sfx_type in ("pan", "whoosh_solar"):
+            # Radiant Plasma Swoosh (Right-to-Center blazing transition)
             env = math.exp(-((t - 0.50) ** 2) / (2 * (0.14 ** 2)))
-            pan_freq = 800.0 - 450.0 * t
-            synth = 0.30 * math.sin(2.0 * math.pi * pan_freq * sec)
-            noise = 0.50 * random.uniform(-1.0, 1.0)
-            val = (synth + noise) * env
-            l_val = val * (1.0 - t * 0.7)
-            r_val = val * (0.3 + t * 0.7)
-        else:  # "pull_back" / wide
+            # Downward solar frequency glide
+            plasma_freq = 1100.0 - 650.0 * (t ** 0.8)
+            plasma_osc = 0.38 * math.sin(2.0 * math.pi * plasma_freq * sec) + 0.20 * math.sin(2.0 * math.pi * (plasma_freq * 1.5) * sec)
+            sizzle = 0.48 * random.uniform(-1.0, 1.0)
+            sub_pulse = 0.30 * math.sin(2.0 * math.pi * 82.0 * sec)
+            raw = (plasma_osc + sizzle + sub_pulse) * env
+            # Dynamic stereo pan (Right -> Center/Left)
+            l_val = raw * (0.2 + 0.8 * t)
+            r_val = raw * (1.0 - 0.6 * t)
+
+        elif sfx_type in ("pull_back", "wide"):
+            # Deep Cosmic Suction / Wide Camera Release
             env = math.exp(-((t - 0.45) ** 2) / (2 * (0.16 ** 2)))
-            sub = 0.40 * math.sin(2.0 * math.pi * 110.0 * (1.0 - 0.5 * t) * sec)
-            noise = 0.45 * random.uniform(-1.0, 1.0)
-            lock = 0.30 * math.exp(-((t - 0.85) ** 2) / (2 * (0.03 ** 2))) * math.sin(2.0 * math.pi * 320.0 * sec)
-            val = (sub + noise) * env + lock
+            sub_drone = 0.45 * math.sin(2.0 * math.pi * 95.0 * (1.0 - 0.45 * t) * sec)
+            whoosh_air = 0.45 * random.uniform(-1.0, 1.0)
+            bass_lock = 0.35 * math.exp(-((t - 0.80) ** 2) / (2 * (0.025 ** 2))) * math.sin(2.0 * math.pi * 120.0 * sec)
+            val = (sub_drone + whoosh_air) * env + bass_lock
             l_val, r_val = val, val
 
-        l_val = max(-1.0, min(1.0, l_val * 0.85))
-        r_val = max(-1.0, min(1.0, r_val * 0.85))
+        elif sfx_type == "quantum_hum":
+            # Ominous Deep Sub-Bass Quantum Revelation Hum
+            env = min(1.0, sec / 0.15) * math.exp(-t * 2.2)
+            sub_f = 48.0 + 8.0 * math.sin(2.0 * math.pi * 1.5 * sec)
+            sub_osc = 0.75 * math.sin(2.0 * math.pi * sub_f * sec)
+            dark_resonance = 0.25 * math.sin(2.0 * math.pi * (sub_f * 2.5) * sec)
+            val = (sub_osc + dark_resonance) * env
+            l_val, r_val = val, val
+
+        elif sfx_type == "solar_flare":
+            # Blazing Solar Flare Stinger
+            env = min(1.0, sec / 0.08) * math.exp(-t * 2.6)
+            flare_f = 750.0 + 350.0 * math.sin(2.0 * math.pi * 6.0 * sec)
+            flare_osc = 0.40 * math.sin(2.0 * math.pi * flare_f * sec)
+            heat_noise = 0.35 * random.uniform(-1.0, 1.0)
+            val = (flare_osc + heat_noise) * env
+            l_val, r_val = val, val
+
+        else:
+            env = math.exp(-t * 3.0)
+            val = 0.5 * math.sin(2.0 * math.pi * 440.0 * sec) * env
+            l_val, r_val = val, val
+
+        l_val = max(-1.0, min(1.0, l_val * 0.88))
+        r_val = max(-1.0, min(1.0, r_val * 0.88))
         samples.append(struct.pack("<hh", int(l_val * 32767), int(r_val * 32767)))
 
     with wave.open(str(output_path), "wb") as wav_file:

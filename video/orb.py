@@ -558,11 +558,16 @@ def render_orb_test_preview(
             syn2 = tts_fallback.synthesize_text("Hoy exploraremos los límites y misterios de la física cuántica.", part2_path)
             syn3 = tts_fallback.synthesize_text("¡Excelente! Y yo aportaré los secretos de la física solar.", part3_path)
 
-        # Synthesize camera transition SFX
-        synthesize_camera_servo_sfx(sfx_intro_path, duration=0.8, sfx_type="intro")
-        synthesize_camera_servo_sfx(sfx_zoom_path, duration=0.45, sfx_type="zoom_in")
-        synthesize_camera_servo_sfx(sfx_pan_path, duration=0.45, sfx_type="pan")
-        synthesize_camera_servo_sfx(sfx_wide_path, duration=0.55, sfx_type="pull_back")
+        # Synthesize camera transition SFX & entity stingers
+        sfx_q_hum_path = output_path.parent / "_temp_sfx_q_hum.wav"
+        sfx_s_flare_path = output_path.parent / "_temp_sfx_s_flare.wav"
+        
+        synthesize_camera_servo_sfx(sfx_intro_path, duration=1.1, sfx_type="intro")
+        synthesize_camera_servo_sfx(sfx_zoom_path, duration=0.52, sfx_type="whoosh_quantum")
+        synthesize_camera_servo_sfx(sfx_pan_path, duration=0.52, sfx_type="whoosh_solar")
+        synthesize_camera_servo_sfx(sfx_wide_path, duration=0.60, sfx_type="pull_back")
+        synthesize_camera_servo_sfx(sfx_q_hum_path, duration=1.2, sfx_type="quantum_hum")
+        synthesize_camera_servo_sfx(sfx_s_flare_path, duration=0.9, sfx_type="solar_flare")
 
         # Prepare background soundtrack (custom asset or procedural space ambient pad)
         music_mgr = MusicManager()
@@ -578,11 +583,13 @@ def render_orb_test_preview(
             # 0: Voice Part 1 (Quantum - 0.0s)
             # 1: Voice Part 2 (Quantum - 3.2s)
             # 2: Voice Part 3 (Solar - 6.2s)
-            # 3: SFX Intro (0.0s)
-            # 4: SFX Zoom (3.2s)
-            # 5: SFX Pan (6.2s)
-            # 6: SFX Wide Pan Out (9.2s)
-            # 7: Sci-Fi Ambient Soundtrack Pad (0.0s - 12.0s)
+            # 3: SFX Intro Heavy Sub Drop + Shimmer (0.0s)
+            # 4: SFX Whoosh Quantum (Haas stereo whip) (3.15s)
+            # 5: SFX Whoosh Solar (Plasma sweep) (6.15s)
+            # 6: SFX Wide Pan Out (9.15s)
+            # 7: SFX Quantum Sub-Bass Revelation Hum (3.20s)
+            # 8: SFX Solar Flare Plasma Stinger (6.20s)
+            # 9: Sci-Fi Ambient Soundtrack Pad (0.0s - 12.0s)
             concat_cmd = [
                 "ffmpeg", "-y",
                 "-i", str(part1_path),
@@ -592,17 +599,21 @@ def render_orb_test_preview(
                 "-i", str(sfx_zoom_path),
                 "-i", str(sfx_pan_path),
                 "-i", str(sfx_wide_path),
+                "-i", str(sfx_q_hum_path),
+                "-i", str(sfx_s_flare_path),
                 "-stream_loop", "-1", "-i", str(music_bg_path),
                 "-filter_complex",
                 "[0:a]adelay=0|0,volume=1.0[v1];"
                 "[1:a]adelay=3200|3200,volume=1.0[v2];"
                 "[2:a]adelay=6200|6200,volume=1.0[v3];"
-                "[3:a]adelay=50|50,volume=0.35[sfx0];"
-                "[4:a]adelay=3180|3180,volume=0.40[sfx1];"
-                "[5:a]adelay=6180|6180,volume=0.40[sfx2];"
-                "[6:a]adelay=9180|9180,volume=0.45[sfx3];"
-                "[7:a]volume=0.18,afade=t=in:st=0:d=1.0,afade=t=out:st=10.2:d=1.8[bgm];"
-                "[v1][v2][v3][sfx0][sfx1][sfx2][sfx3][bgm]amix=inputs=8:dropout_transition=0:normalize=0[aout]",
+                "[3:a]adelay=20|20,volume=0.42[sfx0];"
+                "[4:a]adelay=3120|3120,volume=0.38[sfx1];"
+                "[5:a]adelay=6120|6120,volume=0.38[sfx2];"
+                "[6:a]adelay=9120|9120,volume=0.42[sfx3];"
+                "[7:a]adelay=3200|3200,volume=0.32[sfx_q_hum];"
+                "[8:a]adelay=6200|6200,volume=0.28[sfx_s_flare];"
+                "[9:a]volume=0.16,afade=t=in:st=0:d=1.0,afade=t=out:st=10.2:d=1.8[bgm];"
+                "[v1][v2][v3][sfx0][sfx1][sfx2][sfx3][sfx_q_hum][sfx_s_flare][bgm]amix=inputs=10:dropout_transition=0:normalize=0[aout]",
                 "-map", "[aout]",
                 "-t", "12.0",
                 "-c:a", "libmp3lame",
@@ -617,7 +628,7 @@ def render_orb_test_preview(
                 print(f"  ⚠️ Test co-host audio concat error: {e}")
                 resolved_audio = part1_path
             
-            for p in [part1_path, part2_path, part3_path, sfx_intro_path, sfx_zoom_path, sfx_pan_path, sfx_wide_path]:
+            for p in [part1_path, part2_path, part3_path, sfx_intro_path, sfx_zoom_path, sfx_pan_path, sfx_wide_path, sfx_q_hum_path, sfx_s_flare_path]:
                 if p.exists():
                     try:
                         p.unlink()
