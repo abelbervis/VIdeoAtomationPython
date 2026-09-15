@@ -821,17 +821,17 @@ def render_orb_test_preview(
         "[6:v]scale=340:-2,format=yuva420p[badge_s]",
 
         # 1. Split streams to apply physical static transparency to separate active/resting layers
-        "[1:v]split=4[q_wa][q_wp][q_ca][q_glow]",
-        "[2:v]split=4[s_wa][s_wp][s_ca][s_glow]",
+        "[1:v]split=4[q_t1][q_t2][q_t4][q_glow]",
+        "[2:v]split=4[s_t1][s_t3][s_t4][s_glow]",
         
         # 2. Render each state independently with speech-reactive color surges, contrast flares and luminescence
-        f"[q_wa]scale=355:355,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.95[orb_q_wide_active]",
-        f"[q_wp]scale=310:310,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.32[orb_q_wide_passive]",
-        f"[q_ca]scale=550:550,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.95[orb_q_close_active]",
+        f"[q_t1]scale=355:355,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.95[orb_q_wide_t1]",
+        f"[q_t2]scale=550:550,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.95[orb_q_close_t2]",
+        f"[q_t4]scale=355:355,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.98[orb_q_wide_t4]",
         
-        f"[s_wp]scale=310:310,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.52[orb_s_wide_passive]",
-        f"[s_wa]scale=355:355,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.95[orb_s_wide_active]",
-        f"[s_ca]scale=550:550,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.95[orb_s_close_active]",
+        f"[s_t1]scale=310:310,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.52[orb_s_wide_t1]",
+        f"[s_t3]scale=550:550,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.95[orb_s_close_t3]",
+        f"[s_t4]scale=355:355,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.98[orb_s_wide_t4]",
         
         # 3. Render dynamic ambient glow backplates using ultra-fast pre-scaled blur with audio-reactive intensity
         f"[q_glow]scale=120:120,eq={eq_q},hue={hue_q},boxblur=24:3,scale=1080:1920,format=yuva420p,colorchannelmixer=aa=0.25[bg_glow_q]",
@@ -844,22 +844,22 @@ def render_orb_test_preview(
         
         # 5. Sequentially overlay the foreground orbs with power ignition snap on frame 0 and matching drifts
         # Toma 1 (0 -> t1): Wide Shot. Power ignition snap + Presenter Badges Floating below each orb
-        f"[bg_ambient][orb_q_wide_active]overlay=eval=frame:x='W*0.25-w/2 + {drift_q_active_x} + {drift_intro_x}':y='H*0.38-h/2 + {drift_q_active_y} + {drift_intro_y}':enable='between(t,0,{t1})'[v1]",
-        f"[v1][orb_s_wide_passive]overlay=eval=frame:x='W*0.75-w/2 - 28 + {drift_s_resting_x} + {drift_intro_x}':y='H*0.39-h/2 + {drift_s_resting_y} + {drift_intro_y}':enable='between(t,0,{t1})'[v1_orbs]",
+        f"[bg_ambient][orb_q_wide_t1]overlay=eval=frame:x='W*0.25-w/2 + {drift_q_active_x} + {drift_intro_x}':y='H*0.38-h/2 + {drift_q_active_y} + {drift_intro_y}':enable='between(t,0,{t1})'[v1]",
+        f"[v1][orb_s_wide_t1]overlay=eval=frame:x='W*0.75-w/2 - 28 + {drift_s_resting_x} + {drift_intro_x}':y='H*0.39-h/2 + {drift_s_resting_y} + {drift_intro_y}':enable='between(t,0,{t1})'[v1_orbs]",
         f"[v1_orbs][badge_q]overlay=eval=frame:x='W*0.25-w/2 + 5.0*sin(2*PI*(t-0.4)/2.2)':y='H*0.52-h/2 + 4.0*cos(2*PI*(t-0.4)/2.2)':enable='between(t,0.3,{max(0.4, round(t1-0.2, 2))})'[v1_bdg_q]",
         f"[v1_bdg_q][badge_s]overlay=eval=frame:x='W*0.75-w/2 - 28 + 5.0*cos(2*PI*(t-0.4)/2.4)':y='H*0.52-h/2 + 4.0*sin(2*PI*(t-0.4)/2.4)':enable='between(t,0.3,{max(0.4, round(t1-0.2, 2))})'[v2]",
         
         # Toma 2 (t1 -> t2): Close Up Quantum active + Floating Sci-Fi Hologram Card 1
-        f"[v2][orb_q_close_active]overlay=eval=frame:x='W/2-w/2 + {drift_q_active_x} + 25.0*exp(-6.5*(t-{t1}))*cos(16.0*(t-{t1}))':y='H*0.38-h/2 + {drift_q_active_y} + 30.0*exp(-6.5*(t-{t1}))*sin(16.0*(t-{t1}))':enable='between(t,{t1},{t2})'[v3]",
+        f"[v2][orb_q_close_t2]overlay=eval=frame:x='W/2-w/2 + {drift_q_active_x} + 25.0*exp(-6.5*(t-{t1}))*cos(16.0*(t-{t1}))':y='H*0.38-h/2 + {drift_q_active_y} + 30.0*exp(-6.5*(t-{t1}))*sin(16.0*(t-{t1}))':enable='between(t,{t1},{t2})'[v3]",
         f"[v3][holo_q]overlay=eval=frame:x='(W-w)/2':y='H*0.12-h/2 + 6.0*sin(2*PI*(t-{round(t1+0.1, 2)})/2.4)':enable='between(t,{round(t1+0.1, 2)},{max(round(t1+0.2, 2), round(t2-0.2, 2))})'[v3_holo]",
         
         # Toma 3 (t2 -> t3): Close Up Solar active + Floating Sci-Fi Hologram Card 2
-        f"[v3_holo][orb_s_close_active]overlay=eval=frame:x='W/2-w/2 + {drift_s_active_x} + 25.0*exp(-6.5*(t-{t2}))*cos(16.0*(t-{t2}))':y='H*0.38-h/2 + {drift_s_active_y} + 30.0*exp(-6.5*(t-{t2}))*sin(16.0*(t-{t2}))':enable='between(t,{t2},{t3})'[v4]",
+        f"[v3_holo][orb_s_close_t3]overlay=eval=frame:x='W/2-w/2 + {drift_s_active_x} + 25.0*exp(-6.5*(t-{t2}))*cos(16.0*(t-{t2}))':y='H*0.38-h/2 + {drift_s_active_y} + 30.0*exp(-6.5*(t-{t2}))*sin(16.0*(t-{t2}))':enable='between(t,{t2},{t3})'[v4]",
         f"[v4][holo_s]overlay=eval=frame:x='(W-w)/2':y='H*0.12-h/2 + 6.0*cos(2*PI*(t-{round(t2+0.1, 2)})/2.6)':enable='between(t,{round(t2+0.1, 2)},{max(round(t2+0.2, 2), round(t3-0.2, 2))})'[v4_holo]",
         
         # Toma 4 (t3 -> total_duration): Wide Shot Harmonic Resonance Outro (Both Orbs Glow in Resonance)
-        f"[v4_holo][orb_q_wide_active]overlay=eval=frame:x='W*0.25-w/2 + {drift_q_active_x} + 15.0*exp(-6.5*(t-{t3}))*cos(16.0*(t-{t3}))':y='H*0.38-h/2 + {drift_q_active_y} + 18.0*exp(-6.5*(t-{t3}))*sin(16.0*(t-{t3}))':enable='between(t,{t3},{total_duration})'[v5]",
-        f"[v5][orb_s_wide_active]overlay=eval=frame:x='W*0.75-w/2 - 28 + {drift_s_active_x} + 15.0*exp(-6.5*(t-{t3}))*cos(16.0*(t-{t3}))':y='H*0.39-h/2 + {drift_s_active_y} + 18.0*exp(-6.5*(t-{t3}))*sin(16.0*(t-{t3}))':enable='between(t,{t3},{total_duration})'[v6]",
+        f"[v4_holo][orb_q_wide_t4]overlay=eval=frame:x='W*0.25-w/2 + {drift_q_active_x} + 15.0*exp(-6.5*(t-{t3}))*cos(16.0*(t-{t3}))':y='H*0.38-h/2 + {drift_q_active_y} + 18.0*exp(-6.5*(t-{t3}))*sin(16.0*(t-{t3}))':enable='between(t,{t3},{total_duration})'[v5]",
+        f"[v5][orb_s_wide_t4]overlay=eval=frame:x='W*0.75-w/2 - 28 + {drift_s_active_x} + 15.0*exp(-6.5*(t-{t3}))*cos(16.0*(t-{t3}))':y='H*0.39-h/2 + {drift_s_active_y} + 18.0*exp(-6.5*(t-{t3}))*sin(16.0*(t-{t3}))':enable='between(t,{t3},{total_duration})'[v6]",
         
         # 6. Headline Hook Badge Overlay (Top Center 0.0s -> min(t1, 2.8s))
         f"[v6]drawtext=text='{escaped_headline_hook}':{font_param}:fontcolor=white:fontsize=34:box=1:boxcolor=0x08101e@0.92:boxborderw=20:borderw=2:bordercolor=0x00f0ff:x=(w-text_w)/2:y=140:enable='between(t,0,{min(round(t1, 2), 2.8)})'[v_hook]",
