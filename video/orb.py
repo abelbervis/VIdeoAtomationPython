@@ -113,32 +113,46 @@ ORB_PALETTES: Dict[str, Dict[str, Any]] = {
     "quantum": {
         "name": "Quantum Bio-Reactive",
         "description": "Vibrant cyan sphere, white/magenta core highlight, soft neon purple aura",
-        "body_center": "#06b6d4",    # Electric Cyan
-        "body_mid": "#0284c7",       # Blue
-        "body_edge": "#3b82f6",      # Deep Blue
-        "body_rim": "#4f46e5",       # Indigo Rim
-        "spot_core": "#ffffff",      # White Core
-        "spot_glow": "#f472b6",      # Magenta/Pink Glow
-        "spot_outer": "#c084fc",     # Purple Glow
-        "aura_inner": "#a855f7",     # Neon Purple Aura
+        "body_c0": "#00f0ff",     # Electric Cyan
+        "body_c1": "#0284c7",     # Deep Cyan
+        "body_c2": "#3b82f6",     # Royal Blue
+        "body_c3": "#8a2be2",     # Deep Violet
+        "body_c4": "#d946ef",     # Magenta Rim
+        "body_c5": "#1e0836",     # Void Edge
+        "spot1_core": "#ffffff",  # Incandescent White
+        "spot1_glow": "#f472b6",  # Pink Flare
+        "spot1_outer": "#c084fc", # Purple Edge
+        "spot2_core": "#00f0ff",  # Secondary Cyan Flare
+        "spot2_mid": "#0284c7",
+        "spot2_outer": "#3b82f6",
+        "aura_inner": "#a855f7",  # Neon Purple Aura
         "aura_mid": "#7c3aed",
         "aura_outer": "#3b82f6",
+        "aura_bright": "#c084fc",
         "ring_stroke": "#c084fc",
+        "rim_stroke": "#d946ef",
     },
     "solar": {
         "name": "Solar Bio-Reactive",
-        "description": "Incandescent solar amber sphere, warm flare highlight, golden aura",
-        "body_center": "#ffb700",
-        "body_mid": "#ff7700",
-        "body_edge": "#e65100",
-        "body_rim": "#d84315",
-        "spot_core": "#ffffff",
-        "spot_glow": "#ffe066",
-        "spot_outer": "#ff9800",
-        "aura_inner": "#ff9800",
+        "description": "Incandescent solar amber sphere, golden flare highlight, radiant orange aura",
+        "body_c0": "#fff176",     # Bright Solar Gold
+        "body_c1": "#ffc107",     # Amber Gold
+        "body_c2": "#ff9800",     # Solar Orange
+        "body_c3": "#f57c00",     # Deep Flame
+        "body_c4": "#e65100",     # Fiery Crimson Rim
+        "body_c5": "#2a0800",     # Dark Solar Edge
+        "spot1_core": "#ffffff",  # Incandescent White
+        "spot1_glow": "#ffe082",  # Solar Warm Flare
+        "spot1_outer": "#ffb74d", # Amber Glow
+        "spot2_core": "#ffd54f",  # Secondary Warm Gold Flare
+        "spot2_mid": "#ff9800",
+        "spot2_outer": "#e65100",
+        "aura_inner": "#ff9800",  # Intense Solar Orange Aura
         "aura_mid": "#f57c00",
-        "aura_outer": "#e65100",
-        "ring_stroke": "#ffe066",
+        "aura_outer": "#d84315",
+        "aura_bright": "#ffe082",
+        "ring_stroke": "#ffd54f", # Radiant Gold Ring
+        "rim_stroke": "#ff6d00",
     }
 }
 
@@ -231,39 +245,39 @@ def generate_animated_orb_loop(
       <stop offset="0%" stop-color="{palette['aura_inner']}" stop-opacity="0.95" />
       <stop offset="35%" stop-color="{palette['aura_mid']}" stop-opacity="0.75" />
       <stop offset="68%" stop-color="{palette['aura_outer']}" stop-opacity="0.38" />
-      <stop offset="88%" stop-color="#3b82f6" stop-opacity="0.15" />
+      <stop offset="88%" stop-color="{palette['body_c3']}" stop-opacity="0.15" />
       <stop offset="100%" stop-color="#000000" stop-opacity="0.0" />
     </radialGradient>
 
     <radialGradient id="innerAuraBright_{i}" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#c084fc" stop-opacity="0.90" />
+      <stop offset="0%" stop-color="{palette['aura_bright']}" stop-opacity="0.90" />
       <stop offset="45%" stop-color="{palette['aura_inner']}" stop-opacity="0.60" />
       <stop offset="100%" stop-color="#000000" stop-opacity="0.0" />
     </radialGradient>
 
     <!-- Multi-Spectral Chromatic Sphere Body Gradient -->
     <radialGradient id="sphereBody_{i}" cx="42%" cy="38%" r="62%">
-      <stop offset="0%" stop-color="#00f0ff" />
-      <stop offset="22%" stop-color="#0284c7" />
-      <stop offset="48%" stop-color="#3b82f6" />
-      <stop offset="72%" stop-color="#8a2be2" />
-      <stop offset="88%" stop-color="#d946ef" />
-      <stop offset="100%" stop-color="#1e0836" />
+      <stop offset="0%" stop-color="{palette['body_c0']}" />
+      <stop offset="22%" stop-color="{palette['body_c1']}" />
+      <stop offset="48%" stop-color="{palette['body_c2']}" />
+      <stop offset="72%" stop-color="{palette['body_c3']}" />
+      <stop offset="88%" stop-color="{palette['body_c4']}" />
+      <stop offset="100%" stop-color="{palette['body_c5']}" />
     </radialGradient>
 
-    <!-- Primary Off-Center Light Spot (White Center to Magenta/Pink Flare) -->
+    <!-- Primary Off-Center Light Spot (White Center to Primary Flare) -->
     <radialGradient id="primarySpot_{i}" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#ffffff" stop-opacity="1.0" />
-      <stop offset="26%" stop-color="#f472b6" stop-opacity="0.95" />
-      <stop offset="60%" stop-color="#c084fc" stop-opacity="0.65" />
-      <stop offset="100%" stop-color="#8a2be2" stop-opacity="0.0" />
+      <stop offset="0%" stop-color="{palette['spot1_core']}" stop-opacity="1.0" />
+      <stop offset="26%" stop-color="{palette['spot1_glow']}" stop-opacity="0.95" />
+      <stop offset="60%" stop-color="{palette['spot1_outer']}" stop-opacity="0.65" />
+      <stop offset="100%" stop-color="{palette['body_c3']}" stop-opacity="0.0" />
     </radialGradient>
 
-    <!-- Secondary Counter-Tone Light Spot (Cyan/Electric Blue Flare) -->
+    <!-- Secondary Counter-Tone Light Spot (Secondary Flare) -->
     <radialGradient id="secondarySpot_{i}" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#00f0ff" stop-opacity="0.90" />
-      <stop offset="40%" stop-color="#0284c7" stop-opacity="0.65" />
-      <stop offset="80%" stop-color="#3b82f6" stop-opacity="0.30" />
+      <stop offset="0%" stop-color="{palette['spot2_core']}" stop-opacity="0.90" />
+      <stop offset="40%" stop-color="{palette['spot2_mid']}" stop-opacity="0.65" />
+      <stop offset="80%" stop-color="{palette['spot2_outer']}" stop-opacity="0.30" />
       <stop offset="100%" stop-color="#000000" stop-opacity="0.0" />
     </radialGradient>
   </defs>
@@ -281,15 +295,15 @@ def generate_animated_orb_loop(
 
   <!-- 4. Multi-Spectral Interior Light Layers -->
   <g clip-path="url(#sphereClip_{i})">
-    <!-- Secondary Cyan/Azure Flare (Bottom-Right) -->
+    <!-- Secondary Counter-Tone Flare (Bottom-Right) -->
     <ellipse cx="{spot2_x}" cy="{spot2_y}" rx="{spot2_rx}" ry="{spot2_ry}" fill="url(#secondarySpot_{i})" filter="url(#secondaryBlur_{i})" />
 
-    <!-- Primary White/Magenta Flare (Top-Left) -->
+    <!-- Primary Incandescent Flare (Top-Left) -->
     <ellipse cx="{spot1_x}" cy="{spot1_y}" rx="{spot1_rx}" ry="{spot1_ry}" fill="url(#primarySpot_{i})" filter="url(#coreBlur_{i})" />
-    <circle cx="{spot1_x}" cy="{spot1_y}" r="{int(spot1_rx * 0.45)}" fill="#ffffff" opacity="0.98" filter="url(#coreBlur_{i})" />
+    <circle cx="{spot1_x}" cy="{spot1_y}" r="{int(spot1_rx * 0.45)}" fill="{palette['spot1_core']}" opacity="0.98" filter="url(#coreBlur_{i})" />
 
-    <!-- Subsurface Magenta Rim Accent -->
-    <circle cx="{c}" cy="{c}" r="{r_sphere - 3}" fill="none" stroke="#d946ef" stroke-width="4" opacity="0.55" filter="url(#coreBlur_{i})" />
+    <!-- Subsurface Rim Accent -->
+    <circle cx="{c}" cy="{c}" r="{r_sphere - 3}" fill="none" stroke="{palette['rim_stroke']}" stroke-width="4" opacity="0.55" filter="url(#coreBlur_{i})" />
   </g>
 
   <!-- 5. Inner Concentric Rim Light -->
