@@ -270,7 +270,13 @@ app.post('/api/render-video', (req, res) => {
   if (hookTitle) pyArgs.push('--hook-title', hookTitle);
 
   if (customScript) {
-    pyArgs.push('--script', JSON.stringify(customScript));
+    const tempDir = path.join(ROOT_DIR, 'temp');
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir, { recursive: true });
+    }
+    const tempScriptPath = path.join(tempDir, `script_${jobId}.json`);
+    fs.writeFileSync(tempScriptPath, JSON.stringify(customScript, null, 2), 'utf-8');
+    pyArgs.push('--script', tempScriptPath);
   }
 
   job.status = 'running';

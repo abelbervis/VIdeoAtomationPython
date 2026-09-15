@@ -172,19 +172,30 @@ def main():
 
     # 5. Generate Structured AI Script or Load Custom Pre-edited Script
     if getattr(args, "custom_script", None):
-        custom_script_path = Path(args.custom_script).expanduser().resolve()
-        if not custom_script_path.exists() or not custom_script_path.is_file():
-            print(f"\n❌ Error: El archivo de guion especificado no existe: {custom_script_path}")
-            sys.exit(1)
-        try:
-            with open(custom_script_path, "r", encoding="utf-8") as f:
-                script = json.load(f)
-            print(f"\n📂 Cargando guion personalizado con escenas editadas desde: {custom_script_path.name}")
-            if script.get("title") and not args.topic:
-                args.topic = script["title"]
-        except Exception as e:
-            print(f"\n❌ Error al leer el archivo JSON de guion: {e}")
-            sys.exit(1)
+        script_val = str(args.custom_script).strip()
+        script = None
+        if script_val.startswith("{") or script_val.startswith("["):
+            try:
+                script = json.loads(script_val)
+                print(f"\n📂 Cargando guion personalizado recibido directamente en formato JSON.")
+            except Exception as e:
+                print(f"\n❌ Error al decodificar JSON de --script: {e}")
+                sys.exit(1)
+        else:
+            try:
+                custom_script_path = Path(script_val).expanduser().resolve()
+                if not custom_script_path.exists() or not custom_script_path.is_file():
+                    print(f"\n❌ Error: El archivo de guion especificado no existe: {custom_script_path}")
+                    sys.exit(1)
+                with open(custom_script_path, "r", encoding="utf-8") as f:
+                    script = json.load(f)
+                print(f"\n📂 Cargando guion personalizado con escenas editadas desde: {custom_script_path.name}")
+            except Exception as e:
+                print(f"\n❌ Error al leer el archivo JSON de guion: {e}")
+                sys.exit(1)
+
+        if script and script.get("title") and not args.topic:
+            args.topic = script["title"]
     else:
         script_gen = ScriptGenerator(
             gemini_key=args.gemini_key,
