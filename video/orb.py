@@ -618,6 +618,8 @@ def render_orb_test_preview(
         part1_path = output_path.parent / "_temp_q_part1.mp3"
         part2_path = output_path.parent / "_temp_q_part2.mp3"
         part3_path = output_path.parent / "_temp_s_part3.mp3"
+        part4_q_path = output_path.parent / "_temp_both_q.mp3"
+        part4_s_path = output_path.parent / "_temp_both_s.mp3"
         sfx_intro_path = output_path.parent / "_temp_sfx_intro.wav"
         sfx_zoom_path = output_path.parent / "_temp_sfx_zoom.wav"
         sfx_pan_path = output_path.parent / "_temp_sfx_pan.wav"
@@ -641,25 +643,32 @@ def render_orb_test_preview(
             syn1 = tts_edge.synthesize_cosmic_entity(q_part1, part1_path, entity="quantum")
             syn2 = tts_edge.synthesize_cosmic_entity(q_part2, part2_path, entity="quantum")
             syn3 = tts_edge.synthesize_cosmic_entity(s_part3, part3_path, entity="solar")
+            syn4_q = tts_edge.synthesize_cosmic_entity(both_part4, part4_q_path, entity="quantum")
+            syn4_s = tts_edge.synthesize_cosmic_entity(both_part4, part4_s_path, entity="solar")
         else:
             tts_fallback = GoogleTTSProvider(language="es")
             syn1 = tts_fallback.synthesize_text(q_part1, part1_path)
             syn2 = tts_fallback.synthesize_text(q_part2, part2_path)
             syn3 = tts_fallback.synthesize_text(s_part3, part3_path)
+            syn4_q = tts_fallback.synthesize_text(both_part4, part4_q_path)
+            syn4_s = tts_fallback.synthesize_text(both_part4, part4_s_path)
 
         # Accurately measure each speech part duration to PREVENT ANY AUDIO OVERLAP
         dur1 = _get_audio_duration_secs(part1_path, 3.0)
         dur2 = _get_audio_duration_secs(part2_path, 3.0)
         dur3 = _get_audio_duration_secs(part3_path, 3.2)
+        dur4_q = _get_audio_duration_secs(part4_q_path, 2.5)
+        dur4_s = _get_audio_duration_secs(part4_s_path, 2.5)
+        dur4 = max(dur4_q, dur4_s)
 
         pause = 0.18  # Natural speech boundary pause in seconds
         t0 = 0.0
         t1 = round(dur1 + pause, 2)
         t2 = round(t1 + dur2 + pause, 2)
         t3 = round(t2 + dur3 + pause, 2)
-        total_duration = round(max(t3 + 2.4, 12.0), 2)
+        total_duration = round(max(t3 + dur4 + 0.9, 12.0), 2)
 
-        print(f"   • Línea de Tiempo Dialéctica: T1={t1}s | T2={t2}s | T3={t3}s | Total={total_duration}s")
+        print(f"   • Línea de Tiempo Dialéctica: T1={t1}s | T2={t2}s | T3={t3}s | Dur4={dur4}s | Total={total_duration}s")
 
         # Synthesize camera transition SFX & entity stingers
         sfx_q_hum_path = output_path.parent / "_temp_sfx_q_hum.wav"
@@ -669,7 +678,7 @@ def render_orb_test_preview(
         synthesize_camera_servo_sfx(sfx_zoom_path, duration=0.52, sfx_type="whoosh_quantum")
         synthesize_camera_servo_sfx(sfx_pan_path, duration=0.52, sfx_type="whoosh_solar")
         synthesize_camera_servo_sfx(sfx_wide_path, duration=0.60, sfx_type="pull_back")
-        synthesize_camera_servo_sfx(sfx_res_path, duration=2.2, sfx_type="cosmic_resonance")
+        synthesize_camera_servo_sfx(sfx_res_path, duration=2.5, sfx_type="cosmic_resonance")
         synthesize_camera_servo_sfx(sfx_q_hum_path, duration=1.2, sfx_type="quantum_hum")
         synthesize_camera_servo_sfx(sfx_s_flare_path, duration=0.9, sfx_type="solar_flare")
 
@@ -685,6 +694,7 @@ def render_orb_test_preview(
             v1_delay = 0
             v2_delay = int(t1 * 1000)
             v3_delay = int(t2 * 1000)
+            v4_delay = int(t3 * 1000)
             sfx0_delay = 20
             sfx1_delay = int(max(0.0, t1 - 0.08) * 1000)
             sfx2_delay = int(max(0.0, t2 - 0.08) * 1000)
@@ -698,6 +708,8 @@ def render_orb_test_preview(
                 "-i", str(part1_path),
                 "-i", str(part2_path),
                 "-i", str(part3_path),
+                "-i", str(part4_q_path),
+                "-i", str(part4_s_path),
                 "-i", str(sfx_intro_path),
                 "-i", str(sfx_zoom_path),
                 "-i", str(sfx_pan_path),
@@ -710,15 +722,17 @@ def render_orb_test_preview(
                 f"[0:a]adelay={v1_delay}|{v1_delay},volume=1.0[v1];"
                 f"[1:a]adelay={v2_delay}|{v2_delay},volume=1.0[v2];"
                 f"[2:a]adelay={v3_delay}|{v3_delay},volume=1.0[v3];"
-                f"[3:a]adelay={sfx0_delay}|{sfx0_delay},volume=0.42[sfx0];"
-                f"[4:a]adelay={sfx1_delay}|{sfx1_delay},volume=0.38[sfx1];"
-                f"[5:a]adelay={sfx2_delay}|{sfx2_delay},volume=0.38[sfx2];"
-                f"[6:a]adelay={sfx3_delay}|{sfx3_delay},volume=0.42[sfx3];"
-                f"[7:a]adelay={sfx_res_delay}|{sfx_res_delay},volume=0.45[sfx_res];"
-                f"[8:a]adelay={sfx_q_hum_delay}|{sfx_q_hum_delay},volume=0.32[sfx_q_hum];"
-                f"[9:a]adelay={sfx_s_flare_delay}|{sfx_s_flare_delay},volume=0.28[sfx_s_flare];"
-                f"[10:a]volume=0.16,afade=t=in:st=0:d=1.0,afade=t=out:st={round(total_duration - 1.4, 2)}:d=1.4[bgm];"
-                "[v1][v2][v3][sfx0][sfx1][sfx2][sfx3][sfx_res][sfx_q_hum][sfx_s_flare][bgm]amix=inputs=11:dropout_transition=0:normalize=0[aout]",
+                f"[3:a]adelay={v4_delay}|{v4_delay},volume=0.90[v4_q];"
+                f"[4:a]adelay={v4_delay}|{v4_delay},volume=0.90[v4_s];"
+                f"[5:a]adelay={sfx0_delay}|{sfx0_delay},volume=0.42[sfx0];"
+                f"[6:a]adelay={sfx1_delay}|{sfx1_delay},volume=0.38[sfx1];"
+                f"[7:a]adelay={sfx2_delay}|{sfx2_delay},volume=0.38[sfx2];"
+                f"[8:a]adelay={sfx3_delay}|{sfx3_delay},volume=0.42[sfx3];"
+                f"[9:a]adelay={sfx_res_delay}|{sfx_res_delay},volume=0.45[sfx_res];"
+                f"[10:a]adelay={sfx_q_hum_delay}|{sfx_q_hum_delay},volume=0.32[sfx_q_hum];"
+                f"[11:a]adelay={sfx_s_flare_delay}|{sfx_s_flare_delay},volume=0.28[sfx_s_flare];"
+                f"[12:a]volume=0.16,afade=t=in:st=0:d=1.0,afade=t=out:st={round(total_duration - 1.4, 2)}:d=1.4[bgm];"
+                "[v1][v2][v3][v4_q][v4_s][sfx0][sfx1][sfx2][sfx3][sfx_res][sfx_q_hum][sfx_s_flare][bgm]amix=inputs=13:dropout_transition=0:normalize=0[aout]",
                 "-map", "[aout]",
                 "-t", str(total_duration),
                 "-c:a", "libmp3lame",
@@ -733,10 +747,12 @@ def render_orb_test_preview(
                 print(f"  ⚠️ Test co-host audio concat error: {e}")
                 resolved_audio = part1_path
             
-            for p in [part1_path, part2_path, part3_path, sfx_intro_path, sfx_zoom_path, sfx_pan_path, sfx_wide_path, sfx_res_path, sfx_q_hum_path, sfx_s_flare_path]:
+            for p in [part1_path, part2_path, part3_path, part4_q_path, part4_s_path, sfx_intro_path, sfx_zoom_path, sfx_pan_path, sfx_wide_path, sfx_res_path, sfx_q_hum_path, sfx_s_flare_path]:
                 if p.exists():
                     try:
                         p.unlink()
+                    except Exception:
+                        pass
                     except Exception:
                         pass
             if music_bg_path.name == "_temp_music_ambient.wav" and music_bg_path.exists():
