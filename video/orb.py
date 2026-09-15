@@ -642,9 +642,9 @@ def render_orb_test_preview(
     bg_input = f"color=c=0x08090f:s={width}x{height}:r=30:d=12.0"
 
     filter_complex = [
-        # 0. Hologram Reference Card Pre-scaling
-        "[3:v]scale=500:214,format=yuva420p[holo_q]",
-        "[4:v]scale=500:214,format=yuva420p[holo_s]",
+        # 0. Hologram Reference Card Pre-scaling (Modern Apple/Vercel Floating Card)
+        "[3:v]scale=500:160,format=yuva420p[holo_q]",
+        "[4:v]scale=500:160,format=yuva420p[holo_s]",
 
         # 1. Split streams to apply physical static transparency to separate active/resting layers
         "[1:v]split=4[q_wa][q_wp][q_ca][q_glow]",
