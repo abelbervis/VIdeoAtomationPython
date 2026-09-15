@@ -575,6 +575,21 @@ def parse_args() -> argparse.Namespace:
         help="Path to an existing pre-edited script JSON file (e.g. output/<video>/script.json). Skips AI generation and uses your edited scenes directly."
     )
 
+    # AI Thumbnail / Cover Generator
+    parser.add_argument(
+        "--thumbnail", "--gen-thumbnail", "--cover",
+        dest="generate_thumbnail",
+        action="store_true",
+        help="AI Thumbnail Generator: Automatically generates stunning cinematic vertical thumbnail covers (thumbnail.jpg) for existing video folders or script JSON files using FLUX AI."
+    )
+    parser.add_argument(
+        "--thumbnail-script", "--thumb-script",
+        dest="thumbnail_script",
+        type=str,
+        default=None,
+        help="Path to a specific script.json file to generate a thumbnail for. If omitted with --thumbnail, scans and generates thumbnails for all existing project folders."
+    )
+
     # Tester & Audit Mode Options
     parser.add_argument(
         "--audit", "--tester", "--test-mode",

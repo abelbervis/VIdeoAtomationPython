@@ -59,6 +59,17 @@ def main():
         print("Please install FFmpeg: https://ffmpeg.org/download.html")
         sys.exit(1)
 
+    # If --thumbnail mode is selected, generate video thumbnail covers
+    if getattr(args, "generate_thumbnail", False):
+        from ai.thumbnail_generator import ThumbnailGenerator
+        thumb_gen = ThumbnailGenerator()
+        thumb_script_arg = getattr(args, "thumbnail_script", None)
+        if thumb_script_arg:
+            thumb_gen.generate_thumbnail_for_script(Path(thumb_script_arg))
+        else:
+            thumb_gen.batch_generate_thumbnails()
+        return
+
     # If --debate / --debate-topic / --script mode is selected, render AI debate video
     script_file_arg = getattr(args, "custom_script", None)
     if script_file_arg or getattr(args, "debate", False) or getattr(args, "debate_topic", None):
