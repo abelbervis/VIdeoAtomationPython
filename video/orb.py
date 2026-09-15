@@ -631,16 +631,16 @@ def render_orb_test_preview(
 
 
     # Build advanced video filter chains for double overlays & scale changes (Virtual Camera)
-    # Drift and eq structures with static opacities split by role and shot
-    voice_ripple_q = "(0.5 + 0.5 * sin(2*PI*t/0.38))"
+    # Audio-reactive speech cadence ripple (Dynamic pulsing & physical expansion on speech peaks)
+    voice_pulse_q = "(0.5 + 0.35*sin(2*PI*t/0.16) + 0.15*cos(2*PI*t/0.28))"
     speech_mask_q = "between(t,0,6.2)"
-    eq_q = f"brightness='-0.18 + (0.34 + 0.08*{voice_ripple_q})*{speech_mask_q}':contrast='0.70 + (0.55 + 0.15*{voice_ripple_q})*{speech_mask_q}'"
-    hue_q = f"h='(12 + 4*{voice_ripple_q})*{speech_mask_q} + 6*sin(2*PI*t/2.4)':s='0.60 + (0.65 + 0.20*{voice_ripple_q})*{speech_mask_q}'"
+    eq_q = f"brightness='-0.18 + (0.36 + 0.12*{voice_pulse_q})*{speech_mask_q}':contrast='0.70 + (0.60 + 0.22*{voice_pulse_q})*{speech_mask_q}'"
+    hue_q = f"h='(14 + 6*{voice_pulse_q})*{speech_mask_q} + 6*sin(2*PI*t/2.4)':s='0.60 + (0.70 + 0.25*{voice_pulse_q})*{speech_mask_q}'"
     
-    voice_ripple_s = "(0.5 + 0.5 * sin(2*PI*t/0.36))"
+    voice_pulse_s = "(0.5 + 0.35*sin(2*PI*t/0.14) + 0.15*cos(2*PI*t/0.26))"
     speech_mask_s = "between(t,6.2,12.0)"
-    eq_s = f"brightness='-0.04 + (0.16 + 0.05*{voice_ripple_s})*{speech_mask_s}':contrast='0.92 + (0.22 + 0.08*{voice_ripple_s})*{speech_mask_s}'"
-    hue_s = f"h='(12 + 4*{voice_ripple_s})*{speech_mask_s} + 6*sin(2*PI*t/2.4)':s='0.85 + (0.45 + 0.15*{voice_ripple_s})*{speech_mask_s}'"
+    eq_s = f"brightness='-0.04 + (0.22 + 0.10*{voice_pulse_s})*{speech_mask_s}':contrast='0.92 + (0.28 + 0.14*{voice_pulse_s})*{speech_mask_s}'"
+    hue_s = f"h='(14 + 6*{voice_pulse_s})*{speech_mask_s} + 6*sin(2*PI*t/2.4)':s='0.85 + (0.50 + 0.20*{voice_pulse_s})*{speech_mask_s}'"
 
     # Precise structural drift controls (Calm when passive/resting, full dynamic swing when active)
     drift_q_active_x = "14.0*sin(2*PI*t/3.6)"
@@ -685,18 +685,18 @@ def render_orb_test_preview(
         "[1:v]split=4[q_wa][q_wp][q_ca][q_glow]",
         "[2:v]split=4[s_wa][s_wp][s_ca][s_glow]",
         
-        # 2. Render each state independently with pre-baked alpha levels and size depth differences (Z-Axis)
-        f"[q_wa]scale=355:355,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.95[orb_q_wide_active]",
+        # 2. Render each state independently with speech-reactive physical scale pulsing & color surges
+        f"[q_wa]scale=eval=frame:w='355*(1.0 + 0.08*{voice_pulse_q}*{speech_mask_q})':h='355*(1.0 + 0.08*{voice_pulse_q}*{speech_mask_q})',eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.95[orb_q_wide_active]",
         f"[q_wp]scale=310:310,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.32[orb_q_wide_passive]",
-        f"[q_ca]scale=550:550,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.95[orb_q_close_active]",
+        f"[q_ca]scale=eval=frame:w='550*(1.0 + 0.07*{voice_pulse_q}*{speech_mask_q})':h='550*(1.0 + 0.07*{voice_pulse_q}*{speech_mask_q})',eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.95[orb_q_close_active]",
         
         f"[s_wp]scale=310:310,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.52[orb_s_wide_passive]",
-        f"[s_wa]scale=355:355,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.95[orb_s_wide_active]",
-        f"[s_ca]scale=550:550,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.95[orb_s_close_active]",
+        f"[s_wa]scale=eval=frame:w='355*(1.0 + 0.08*{voice_pulse_s}*{speech_mask_s})':h='355*(1.0 + 0.08*{voice_pulse_s}*{speech_mask_s})',eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.95[orb_s_wide_active]",
+        f"[s_ca]scale=eval=frame:w='550*(1.0 + 0.07*{voice_pulse_s}*{speech_mask_s})':h='550*(1.0 + 0.07*{voice_pulse_s}*{speech_mask_s})',eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.95[orb_s_close_active]",
         
         # 3. Render dynamic ambient glow backplates using the ultra-fast pre-scaled blur technique
-        f"[q_glow]scale=120:120,eq={eq_q},hue={hue_q},boxblur=24:3,scale=1080:1920,format=yuva420p,colorchannelmixer=aa=0.22[bg_glow_q]",
-        f"[s_glow]scale=120:120,eq={eq_s},hue={hue_s},boxblur=24:3,scale=1080:1920,format=yuva420p,colorchannelmixer=aa=0.22[bg_glow_s]",
+        f"[q_glow]scale=120:120,eq={eq_q},hue={hue_q},boxblur=24:3,scale=eval=frame:w='1080*(1.0 + 0.15*{voice_pulse_q}*{speech_mask_q})':h='1920*(1.0 + 0.15*{voice_pulse_q}*{speech_mask_q})',format=yuva420p,colorchannelmixer=aa=0.25[bg_glow_q]",
+        f"[s_glow]scale=120:120,eq={eq_s},hue={hue_s},boxblur=24:3,scale=eval=frame:w='1080*(1.0 + 0.15*{voice_pulse_s}*{speech_mask_s})':h='1920*(1.0 + 0.15*{voice_pulse_s}*{speech_mask_s})',format=yuva420p,colorchannelmixer=aa=0.25[bg_glow_s]",
         
         # 4. Apply background grading and overlay dynamic glows first to make the ambient background
         f"[0:v]eq=brightness=-0.01:contrast=1.05[bg_graded]",
