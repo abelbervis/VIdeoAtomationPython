@@ -454,14 +454,14 @@ def render_orb_test_preview(
     size: str = "medium",
     animation: str = "speaking",
     opacity: float = 0.95,
-    duration: float = 6.5,
+    duration: float = 12.0,
     output_path: Optional[Path] = None,
     width: int = 1080,
     height: int = 1920,
     bg_style: str = "cosmic",
     sample_audio: Optional[Path] = None,
 ) -> Path:
-    """Renders a fast preview video matching the reference bio-reactive orb."""
+    """Renders a stunning co-host conversation video with two bio-reactive orbs and dynamic camera cuts."""
     if output_path is None:
         out_dir = Path("output") / "orb_previews"
         out_dir.mkdir(parents=True, exist_ok=True)
@@ -470,32 +470,49 @@ def render_orb_test_preview(
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    print(f"\n🔮 [AI Presenter Tester] Generando vista previa del Orbe Bio-Reactivo...")
-    print(f"   • Paleta: '{palette}' | Opacidad: {opacity}")
-    print(f"   • Duración: {duration}s | Resolución: {width}x{height}")
+    print(f"\n🔮 [AI Co-Host Debate] Generando demo interactiva de Doble Orbe y Multi-Cámara...")
+    print(f"   • Orbe 1: Quantum (Azul Eléctrico) | Orbe 2: Solar (Ámbar Fuego)")
+    print(f"   • Duración: 12.0s | Resolución: {width}x{height} | 4 Cortes de Cámara")
 
-    orb_asset = get_or_create_orb_asset(palette=palette, force_refresh=True)
-    temp_test_audio: Optional[Path] = None
+    # Generate both assets
+    orb_quantum = get_or_create_orb_asset(palette="quantum", force_refresh=True)
+    orb_solar = get_or_create_orb_asset(palette="solar", force_refresh=True)
+
+    temp_test_audio: Optional[Path] = output_path.parent / "_temp_cohost_debate.mp3"
     resolved_audio: Optional[Path] = sample_audio
 
     if not resolved_audio:
-        temp_test_audio = output_path.parent / "_temp_test_voice_paused.mp3"
-        part1_path = output_path.parent / "_temp_part1.mp3"
-        part2_path = output_path.parent / "_temp_part2.mp3"
+        part1_path = output_path.parent / "_temp_q_part1.mp3"
+        part2_path = output_path.parent / "_temp_q_part2.mp3"
+        part3_path = output_path.parent / "_temp_s_part3.mp3"
         
-        from audio.tts import GoogleTTSProvider
-        g_tts = GoogleTTSProvider(language="es")
-        syn1 = g_tts.synthesize_text("NEXUS Orbe Bio Reactivo en acción.", part1_path)
-        syn2 = g_tts.synthesize_text("El universo expande sus fronteras sin límite.", part2_path)
+        from audio.tts import EdgeTTSProvider, GoogleTTSProvider
+        tts_q = EdgeTTSProvider(default_voice="es-ES-AlvaroNeural")
+        tts_s = EdgeTTSProvider(default_voice="es-ES-ElviraNeural")
         
-        if syn1 and syn2 and part1_path.exists() and part2_path.exists():
-            # Stitch part1 + 1.8s silence + part2 using FFmpeg
+        # Test a brief call to see if edge neural is online, else fallback
+        test_file = output_path.parent / "_test_probe.mp3"
+        if not tts_q.synthesize_text("Hola", test_file):
+            tts_q = GoogleTTSProvider(language="es")
+            tts_s = GoogleTTSProvider(language="es")
+        if test_file.exists():
+            test_file.unlink()
+
+        syn1 = tts_q.synthesize_text("Hola. Bienvenidos a este nuevo debate espacial cuántico.", part1_path)
+        syn2 = tts_q.synthesize_text("Hoy exploraremos los límites y misterios de la física cuántica.", part2_path)
+        syn3 = tts_s.synthesize_text("Excelente. Y yo aportaré la visión de la termodinámica solar.", part3_path)
+        
+        if syn1 and syn2 and syn3 and part1_path.exists() and part2_path.exists() and part3_path.exists():
+            # Stitch: 
+            # Part 1 starts at 0.0s (Quantum)
+            # Part 2 starts at 3.2s (Quantum)
+            # Part 3 starts at 6.2s (Solar)
             concat_cmd = [
                 "ffmpeg", "-y",
                 "-i", str(part1_path),
-                "-f", "lavfi", "-i", "anullsrc=r=24000:cl=mono:d=1.8",
                 "-i", str(part2_path),
-                "-filter_complex", "[0:a][1:a][2:a]concat=n=3:v=0:a=1[aout]",
+                "-i", str(part3_path),
+                "-filter_complex", "[0:a]adelay=0|0[a1];[1:a]adelay=3200|3200[a2];[2:a]adelay=6200|6200[a3];[a1][a2][a3]amix=inputs=3:dropout_transition=0[aout]",
                 "-map", "[aout]",
                 "-c:a", "libmp3lame",
                 str(temp_test_audio)
@@ -505,57 +522,84 @@ def render_orb_test_preview(
                 if temp_test_audio.exists():
                     resolved_audio = temp_test_audio
             except Exception as e:
-                print(f"  ⚠️ Test audio concat notice: {e}")
+                print(f"  ⚠️ Test co-host audio concat error: {e}")
                 resolved_audio = part1_path
             
-            for p in [part1_path, part2_path]:
+            for p in [part1_path, part2_path, part3_path]:
                 if p.exists():
                     try:
                         p.unlink()
                     except Exception:
                         pass
 
-    mgr = GradientOrbManager(
-        palette=palette,
-        position=position,
-        size=size,
-        opacity=opacity,
-        animation=animation,
-        audio_path=resolved_audio,
-        total_duration=duration,
-        intro_duration=max(1.5, duration * 0.35),
-    )
+    # Build advanced video filter chains for double overlays & scale changes (Virtual Camera)
+    # Quantum (Left) configuration & speech reactivity
+    voice_ripple_q = "(0.5 + 0.5 * sin(2*PI*t/0.38))"
+    speech_mask_q = "between(t,0,6.2)"
+    eq_q = f"brightness='-0.12 + (0.28 + 0.08*{voice_ripple_q})*{speech_mask_q}':contrast='0.80 + (0.35 + 0.15*{voice_ripple_q})*{speech_mask_q}'"
+    hue_q = f"h='(12 + 4*{voice_ripple_q})*{speech_mask_q} + 6*sin(2*PI*t/2.4)':s='0.75 + (0.45 + 0.20*{voice_ripple_q})*{speech_mask_q}'"
+    
+    # Solar (Right) configuration & speech reactivity
+    voice_ripple_s = "(0.5 + 0.5 * sin(2*PI*t/0.36))"
+    speech_mask_s = "between(t,6.2,9.7)"
+    eq_s = f"brightness='-0.12 + (0.28 + 0.08*{voice_ripple_s})*{speech_mask_s}':contrast='0.80 + (0.35 + 0.15*{voice_ripple_s})*{speech_mask_s}'"
+    hue_s = f"h='(12 + 4*{voice_ripple_s})*{speech_mask_s} + 6*sin(2*PI*t/2.4)':s='0.75 + (0.45 + 0.20*{voice_ripple_s})*{speech_mask_s}'"
 
-    orb_filter = mgr.build_filter_chain(
-        input_idx=1,
-        output_label="orb_layer",
-        video_width=width,
-        video_height=height,
-        fps=30
-    )
-    x_coord, y_coord = mgr.get_overlay_coordinates(width, height)
-    bg_input = f"color=c=0x0b0d14:s={width}x{height}:r=30:d={duration}"
+    # Organic floating drifts
+    drift_q_x = "14*sin(2*PI*t/3.6)"
+    drift_q_y = "18*sin(2*PI*t/2.4)"
+    drift_s_x = "14*sin(2*PI*t/3.2)"
+    drift_s_y = "18*sin(2*PI*t/2.8)"
+
+    bg_input = f"color=c=0x08090f:s={width}x{height}:r=30:d=12.0"
 
     filter_complex = [
-        orb_filter,
-        f"[0:v]eq=brightness=-0.02:contrast=1.05[bg_graded]",
-        f"[bg_graded][orb_layer]overlay=eval=frame:x='{x_coord}':y='{y_coord}':shortest=1[v_orb]",
-        f"[v_orb]drawtext=text='NEXUS - ORBE BIO REACTIVO':fontcolor=white:fontsize=36:box=1:boxcolor=black@0.65:boxborderw=12:x=(w-text_w)/2:y=180[vout]"
+        # 1. Split input streams to avoid dynamic resolution changes
+        "[1:v]split=2[q1][q2]",
+        "[2:v]split=2[s1][s2]",
+        
+        # 2. Process wide and close variations with static resolutions
+        f"[q1]scale=340:340,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.95[orb_q_wide]",
+        f"[q2]scale=550:550,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.95[orb_q_close]",
+        f"[s1]scale=340:340,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.95[orb_s_wide]",
+        f"[s2]scale=550:550,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.95[orb_s_close]",
+        
+        # 3. Apply background grading
+        f"[0:v]eq=brightness=-0.01:contrast=1.05[bg_graded]",
+        
+        # 4. Sequentially overlay using conditional enabling (enable parameter)
+        f"[bg_graded][orb_q_wide]overlay=eval=frame:x='W*0.25-w/2 + {drift_q_x}':y='H*0.42-h/2 + {drift_q_y}':enable='between(t,0,3.2)+between(t,9.2,12.0)'[v1]",
+        f"[v1][orb_s_wide]overlay=eval=frame:x='W*0.75-w/2 + {drift_s_x}':y='H*0.42-h/2 + {drift_s_y}':enable='between(t,0,3.2)+between(t,9.2,12.0)'[v2]",
+        f"[v2][orb_q_close]overlay=eval=frame:x='W/2-w/2 + {drift_q_x}':y='H*0.40-h/2 + {drift_q_y}':enable='between(t,3.2,6.2)'[v3]",
+        f"[v3][orb_s_close]overlay=eval=frame:x='W/2-w/2 + {drift_s_x}':y='H*0.40-h/2 + {drift_s_y}':enable='between(t,6.2,9.2)'[v4]",
+        
+        # 5. Camera Shot indicator text overlays (Top)
+        f"[v4]drawtext=text='TOMA 1\\: PLANO GENERAL (WIDE SHOT)':fontcolor=0x00f0ff:fontsize=32:fontfile=Arial:box=1:boxcolor=black@0.65:boxborderw=10:x=(w-text_w)/2:y=180:enable='between(t,0,3.2)'[sh1]",
+        f"[sh1]drawtext=text='TOMA 2\\: PRIMER PLANO (ORBE QUANTUM)':fontcolor=0x00f0ff:fontsize=32:fontfile=Arial:box=1:boxcolor=black@0.65:boxborderw=10:x=(w-text_w)/2:y=180:enable='between(t,3.2,6.2)'[sh2]",
+        f"[sh2]drawtext=text='TOMA 3\\: PRIMER PLANO (ORBE SOLAR)':fontcolor=0xffaa00:fontsize=32:fontfile=Arial:box=1:boxcolor=black@0.65:boxborderw=10:x=(w-text_w)/2:y=180:enable='between(t,6.2,9.2)'[sh3]",
+        f"[sh3]drawtext=text='TOMA 4\\: CONCLUSIONAL CO-HOST (WIDE)':fontcolor=white:fontsize=32:fontfile=Arial:box=1:boxcolor=black@0.65:boxborderw=10:x=(w-text_w)/2:y=180:enable='between(t,9.2,12.0)'[sh4]",
+
+        # 6. Subtitles dialogue overlays (Bottom)
+        f"[sh4]drawtext=text='Quantum\\: ¡Hola! Bienvenidos a este nuevo debate espacial.':fontcolor=0x00f0ff:fontsize=36:fontfile=Arial:box=1:boxcolor=black@0.75:boxborderw=12:x=(w-text_w)/2:y=h-240:enable='between(t,0,3.2)'[sub1]",
+        f"[sub1]drawtext=text='Quantum\\: Hoy exploraremos los limites y misterios de la fisica cuantica.':fontcolor=0x00f0ff:fontsize=36:fontfile=Arial:box=1:boxcolor=black@0.75:boxborderw=12:x=(w-text_w)/2:y=h-240:enable='between(t,3.2,6.2)'[sub2]",
+        f"[sub2]drawtext=text='Solar\\: ¡Excelente! Y yo aportare los secretos de la fisica solar.':fontcolor=0xffaa00:fontsize=36:fontfile=Arial:box=1:boxcolor=black@0.75:boxborderw=12:x=(w-text_w)/2:y=h-240:enable='between(t,6.2,9.7)'[sub3]",
+        f"[sub3]drawtext=text='[Ambos Orbes en Armonia y Resonancia]':fontcolor=white:fontsize=36:fontfile=Arial:box=1:boxcolor=black@0.75:boxborderw=12:x=(w-text_w)/2:y=h-240:enable='between(t,9.7,12.0)'[vout]"
     ]
     filter_str = ";".join(filter_complex)
 
     audio_input_args = []
     if resolved_audio and resolved_audio.exists():
         audio_input_args = ["-i", str(resolved_audio)]
-        audio_map = ["-map", "2:a"]
+        audio_map = ["-map", "3:a"]
     else:
         audio_input_args = ["-f", "lavfi", "-i", "anullsrc=r=44100:cl=stereo"]
-        audio_map = ["-map", "2:a"]
+        audio_map = ["-map", "3:a"]
 
     cmd = [
         "ffmpeg", "-y",
         "-f", "lavfi", "-i", bg_input,
-        "-stream_loop", "-1", "-i", str(orb_asset),
+        "-stream_loop", "-1", "-i", str(orb_quantum),
+        "-stream_loop", "-1", "-i", str(orb_solar),
         *audio_input_args,
         "-filter_complex", filter_str,
         "-map", "[vout]",
@@ -571,25 +615,9 @@ def render_orb_test_preview(
 
     try:
         subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    except subprocess.CalledProcessError:
-        fallback_filter = f"{orb_filter};[0:v]eq=brightness=-0.02:contrast=1.05[bg_graded];[bg_graded][orb_layer]overlay=eval=frame:x='{x_coord}':y='{y_coord}':shortest=1[vout]"
-        cmd_fallback = [
-            "ffmpeg", "-y",
-            "-f", "lavfi", "-i", bg_input,
-            "-stream_loop", "-1", "-i", str(orb_asset),
-            *audio_input_args,
-            "-filter_complex", fallback_filter,
-            "-map", "[vout]",
-            *audio_map,
-            "-c:v", "libx264",
-            "-preset", "ultrafast",
-            "-pix_fmt", "yuv420p",
-            "-c:a", "aac",
-            "-shortest",
-            "-movflags", "+faststart",
-            str(output_path)
-        ]
-        subprocess.run(cmd_fallback, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    except subprocess.CalledProcessError as e:
+        print(f"  ❌ FFmpeg render error: {e.stderr.decode('utf-8') if e.stderr else str(e)}")
+        raise e
     finally:
         if temp_test_audio and temp_test_audio.exists():
             try:
