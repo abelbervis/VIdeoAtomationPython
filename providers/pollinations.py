@@ -74,7 +74,8 @@ class PollinationsProvider:
         height: int = 1344,
         model: Optional[str] = None,
         seed: Optional[int] = None,
-        max_retries: int = 3
+        max_retries: int = 3,
+        timeout: int = 20
     ) -> bool:
         """
         Download generated image from Pollinations.ai API with backoff retry.
@@ -117,7 +118,7 @@ class PollinationsProvider:
                         headers["Authorization"] = f"Bearer {self.api_key}"
 
                     req = urllib.request.Request(url, headers=headers)
-                    with urllib.request.urlopen(req, timeout=25) as resp:
+                    with urllib.request.urlopen(req, timeout=timeout) as resp:
                         content_type = resp.headers.get("Content-Type", "").lower()
                         status = resp.status
 
