@@ -693,9 +693,10 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             if not words:
                 continue
 
-            # Group into punchy 2-3 word chunks
+            # Group into smooth, readable phrase chunks (3-4 words) for steady, non-jittery captions
+            max_words_per_cue = 4
             total_words = len(words)
-            chunk_size = max(1, min(max_words_per_cue, math.ceil(total_words / max(1, s_dur / 1.0))))
+            chunk_size = max(2, min(max_words_per_cue, math.ceil(total_words / max(1, s_dur / 1.2))))
             word_groups = [words[i:i + chunk_size] for i in range(0, total_words, chunk_size)]
             
             # Duration per chunk weighted by total characters in chunk
@@ -706,35 +707,16 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             for g_idx, grp in enumerate(word_groups):
                 grp_dur = (group_weights[g_idx] / tot_grp_weight) * s_dur
                 grp_end = min(s_end, cur_grp_start + grp_dur)
+                if g_idx == len(word_groups) - 1:
+                    grp_end = s_end
+
+                phrase_text = " ".join(grp)
+                # Smooth cinematic fade-in and gentle scale entrance for the phrase
+                full_line = f"{badge_str}{{\\fad(150,100)\\fscx97\\fscy97\\t(0,180,\\fscx100\\fscy100)}}{phrase_text}"
                 
-                # Active word timings inside the chunk
-                w_weights = [max(2, len(w)) for w in grp]
-                tot_w_weight = sum(w_weights)
-                cur_w_start = cur_grp_start
-
-                for w_idx, w in enumerate(grp):
-                    w_slice = (w_weights[w_idx] / tot_w_weight) * grp_dur
-                    w_end = min(grp_end, cur_w_start + w_slice)
-                    if w_idx == len(grp) - 1:
-                        w_end = grp_end
-
-                    # Smooth cinematic fade and gentle scale entrance on the first word of each cue
-                    pop_tag = r"{\fad(80,60)\fscx96\fscy96\t(0,100,\fscx100\fscy100)}" if w_idx == 0 else ""
-
-                    line_parts = []
-                    for j, other_w in enumerate(grp):
-                        if j == w_idx:
-                            # Highlight active word with smooth aura & subtle scale accent
-                            line_parts.append(rf"{{\c{hl_color}\b1\fscx106\fscy106}}{other_w}{{\r{style_name}}}")
-                        else:
-                            line_parts.append(other_w)
-
-                    full_line = f"{badge_str}{pop_tag}{' '.join(line_parts)}"
-                    f.write(
-                        f"Dialogue: 0,{format_timestamp_ass(cur_w_start)},{format_timestamp_ass(w_end)},{style_name},,0,0,0,,{full_line}\n"
-                    )
-                    cur_w_start = w_end
-
+                f.write(
+                    f"Dialogue: 0,{format_timestamp_ass(cur_grp_start)},{format_timestamp_ass(grp_end)},{style_name},,0,0,0,,{full_line}\n"
+                )
                 cur_grp_start = grp_end
 
     return output_path
