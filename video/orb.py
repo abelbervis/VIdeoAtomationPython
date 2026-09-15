@@ -556,25 +556,25 @@ def render_orb_test_preview(
     drift_s_resting_y = "5.0*sin(2*PI*t/2.8)"
 
     # Particle coordinates and spatial gaussian intensity models for floating cosmic dust (270x480 simulation canvas)
-    px1 = "w*(0.20+0.08*sin(t*0.3))"
-    py1 = "h*(0.25+0.10*cos(t*0.2))"
-    pv1 = f"exp(-((x-{px1})*(x-{px1})+(y-{py1})*(y-{py1}))/140)"
+    px1 = "W*(0.20+0.08*sin(t*0.3))"
+    py1 = "H*(0.25+0.10*cos(t*0.2))"
+    pv1 = f"exp(-((X-{px1})*(X-{px1})+(Y-{py1})*(Y-{py1}))/140)"
 
-    px2 = "w*(0.80+0.06*cos(t*0.4))"
-    py2 = "h*(0.65+0.08*sin(t*0.3))"
-    pv2 = f"exp(-((x-{px2})*(x-{px2})+(y-{py2})*(y-{py2}))/120)"
+    px2 = "W*(0.80+0.06*cos(t*0.4))"
+    py2 = "H*(0.65+0.08*sin(t*0.3))"
+    pv2 = f"exp(-((X-{px2})*(X-{px2})+(Y-{py2})*(Y-{py2}))/120)"
 
-    px3 = "w*(0.50+0.12*sin(t*0.2))"
-    py3 = "h*(0.40+0.12*cos(t*0.3))"
-    pv3 = f"exp(-((x-{px3})*(x-{px3})+(y-{py3})*(y-{py3}))/160)"
+    px3 = "W*(0.50+0.12*sin(t*0.2))"
+    py3 = "H*(0.40+0.12*cos(t*0.3))"
+    pv3 = f"exp(-((X-{px3})*(X-{px3})+(Y-{py3})*(Y-{py3}))/160)"
 
-    px4 = "w*(0.30+0.05*cos(t*0.5))"
-    py4 = "h*(0.80+0.08*sin(t*0.4))"
-    pv4 = f"exp(-((x-{px4})*(x-{px4})+(y-{py4})*(y-{py4}))/100)"
+    px4 = "W*(0.30+0.05*cos(t*0.5))"
+    py4 = "H*(0.80+0.08*sin(t*0.4))"
+    pv4 = f"exp(-((X-{px4})*(X-{px4})+(Y-{py4})*(Y-{py4}))/100)"
 
-    px5 = "w*(0.75+0.08*sin(t*0.35))"
-    py5 = "h*(0.15+0.07*cos(t*0.45))"
-    pv5 = f"exp(-((x-{px5})*(x-{px5})+(y-{py5})*(y-{py5}))/110)"
+    px5 = "W*(0.75+0.08*sin(t*0.35))"
+    py5 = "H*(0.15+0.07*cos(t*0.45))"
+    pv5 = f"exp(-((X-{px5})*(X-{px5})+(Y-{py5})*(Y-{py5}))/110)"
 
     bg_input = f"color=c=0x08090f:s={width}x{height}:r=30:d=12.0"
 
