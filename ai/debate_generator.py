@@ -40,7 +40,7 @@ MANDATORY SCRIPT STRUCTURE (EXACTLY 4 SEGMENTS, ~12.0 SECONDS TOTAL):
 - Scene 1 (0.0s - 3.2s) [QUANTUM - Wide Shot]: Quantum delivers an electrifying opening hook and initial premise in 12-16 words max.
 - Scene 2 (3.2s - 6.2s) [QUANTUM - Close Up]: Quantum delivers the mind-bending technical paradox or proof in 12-16 words max.
 - Scene 3 (6.2s - 9.2s) [SOLAR - Close Up]: Solar counters with a devastating astrophysical counter-argument in 12-16 words max.
-- Scene 4 (9.2s - 12.0s) [AMBOS - Wide Shot Harmonic]: Both orbs enter resonance; dialogue indicator "[Ambos Orbes en Resonancia Cósmica]".
+- Scene 4 (9.2s - 12.0s) [AMBOS - Wide Shot Harmonic Resonance]: Both orbs enter harmonic resonance. Scene 4 text must be an engaging closing call-to-action / question to the viewer (e.g. "¿Simulación cuántica o realidad estelar? Comenta tu veredicto ⬇️").
 
 HOLOGRAPHIC DATA CARDS:
 Provide 2 ultra-compact, high-tech holographic HUD data cards:
@@ -88,7 +88,7 @@ Respond ONLY with valid JSON matching this schema:
     {
       "speaker": "Ambos",
       "entity": "both",
-      "text": "[Ambos Orbes en Resonancia Cósmica]",
+      "text": "¿Cuál teoría explica la realidad? Comenta tu veredicto ⬇️",
       "shot": "wide",
       "duration": 2.3
     }
@@ -347,6 +347,13 @@ class DebateScriptGenerator:
                         "text": "Fascinante postulado, pero la furia termodinámica de una supernova no es un simple algoritmo.",
                         "shot": "close_solar",
                         "duration": 3.5
+                    },
+                    {
+                        "speaker": "Ambos",
+                        "entity": "both",
+                        "text": "¿Simulación cuántica o realidad estelar? Comenta tu veredicto ⬇️",
+                        "shot": "wide",
+                        "duration": 2.5
                     }
                 ]
             }
@@ -387,6 +394,13 @@ class DebateScriptGenerator:
                         "text": "El cálculo no es suficiente: la emoción y la intuición humana nacen del fuego de la evolución.",
                         "shot": "close_solar",
                         "duration": 3.5
+                    },
+                    {
+                        "speaker": "Ambos",
+                        "entity": "both",
+                        "text": "¿Quién ganará el futuro? Elige tu postura en los comentarios ⬇️",
+                        "shot": "wide",
+                        "duration": 2.5
                     }
                 ]
             }
@@ -429,6 +443,13 @@ class DebateScriptGenerator:
                         "text": "Sin embargo, es la energía masiva de las estrellas la que manifiesta la realidad que contemplamos.",
                         "shot": "close_solar",
                         "duration": 3.5
+                    },
+                    {
+                        "speaker": "Ambos",
+                        "entity": "both",
+                        "text": "¿Cuál teoría explica la verdad? Deja tu voto abajo ⬇️",
+                        "shot": "wide",
+                        "duration": 2.5
                     }
                 ]
             }

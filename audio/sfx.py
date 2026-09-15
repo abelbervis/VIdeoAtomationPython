@@ -184,7 +184,7 @@ def synthesize_camera_servo_sfx(
             val = (sub_osc + dark_resonance) * env
             l_val, r_val = val, val
 
-        elif sfx_type == "solar_flare":
+        elif sfx_type in ("solar_flare", "flare"):
             # Blazing Solar Flare Stinger
             env = min(1.0, sec / 0.08) * math.exp(-t * 2.6)
             flare_f = 750.0 + 350.0 * math.sin(2.0 * math.pi * 6.0 * sec)
@@ -192,6 +192,17 @@ def synthesize_camera_servo_sfx(
             heat_noise = 0.35 * random.uniform(-1.0, 1.0)
             val = (flare_osc + heat_noise) * env
             l_val, r_val = val, val
+
+        elif sfx_type in ("cosmic_resonance", "verdict_chime"):
+            # Resonant Dual Harmonic Cosmic Bell / Stinger (Sub-bass + Cyan Chime + Solar Brass)
+            env = min(1.0, sec / 0.06) * math.exp(-t * 2.1)
+            sub_base = 0.55 * math.sin(2.0 * math.pi * 55.0 * sec) + 0.25 * math.sin(2.0 * math.pi * 110.0 * sec)
+            cyan_crystal = 0.28 * math.sin(2.0 * math.pi * 880.0 * sec) * math.exp(-t * 3.2) + 0.18 * math.sin(2.0 * math.pi * 1320.0 * sec) * math.exp(-t * 4.0)
+            solar_plasma = 0.28 * math.sin(2.0 * math.pi * 440.0 * sec) * math.exp(-t * 2.8) + 0.16 * math.sin(2.0 * math.pi * 660.0 * sec) * math.exp(-t * 3.5)
+            harmonic_shimmer = 0.12 * math.sin(2.0 * math.pi * 1760.0 * sec + math.sin(2.0 * math.pi * 8.0 * sec))
+            val = (sub_base + cyan_crystal + solar_plasma + harmonic_shimmer) * env
+            l_val = val * (0.8 + 0.2 * math.sin(2.0 * math.pi * 2.0 * sec))
+            r_val = val * (0.8 - 0.2 * math.sin(2.0 * math.pi * 2.0 * sec))
 
         else:
             env = math.exp(-t * 3.0)

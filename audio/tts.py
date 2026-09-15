@@ -159,24 +159,12 @@ def build_cell_double_tracking_filter(
 
 def prepare_cosmic_pacing_text(text: str) -> str:
     """
-    Inserts psychophysical micro-pauses before key concepts to create a measured,
-    ancient intelligence cadence rather than rapid robotic TTS delivery.
+    Cleans and normalizes text for natural, authoritative speech cadence without artificial long pauses.
     """
-    replacements = {
-        " cuántica": "... cuántica",
-        "cuántica": "cuántica",
-        " universo": "... universo",
-        " espacio": "... espacio",
-        " tiempo": "... tiempo",
-        " partículas": "... partículas",
-        " energía": "... energía",
-        " misterios": "... misterios",
-    }
-    processed = text
-    for target, rep in replacements.items():
-        if target in processed and not processed.startswith("..."):
-            processed = processed.replace(target, rep, 1)
-    return processed
+    clean = text.strip()
+    # Ensure natural comma spacing without awkward multi-dot pauses
+    clean = clean.replace("...", ",").replace("..", ".")
+    return clean
 
 
 
