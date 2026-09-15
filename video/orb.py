@@ -134,25 +134,25 @@ ORB_PALETTES: Dict[str, Dict[str, Any]] = {
     },
     "solar": {
         "name": "Solar Bio-Reactive",
-        "description": "Incandescent solar amber sphere, golden flare highlight, radiant orange aura",
-        "body_c0": "#fff176",     # Bright Solar Gold
-        "body_c1": "#ffc107",     # Amber Gold
-        "body_c2": "#ff9800",     # Solar Orange
-        "body_c3": "#f57c00",     # Deep Flame
-        "body_c4": "#e65100",     # Fiery Crimson Rim
-        "body_c5": "#2a0800",     # Dark Solar Edge
-        "spot1_core": "#ffffff",  # Incandescent White
-        "spot1_glow": "#ffe082",  # Solar Warm Flare
-        "spot1_outer": "#ffb74d", # Amber Glow
-        "spot2_core": "#ffd54f",  # Secondary Warm Gold Flare
-        "spot2_mid": "#ff9800",
-        "spot2_outer": "#e65100",
-        "aura_inner": "#ff9800",  # Intense Solar Orange Aura
-        "aura_mid": "#f57c00",
-        "aura_outer": "#d84315",
-        "aura_bright": "#ffe082",
+        "description": "Incandescent solar gold sphere, rose-coral flare highlights, radiant ruby/amber aura",
+        "body_c0": "#ffea00",     # Electric Solar Gold
+        "body_c1": "#ff9100",     # Amber Flare
+        "body_c2": "#ff3d00",     # Fiery Orange-Red
+        "body_c3": "#d50000",     # Deep Ruby Crimson
+        "body_c4": "#c2185b",     # Magenta Rose Rim
+        "body_c5": "#2a0010",     # Deep Cosmic Dark
+        "spot1_core": "#ffffff",  # Pure Incandescent Core
+        "spot1_glow": "#ff80ab",  # Neon Coral/Rose Flare
+        "spot1_outer": "#ff4081", # Hot Pink / Solar Magenta Edge
+        "spot2_core": "#ffea00",  # Electric Solar Gold Flare
+        "spot2_mid": "#ff9100",   # Amber Mid
+        "spot2_outer": "#ff3d00",  # Flame Edge
+        "aura_inner": "#ff1744",  # Electric Crimson/Rose Aura
+        "aura_mid": "#d50000",   # Ruby Deep Aura
+        "aura_outer": "#ff6d00",  # Solar Amber Outer Aura
+        "aura_bright": "#ff80ab", # Neon Rose Bright Core
         "ring_stroke": "#ffd54f", # Radiant Gold Ring
-        "rim_stroke": "#ff6d00",
+        "rim_stroke": "#ff4081",  # Hot Pink/Rose Rim Accent
     }
 }
 
