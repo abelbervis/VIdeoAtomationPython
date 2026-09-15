@@ -75,6 +75,7 @@ def main():
             gemini_key=getattr(args, "gemini_key", None),
             groq_key=getattr(args, "groq_key", None),
             openai_key=getattr(args, "openai_key", None),
+            enable_review=getattr(args, "review", True),
         )
         if res_video is None:
             print("\n❌ [Debate Express] El proceso se detuvo sin renderizar video debido a la ausencia de guion de IA.")

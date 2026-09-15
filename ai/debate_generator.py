@@ -13,6 +13,8 @@ import urllib.error
 from pathlib import Path
 from typing import Dict, Any, Optional, Tuple
 
+from ai.orb_reviewer import OrbScriptReviewer
+
 from config import (
     BASE_DIR,
     GEMINI_API_KEY,
@@ -125,6 +127,7 @@ class DebateScriptGenerator:
         groq_key: Optional[str] = None,
         openai_key: Optional[str] = None,
         preferred_provider: str = LLM_PROVIDER,
+        enable_review: bool = True,
     ):
         raw_gemini = gemini_key if gemini_key is not None else GEMINI_API_KEY
         raw_groq = groq_key if groq_key is not None else GROQ_API_KEY
@@ -134,6 +137,14 @@ class DebateScriptGenerator:
         self.groq_key = sanitize_env_value(raw_groq)
         self.openai_key = sanitize_env_value(raw_openai)
         self.provider = (sanitize_env_value(preferred_provider) or "auto").lower()
+        self.enable_review = enable_review
+
+        self.reviewer = OrbScriptReviewer(
+            gemini_key=self.gemini_key,
+            openai_key=self.openai_key,
+            groq_key=self.groq_key,
+            preferred_provider=self.provider
+        )
 
     def _is_valid_key(self, key: str) -> bool:
         if not key or len(key) < 15:
@@ -162,38 +173,39 @@ class DebateScriptGenerator:
             providers = ["groq", "gemini", "openai"]
 
         for prov in providers:
+            script = None
             if prov == "groq" and self._is_valid_key(self.groq_key):
                 try:
                     print("  ⚡ Solicitando guion de debate a Groq LPU (llama-3.3-70b-versatile)...")
                     script = self._call_groq(clean_topic, language)
-                    if script and self._validate_debate_script(script):
-                        print(f"  ✨ Guion de debate generado con éxito por Groq!")
-                        return script
                 except Exception as e:
                     print(f"  ⚠️ Groq debate generation error: {e}")
             elif prov == "gemini" and self._is_valid_key(self.gemini_key):
                 try:
                     print("  ⚡ Solicitando guion de debate a Google Gemini...")
                     script = self._call_gemini(clean_topic, language)
-                    if script and self._validate_debate_script(script):
-                        print(f"  ✨ Guion de debate generado con éxito por Gemini!")
-                        return script
                 except Exception as e:
                     print(f"  ⚠️ Gemini debate generation error: {e}")
             elif prov == "openai" and self._is_valid_key(self.openai_key):
                 try:
                     print("  ⚡ Solicitando guion de debate a OpenAI (gpt-4o-mini)...")
                     script = self._call_openai(clean_topic, language)
-                    if script and self._validate_debate_script(script):
-                        print(f"  ✨ Guion de debate generado con éxito por OpenAI!")
-                        return script
                 except Exception as e:
                     print(f"  ⚠️ OpenAI debate generation error: {e}")
+
+            if script and self._validate_debate_script(script):
+                print(f"  ✨ Guion de debate generado con éxito por {prov.upper()}!")
+                if self.enable_review:
+                    script = self.reviewer.review(script)
+                return script
 
         # If fallback is explicitly allowed
         if allow_fallback:
             print("  🛰️ Generando guion dialéctico con el motor científico especializado (Fallback)...")
-            return self._generate_scientific_fallback(clean_topic, language)
+            script = self._generate_scientific_fallback(clean_topic, language)
+            if script and self.enable_review:
+                script = self.reviewer.review(script)
+            return script
 
         print("\n❌ [Debate Express AI] No se pudo generar el guion con ninguno de los proveedores de IA configurados.")
         print("   💡 Verifica que tu GROQ_API_KEY o GEMINI_API_KEY esté configurada en el archivo .env o pásala vía CLI (--groq-key / --gemini-key).")

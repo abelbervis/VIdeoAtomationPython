@@ -483,6 +483,7 @@ def render_orb_test_preview(
     gemini_key: Optional[str] = None,
     groq_key: Optional[str] = None,
     openai_key: Optional[str] = None,
+    enable_review: bool = True,
 ) -> Optional[Path]:
     """Renders a stunning co-host conversation video with two bio-reactive orbs and dynamic camera cuts."""
     # 1. If topic is provided and debate_script is not provided, generate with AI
@@ -492,7 +493,8 @@ def render_orb_test_preview(
             preferred_provider=llm_provider,
             gemini_key=gemini_key,
             groq_key=groq_key,
-            openai_key=openai_key
+            openai_key=openai_key,
+            enable_review=enable_review
         )
         debate_script = gen.generate(topic, language="es", allow_fallback=False)
         if not debate_script:
