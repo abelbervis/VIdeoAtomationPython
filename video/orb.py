@@ -173,38 +173,57 @@ def generate_animated_orb_loop(
     frames_dir.mkdir(parents=True, exist_ok=True)
 
     c = canvas_size // 2
-    r_sphere = int(canvas_size * 0.28)
-    r_aura_base = int(canvas_size * 0.42)
+    r_sphere = int(canvas_size * 0.27)
+    r_aura_outer_base = int(canvas_size * 0.48)
+    r_aura_inner_base = int(canvas_size * 0.38)
+    r_ring_base = int(r_sphere * 1.18)
 
     try:
         for i in range(loop_frames):
             t = i / loop_frames
             tau = 2 * math.pi * t
 
-            # Breathing movement for core light spot
+            # 1. Concentric surrounding ring expands and contracts (+/- 6.5px breathing)
+            ring_r = int(r_ring_base + 6.5 * math.sin(tau))
+            ring_r_outer_glow = ring_r + 4
+
+            # 2. Rich atmospheric volumetric aura swells (+/- 14px)
+            r_aura_outer = int(r_aura_outer_base + 14 * math.sin(tau))
+            r_aura_inner = int(r_aura_inner_base + 10 * math.sin(tau))
+
+            # 3. Core light spot breathing
             spot_x = int(c - r_sphere * 0.32 + 10 * math.sin(tau))
             spot_y = int(c - r_sphere * 0.28 + 8 * math.cos(tau))
-            spot_rx = int(r_sphere * 0.52 + 6 * math.sin(2 * tau))
-            spot_ry = int(r_sphere * 0.48 + 5 * math.cos(2 * tau))
-            r_aura = int(r_aura_base + 8 * math.sin(tau))
+            spot_rx = int(r_sphere * 0.52 + 7 * math.sin(2 * tau))
+            spot_ry = int(r_sphere * 0.48 + 6 * math.cos(2 * tau))
 
             svg = f"""<svg width="{canvas_size}" height="{canvas_size}" viewBox="0 0 {canvas_size} {canvas_size}" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <filter id="auraGlow_{i}" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="16" />
+    <filter id="auraGlowDeep_{i}" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="30" />
+    </filter>
+    <filter id="auraGlowMid_{i}" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="18" />
     </filter>
     <filter id="coreBlur_{i}" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="12" />
+      <feGaussianBlur stdDeviation="11" />
     </filter>
-    <filter id="ringGlow_{i}" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="6" />
+    <filter id="ringGlow_{i}" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="8" />
     </filter>
 
-    <!-- Outer Soft Neon Aura -->
-    <radialGradient id="outerAura_{i}" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="{palette['aura_inner']}" stop-opacity="0.85" />
-      <stop offset="50%" stop-color="{palette['aura_mid']}" stop-opacity="0.45" />
-      <stop offset="80%" stop-color="{palette['aura_outer']}" stop-opacity="0.12" />
+    <!-- Expansive Multi-Stop Atmospheric Neon Volumetric Aura -->
+    <radialGradient id="outerAuraDeep_{i}" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="{palette['aura_inner']}" stop-opacity="0.95" />
+      <stop offset="35%" stop-color="{palette['aura_mid']}" stop-opacity="0.75" />
+      <stop offset="68%" stop-color="{palette['aura_outer']}" stop-opacity="0.38" />
+      <stop offset="88%" stop-color="#3b82f6" stop-opacity="0.15" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.0" />
+    </radialGradient>
+
+    <radialGradient id="innerAuraBright_{i}" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#c084fc" stop-opacity="0.90" />
+      <stop offset="45%" stop-color="{palette['aura_inner']}" stop-opacity="0.60" />
       <stop offset="100%" stop-color="#000000" stop-opacity="0.0" />
     </radialGradient>
 
@@ -219,24 +238,25 @@ def generate_animated_orb_loop(
     <!-- Off-Center Light Spot (White Center to Pink/Purple Glow) -->
     <radialGradient id="lightSpot_{i}" cx="50%" cy="50%" r="50%">
       <stop offset="0%" stop-color="{palette['spot_core']}" stop-opacity="1.0" />
-      <stop offset="28%" stop-color="{palette['spot_glow']}" stop-opacity="0.92" />
-      <stop offset="65%" stop-color="{palette['spot_outer']}" stop-opacity="0.55" />
+      <stop offset="28%" stop-color="{palette['spot_glow']}" stop-opacity="0.95" />
+      <stop offset="65%" stop-color="{palette['spot_outer']}" stop-opacity="0.60" />
       <stop offset="100%" stop-color="{palette['body_center']}" stop-opacity="0.0" />
     </radialGradient>
   </defs>
 
-  <!-- 1. Soft Atmospheric Neon Glow -->
-  <circle cx="{c}" cy="{c}" r="{r_aura}" fill="url(#outerAura_{i})" />
+  <!-- 1. Rich Atmospheric Neon Bloom (Deep + Mid Layered Aura) -->
+  <circle cx="{c}" cy="{c}" r="{r_aura_outer}" fill="url(#outerAuraDeep_{i})" filter="url(#auraGlowDeep_{i})" />
+  <circle cx="{c}" cy="{c}" r="{r_aura_inner}" fill="url(#innerAuraBright_{i})" filter="url(#auraGlowMid_{i})" />
 
-  <!-- 2. Concentric Outer Glowing Ring -->
-  <circle cx="{c}" cy="{c}" r="{r_sphere + 7}" fill="none" stroke="{palette['aura_inner']}" stroke-width="5" opacity="0.80" filter="url(#ringGlow_{i})" />
-  <circle cx="{c}" cy="{c}" r="{r_sphere + 4}" fill="none" stroke="{palette['ring_stroke']}" stroke-width="2.5" opacity="0.90" />
+  <!-- 2. Concentric Surrounding Ring (Expanding and Contracting Subtly) -->
+  <circle cx="{c}" cy="{c}" r="{ring_r_outer_glow}" fill="none" stroke="{palette['aura_inner']}" stroke-width="7" opacity="0.85" filter="url(#ringGlow_{i})" />
+  <circle cx="{c}" cy="{c}" r="{ring_r}" fill="none" stroke="{palette['ring_stroke']}" stroke-width="2.8" opacity="0.95" />
 
   <!-- 3. Sphere Body -->
   <circle cx="{c}" cy="{c}" r="{r_sphere}" fill="url(#sphereBody_{i})" />
 
   <!-- 4. Inner Concentric Rim Light -->
-  <circle cx="{c}" cy="{c}" r="{r_sphere - 2}" fill="none" stroke="{palette['aura_inner']}" stroke-width="3" opacity="0.65" />
+  <circle cx="{c}" cy="{c}" r="{r_sphere - 2}" fill="none" stroke="{palette['aura_inner']}" stroke-width="3" opacity="0.70" />
 
   <!-- 5. Bioluminescent Core Light Spot -->
   <ellipse cx="{spot_x}" cy="{spot_y}" rx="{spot_rx}" ry="{spot_ry}" fill="url(#lightSpot_{i})" filter="url(#coreBlur_{i})" />
