@@ -555,6 +555,27 @@ def render_orb_test_preview(
     drift_s_resting_x = "4.0*sin(2*PI*t/3.2)"
     drift_s_resting_y = "5.0*sin(2*PI*t/2.8)"
 
+    # Particle coordinates and spatial gaussian intensity models for floating cosmic dust (270x480 simulation canvas)
+    px1 = "w*(0.20+0.08*sin(t*0.3))"
+    py1 = "h*(0.25+0.10*cos(t*0.2))"
+    pv1 = f"exp(-((x-{px1})*(x-{px1})+(y-{py1})*(y-{py1}))/140)"
+
+    px2 = "w*(0.80+0.06*cos(t*0.4))"
+    py2 = "h*(0.65+0.08*sin(t*0.3))"
+    pv2 = f"exp(-((x-{px2})*(x-{px2})+(y-{py2})*(y-{py2}))/120)"
+
+    px3 = "w*(0.50+0.12*sin(t*0.2))"
+    py3 = "h*(0.40+0.12*cos(t*0.3))"
+    pv3 = f"exp(-((x-{px3})*(x-{px3})+(y-{py3})*(y-{py3}))/160)"
+
+    px4 = "w*(0.30+0.05*cos(t*0.5))"
+    py4 = "h*(0.80+0.08*sin(t*0.4))"
+    pv4 = f"exp(-((x-{px4})*(x-{px4})+(y-{py4})*(y-{py4}))/100)"
+
+    px5 = "w*(0.75+0.08*sin(t*0.35))"
+    py5 = "h*(0.15+0.07*cos(t*0.45))"
+    pv5 = f"exp(-((x-{px5})*(x-{px5})+(y-{py5})*(y-{py5}))/110)"
+
     bg_input = f"color=c=0x08090f:s={width}x{height}:r=30:d=12.0"
 
     filter_complex = [
@@ -575,12 +596,16 @@ def render_orb_test_preview(
         f"[q_glow]scale=120:120,eq={eq_q},hue={hue_q},boxblur=24:3,scale=1080:1920,format=yuva420p,colorchannelmixer=aa=0.22[bg_glow_q]",
         f"[s_glow]scale=120:120,eq={eq_s},hue={hue_s},boxblur=24:3,scale=1080:1920,format=yuva420p,colorchannelmixer=aa=0.22[bg_glow_s]",
         
-        # 4. Apply background grading and overlay dynamic glows first to make the ambient background
+        # 4. Synthesize 5 slow-floating glowing cosmic dust particles in real-time (Pre-scaled for smooth organic bokeh blur)
+        f"nullsrc=s=270x480:r=30:d=12.0,format=yuva420p,geq=r='({pv1})*200+({pv2})*80+({pv3})*255+({pv4})*240+({pv5})*140':g='({pv1})*150+({pv2})*180+({pv3})*245+({pv4})*120+({pv5})*100':b='({pv1})*100+({pv2})*255+({pv3})*200+({pv4})*40+({pv5})*220':a='(({pv1})+({pv2})+({pv3})+({pv4})+({pv5}))*130',scale=1080:1920[ambient_dust]",
+
+        # 5. Apply background grading and overlay dynamic glows + floating stardust particles
         f"[0:v]eq=brightness=-0.01:contrast=1.05[bg_graded]",
         f"[bg_graded][bg_glow_q]overlay=eval=frame:enable='between(t,0,6.2)'[bg_glowed_1]",
-        f"[bg_glowed_1][bg_glow_s]overlay=eval=frame:enable='between(t,6.2,12.0)'[bg_ambient]",
+        f"[bg_glowed_1][bg_glow_s]overlay=eval=frame:enable='between(t,6.2,12.0)'[bg_glowed_2]",
+        f"[bg_glowed_2][ambient_dust]overlay=eval=frame[bg_ambient]",
         
-        # 5. Sequentially overlay the foreground orbs using conditional enabling (enable parameter) and matching drifts
+        # 6. Sequentially overlay the foreground orbs using conditional enabling (enable parameter) and matching drifts
         # Toma 1 (0-3.2s): Wide Shot. Quantum active takes stage (Z-forward). Solar passive leans left towards Quantum (Z-back + leaning offset)
         f"[bg_ambient][orb_q_wide_active]overlay=eval=frame:x='W*0.25-w/2 + {drift_q_active_x}':y='H*0.42-h/2 + {drift_q_active_y}':enable='between(t,0,3.2)'[v1]",
         f"[v1][orb_s_wide_passive]overlay=eval=frame:x='W*0.75-w/2 - 28 + {drift_s_resting_x}':y='H*0.43-h/2 + {drift_s_resting_y}':enable='between(t,0,3.2)'[v2]",
