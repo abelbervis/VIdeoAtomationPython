@@ -53,46 +53,106 @@ COSMIC_VOICE_PROFILES = {
 }
 
 
+def detect_speech_impact_intensity(text: str) -> Tuple[bool, float, str]:
+    """
+    Analyzes text to detect questions, exclamations, and high-impact cosmic concepts.
+    Returns:
+      - is_impact: bool (True for emphasis/questions/hooks/revelations)
+      - intensity: float (0.0 for subtle narration up to 1.0 for high impact)
+      - reason: str description of triggered pattern
+    """
+    clean = text.strip()
+    
+    # 1. Direct Questions & Inquiries (Highest cosmic impact: "¿Qué pasaría si...?", "¿Cómo es posible...?")
+    if "¿" in clean or "?" in clean:
+        return True, 0.85, "cosmic_question"
+    
+    # 2. Exclamations, Greetings & Direct Audience Hooks ("¡Hola!", "¡Increíble!", "¡Atención!")
+    if "¡" in clean or "!" in clean:
+        return True, 0.90, "cosmic_exclamation"
+        
+    # 3. High Impact Turning Points & Climax Concepts (Requires strong cosmic disruption words)
+    high_impact_tokens = [
+        "paradoja", "singularidad", "colapso", "destrucción", 
+        "agujero negro", "horizonte de sucesos", "big bang", "antimateria",
+        "multiverso", "apocalipsis", "cataclismo", "imposible", "revelación"
+    ]
+    lower = clean.lower()
+    matched_high = [kw for kw in high_impact_tokens if kw in lower]
+    if matched_high:
+        return True, 0.80, f"climax_concept:{matched_high[0]}"
+        
+    # 4. Standard measured narration (e.g. explanations, descriptions, neutral sentences)
+    # The double voice stays active permanently as a subtle, organic acoustic presence (-13.5dB)
+    return False, 0.15, "standard_narration"
+
+
 def build_cell_double_tracking_filter(
     entity: str,
-    delay_ms: int = 15,
-    double_vol_db: float = -11.0,
-    detune_semitones: float = -0.35
+    delay_ms: Optional[int] = None,
+    double_vol_db: Optional[float] = None,
+    detune_semitones: Optional[float] = None,
+    is_impact: bool = False,
+    impact_intensity: float = 0.5
 ) -> str:
     """
-    Generates a clean, artifact-free FFmpeg filtergraph for DBZ Cell-style Double Tracking.
-    Duplicates the lead Edge-TTS voice with:
-      1. Micro-delay (10-20ms) for supernatural presence without discrete echo.
-      2. Direct -10 to -12 dB attenuation so it acts purely as resonance.
-      3. Subtle pitch detune via rubberband (no atempo artifacts or robotic speedups).
-      4. Targeted acoustic EQ: Quantum (deep fundamental resonance) vs Solar (plasma shimmer).
+    Generates an adaptive, artifact-free FFmpeg filtergraph for DBZ Cell-style Double Tracking.
+    
+    Adaptive Architecture:
+      - SUTILEZA NARRATIVA: Durante la narración continua, la voz secundaria permanece en
+        -13.0 a -14.0 dB con micro-retardo de 10-14ms, percibida como una textura orgánica íntima.
+      - IMPACTO / PREGUNTAS: Cuando se detectan signos de interrogación/exclamación o conceptos
+        clave, sube de manera controlada a -8.0 a -9.5 dB con micro-retardo de 16-22ms (Efecto Haas 3D),
+        desplegando una resonancia estéreo omnipotente sin generar eco discreto.
+      - 3D HAAS STEREO EXPANSION: La voz secundaria se abre binauralmente (L/R desfasados),
+        mientras la voz líder se mantiene centrada al 100% para máxima nitidez y comprensión.
     """
-    pitch_scale = 2.0 ** (detune_semitones / 12.0)
-    vol_factor = 10.0 ** (double_vol_db / 20.0)
     tag = "q" if "quantum" in entity.lower() else "s"
     
+    # Adaptive parameter resolution based on impact intensity
     if "quantum" in entity.lower():
-        # Quantum: Ominous, multi-layered consciousness resonance (Cell Latino style)
+        # Quantum: Sub-armónicos, misterio del vacío, pitch descendente
+        default_delay_l = int(12 + (18 - 12) * impact_intensity) if delay_ms is None else delay_ms
+        default_delay_r = int(16 + (24 - 16) * impact_intensity) if delay_ms is None else int(delay_ms * 1.3)
+        default_vol_db = (-13.5 + (5.5 * impact_intensity)) if double_vol_db is None else double_vol_db
+        default_detune = (-0.30 - (0.25 * impact_intensity)) if detune_semitones is None else detune_semitones
+        
+        pitch_scale = 2.0 ** (default_detune / 12.0)
+        vol_factor = 10.0 ** (default_vol_db / 20.0)
+        
         filter_graph = (
-            f"[0:a]asplit=2[lead_{tag}][raw_clone_{tag}];"
-            f"[raw_clone_{tag}]adelay={delay_ms}|{delay_ms},"
-            f"rubberband=pitch={pitch_scale:.4f},"
-            f"equalizer=f=180:width_type=h:width=80:g=2.5,"
-            f"volume={vol_factor:.3f}[clone_{tag}];"
-            f"[lead_{tag}][clone_{tag}]amix=inputs=2:weights=1.0 1.0:normalize=0:duration=first[mixed_{tag}];"
-            f"[mixed_{tag}]highpass=f=75,equalizer=f=3200:width_type=h:width=1200:g=1.5,volume=1.8[out_{tag}]"
+            f"[0:a]aformat=channel_layouts=stereo[lead_{tag}];"
+            f"[0:a]asplit=2[c_l_{tag}][c_r_{tag}];"
+            f"[c_l_{tag}]adelay={default_delay_l}|0,rubberband=pitch={pitch_scale:.4f},"
+            f"equalizer=f=180:width_type=h:width=80:g=2.5,lowpass=f=2800[clone_l_{tag}];"
+            f"[c_r_{tag}]adelay=0|{default_delay_r},rubberband=pitch={pitch_scale:.4f},"
+            f"equalizer=f=180:width_type=h:width=80:g=2.5,lowpass=f=2800[clone_r_{tag}];"
+            f"[clone_l_{tag}][clone_r_{tag}]join=inputs=2:channel_layout=stereo,volume={vol_factor:.3f}[clone_stereo_{tag}];"
+            f"[lead_{tag}][clone_stereo_{tag}]amix=inputs=2:weights=1.0 1.0:normalize=0:duration=first[mix_{tag}];"
+            f"[mix_{tag}]highpass=f=75,equalizer=f=3200:width_type=h:width=1200:g=1.5,volume=1.8[out_{tag}]"
         )
     else:
-        # Solar: Radiant, energetic plasma vibration resonance
+        # Solar: Plasma armónico estelar, brillo energético, pitch ascendente
+        default_delay_l = int(10 + (16 - 10) * impact_intensity) if delay_ms is None else delay_ms
+        default_delay_r = int(14 + (22 - 14) * impact_intensity) if delay_ms is None else int(delay_ms * 1.3)
+        default_vol_db = (-14.0 + (5.5 * impact_intensity)) if double_vol_db is None else double_vol_db
+        default_detune = (0.25 + (0.20 * impact_intensity)) if detune_semitones is None else detune_semitones
+        
+        pitch_scale = 2.0 ** (default_detune / 12.0)
+        vol_factor = 10.0 ** (default_vol_db / 20.0)
+        
         filter_graph = (
-            f"[0:a]asplit=2[lead_{tag}][raw_clone_{tag}];"
-            f"[raw_clone_{tag}]adelay={delay_ms}|{delay_ms},"
-            f"rubberband=pitch={pitch_scale:.4f},"
-            f"equalizer=f=3600:width_type=h:width=1000:g=2.0,"
-            f"volume={vol_factor:.3f}[clone_{tag}];"
-            f"[lead_{tag}][clone_{tag}]amix=inputs=2:weights=1.0 1.0:normalize=0:duration=first[mixed_{tag}];"
-            f"[mixed_{tag}]highpass=f=85,equalizer=f=2600:width_type=h:width=900:g=1.8,volume=1.8[out_{tag}]"
+            f"[0:a]aformat=channel_layouts=stereo[lead_{tag}];"
+            f"[0:a]asplit=2[c_l_{tag}][c_r_{tag}];"
+            f"[c_l_{tag}]adelay={default_delay_l}|0,rubberband=pitch={pitch_scale:.4f},"
+            f"highpass=f=1100,equalizer=f=3800:width_type=h:width=1200:g=2.2[clone_l_{tag}];"
+            f"[c_r_{tag}]adelay=0|{default_delay_r},rubberband=pitch={pitch_scale:.4f},"
+            f"highpass=f=1100,equalizer=f=3800:width_type=h:width=1200:g=2.2[clone_r_{tag}];"
+            f"[clone_l_{tag}][clone_r_{tag}]join=inputs=2:channel_layout=stereo,volume={vol_factor:.3f}[clone_stereo_{tag}];"
+            f"[lead_{tag}][clone_stereo_{tag}]amix=inputs=2:weights=1.0 1.0:normalize=0:duration=first[mix_{tag}];"
+            f"[mix_{tag}]highpass=f=85,equalizer=f=2600:width_type=h:width=900:g=1.8,volume=1.8[out_{tag}]"
         )
+        
     return filter_graph
 
 
@@ -235,19 +295,24 @@ class EdgeTTSProvider(BaseTTSProvider):
         apply_dsp: bool = True,
         delay_ms: Optional[int] = None,
         double_vol_db: Optional[float] = None,
-        detune_semitones: Optional[float] = None
+        detune_semitones: Optional[float] = None,
+        is_impact: Optional[bool] = None,
+        impact_intensity: Optional[float] = None
     ) -> bool:
         """
         Synthesize voice for a cosmic entity (quantum or solar) with tuned SSML prosody,
-        DBZ Cell-style Double Tracking (detuned micro-delay), 3D Haas binaural width, and sub-harmonics.
+        Adaptive DBZ Cell-style Double Tracking (detuned micro-delay), 3D Haas binaural width, and sub-harmonics.
+        Automatically scales presence between subtle narration and high-impact emphasis.
         """
         entity_key = entity.lower()
         profile = COSMIC_VOICE_PROFILES.get(entity_key, COSMIC_VOICE_PROFILES["quantum"])
-        dt_cfg = profile.get("double_tracking", {"delay_ms": 14, "double_vol_db": -11.0, "detune_semitones": -0.3})
-        
-        d_ms = delay_ms if delay_ms is not None else dt_cfg["delay_ms"]
-        d_vol = double_vol_db if double_vol_db is not None else dt_cfg["double_vol_db"]
-        d_pitch = detune_semitones if detune_semitones is not None else dt_cfg["detune_semitones"]
+
+        # Dynamic speech impact detection
+        auto_impact, auto_intensity, reason = detect_speech_impact_intensity(text)
+        final_is_impact = is_impact if is_impact is not None else auto_impact
+        final_intensity = impact_intensity if impact_intensity is not None else auto_intensity
+
+        print(f"  🎙️ [{entity.upper()}] Adaptive Double Voice Mode: {'IMPACT (' + reason + ')' if final_is_impact else 'SUBTLE NARRATION'} (intensity: {final_intensity:.2f})")
 
         # 1. Pacing & SSML pre-processing
         paced_text = prepare_cosmic_pacing_text(text)
@@ -269,13 +334,15 @@ class EdgeTTSProvider(BaseTTSProvider):
         if not synthesized or not apply_dsp:
             return synthesized
 
-        # 3. Apply Cell Double Tracking + Acoustic DSP Filtergraph
+        # 3. Apply Adaptive Cell Double Tracking + Haas 3D Stereo DSP Filtergraph
         try:
             filter_graph = build_cell_double_tracking_filter(
                 entity=entity_key,
-                delay_ms=d_ms,
-                double_vol_db=d_vol,
-                detune_semitones=d_pitch
+                delay_ms=delay_ms,
+                double_vol_db=double_vol_db,
+                detune_semitones=detune_semitones,
+                is_impact=final_is_impact,
+                impact_intensity=final_intensity
             )
 
             cmd = [
