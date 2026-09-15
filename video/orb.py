@@ -662,6 +662,16 @@ def render_orb_test_preview(
 
     escaped_headline_hook = headline_hook.replace(":", "\\:").replace("'", "\\'")
 
+    # Clean subtitle text files for flawless UTF-8 accents and multiline linebreaks
+    sub1_path = output_path.parent / "_temp_sub1.txt"
+    sub2_path = output_path.parent / "_temp_sub2.txt"
+    sub3_path = output_path.parent / "_temp_sub3.txt"
+    sub4_path = output_path.parent / "_temp_sub4.txt"
+    sub1_path.write_text("Quantum: ¡Hola! Bienvenidos a este\nnuevo debate espacial.", encoding="utf-8")
+    sub2_path.write_text("Quantum: Hoy exploraremos los límites\ny misterios de la física cuántica.", encoding="utf-8")
+    sub3_path.write_text("Solar: ¡Excelente! Y yo aportaré\nlos secretos de la física solar.", encoding="utf-8")
+    sub4_path.write_text("[Ambos Orbes en Armonía y Resonancia]", encoding="utf-8")
+
     bg_input = f"color=c=0x08090f:s={width}x{height}:r=30:d=12.0"
 
     filter_complex = [
@@ -715,11 +725,11 @@ def render_orb_test_preview(
         # 6. Headline Hook Badge Overlay (Top Center 0.0s - 2.6s - Google / ElevenLabs ad style)
         f"[v6]drawtext=text='{escaped_headline_hook}':{font_param}:fontcolor=white:fontsize=34:box=1:boxcolor=0x08101e@0.90:boxborderw=20:borderw=2:bordercolor=0x00f0ff:x=(w-text_w)/2:y=140:enable='between(t,0,2.6)'[v_hook]",
 
-        # 7. Subtitles dialogue overlays (Balanced 2-line formatting, safe vertical margin y=h-300)
-        f"[v_hook]drawtext=text='Quantum\\: ¡Hola! Bienvenidos a este\\nnuevo debate espacial.':{font_param}:fontcolor=0x00f0ff:fontsize=32:line_spacing=10:box=1:boxcolor=0x060c18@0.90:boxborderw=20:borderw=1:bordercolor=0x00f0ff@0.60:x=(w-text_w)/2:y=h-300:enable='between(t,0,3.2)'[sub1]",
-        f"[sub1]drawtext=text='Quantum\\: Hoy exploraremos los límites\\ny misterios de la física cuántica.':{font_param}:fontcolor=0x00f0ff:fontsize=32:line_spacing=10:box=1:boxcolor=0x060c18@0.90:boxborderw=20:borderw=1:bordercolor=0x00f0ff@0.60:x=(w-text_w)/2:y=h-300:enable='between(t,3.2,6.2)'[sub2]",
-        f"[sub2]drawtext=text='Solar\\: ¡Excelente! Y yo aportaré\\nlos secretos de la física solar.':{font_param}:fontcolor=0xffb300:fontsize=32:line_spacing=10:box=1:boxcolor=0x181006@0.90:boxborderw=20:borderw=1:bordercolor=0xffb300@0.60:x=(w-text_w)/2:y=h-300:enable='between(t,6.2,9.7)'[sub3]",
-        f"[sub3]drawtext=text='[Ambos Orbes en Armonía y Resonancia]':{font_param}:fontcolor=white:fontsize=32:box=1:boxcolor=0x0c0c16@0.90:boxborderw=20:borderw=1:bordercolor=0xffffff@0.50:x=(w-text_w)/2:y=h-300:enable='between(t,9.7,12.0)'[vout]"
+        # 7. Subtitles dialogue overlays (Clean UTF-8 text files, exact 2-line formatting, safe vertical margin y=h-300)
+        f"[v_hook]drawtext=textfile='{sub1_path}':{font_param}:fontcolor=0x00f0ff:fontsize=32:line_spacing=10:box=1:boxcolor=0x060c18@0.90:boxborderw=20:borderw=1:bordercolor=0x00f0ff@0.60:x=(w-text_w)/2:y=h-300:enable='between(t,0,3.2)'[sub1]",
+        f"[sub1]drawtext=textfile='{sub2_path}':{font_param}:fontcolor=0x00f0ff:fontsize=32:line_spacing=10:box=1:boxcolor=0x060c18@0.90:boxborderw=20:borderw=1:bordercolor=0x00f0ff@0.60:x=(w-text_w)/2:y=h-300:enable='between(t,3.2,6.2)'[sub2]",
+        f"[sub2]drawtext=textfile='{sub3_path}':{font_param}:fontcolor=0xffb300:fontsize=32:line_spacing=10:box=1:boxcolor=0x181006@0.90:boxborderw=20:borderw=1:bordercolor=0xffb300@0.60:x=(w-text_w)/2:y=h-300:enable='between(t,6.2,9.7)'[sub3]",
+        f"[sub3]drawtext=textfile='{sub4_path}':{font_param}:fontcolor=white:fontsize=32:box=1:boxcolor=0x0c0c16@0.90:boxborderw=20:borderw=1:bordercolor=0xffffff@0.50:x=(w-text_w)/2:y=h-300:enable='between(t,9.7,12.0)'[vout]"
     ]
     filter_str = ";".join(filter_complex)
 
@@ -761,11 +771,12 @@ def render_orb_test_preview(
         print(f"  ❌ FFmpeg render error: {e.stderr.decode('utf-8') if e.stderr else str(e)}")
         raise e
     finally:
-        if temp_test_audio and temp_test_audio.exists():
-            try:
-                temp_test_audio.unlink()
-            except Exception:
-                pass
+        for p in [temp_test_audio, sub1_path, sub2_path, sub3_path, sub4_path]:
+            if p and p.exists():
+                try:
+                    p.unlink()
+                except Exception:
+                    pass
 
     print(f"\n✨ ¡Vista previa del Orbe Bio-Reactivo generada con éxito!")
     print(f"🎬 Video listo: {output_path.resolve()}\n")

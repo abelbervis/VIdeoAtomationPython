@@ -55,46 +55,43 @@ COSMIC_VOICE_PROFILES = {
 
 def build_cell_double_tracking_filter(
     entity: str,
-    delay_ms: int = 14,
+    delay_ms: int = 15,
     double_vol_db: float = -11.0,
-    detune_semitones: float = -0.3
+    detune_semitones: float = -0.35
 ) -> str:
     """
-    Generates a reusable FFmpeg filtergraph for DBZ Cell-style Double Tracking.
-    Duplicates the lead voice with a short micro-delay (10-20ms), attenuated volume (-11dB resonance),
-    and pitch detune (+/- 0.3 semitones) to create a subtle supernatural entity voice.
+    Generates a clean, artifact-free FFmpeg filtergraph for DBZ Cell-style Double Tracking.
+    Duplicates the lead Edge-TTS voice with:
+      1. Micro-delay (10-20ms) for supernatural presence without discrete echo.
+      2. Direct -10 to -12 dB attenuation so it acts purely as resonance.
+      3. Subtle pitch detune via rubberband (no atempo artifacts or robotic speedups).
+      4. Targeted acoustic EQ: Quantum (deep fundamental resonance) vs Solar (plasma shimmer).
     """
-    rate_mult = 2.0 ** (detune_semitones / 12.0)
-    new_sample_rate = int(round(44100 * rate_mult))
-    tempo_corr = 1.0 / rate_mult
+    pitch_scale = 2.0 ** (detune_semitones / 12.0)
     vol_factor = 10.0 ** (double_vol_db / 20.0)
-    
     tag = "q" if "quantum" in entity.lower() else "s"
     
-    filter_graph = (
-        f"[0:a]asplit=2[lead_{tag}][clone_raw_{tag}];"
-        f"[clone_raw_{tag}]adelay={delay_ms}|{delay_ms},asetrate={new_sample_rate},atempo={tempo_corr:.4f},volume={vol_factor:.3f}[clone_{tag}];"
-        f"[lead_{tag}][clone_{tag}]amix=inputs=2:weights=1.0 {vol_factor:.3f}:duration=first[double_{tag}];"
-    )
     if "quantum" in entity.lower():
-        filter_graph += (
-            f"[double_{tag}]asplit=2[main_q][sub_q];"
-            f"[sub_q]asetrate=22050,atempo=2.0,lowpass=f=120,volume=0.15[sub_bass];"
-            f"[main_q][sub_bass]amix=inputs=2:weights=1.0 0.2:duration=first[mixed_q];"
-            f"[mixed_q]highpass=f=80,equalizer=f=140:width_type=h:width=60:g=3.0,equalizer=f=3800:width_type=h:width=1200:g=2.5,compand=attacks=0.01:decays=0.1:points=-60/-60|-20/-10|0/-3:soft-knee=6[eq_q];"
-            f"[eq_q]aformat=channel_layouts=stereo,asplit=2[center_q][wide_q];"
-            f"[wide_q]adelay=14|14,highpass=f=300,volume=0.20[wide_delayed_q];"
-            f"[center_q][wide_delayed_q]amix=inputs=2:weights=1.0 0.15:duration=first,volume=2.2[out_q]"
+        # Quantum: Ominous, multi-layered consciousness resonance (Cell Latino style)
+        filter_graph = (
+            f"[0:a]asplit=2[lead_{tag}][raw_clone_{tag}];"
+            f"[raw_clone_{tag}]adelay={delay_ms}|{delay_ms},"
+            f"rubberband=pitch={pitch_scale:.4f},"
+            f"equalizer=f=180:width_type=h:width=80:g=2.5,"
+            f"volume={vol_factor:.3f}[clone_{tag}];"
+            f"[lead_{tag}][clone_{tag}]amix=inputs=2:weights=1.0 1.0:normalize=0:duration=first[mixed_{tag}];"
+            f"[mixed_{tag}]highpass=f=75,equalizer=f=3200:width_type=h:width=1200:g=1.5,volume=1.8[out_{tag}]"
         )
     else:
-        filter_graph += (
-            f"[double_{tag}]asplit=2[main_s][plasma_s];"
-            f"[plasma_s]highpass=f=3200,volume=0.18,aecho=0.8:0.7:16:0.25[shimmer_s];"
-            f"[main_s][shimmer_s]amix=inputs=2:weights=1.0 0.2:duration=first[mixed_s];"
-            f"[mixed_s]highpass=f=90,equalizer=f=2200:width_type=h:width=800:g=2.5,equalizer=f=6200:width_type=h:width=2000:g=2.8,compand=attacks=0.01:decays=0.1:points=-60/-60|-20/-10|0/-3:soft-knee=6[eq_s];"
-            f"[eq_s]aformat=channel_layouts=stereo,asplit=2[center_s][wide_s];"
-            f"[wide_s]adelay=10|10,highpass=f=350,volume=0.18[wide_delayed_s];"
-            f"[center_s][wide_delayed_s]amix=inputs=2:weights=1.0 0.15:duration=first,volume=2.2[out_s]"
+        # Solar: Radiant, energetic plasma vibration resonance
+        filter_graph = (
+            f"[0:a]asplit=2[lead_{tag}][raw_clone_{tag}];"
+            f"[raw_clone_{tag}]adelay={delay_ms}|{delay_ms},"
+            f"rubberband=pitch={pitch_scale:.4f},"
+            f"equalizer=f=3600:width_type=h:width=1000:g=2.0,"
+            f"volume={vol_factor:.3f}[clone_{tag}];"
+            f"[lead_{tag}][clone_{tag}]amix=inputs=2:weights=1.0 1.0:normalize=0:duration=first[mixed_{tag}];"
+            f"[mixed_{tag}]highpass=f=85,equalizer=f=2600:width_type=h:width=900:g=1.8,volume=1.8[out_{tag}]"
         )
     return filter_graph
 
