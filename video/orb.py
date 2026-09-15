@@ -480,6 +480,29 @@ def render_orb_test_preview(
     orb_quantum = get_or_create_orb_asset(palette="quantum", force_refresh=True)
     orb_solar = get_or_create_orb_asset(palette="solar", force_refresh=True)
 
+    # Generate Holographic Floating Reference Cards
+    from video.hologram import generate_hologram_card_svg
+    holo_q_path = output_path.parent / "_holo_q.svg"
+    holo_s_path = output_path.parent / "_holo_s.svg"
+    generate_hologram_card_svg(
+        title="FÍSICA CUÁNTICA",
+        subtitle="Estado: Superposición |ψ⟩ = α|0⟩ + β|1⟩",
+        category="CONCEPTO",
+        color_theme="cyan",
+        width=540,
+        height=320,
+        output_path=holo_q_path
+    )
+    generate_hologram_card_svg(
+        title="FÍSICA SOLAR",
+        subtitle="Núcleo: 15,000,000 K | Plasma Cromatico",
+        category="DATO REAL",
+        color_theme="amber",
+        width=540,
+        height=320,
+        output_path=holo_s_path
+    )
+
     temp_test_audio: Optional[Path] = output_path.parent / "_temp_cohost_debate.mp3"
     resolved_audio: Optional[Path] = sample_audio
 
@@ -619,6 +642,10 @@ def render_orb_test_preview(
     bg_input = f"color=c=0x08090f:s={width}x{height}:r=30:d=12.0"
 
     filter_complex = [
+        # 0. Hologram Reference Card Pre-scaling
+        "[3:v]scale=500:296,format=yuva420p[holo_q]",
+        "[4:v]scale=500:296,format=yuva420p[holo_s]",
+
         # 1. Split streams to apply physical static transparency to separate active/resting layers
         "[1:v]split=4[q_wa][q_wp][q_ca][q_glow]",
         "[2:v]split=4[s_wa][s_wp][s_ca][s_glow]",
@@ -646,14 +673,16 @@ def render_orb_test_preview(
         f"[bg_ambient][orb_q_wide_active]overlay=eval=frame:x='W*0.25-w/2 + {drift_q_active_x} + {drift_intro_x}':y='H*0.42-h/2 + {drift_q_active_y} + {drift_intro_y}':enable='between(t,0,3.2)'[v1]",
         f"[v1][orb_s_wide_passive]overlay=eval=frame:x='W*0.75-w/2 - 28 + {drift_s_resting_x} + {drift_intro_x}':y='H*0.43-h/2 + {drift_s_resting_y} + {drift_intro_y}':enable='between(t,0,3.2)'[v2]",
         
-        # Toma 2 (3.2s-6.2s): Close Up Quantum active with organic spring camera damping transition
+        # Toma 2 (3.2s-6.2s): Close Up Quantum active + Floating Sci-Fi Hologram Card 1
         f"[v2][orb_q_close_active]overlay=eval=frame:x='W/2-w/2 + {drift_q_active_x} + 25.0*exp(-6.5*(t-3.2))*cos(16.0*(t-3.2))':y='H*0.40-h/2 + {drift_q_active_y} + 30.0*exp(-6.5*(t-3.2))*sin(16.0*(t-3.2))':enable='between(t,3.2,6.2)'[v3]",
+        f"[v3][holo_q]overlay=eval=frame:x='(W-w)/2':y='H*0.15-h/2 + 8.0*sin(2*PI*t/2.2)':enable='between(t,3.4,6.0)'[v3_holo]",
         
-        # Toma 3 (6.2s-9.2s): Close Up Solar active with organic spring camera damping transition
-        f"[v3][orb_s_close_active]overlay=eval=frame:x='W/2-w/2 + {drift_s_active_x} + 25.0*exp(-6.5*(t-6.2))*cos(16.0*(t-6.2))':y='H*0.40-h/2 + {drift_s_active_y} + 30.0*exp(-6.5*(t-6.2))*sin(16.0*(t-6.2))':enable='between(t,6.2,9.2)'[v4]",
+        # Toma 3 (6.2s-9.2s): Close Up Solar active + Floating Sci-Fi Hologram Card 2
+        f"[v3_holo][orb_s_close_active]overlay=eval=frame:x='W/2-w/2 + {drift_s_active_x} + 25.0*exp(-6.5*(t-6.2))*cos(16.0*(t-6.2))':y='H*0.40-h/2 + {drift_s_active_y} + 30.0*exp(-6.5*(t-6.2))*sin(16.0*(t-6.2))':enable='between(t,6.2,9.2)'[v4]",
+        f"[v4][holo_s]overlay=eval=frame:x='(W-w)/2':y='H*0.15-h/2 + 8.0*cos(2*PI*t/2.4)':enable='between(t,6.4,9.0)'[v4_holo]",
         
-        # Toma 4 (9.2s-12.0s): Wide Shot. Solar active takes stage (Z-forward). Quantum passive leans right towards Solar (Z-back + leaning offset)
-        f"[v4][orb_q_wide_passive]overlay=eval=frame:x='W*0.25-w/2 + 28 + {drift_q_resting_x} + 15.0*exp(-6.5*(t-9.2))*cos(16.0*(t-9.2))':y='H*0.43-h/2 + {drift_q_resting_y} + 18.0*exp(-6.5*(t-9.2))*sin(16.0*(t-9.2))':enable='between(t,9.2,12.0)'[v5]",
+        # Toma 4 (9.2s-12.0s): Wide Shot. Solar active takes stage (Z-forward). Quantum passive leans right towards Solar
+        f"[v4_holo][orb_q_wide_passive]overlay=eval=frame:x='W*0.25-w/2 + 28 + {drift_q_resting_x} + 15.0*exp(-6.5*(t-9.2))*cos(16.0*(t-9.2))':y='H*0.43-h/2 + {drift_q_resting_y} + 18.0*exp(-6.5*(t-9.2))*sin(16.0*(t-9.2))':enable='between(t,9.2,12.0)'[v5]",
         f"[v5][orb_s_wide_active]overlay=eval=frame:x='W*0.75-w/2 + {drift_s_active_x} + 15.0*exp(-6.5*(t-9.2))*cos(16.0*(t-9.2))':y='H*0.42-h/2 + {drift_s_active_y} + 18.0*exp(-6.5*(t-9.2))*sin(16.0*(t-9.2))':enable='between(t,9.2,12.0)'[v6]",
         
         # 6. Headline Hook Badge Overlay (Top Center 0.0s - 2.6s - Google / ElevenLabs ad style)
@@ -670,16 +699,18 @@ def render_orb_test_preview(
     audio_input_args = []
     if resolved_audio and resolved_audio.exists():
         audio_input_args = ["-i", str(resolved_audio)]
-        audio_map = ["-map", "3:a"]
+        audio_map = ["-map", "5:a"]
     else:
         audio_input_args = ["-f", "lavfi", "-i", "anullsrc=r=44100:cl=stereo"]
-        audio_map = ["-map", "3:a"]
+        audio_map = ["-map", "5:a"]
 
     cmd = [
         "ffmpeg", "-y",
         "-f", "lavfi", "-i", bg_input,
         "-stream_loop", "-1", "-i", str(orb_quantum),
         "-stream_loop", "-1", "-i", str(orb_solar),
+        "-stream_loop", "-1", "-i", str(holo_q_path),
+        "-stream_loop", "-1", "-i", str(holo_s_path),
         *audio_input_args,
         "-filter_complex", filter_str,
         "-map", "[vout]",
@@ -692,6 +723,7 @@ def render_orb_test_preview(
         "-movflags", "+faststart",
         str(output_path)
     ]
+
 
     try:
         subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
