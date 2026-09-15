@@ -931,6 +931,20 @@ def render_orb_test_preview(
 
     print(f"\n✨ ¡Vista previa del Orbe Bio-Reactivo generada con éxito!")
     print(f"🎬 Video listo: {output_path.resolve()}\n")
+
+    # Generate companion studio-grade thumbnail
+    try:
+        from ai.thumbnail_generator import ThumbnailGenerator
+        thumb_gen = ThumbnailGenerator()
+        thumb_path = output_path.parent / "thumbnail.jpg"
+        thumb_gen.render_studio_poster(
+            hook=headline_hook,
+            topic=topic or "Física Cuántica vs Astrofísica Solar",
+            output_path=thumb_path
+        )
+    except Exception as te:
+        print(f"  ⚠️ Error secundario generando portada automática: {te}")
+
     return output_path
 
 

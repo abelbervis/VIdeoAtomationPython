@@ -64,8 +64,18 @@ def main():
         from ai.thumbnail_generator import ThumbnailGenerator
         thumb_gen = ThumbnailGenerator()
         thumb_script_arg = getattr(args, "thumbnail_script", None)
+        custom_topic = getattr(args, "topic", None) or getattr(args, "debate_topic", None)
+        out_target = Path(args.output) if getattr(args, "output", None) else None
+
         if thumb_script_arg:
-            thumb_gen.generate_thumbnail_for_script(Path(thumb_script_arg))
+            thumb_gen.generate_thumbnail_for_script(Path(thumb_script_arg), out_target)
+        elif custom_topic:
+            dest = out_target or Path("output") / "thumbnail.jpg"
+            thumb_gen.render_studio_poster(
+                hook=custom_topic,
+                topic=custom_topic,
+                output_path=dest
+            )
         else:
             thumb_gen.batch_generate_thumbnails()
         return
