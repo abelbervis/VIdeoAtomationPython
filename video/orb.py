@@ -559,8 +559,8 @@ def render_orb_test_preview(
 
     filter_complex = [
         # 1. Split streams to apply physical static transparency to separate active/resting layers
-        "[1:v]split=3[q_wa][q_wp][q_ca]",
-        "[2:v]split=3[s_wa][s_wp][s_ca]",
+        "[1:v]split=4[q_wa][q_wp][q_ca][q_glow]",
+        "[2:v]split=4[s_wa][s_wp][s_ca][s_glow]",
         
         # 2. Render each state independently with pre-baked alpha levels to avoid FFmpeg evaluate parser issues
         f"[q_wa]scale=340:340,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.95[orb_q_wide_active]",
@@ -571,12 +571,18 @@ def render_orb_test_preview(
         f"[s_wa]scale=340:340,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.95[orb_s_wide_active]",
         f"[s_ca]scale=550:550,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.95[orb_s_close_active]",
         
-        # 3. Apply background grading
-        f"[0:v]eq=brightness=-0.01:contrast=1.05[bg_graded]",
+        # 3. Render dynamic ambient glow backplates using the ultra-fast pre-scaled blur technique
+        f"[q_glow]scale=120:120,eq={eq_q},hue={hue_q},boxblur=24:3,scale=1080:1920,format=yuva420p,colorchannelmixer=aa=0.22[bg_glow_q]",
+        f"[s_glow]scale=120:120,eq={eq_s},hue={hue_s},boxblur=24:3,scale=1080:1920,format=yuva420p,colorchannelmixer=aa=0.22[bg_glow_s]",
         
-        # 4. Sequentially overlay using conditional enabling (enable parameter) and matching drifts
+        # 4. Apply background grading and overlay dynamic glows first to make the ambient background
+        f"[0:v]eq=brightness=-0.01:contrast=1.05[bg_graded]",
+        f"[bg_graded][bg_glow_q]overlay=eval=frame:enable='between(t,0,6.2)'[bg_glowed_1]",
+        f"[bg_glowed_1][bg_glow_s]overlay=eval=frame:enable='between(t,6.2,12.0)'[bg_ambient]",
+        
+        # 5. Sequentially overlay the foreground orbs using conditional enabling (enable parameter) and matching drifts
         # Toma 1 (0-3.2s): Wide Shot. Quantum active (drift_active), Solar passive (drift_resting)
-        f"[bg_graded][orb_q_wide_active]overlay=eval=frame:x='W*0.25-w/2 + {drift_q_active_x}':y='H*0.42-h/2 + {drift_q_active_y}':enable='between(t,0,3.2)'[v1]",
+        f"[bg_ambient][orb_q_wide_active]overlay=eval=frame:x='W*0.25-w/2 + {drift_q_active_x}':y='H*0.42-h/2 + {drift_q_active_y}':enable='between(t,0,3.2)'[v1]",
         f"[v1][orb_s_wide_passive]overlay=eval=frame:x='W*0.75-w/2 + {drift_s_resting_x}':y='H*0.42-h/2 + {drift_s_resting_y}':enable='between(t,0,3.2)'[v2]",
         
         # Toma 2 (3.2s-6.2s): Close Up Quantum active (drift_active), Solar is off-screen
@@ -589,13 +595,13 @@ def render_orb_test_preview(
         f"[v4][orb_q_wide_passive]overlay=eval=frame:x='W*0.25-w/2 + {drift_q_resting_x}':y='H*0.42-h/2 + {drift_q_resting_y}':enable='between(t,9.2,12.0)'[v5]",
         f"[v5][orb_s_wide_active]overlay=eval=frame:x='W*0.75-w/2 + {drift_s_active_x}':y='H*0.42-h/2 + {drift_s_active_y}':enable='between(t,9.2,12.0)'[v6]",
         
-        # 5. Camera Shot indicator text overlays (Top)
+        # 6. Camera Shot indicator text overlays (Top)
         f"[v6]drawtext=text='TOMA 1\\: PLANO GENERAL (WIDE SHOT)':fontcolor=0x00f0ff:fontsize=32:fontfile=Arial:box=1:boxcolor=black@0.65:boxborderw=10:x=(w-text_w)/2:y=180:enable='between(t,0,3.2)'[sh1]",
         f"[sh1]drawtext=text='TOMA 2\\: PRIMER PLANO (ORBE QUANTUM)':fontcolor=0x00f0ff:fontsize=32:fontfile=Arial:box=1:boxcolor=black@0.65:boxborderw=10:x=(w-text_w)/2:y=180:enable='between(t,3.2,6.2)'[sh2]",
         f"[sh2]drawtext=text='TOMA 3\\: PRIMER PLANO (ORBE SOLAR)':fontcolor=0xffaa00:fontsize=32:fontfile=Arial:box=1:boxcolor=black@0.65:boxborderw=10:x=(w-text_w)/2:y=180:enable='between(t,6.2,9.2)'[sh3]",
         f"[sh3]drawtext=text='TOMA 4\\: CONCLUSIONAL CO-HOST (WIDE)':fontcolor=white:fontsize=32:fontfile=Arial:box=1:boxcolor=black@0.65:boxborderw=10:x=(w-text_w)/2:y=180:enable='between(t,9.2,12.0)'[sh4]",
-
-        # 6. Subtitles dialogue overlays (Bottom)
+ 
+        # 7. Subtitles dialogue overlays (Bottom)
         f"[sh4]drawtext=text='Quantum\\: ¡Hola! Bienvenidos a este nuevo debate espacial.':fontcolor=0x00f0ff:fontsize=36:fontfile=Arial:box=1:boxcolor=black@0.75:boxborderw=12:x=(w-text_w)/2:y=h-240:enable='between(t,0,3.2)'[sub1]",
         f"[sub1]drawtext=text='Quantum\\: Hoy exploraremos los limites y misterios de la fisica cuantica.':fontcolor=0x00f0ff:fontsize=36:fontfile=Arial:box=1:boxcolor=black@0.75:boxborderw=12:x=(w-text_w)/2:y=h-240:enable='between(t,3.2,6.2)'[sub2]",
         f"[sub2]drawtext=text='Solar\\: ¡Excelente! Y yo aportare los secretos de la fisica solar.':fontcolor=0xffaa00:fontsize=36:fontfile=Arial:box=1:boxcolor=black@0.75:boxborderw=12:x=(w-text_w)/2:y=h-240:enable='between(t,6.2,9.7)'[sub3]",
