@@ -218,30 +218,29 @@ def generate_animated_orb_loop(
             spot2_rx = int(r_sphere * 0.44 + 5 * math.cos(2 * tau))
             spot2_ry = int(r_sphere * 0.40 + 4 * math.sin(2 * tau))
 
-            # 5. Bioluminescent Floating Particle Swarm (38 Vibrant Glowing Particles)
+            # 5. Bioluminescent Floating Particle Swarm (20 Subtle Ethereal Particles - Sweet Spot)
             particle_elements = []
-            num_particles = 38
+            num_particles = 20
             for p in range(num_particles):
-                angle_base = (p * (2 * math.pi / num_particles)) + (p * 0.35)
+                angle_base = (p * (2 * math.pi / num_particles)) + (p * 0.42)
                 orbit_speed = 1.0 if (p % 2 == 0) else -1.0
-                radius_base = r_sphere + 25 + ((p * 23) % 115)  # Distributed across halo and outer aura
-                p_size = 3.5 + ((p * 7) % 5) * 0.9              # Crisp sizes from 3.5px to 7.1px
+                radius_base = r_sphere + 18 + ((p * 19) % 85)  # Floating gracefully around the inner/outer halo
+                p_size = 2.0 + ((p * 7) % 4) * 0.5              # Refined sizes from 2.0px to 3.5px
                 
                 angle = angle_base + orbit_speed * tau
-                radial_drift = 12 * math.sin(2 * tau + p * 0.7)
+                radial_drift = 8 * math.sin(2 * tau + p * 0.7)
                 r_curr = radius_base + radial_drift
                 
                 px = c + r_curr * math.cos(angle)
                 py = c + r_curr * math.sin(angle)
                 
-                p_opacity = 0.65 + 0.35 * math.sin(3 * tau + p * 1.1)
+                p_opacity = 0.35 + 0.35 * (0.5 + 0.5 * math.sin(3 * tau + p * 1.1))
                 p_color = palette['spot1_core'] if (p % 3 == 0) else (palette['aura_bright'] if (p % 3 == 1) else palette['body_c0'])
                 
-                # Outer Soft Halo + Crisp Bright Core (ensures high visibility on video render)
+                # Balanced dual layer: soft atmospheric glow + delicate luminous core
                 particle_elements.append(
-                    f'<circle cx="{px:.1f}" cy="{py:.1f}" r="{p_size + 3.5:.1f}" fill="{p_color}" opacity="{p_opacity * 0.5:.2f}" filter="url(#particleGlow_{i})" />\n'
-                    f'  <circle cx="{px:.1f}" cy="{py:.1f}" r="{p_size:.1f}" fill="{p_color}" opacity="{p_opacity:.2f}" />\n'
-                    f'  <circle cx="{px:.1f}" cy="{py:.1f}" r="{max(1.2, p_size * 0.45):.1f}" fill="#ffffff" opacity="{p_opacity * 0.95:.2f}" />'
+                    f'<circle cx="{px:.1f}" cy="{py:.1f}" r="{p_size + 2.0:.1f}" fill="{p_color}" opacity="{p_opacity * 0.45:.2f}" filter="url(#particleGlow_{i})" />\n'
+                    f'  <circle cx="{px:.1f}" cy="{py:.1f}" r="{p_size:.1f}" fill="{p_color}" opacity="{p_opacity * 0.85:.2f}" />'
                 )
             particles_svg = "\n  ".join(particle_elements)
 
