@@ -540,9 +540,9 @@ def render_orb_test_preview(
     hue_q = f"h='(12 + 4*{voice_ripple_q})*{speech_mask_q} + 6*sin(2*PI*t/2.4)':s='0.60 + (0.65 + 0.20*{voice_ripple_q})*{speech_mask_q}'"
     
     voice_ripple_s = "(0.5 + 0.5 * sin(2*PI*t/0.36))"
-    speech_mask_s = "between(t,6.2,9.7)"
-    eq_s = f"brightness='-0.18 + (0.34 + 0.08*{voice_ripple_s})*{speech_mask_s}':contrast='0.70 + (0.55 + 0.15*{voice_ripple_s})*{speech_mask_s}'"
-    hue_s = f"h='(12 + 4*{voice_ripple_s})*{speech_mask_s} + 6*sin(2*PI*t/2.4)':s='0.60 + (0.65 + 0.20*{voice_ripple_s})*{speech_mask_s}'"
+    speech_mask_s = "between(t,6.2,12.0)"
+    eq_s = f"brightness='-0.18 + (0.44 + 0.08*{voice_ripple_s})*{speech_mask_s}':contrast='0.70 + (0.75 + 0.15*{voice_ripple_s})*{speech_mask_s}'"
+    hue_s = f"h='(12 + 4*{voice_ripple_s})*{speech_mask_s} + 6*sin(2*PI*t/2.4)':s='0.60 + (1.10 + 0.20*{voice_ripple_s})*{speech_mask_s}'"
 
     # Precise structural drift controls (Calm when passive/resting, full dynamic swing when active)
     drift_q_active_x = "14.0*sin(2*PI*t/3.6)"
@@ -568,7 +568,7 @@ def render_orb_test_preview(
         f"[q_ca]scale=550:550,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.95[orb_q_close_active]",
         
         f"[s_wp]scale=340:340,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.32[orb_s_wide_passive]",
-        f"[s_wa]scale=340:340,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.75[orb_s_wide_active]",
+        f"[s_wa]scale=340:340,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.95[orb_s_wide_active]",
         f"[s_ca]scale=550:550,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.95[orb_s_close_active]",
         
         # 3. Apply background grading
