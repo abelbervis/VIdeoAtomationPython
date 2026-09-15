@@ -611,6 +611,9 @@ def render_orb_test_preview(
     drift_intro_x = "30.0*exp(-7.0*t)*cos(16.0*t)"
     drift_intro_y = "35.0*exp(-7.0*t)*sin(16.0*t)"
 
+    from utils.fonts import resolve_best_font_path
+    font_param, _ = resolve_best_font_path()
+
     escaped_headline_hook = headline_hook.replace(":", "\\:").replace("'", "\\'")
 
     bg_input = f"color=c=0x08090f:s={width}x{height}:r=30:d=12.0"
@@ -653,14 +656,14 @@ def render_orb_test_preview(
         f"[v4][orb_q_wide_passive]overlay=eval=frame:x='W*0.25-w/2 + 28 + {drift_q_resting_x} + 15.0*exp(-6.5*(t-9.2))*cos(16.0*(t-9.2))':y='H*0.43-h/2 + {drift_q_resting_y} + 18.0*exp(-6.5*(t-9.2))*sin(16.0*(t-9.2))':enable='between(t,9.2,12.0)'[v5]",
         f"[v5][orb_s_wide_active]overlay=eval=frame:x='W*0.75-w/2 + {drift_s_active_x} + 15.0*exp(-6.5*(t-9.2))*cos(16.0*(t-9.2))':y='H*0.42-h/2 + {drift_s_active_y} + 18.0*exp(-6.5*(t-9.2))*sin(16.0*(t-9.2))':enable='between(t,9.2,12.0)'[v6]",
         
-        # 6. Headline Hook Badge Overlay (Top Center 0.0s - 2.6s)
-        f"[v6]drawtext=text='{escaped_headline_hook}':fontcolor=white:fontsize=36:fontfile=Arial:box=1:boxcolor=0x08101e@0.85:boxborderw=14:borderw=2:bordercolor=0x00f0ff:x=(w-text_w)/2:y=170:enable='between(t,0,2.6)'[v_hook]",
+        # 6. Headline Hook Badge Overlay (Top Center 0.0s - 2.6s - Google / ElevenLabs ad style)
+        f"[v6]drawtext=text='{escaped_headline_hook}':{font_param}:fontcolor=white:fontsize=36:box=1:boxcolor=0x08101e@0.88:boxborderw=18:borderw=2:bordercolor=0x00f0ff:x=(w-text_w)/2:y=170:enable='between(t,0,2.6)'[v_hook]",
 
-        # 7. Subtitles dialogue overlays (Bottom)
-        f"[v_hook]drawtext=text='Quantum\\: ¡Hola! Bienvenidos a este nuevo debate espacial.':fontcolor=0x00f0ff:fontsize=36:fontfile=Arial:box=1:boxcolor=black@0.75:boxborderw=12:x=(w-text_w)/2:y=h-240:enable='between(t,0,3.2)'[sub1]",
-        f"[sub1]drawtext=text='Quantum\\: Hoy exploraremos los limites y misterios de la fisica cuantica.':fontcolor=0x00f0ff:fontsize=36:fontfile=Arial:box=1:boxcolor=black@0.75:boxborderw=12:x=(w-text_w)/2:y=h-240:enable='between(t,3.2,6.2)'[sub2]",
-        f"[sub2]drawtext=text='Solar\\: ¡Excelente! Y yo aportare los secretos de la fisica solar.':fontcolor=0xffaa00:fontsize=36:fontfile=Arial:box=1:boxcolor=black@0.75:boxborderw=12:x=(w-text_w)/2:y=h-240:enable='between(t,6.2,9.7)'[sub3]",
-        f"[sub3]drawtext=text='[Ambos Orbes en Armonia y Resonancia]':fontcolor=white:fontsize=36:fontfile=Arial:box=1:boxcolor=black@0.75:boxborderw=12:x=(w-text_w)/2:y=h-240:enable='between(t,9.7,12.0)'[vout]"
+        # 7. Subtitles dialogue overlays (Bottom Cards with role-based neon glow borders)
+        f"[v_hook]drawtext=text='Quantum\\: ¡Hola! Bienvenidos a este nuevo debate espacial.':{font_param}:fontcolor=0x00f0ff:fontsize=36:box=1:boxcolor=0x060c18@0.85:boxborderw=16:borderw=1:bordercolor=0x00f0ff@0.50:x=(w-text_w)/2:y=h-240:enable='between(t,0,3.2)'[sub1]",
+        f"[sub1]drawtext=text='Quantum\\: Hoy exploraremos los limites y misterios de la fisica cuantica.':{font_param}:fontcolor=0x00f0ff:fontsize=36:box=1:boxcolor=0x060c18@0.85:boxborderw=16:borderw=1:bordercolor=0x00f0ff@0.50:x=(w-text_w)/2:y=h-240:enable='between(t,3.2,6.2)'[sub2]",
+        f"[sub2]drawtext=text='Solar\\: ¡Excelente! Y yo aportare los secretos de la fisica solar.':{font_param}:fontcolor=0xffb300:fontsize=36:box=1:boxcolor=0x181006@0.85:boxborderw=16:borderw=1:bordercolor=0xffb300@0.50:x=(w-text_w)/2:y=h-240:enable='between(t,6.2,9.7)'[sub3]",
+        f"[sub3]drawtext=text='[Ambos Orbes en Armonia y Resonancia]':{font_param}:fontcolor=white:fontsize=36:box=1:boxcolor=0x0c0c16@0.85:boxborderw=16:borderw=1:bordercolor=0xffffff@0.40:x=(w-text_w)/2:y=h-240:enable='between(t,9.7,12.0)'[vout]"
     ]
     filter_str = ";".join(filter_complex)
 
