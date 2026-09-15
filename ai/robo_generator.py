@@ -54,25 +54,21 @@ class RoboScriptGenerator:
         """Generate dialogue script using available LLM API or fallback."""
         print(f"🤖 Generating Robo dialogue for topic: '{topic}'...")
 
-        # 1. Try Gemini if API key present
         if GEMINI_API_KEY and GEMINI_API_KEY != "your_gemini_api_key_here":
             script = self._generate_gemini(topic)
             if script:
                 return script
 
-        # 2. Try Groq if configured
         if GROQ_API_KEY:
             script = self._generate_groq(topic)
             if script:
                 return script
 
-        # 3. Try OpenAI if configured
         if OPENAI_API_KEY and OPENAI_API_KEY != "your_openai_api_key_here":
             script = self._generate_openai(topic)
             if script:
                 return script
 
-        # 4. Fallback script
         print("  ⚠️ LLM API keys not provided or failed. Using humorous built-in fallback script.")
         return self._get_fallback_script(topic)
 
@@ -155,7 +151,6 @@ class RoboScriptGenerator:
             return {}
 
     def _get_fallback_script(self, topic: str) -> Dict[str, Any]:
-        """Humorous fallback dialogue when offline or without API key."""
         return {
             "title": f"Robots exploran: {topic}",
             "topic": topic,

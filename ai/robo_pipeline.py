@@ -1,63 +1,19 @@
 """
-Main entry point for Robo Agents Video Generator.
+Robo Agents Pipeline Runner.
 CLI runner for creating dual-robot humorous short videos.
 """
 
-import argparse
 import sys
 import time
 from pathlib import Path
 
+from ai.robo_generator import RoboScriptGenerator
+from audio.robo_tts import RoboTTSManager
 from config import PEXELS_API_KEY, PIXABAY_API_KEY
 from providers.pexels import PexelsProvider
 from providers.pixabay import PixabayProvider
-from robo_agents.renderer import RoboRenderer
-from robo_agents.script_generator import RoboScriptGenerator
-from robo_agents.tts_manager import RoboTTSManager
 from utils.files import check_ffmpeg
-
-
-def parse_args():
-    parser = argparse.ArgumentParser(
-        description="Robo Agents Shorts Generator - Animated dual-robot dialogue videos."
-    )
-    parser.add_argument(
-        "--topic",
-        type=str,
-        default="por qué el cielo es azul",
-        help="Topic for the humorous conversation between Orange and Blue robots.",
-    )
-    parser.add_argument(
-        "--turns",
-        type=int,
-        default=5,
-        help="Number of dialogue turns (default: 5).",
-    )
-    parser.add_argument(
-        "--orange-voice",
-        type=str,
-        default="es-MX-JorgeNeural",
-        help="Edge TTS voice for Orange Robot (Charismatic).",
-    )
-    parser.add_argument(
-        "--blue-voice",
-        type=str,
-        default="es-ES-AlvaroNeural",
-        help="Edge TTS voice for Blue Robot (Scientist).",
-    )
-    parser.add_argument(
-        "--pexels-key",
-        type=str,
-        default=PEXELS_API_KEY,
-        help="Pexels API Key for background stock videos.",
-    )
-    parser.add_argument(
-        "--pixabay-key",
-        type=str,
-        default=PIXABAY_API_KEY,
-        help="Pixabay API Key for background stock videos.",
-    )
-    return parser.parse_args()
+from video.robo_render import RoboRenderer
 
 
 def run_robo_pipeline(
@@ -112,19 +68,3 @@ def run_robo_pipeline(
     elapsed = time.time() - start_time
     print(f"✨ Total generation time: {elapsed:.2f} seconds.")
     return final_video
-
-
-def main():
-    args = parse_args()
-    run_robo_pipeline(
-        topic=args.topic,
-        turns=args.turns,
-        orange_voice=args.orange_voice,
-        blue_voice=args.blue_voice,
-        pexels_key=args.pexels_key,
-        pixabay_key=args.pixabay_key,
-    )
-
-
-if __name__ == "__main__":
-    main()

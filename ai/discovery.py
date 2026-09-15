@@ -10,7 +10,7 @@ from typing import Any, Dict, Optional, Tuple
 
 from ai.trend_evaluator import ViralTrendEvaluator
 from config import BASE_DIR, OUTPUT_DIR
-from providers.nasa_trends import NASATrendsProvider
+from providers.nasa import NASATrendsProvider
 from utils.files import format_date_display, load_json, save_json
 
 

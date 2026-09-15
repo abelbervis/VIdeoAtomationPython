@@ -11,7 +11,6 @@ from typing import Dict, Any, List
 from config import AUDIO_DIR, TEMP_DIR
 from utils.files import get_media_duration
 
-# Default distinct Edge-TTS voices
 DEFAULT_ORANGE_VOICE = "es-MX-JorgeNeural"  # Energetic, charismatic male voice
 DEFAULT_BLUE_VOICE = "es-ES-AlvaroNeural"    # Intellectual, scientific Spanish voice
 
@@ -33,7 +32,6 @@ class RoboTTSManager:
 
         voice = self.orange_voice if speaker.lower() == "orange" else self.blue_voice
 
-        # 1. Try python edge-tts library
         success = False
         try:
             import edge_tts
@@ -45,10 +43,9 @@ class RoboTTSManager:
             asyncio.run(_run())
             if output_path.exists() and output_path.stat().st_size > 0:
                 success = True
-        except Exception as e:
+        except Exception:
             pass
 
-        # 2. Try CLI fallback if python import failed
         if not success:
             try:
                 cmd = ["edge-tts", "--voice", voice, "--text", text, "--write-media", str(output_path)]
@@ -58,13 +55,11 @@ class RoboTTSManager:
             except Exception:
                 pass
 
-        # 3. Fallback dummy audio generator if offline/edge-tts fails
         if not success or not output_path.exists():
             print(f"  ⚠️ Edge TTS synthesis failed for turn: '{text[:20]}...'. Creating silent placeholder clip.")
-            # Calculate estimated reading duration (~15 chars per sec, min 2.5s)
             est_dur = max(2.5, len(text) / 15.0)
             cmd = [
-                "ffmpeg", "-y", "-f", "lavfi", "-i", f"anullsrc=r=44100:cl=mono",
+                "ffmpeg", "-y", "-f", "lavfi", "-i", "anullsrc=r=44100:cl=mono",
                 "-t", f"{est_dur:.2f}", str(output_path)
             ]
             subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)

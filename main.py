@@ -61,7 +61,7 @@ def main():
 
     # If --robo mode is selected, run Robo Agents pipeline
     if getattr(args, "robo", False):
-        from robo_agents.main import run_robo_pipeline
+        from ai.robo_pipeline import run_robo_pipeline
         topic = args.topic or "por qué el cielo es azul"
         run_robo_pipeline(
             topic=topic,
