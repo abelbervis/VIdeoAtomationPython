@@ -6,6 +6,7 @@ Includes procedural synthesis if external SFX files are not present.
 
 import math
 import random
+import shutil
 import struct
 import subprocess
 import wave
@@ -13,6 +14,8 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Any
 
 from config import SFX_DIR, SFX_INTRO_DIR, SFX_SWOOSH_DIR, TEMP_DIR, ENABLE_SFX, SFX_VOLUME
+
+SFX_CACHE_DIR = Path(__file__).resolve().parent.parent / "assets" / "sfx" / "cached"
 
 
 def synthesize_procedural_whoosh(
@@ -24,6 +27,17 @@ def synthesize_procedural_whoosh(
     sub_freq: float = 85.0
 ) -> Path:
     """Synthesize a smooth cinematic whoosh transition sound effect with customizable acoustics."""
+    output_path = Path(output_path)
+    if output_path.exists() and output_path.stat().st_size > 100:
+        return output_path
+
+    SFX_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    cache_file = SFX_CACHE_DIR / f"whoosh_{int(duration * 1000)}_{int(center_freq)}_{int(sweep_range)}.wav"
+    if cache_file.exists() and cache_file.stat().st_size > 100:
+        if output_path.resolve() != cache_file.resolve():
+            shutil.copy2(cache_file, output_path)
+        return output_path
+
     output_path.parent.mkdir(parents=True, exist_ok=True)
     total_samples = int(duration * sample_rate)
     samples = []
@@ -52,6 +66,12 @@ def synthesize_procedural_whoosh(
         wav_file.setframerate(sample_rate)
         wav_file.writeframes(b"".join(samples))
 
+    if output_path.resolve() != cache_file.resolve():
+        try:
+            shutil.copy2(output_path, cache_file)
+        except Exception:
+            pass
+
     return output_path
 
 
@@ -64,6 +84,17 @@ def synthesize_procedural_boom(
     punch_intensity: float = 0.35
 ) -> Path:
     """Synthesize a cinematic sub-bass impact for the opening hook."""
+    output_path = Path(output_path)
+    if output_path.exists() and output_path.stat().st_size > 100:
+        return output_path
+
+    SFX_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    cache_file = SFX_CACHE_DIR / f"boom_{int(duration * 1000)}.wav"
+    if cache_file.exists() and cache_file.stat().st_size > 100:
+        if output_path.resolve() != cache_file.resolve():
+            shutil.copy2(cache_file, output_path)
+        return output_path
+
     output_path.parent.mkdir(parents=True, exist_ok=True)
     total_samples = int(duration * sample_rate)
     samples = []
@@ -96,6 +127,12 @@ def synthesize_procedural_boom(
         wav_file.setframerate(sample_rate)
         wav_file.writeframes(b"".join(samples))
 
+    if output_path.resolve() != cache_file.resolve():
+        try:
+            shutil.copy2(output_path, cache_file)
+        except Exception:
+            pass
+
     return output_path
 
 
@@ -114,6 +151,17 @@ def synthesize_camera_servo_sfx(
       - 'quantum_hum': Ominous sub-quantum resonant hum with phase modulation
       - 'solar_flare': Searing solar energy discharge stinger
     """
+    output_path = Path(output_path)
+    if output_path.exists() and output_path.stat().st_size > 100:
+        return output_path
+
+    SFX_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    cache_file = SFX_CACHE_DIR / f"{sfx_type}_{int(duration * 1000)}ms_{sample_rate}.wav"
+    if cache_file.exists() and cache_file.stat().st_size > 100:
+        if output_path.resolve() != cache_file.resolve():
+            shutil.copy2(cache_file, output_path)
+        return output_path
+
     output_path.parent.mkdir(parents=True, exist_ok=True)
     total_samples = int(duration * sample_rate)
     samples = []
@@ -218,6 +266,12 @@ def synthesize_camera_servo_sfx(
         wav_file.setsampwidth(2)
         wav_file.setframerate(sample_rate)
         wav_file.writeframes(b"".join(samples))
+
+    if output_path.resolve() != cache_file.resolve():
+        try:
+            shutil.copy2(output_path, cache_file)
+        except Exception:
+            pass
 
     return output_path
 

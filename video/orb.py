@@ -730,20 +730,17 @@ def render_orb_test_preview(
     temp_audio_files_to_clean = []
 
     if not resolved_audio:
+        import concurrent.futures
         from audio.tts import EdgeTTSProvider, GoogleTTSProvider
         from audio.sfx import synthesize_camera_servo_sfx, synthesize_space_ambient_pad
         from audio.music import MusicManager
 
         tts_edge = EdgeTTSProvider()
-        test_file = output_path.parent / "_test_probe.mp3"
-        use_cosmic_edge = tts_edge.synthesize_text("Hola", test_file)
-        if test_file.exists():
-            test_file.unlink()
+        tts_fallback = GoogleTTSProvider(language="es")
 
-        tts_fallback = GoogleTTSProvider(language="es") if not use_cosmic_edge else None
-
-        current_audio_time = 0.0
-        pause_between_scenes = 0.18
+        # Prepare scene specs and parallel TTS tasks (Eliminates sequential roundtrips & test probe)
+        parsed_scenes = []
+        tts_tasks = []
 
         for idx, sc in enumerate(scenes):
             spk_raw = str(sc.get("speaker", "Quantum")).strip()
@@ -778,43 +775,70 @@ def render_orb_test_preview(
                 else:
                     shot = "close_quantum"
 
-            scene_audio_paths = []
-
             if ent == "both":
                 p_q = output_path.parent / f"_temp_sc_{idx}_both_q.mp3"
                 p_s = output_path.parent / f"_temp_sc_{idx}_both_s.mp3"
                 temp_audio_files_to_clean.extend([p_q, p_s])
-                if use_cosmic_edge:
-                    tts_edge.synthesize_cosmic_entity(text, p_q, entity="quantum")
-                    tts_edge.synthesize_cosmic_entity(text, p_s, entity="solar")
-                else:
-                    tts_fallback.synthesize_text(text, p_q)
-                    tts_fallback.synthesize_text(text, p_s)
-                dur = max(_get_audio_duration_secs(p_q, 2.5), _get_audio_duration_secs(p_s, 2.5))
+                tts_tasks.append((text, p_q, "quantum"))
+                tts_tasks.append((text, p_s, "solar"))
                 scene_audio_paths = [p_q, p_s]
             else:
                 p_sc = output_path.parent / f"_temp_sc_{idx}_{ent}.mp3"
                 temp_audio_files_to_clean.append(p_sc)
-                if use_cosmic_edge:
-                    tts_edge.synthesize_cosmic_entity(text, p_sc, entity=ent)
-                else:
-                    tts_fallback.synthesize_text(text, p_sc)
-                dur = _get_audio_duration_secs(p_sc, 3.0)
+                tts_tasks.append((text, p_sc, ent))
                 scene_audio_paths = [p_sc]
+
+            parsed_scenes.append({
+                "index": idx,
+                "speaker": spk,
+                "entity": ent,
+                "text": text,
+                "shot": shot,
+                "audio_paths": scene_audio_paths
+            })
+
+        def _synthesize_voice_worker(task):
+            txt, out_p, entity_name = task
+            try:
+                ok = tts_edge.synthesize_cosmic_entity(txt, out_p, entity=entity_name)
+                if not ok or not out_p.exists() or out_p.stat().st_size == 0:
+                    tts_fallback.synthesize_text(txt, out_p)
+            except Exception as e:
+                print(f"  ⚠️ Edge-TTS failed for {entity_name} ({e}), trying fallback...")
+                try:
+                    tts_fallback.synthesize_text(txt, out_p)
+                except Exception as fb_err:
+                    print(f"  ❌ Fallback TTS failed: {fb_err}")
+
+        # Parallelize TTS synthesis across worker threads
+        if tts_tasks:
+            print(f"  ⚡ Sintetizando {len(tts_tasks)} pistas vocales en paralelo...")
+            with concurrent.futures.ThreadPoolExecutor(max_workers=min(8, len(tts_tasks))) as executor:
+                list(executor.map(_synthesize_voice_worker, tts_tasks))
+
+        # Build chronologically aligned timeline from generated audio files
+        current_audio_time = 0.0
+        pause_between_scenes = 0.18
+
+        for item in parsed_scenes:
+            if item["entity"] == "both":
+                dur = max(_get_audio_duration_secs(item["audio_paths"][0], 2.5), _get_audio_duration_secs(item["audio_paths"][1], 2.5))
+            else:
+                dur = _get_audio_duration_secs(item["audio_paths"][0], 3.0)
 
             s_start = round(current_audio_time, 2)
             s_end = round(s_start + dur, 2)
             current_audio_time = round(s_end + pause_between_scenes, 2)
 
             scene_records.append({
-                "index": idx,
-                "speaker": spk,
-                "entity": ent,
-                "text": text,
-                "shot": shot,
+                "index": item["index"],
+                "speaker": item["speaker"],
+                "entity": item["entity"],
+                "text": item["text"],
+                "shot": item["shot"],
                 "start": s_start,
                 "end": s_end,
-                "audio_paths": scene_audio_paths
+                "audio_paths": item["audio_paths"]
             })
 
         total_duration = round(max(current_audio_time + 0.6, 8.0), 2)
@@ -823,18 +847,24 @@ def render_orb_test_preview(
             print(f"     - Escena {sc['index']+1} [{sc['speaker']}] ({sc['shot']}): {sc['start']}s -> {sc['end']}s | \"{sc['text'][:45]}...\"")
         print(f"     - Duración Total: {total_duration}s")
 
-        # Synthesize camera transition SFX & entity stingers
-        sfx_intro_path = output_path.parent / "_temp_sfx_intro.wav"
-        sfx_zoom_path = output_path.parent / "_temp_sfx_zoom.wav"
-        sfx_pan_path = output_path.parent / "_temp_sfx_pan.wav"
-        sfx_res_path = output_path.parent / "_temp_sfx_res.wav"
-        music_bg_path = output_path.parent / "_temp_music_ambient.wav"
-        temp_audio_files_to_clean.extend([sfx_intro_path, sfx_zoom_path, sfx_pan_path, sfx_res_path])
+        # Camera transition SFX & entity stingers (Cached in assets/sfx/cached for 0ms overhead)
+        sfx_cache_dir = Path(__file__).resolve().parent.parent / "assets" / "sfx" / "cached"
+        sfx_cache_dir.mkdir(parents=True, exist_ok=True)
 
-        synthesize_camera_servo_sfx(sfx_intro_path, duration=1.1, sfx_type="intro")
-        synthesize_camera_servo_sfx(sfx_zoom_path, duration=0.52, sfx_type="whoosh_quantum")
-        synthesize_camera_servo_sfx(sfx_pan_path, duration=0.52, sfx_type="whoosh_solar")
-        synthesize_camera_servo_sfx(sfx_res_path, duration=2.5, sfx_type="cosmic_resonance")
+        sfx_intro_path = sfx_cache_dir / "sfx_intro_1100.wav"
+        sfx_zoom_path = sfx_cache_dir / "sfx_whoosh_quantum_520.wav"
+        sfx_pan_path = sfx_cache_dir / "sfx_whoosh_solar_520.wav"
+        sfx_res_path = sfx_cache_dir / "sfx_cosmic_resonance_2500.wav"
+        music_bg_path = output_path.parent / "_temp_music_ambient.wav"
+
+        if not sfx_intro_path.exists() or sfx_intro_path.stat().st_size < 100:
+            synthesize_camera_servo_sfx(sfx_intro_path, duration=1.1, sfx_type="intro")
+        if not sfx_zoom_path.exists() or sfx_zoom_path.stat().st_size < 100:
+            synthesize_camera_servo_sfx(sfx_zoom_path, duration=0.52, sfx_type="whoosh_quantum")
+        if not sfx_pan_path.exists() or sfx_pan_path.stat().st_size < 100:
+            synthesize_camera_servo_sfx(sfx_pan_path, duration=0.52, sfx_type="whoosh_solar")
+        if not sfx_res_path.exists() or sfx_res_path.stat().st_size < 100:
+            synthesize_camera_servo_sfx(sfx_res_path, duration=2.5, sfx_type="cosmic_resonance")
 
         # Background soundtrack
         music_mgr = MusicManager()
