@@ -681,11 +681,11 @@ def render_orb_test_preview(
     orb_solar = get_or_create_orb_asset(palette="solar", force_refresh=False)
 
     # Generate Holographic Floating Reference Cards (Only if required by script)
-    from video.hologram import generate_hologram_card_svg, generate_presenter_badge_svg
+    from video.hologram import generate_hologram_card_svg
+    from core.hosts import CosmicDebateShow, DEFAULT_QUANTUM_HOST, DEFAULT_SOLAR_HOST
+
     holo_q_path = output_path.parent / "_holo_q.svg"
     holo_s_path = output_path.parent / "_holo_s.svg"
-    badge_q_path = output_path.parent / "_badge_q.svg"
-    badge_s_path = output_path.parent / "_badge_s.svg"
 
     if has_holo_q:
         generate_hologram_card_svg(
@@ -708,21 +708,22 @@ def render_orb_test_preview(
             output_path=holo_s_path
         )
 
-    generate_presenter_badge_svg(
-        name="QUANTUM",
-        role="IA Física Cuántica",
-        color_theme="cyan",
-        width=380,
-        height=110,
-        output_path=badge_q_path
-    )
-    generate_presenter_badge_svg(
-        name="SOLAR",
-        role="IA Astrofísica Solar",
-        color_theme="amber",
-        width=380,
-        height=110,
-        output_path=badge_s_path
+    # Resolve OOP Show model and optional dynamic roles from script
+    custom_roles = {}
+    if debate_script:
+        if "roles" in debate_script and isinstance(debate_script["roles"], dict):
+            custom_roles = debate_script["roles"]
+        elif "hosts" in debate_script and isinstance(debate_script["hosts"], dict):
+            for h_k, h_v in debate_script["hosts"].items():
+                if isinstance(h_v, dict) and "role" in h_v:
+                    custom_roles[h_k] = h_v["role"]
+                elif isinstance(h_v, str):
+                    custom_roles[h_k] = h_v
+
+    debate_show = CosmicDebateShow(host_a=DEFAULT_QUANTUM_HOST, host_b=DEFAULT_SOLAR_HOST)
+    badge_q_path, badge_s_path = debate_show.generate_all_badges(
+        output_dir=output_path.parent,
+        custom_roles=custom_roles
     )
 
     temp_test_audio: Optional[Path] = output_path.parent / "_temp_cohost_debate.mp3"

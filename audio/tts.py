@@ -15,42 +15,13 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Any
 
 from config import AUDIO_DIR, TTS_PROVIDER, TTS_API_KEY, DEFAULT_TTS_VOICE, OPENAI_API_KEY
+from core.hosts import HostRegistry
 from utils.files import get_media_duration
 
 
-# Cosmic Entity Voice Profiles (Microsoft Edge Neural TTS + SSML Prosody + Cell DBZ Double Tracking + 4-Tier DSP)
-COSMIC_VOICE_PROFILES = {
-    "quantum": {
-        "name": "QUANTUM",
-        "voice": "es-ES-AlvaroNeural",
-        "rate": "-5%",
-        "pitch": "-4Hz",
-        "volume": "+0%",
-        "role": "La Mente Fundamental del Vacío",
-        "description": "Profunda, analítica, serena. Double tracking grave (-0.3 semitonos, 14ms, -11dB) + dimensión 3D.",
-        "drone_freq": 48,
-        "double_tracking": {
-            "delay_ms": 14,
-            "double_vol_db": -11.0,
-            "detune_semitones": -0.3
-        }
-    },
-    "solar": {
-        "name": "SOLAR",
-        "voice": "es-ES-ElviraNeural",
-        "rate": "+1%",
-        "pitch": "+2Hz",
-        "volume": "+0%",
-        "role": "El Núcleo Estelar Radiante",
-        "description": "Cálida, brillante, envolvente. Double tracking plasma (+0.3 semitonos, 12ms, -11.5dB) + expansión 3D.",
-        "drone_freq": 58,
-        "double_tracking": {
-            "delay_ms": 12,
-            "double_vol_db": -11.5,
-            "detune_semitones": 0.3
-        }
-    }
-}
+# Cosmic Entity Voice Profiles (Populated dynamically from Core OOP Host Registry)
+COSMIC_VOICE_PROFILES = HostRegistry.all_voice_profiles()
+
 
 
 def detect_speech_impact_intensity(text: str) -> Tuple[bool, float, str]:

@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Dict, Any, Optional, Tuple
 
 from ai.orb_reviewer import OrbScriptReviewer
+from core.hosts import CosmicDebateShow, DEFAULT_QUANTUM_HOST, DEFAULT_SOLAR_HOST, OrbHost
 
 from config import (
     BASE_DIR,
@@ -27,70 +28,12 @@ from config import (
     sanitize_env_value,
 )
 
-
-DEBATE_SYSTEM_PROMPT = """You are the Lead Writer and Showrunner for 'COSMIC ORB SHOW', an ultra-engaging vertical video series featuring two AI co-hosts (Quantum and Solar).
-
-CRITICAL NARRATIVE RULES:
-
-1. NO PSEUDO-POETRY OR VAGUE FLUFF (STRICTLY BANNED):
-   - PROHIBITED: Abstract pseudo-poetic phrases without physical meaning (e.g. "la gravedad del relato", "la tinta de la conciencia", "las hojas del libro cósmico", "el tejido de las almas", "la voz del universo").
-   - MANDATORY GROUNDING: Every script MUST be grounded in REAL physics, real scientific paradoxes, or concrete sci-fi mechanics (e.g. quantum superposition, time dilation, speed of light limit, entropy, black hole event horizons, simulation theory, Planck scale, observer effect).
-
-2. ONE SINGLE STORY ARC & CONVERSATIONAL CHAINING:
-   - The script MUST maintain ONE single central thought experiment or real paradox from line 1 to the end. Do NOT jump to unrelated isolated physics facts.
-   - Every scene after Scene 1 MUST directly react to or build upon the previous sentence using natural bridges ("Exacto, y por eso...", "De hecho, si ese fuera el caso...", "Ahí está la paradoja: ...", "Eso significa que...", "Pero piénsalo: ...").
-   - The dialog MUST read like a real, fascinating conversation between two brilliant minds bouncing off each other.
-
-3. STRUCTURE & HOLOGRAMS:
-   - FLEXIBLE SCENE COUNT: Produce between 3 and 5 scenes based on what the narrative naturally requires.
-   - FLEXIBLE STARTER: Either Solar or Quantum can speak first—whichever speaker creates the strongest immediate hook.
-   - OPTIONAL HOLOGRAMS: Only output 'holograms' if there is a real, concrete scientific metric or formula to display (e.g. "300,000 km/s", "13.8 Gyr", "1.6x10⁻³⁵ m"). If the script is a pure conceptual thought experiment, set 'holograms': null.
-
-4. CAMERA SHOTS MUST STRICTLY MATCH THE SPEAKER:
-   - "shot": "wide" -> Opening scene or general view where both orbs are present.
-   - "shot": "close_quantum" -> ONLY when Quantum is speaking solo! Never assign to Solar.
-   - "shot": "close_solar" -> ONLY when Solar is speaking solo! Never assign to Quantum.
-   - "shot": "both" -> When both orbs speak together or in the concluding realization.
-
-5. DIALOGUE STYLE & ELI5:
-   - Speak in clear, simple Spanish. Explain like to a 12-year-old using clear physical analogies.
-   - Hook the viewer in the first 3 words with an irresistible, visual premise.
-   - End with a mind-expanding scientific realization or existential question (NO forced "comment below" CTAs).
-
-Respond ONLY with valid JSON matching this schema:
-{
-  "topic": "Clean topic name",
-  "headline_hook": "⚡ TITULO IMPACTANTE (MAX 45 CHARACTERS) ⚡",
-  "holograms": null,
-  "scenes": [
-    {
-      "speaker": "Quantum",
-      "entity": "quantum",
-      "text": "Imagina que el universo entero es solo una pantalla de videojuegos cargando en tiempo real.",
-      "shot": "wide",
-      "duration": 3.2
-    },
-    {
-      "speaker": "Solar",
-      "entity": "solar",
-      "text": "Exacto, y cada estrella que ves a lo lejos solo se renderiza cuando alguien la mira.",
-      "shot": "close_solar",
-      "duration": 3.5
-    },
-    {
-      "speaker": "Quantum",
-      "entity": "quantum",
-      "text": "Pero ahí está el misterio: si nadie está mirando el código, ¿quién presionó el botón de inicio?",
-      "shot": "both",
-      "duration": 3.5
-    }
-  ]
-}
-"""
+# Canonical default prompt generated from the default OOP model
+DEBATE_SYSTEM_PROMPT = CosmicDebateShow().build_system_prompt()
 
 
 class DebateScriptGenerator:
-    """Generates dialectic debate scripts between Quantum and Solar."""
+    """Generates dialectic debate scripts using the CosmicDebateShow OOP model."""
 
     def __init__(
         self,
@@ -99,6 +42,9 @@ class DebateScriptGenerator:
         openai_key: Optional[str] = None,
         preferred_provider: str = LLM_PROVIDER,
         enable_review: bool = True,
+        show: Optional[CosmicDebateShow] = None,
+        host_a: Optional[OrbHost] = None,
+        host_b: Optional[OrbHost] = None,
     ):
         raw_gemini = gemini_key if gemini_key is not None else GEMINI_API_KEY
         raw_groq = groq_key if groq_key is not None else GROQ_API_KEY
@@ -109,6 +55,12 @@ class DebateScriptGenerator:
         self.openai_key = sanitize_env_value(raw_openai)
         self.provider = (sanitize_env_value(preferred_provider) or "auto").lower()
         self.enable_review = enable_review
+
+        # OOP Show Model with injected variables
+        self.show = show or CosmicDebateShow(
+            host_a=host_a or DEFAULT_QUANTUM_HOST,
+            host_b=host_b or DEFAULT_SOLAR_HOST
+        )
 
         self.reviewer = OrbScriptReviewer(
             gemini_key=self.gemini_key,
@@ -183,8 +135,9 @@ class DebateScriptGenerator:
         return None
 
     def _call_gemini(self, topic: str, language: str) -> Optional[Dict[str, Any]]:
+        system_prompt = self.show.build_system_prompt(topic)
         full_prompt = (
-            f"{DEBATE_SYSTEM_PROMPT}\n\n"
+            f"{system_prompt}\n\n"
             f"Topic for Script: {topic}\n"
             f"Language: Spanish (Español)\n"
             f"Generate the JSON script following all narrative continuity rules and schema:"
@@ -228,11 +181,12 @@ class DebateScriptGenerator:
         return None
 
     def _call_groq(self, topic: str, language: str) -> Optional[Dict[str, Any]]:
+        system_prompt = self.show.build_system_prompt(topic)
         url = f"{GROQ_API_BASE}/chat/completions"
         payload = {
             "model": GROQ_MODEL or "llama-3.3-70b-versatile",
             "messages": [
-                {"role": "system", "content": DEBATE_SYSTEM_PROMPT},
+                {"role": "system", "content": system_prompt},
                 {"role": "user", "content": f"Topic: {topic}\nLanguage: Spanish\nGenerate the debate JSON:"}
             ],
             "response_format": {"type": "json_object"},
@@ -257,11 +211,12 @@ class DebateScriptGenerator:
             return self._parse_json(text)
 
     def _call_openai(self, topic: str, language: str) -> Optional[Dict[str, Any]]:
+        system_prompt = self.show.build_system_prompt(topic)
         url = "https://api.openai.com/v1/chat/completions"
         payload = {
             "model": "gpt-4o-mini",
             "messages": [
-                {"role": "system", "content": DEBATE_SYSTEM_PROMPT},
+                {"role": "system", "content": system_prompt},
                 {"role": "user", "content": f"Topic: {topic}\nLanguage: Spanish\nGenerate the debate JSON:"}
             ],
             "response_format": {"type": "json_object"},
