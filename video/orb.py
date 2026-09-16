@@ -671,31 +671,34 @@ def render_orb_test_preview(
     orb_quantum = get_or_create_orb_asset(palette="quantum", force_refresh=True)
     orb_solar = get_or_create_orb_asset(palette="solar", force_refresh=True)
 
-    # Generate Holographic Floating Reference Cards (Modern Apple/Vercel Frosted Glass)
+    # Generate Holographic Floating Reference Cards (Only if required by script)
     from video.hologram import generate_hologram_card_svg, generate_presenter_badge_svg
     holo_q_path = output_path.parent / "_holo_q.svg"
     holo_s_path = output_path.parent / "_holo_s.svg"
     badge_q_path = output_path.parent / "_badge_q.svg"
     badge_s_path = output_path.parent / "_badge_s.svg"
 
-    generate_hologram_card_svg(
-        title=holo_q_title,
-        subtitle=holo_q_sub,
-        category=holo_q_cat,
-        color_theme="cyan",
-        width=620,
-        height=240,
-        output_path=holo_q_path
-    )
-    generate_hologram_card_svg(
-        title=holo_s_title,
-        subtitle=holo_s_sub,
-        category=holo_s_cat,
-        color_theme="amber",
-        width=620,
-        height=240,
-        output_path=holo_s_path
-    )
+    if has_holo_q:
+        generate_hologram_card_svg(
+            title=holo_q_title,
+            subtitle=holo_q_sub,
+            category=holo_q_cat,
+            color_theme="cyan",
+            width=620,
+            height=240,
+            output_path=holo_q_path
+        )
+    if has_holo_s:
+        generate_hologram_card_svg(
+            title=holo_s_title,
+            subtitle=holo_s_sub,
+            category=holo_s_cat,
+            color_theme="amber",
+            width=620,
+            height=240,
+            output_path=holo_s_path
+        )
+
     generate_presenter_badge_svg(
         name="QUANTUM",
         role="IA Física Cuántica",
@@ -921,12 +924,50 @@ def render_orb_test_preview(
 
     bg_input = f"color=c=0x08090f:s={width}x{height}:r=30:d={total_duration}"
 
+    cmd_inputs = [
+        "-f", "lavfi", "-i", bg_input,
+        "-stream_loop", "-1", "-i", str(orb_quantum),
+        "-stream_loop", "-1", "-i", str(orb_solar),
+    ]
+    curr_input_idx = 3
+
+    holo_q_idx = None
+    if has_holo_q:
+        cmd_inputs.extend(["-stream_loop", "-1", "-i", str(holo_q_path)])
+        holo_q_idx = curr_input_idx
+        curr_input_idx += 1
+
+    holo_s_idx = None
+    if has_holo_s:
+        cmd_inputs.extend(["-stream_loop", "-1", "-i", str(holo_s_path)])
+        holo_s_idx = curr_input_idx
+        curr_input_idx += 1
+
+    cmd_inputs.extend(["-stream_loop", "-1", "-i", str(badge_q_path)])
+    badge_q_idx = curr_input_idx
+    curr_input_idx += 1
+
+    cmd_inputs.extend(["-stream_loop", "-1", "-i", str(badge_s_path)])
+    badge_s_idx = curr_input_idx
+    curr_input_idx += 1
+
+    audio_idx = curr_input_idx
+    if resolved_audio and resolved_audio.exists():
+        cmd_inputs.extend(["-i", str(resolved_audio)])
+    else:
+        cmd_inputs.extend(["-f", "lavfi", "-i", "anullsrc=r=44100:cl=stereo"])
+
+    pre_scale_lines = []
+    if has_holo_q:
+        pre_scale_lines.append(f"[{holo_q_idx}:v]scale=540:-2,format=yuva420p[holo_q]")
+    if has_holo_s:
+        pre_scale_lines.append(f"[{holo_s_idx}:v]scale=540:-2,format=yuva420p[holo_s]")
+    pre_scale_lines.append(f"[{badge_q_idx}:v]scale=340:-2,format=yuva420p[badge_q]")
+    pre_scale_lines.append(f"[{badge_s_idx}:v]scale=340:-2,format=yuva420p[badge_s]")
+
     filter_complex = [
         # 0. Hologram Reference Card & Presenter Badge Pre-scaling
-        "[3:v]scale=540:-2,format=yuva420p[holo_q]",
-        "[4:v]scale=540:-2,format=yuva420p[holo_s]",
-        "[5:v]scale=340:-2,format=yuva420p[badge_q]",
-        "[6:v]scale=340:-2,format=yuva420p[badge_s]",
+        *pre_scale_lines,
 
         # 1. Split streams to apply physical static transparency to separate active/resting layers
         "[1:v]split=4[q_t1][q_t2][q_t4][q_glow]",
@@ -958,12 +999,16 @@ def render_orb_test_preview(
         f"[v1_bdg_q][badge_s]overlay=eval=frame:x='W*0.75-w/2 - 28 + 5.0*cos(2*PI*(t-0.4)/2.4)':y='H*0.52-h/2 + 4.0*sin(2*PI*(t-0.4)/2.4)':enable='between(t,0.3,{max(0.4, round(t1-0.2, 2))})'[v2]",
 
         # Toma 2 (t1 -> t2): Close Up Quantum active + Floating Sci-Fi Hologram Card 1 (if enabled)
-        f"[v2][orb_q_close_t2]overlay=eval=frame:x='W/2-w/2 + {drift_q_active_x} + 25.0*exp(-6.5*(t-{t1}))*cos(16.0*(t-{t1}))':y='H*0.38-h/2 + {drift_q_active_y} + 30.0*exp(-6.5*(t-{t1}))*sin(16.0*(t-{t1}))':enable='between(t,{t1},{t2})'[v3]",
-        f"[v3][holo_q]overlay=eval=frame:x='(W-w)/2':y='H*0.12-h/2 + 6.0*sin(2*PI*(t-{round(t1+0.1, 2)})/2.4)':enable='between(t,{round(t1+0.1, 2)},{max(round(t1+0.2, 2), round(t2-0.2, 2))})'[v3_holo]" if has_holo_q else "[v3]null[v3_holo]",
+        (f"[v2][orb_q_close_t2]overlay=eval=frame:x='W/2-w/2 + {drift_q_active_x} + 25.0*exp(-6.5*(t-{t1}))*cos(16.0*(t-{t1}))':y='H*0.38-h/2 + {drift_q_active_y} + 30.0*exp(-6.5*(t-{t1}))*sin(16.0*(t-{t1}))':enable='between(t,{t1},{t2})'[v3]; "
+         f"[v3][holo_q]overlay=eval=frame:x='(W-w)/2':y='H*0.12-h/2 + 6.0*sin(2*PI*(t-{round(t1+0.1, 2)})/2.4)':enable='between(t,{round(t1+0.1, 2)},{max(round(t1+0.2, 2), round(t2-0.2, 2))})'[v3_holo]")
+        if has_holo_q else
+        f"[v2][orb_q_close_t2]overlay=eval=frame:x='W/2-w/2 + {drift_q_active_x} + 25.0*exp(-6.5*(t-{t1}))*cos(16.0*(t-{t1}))':y='H*0.38-h/2 + {drift_q_active_y} + 30.0*exp(-6.5*(t-{t1}))*sin(16.0*(t-{t1}))':enable='between(t,{t1},{t2})'[v3_holo]",
 
         # Toma 3 (t2 -> t3): Close Up Solar active + Floating Sci-Fi Hologram Card 2 (if enabled)
-        f"[v3_holo][orb_s_close_t3]overlay=eval=frame:x='W/2-w/2 + {drift_s_active_x} + 25.0*exp(-6.5*(t-{t2}))*cos(16.0*(t-{t2}))':y='H*0.38-h/2 + {drift_s_active_y} + 30.0*exp(-6.5*(t-{t2}))*sin(16.0*(t-{t2}))':enable='between(t,{t2},{t3})'[v4]",
-        f"[v4][holo_s]overlay=eval=frame:x='(W-w)/2':y='H*0.12-h/2 + 6.0*cos(2*PI*(t-{round(t2+0.1, 2)})/2.6)':enable='between(t,{round(t2+0.1, 2)},{max(round(t2+0.2, 2), round(t3-0.2, 2))})'[v4_holo]" if has_holo_s else "[v4]null[v4_holo]",
+        (f"[v3_holo][orb_s_close_t3]overlay=eval=frame:x='W/2-w/2 + {drift_s_active_x} + 25.0*exp(-6.5*(t-{t2}))*cos(16.0*(t-{t2}))':y='H*0.38-h/2 + {drift_s_active_y} + 30.0*exp(-6.5*(t-{t2}))*sin(16.0*(t-{t2}))':enable='between(t,{t2},{t3})'[v4]; "
+         f"[v4][holo_s]overlay=eval=frame:x='(W-w)/2':y='H*0.12-h/2 + 6.0*cos(2*PI*(t-{round(t2+0.1, 2)})/2.6)':enable='between(t,{round(t2+0.1, 2)},{max(round(t2+0.2, 2), round(t3-0.2, 2))})'[v4_holo]")
+        if has_holo_s else
+        f"[v3_holo][orb_s_close_t3]overlay=eval=frame:x='W/2-w/2 + {drift_s_active_x} + 25.0*exp(-6.5*(t-{t2}))*cos(16.0*(t-{t2}))':y='H*0.38-h/2 + {drift_s_active_y} + 30.0*exp(-6.5*(t-{t2}))*sin(16.0*(t-{t2}))':enable='between(t,{t2},{t3})'[v4_holo]",
 
         # Toma 4 (t3 -> total_duration): Wide Shot Harmonic Resonance Outro (Both Orbs Glow in Resonance)
         f"[v4_holo][orb_q_wide_t4]overlay=eval=frame:x='W*0.25-w/2 + {drift_q_active_x} + 15.0*exp(-6.5*(t-{t3}))*cos(16.0*(t-{t3}))':y='H*0.38-h/2 + {drift_q_active_y} + 18.0*exp(-6.5*(t-{t3}))*sin(16.0*(t-{t3}))':enable='between(t,{t3},{total_duration})'[v5]",
@@ -980,27 +1025,12 @@ def render_orb_test_preview(
     ]
     filter_str = ";".join(filter_complex)
 
-    audio_input_args = []
-    if resolved_audio and resolved_audio.exists():
-        audio_input_args = ["-i", str(resolved_audio)]
-        audio_map = ["-map", "7:a"]
-    else:
-        audio_input_args = ["-f", "lavfi", "-i", "anullsrc=r=44100:cl=stereo"]
-        audio_map = ["-map", "7:a"]
-
     cmd = [
         "ffmpeg", "-y",
-        "-f", "lavfi", "-i", bg_input,
-        "-stream_loop", "-1", "-i", str(orb_quantum),
-        "-stream_loop", "-1", "-i", str(orb_solar),
-        "-stream_loop", "-1", "-i", str(holo_q_path),
-        "-stream_loop", "-1", "-i", str(holo_s_path),
-        "-stream_loop", "-1", "-i", str(badge_q_path),
-        "-stream_loop", "-1", "-i", str(badge_s_path),
-        *audio_input_args,
+        *cmd_inputs,
         "-filter_complex", filter_str,
         "-map", "[vout]",
-        *audio_map,
+        "-map", f"{audio_idx}:a",
         "-c:v", "libx264",
         "-preset", "ultrafast",
         "-pix_fmt", "yuv420p",
