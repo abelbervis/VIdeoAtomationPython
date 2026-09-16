@@ -648,26 +648,33 @@ def render_orb_test_preview(
                 holo_s_cat = str(hs.get("category", holo_s_cat))
 
         scenes = debate_script.get("scenes", [])
-        if len(scenes) > 0 and scenes[0].get("text"):
-            q_part1 = scenes[0]["text"]
-        if len(scenes) > 1 and scenes[1].get("text"):
-            q_part2 = scenes[1]["text"]
-        if len(scenes) > 2 and scenes[2].get("text"):
-            s_part3 = scenes[2]["text"]
-        if len(scenes) > 3 and scenes[3].get("text"):
-            both_part4 = scenes[3]["text"]
+        if not scenes:
+            scenes = [
+                {"speaker": "Quantum", "entity": "quantum", "text": "Bienvenido al canal cósmico.", "shot": "wide"},
+                {"speaker": "Solar", "entity": "solar", "text": "Explorando los misterios del cosmos.", "shot": "close_solar"},
+                {"speaker": "Quantum", "entity": "quantum", "text": "Cada átomo cuenta una historia infinita.", "shot": "close_quantum"},
+                {"speaker": "Ambos", "entity": "both", "text": "El universo continúa expandiéndose.", "shot": "both"}
+            ]
 
         script_json_path = output_path.parent / "script.json"
         script_json_path.write_text(json.dumps(debate_script, ensure_ascii=False, indent=2), encoding="utf-8")
+    else:
+        scenes = [
+            {"speaker": "Quantum", "entity": "quantum", "text": q_part1, "shot": "wide"},
+            {"speaker": "Quantum", "entity": "quantum", "text": q_part2, "shot": "close_quantum"},
+            {"speaker": "Solar", "entity": "solar", "text": s_part3, "shot": "close_solar"},
+            {"speaker": "Ambos", "entity": "both", "text": both_part4, "shot": "both"}
+        ]
 
-    print(f"\n🔮 [AI Co-Host Debate Express] Renderizando video con Doble Orbe y Multi-Cámara...")
+    print(f"\n🔮 [AI Co-Host Debate Express] Renderizando video dinámico ({len(scenes)} escenas) con Doble Orbe y Multi-Cámara...")
     print(f"   • Orbe 1: QUANTUM (Azul Eléctrico / Cyan) | Orbe 2: SOLAR (Ámbar / Oro)")
     print(f"   • Hook: {headline_hook}")
-    print(f"   • HUD Holográfico Q: [{holo_q_cat}] {holo_q_title} -> {holo_q_sub}")
-    print(f"   • HUD Holográfico S: [{holo_s_cat}] {holo_s_title} -> {holo_s_sub}")
-    print(f"   • Outro CTA Resonancia: {both_part4}")
+    if has_holo_q:
+        print(f"   • HUD Holográfico Q: [{holo_q_cat}] {holo_q_title} -> {holo_q_sub}")
+    if has_holo_s:
+        print(f"   • HUD Holográfico S: [{holo_s_cat}] {holo_s_title} -> {holo_s_sub}")
 
-    # Generate both assets
+    # Generate both orb visual assets
     orb_quantum = get_or_create_orb_asset(palette="quantum", force_refresh=True)
     orb_solar = get_or_create_orb_asset(palette="solar", force_refresh=True)
 
@@ -719,178 +726,220 @@ def render_orb_test_preview(
     temp_test_audio: Optional[Path] = output_path.parent / "_temp_cohost_debate.mp3"
     resolved_audio: Optional[Path] = sample_audio
 
-    # Dynamic timeline variables
-    t0 = 0.0
-    t1 = 3.2
-    t2 = 6.4
-    t3 = 9.8
-    total_duration = 12.0
+    scene_records = []
+    temp_audio_files_to_clean = []
 
     if not resolved_audio:
-        part1_path = output_path.parent / "_temp_q_part1.mp3"
-        part2_path = output_path.parent / "_temp_q_part2.mp3"
-        part3_path = output_path.parent / "_temp_s_part3.mp3"
-        part4_q_path = output_path.parent / "_temp_both_q.mp3"
-        part4_s_path = output_path.parent / "_temp_both_s.mp3"
-        sfx_intro_path = output_path.parent / "_temp_sfx_intro.wav"
-        sfx_zoom_path = output_path.parent / "_temp_sfx_zoom.wav"
-        sfx_pan_path = output_path.parent / "_temp_sfx_pan.wav"
-        sfx_wide_path = output_path.parent / "_temp_sfx_wide.wav"
-        sfx_res_path = output_path.parent / "_temp_sfx_res.wav"
-        music_bg_path = output_path.parent / "_temp_music_ambient.wav"
-
         from audio.tts import EdgeTTSProvider, GoogleTTSProvider
         from audio.sfx import synthesize_camera_servo_sfx, synthesize_space_ambient_pad
         from audio.music import MusicManager
 
         tts_edge = EdgeTTSProvider()
-
-        # Test a brief call to see if edge neural is online, else fallback
         test_file = output_path.parent / "_test_probe.mp3"
         use_cosmic_edge = tts_edge.synthesize_text("Hola", test_file)
         if test_file.exists():
             test_file.unlink()
 
-        if use_cosmic_edge:
-            syn1 = tts_edge.synthesize_cosmic_entity(q_part1, part1_path, entity="quantum")
-            syn2 = tts_edge.synthesize_cosmic_entity(q_part2, part2_path, entity="quantum")
-            syn3 = tts_edge.synthesize_cosmic_entity(s_part3, part3_path, entity="solar")
-            syn4_q = tts_edge.synthesize_cosmic_entity(both_part4, part4_q_path, entity="quantum")
-            syn4_s = tts_edge.synthesize_cosmic_entity(both_part4, part4_s_path, entity="solar")
-        else:
-            tts_fallback = GoogleTTSProvider(language="es")
-            syn1 = tts_fallback.synthesize_text(q_part1, part1_path)
-            syn2 = tts_fallback.synthesize_text(q_part2, part2_path)
-            syn3 = tts_fallback.synthesize_text(s_part3, part3_path)
-            syn4_q = tts_fallback.synthesize_text(both_part4, part4_q_path)
-            syn4_s = tts_fallback.synthesize_text(both_part4, part4_s_path)
+        tts_fallback = GoogleTTSProvider(language="es") if not use_cosmic_edge else None
 
-        # Accurately measure each speech part duration to PREVENT ANY AUDIO OVERLAP
-        dur1 = _get_audio_duration_secs(part1_path, 3.0)
-        dur2 = _get_audio_duration_secs(part2_path, 3.0)
-        dur3 = _get_audio_duration_secs(part3_path, 3.2)
-        dur4_q = _get_audio_duration_secs(part4_q_path, 2.5)
-        dur4_s = _get_audio_duration_secs(part4_s_path, 2.5)
-        dur4 = max(dur4_q, dur4_s)
+        current_audio_time = 0.0
+        pause_between_scenes = 0.18
 
-        pause = 0.18  # Natural speech boundary pause in seconds
-        t0 = 0.0
-        t1 = round(dur1 + pause, 2)
-        t2 = round(t1 + dur2 + pause, 2)
-        t3 = round(t2 + dur3 + pause, 2)
-        total_duration = round(max(t3 + dur4 + 0.9, 12.0), 2)
+        for idx, sc in enumerate(scenes):
+            spk_raw = str(sc.get("speaker", "Quantum")).strip()
+            ent_raw = str(sc.get("entity", "quantum")).strip().lower()
+            text = str(sc.get("text", "")).strip()
+            shot = str(sc.get("shot", "wide")).strip().lower()
 
-        print(f"   • Línea de Tiempo Dialéctica: T1={t1}s | T2={t2}s | T3={t3}s | Dur4={dur4}s | Total={total_duration}s")
+            if "solar" in ent_raw or "solar" in spk_raw.lower():
+                ent = "solar"
+                spk = "Solar"
+            elif "ambos" in ent_raw or "both" in ent_raw or "ambos" in spk_raw.lower() or "dual" in spk_raw.lower():
+                ent = "both"
+                spk = "Ambos"
+            else:
+                ent = "quantum"
+                spk = "Quantum"
+
+            # Auto-align shot if missing or mismatch
+            if shot not in ["wide", "close_quantum", "close_solar", "both"]:
+                if ent == "solar":
+                    shot = "close_solar"
+                elif ent == "both":
+                    shot = "both"
+                elif idx == 0:
+                    shot = "wide"
+                else:
+                    shot = "close_quantum"
+
+            scene_audio_paths = []
+
+            if ent == "both":
+                p_q = output_path.parent / f"_temp_sc_{idx}_both_q.mp3"
+                p_s = output_path.parent / f"_temp_sc_{idx}_both_s.mp3"
+                temp_audio_files_to_clean.extend([p_q, p_s])
+                if use_cosmic_edge:
+                    tts_edge.synthesize_cosmic_entity(text, p_q, entity="quantum")
+                    tts_edge.synthesize_cosmic_entity(text, p_s, entity="solar")
+                else:
+                    tts_fallback.synthesize_text(text, p_q)
+                    tts_fallback.synthesize_text(text, p_s)
+                dur = max(_get_audio_duration_secs(p_q, 2.5), _get_audio_duration_secs(p_s, 2.5))
+                scene_audio_paths = [p_q, p_s]
+            else:
+                p_sc = output_path.parent / f"_temp_sc_{idx}_{ent}.mp3"
+                temp_audio_files_to_clean.append(p_sc)
+                if use_cosmic_edge:
+                    tts_edge.synthesize_cosmic_entity(text, p_sc, entity=ent)
+                else:
+                    tts_fallback.synthesize_text(text, p_sc)
+                dur = _get_audio_duration_secs(p_sc, 3.0)
+                scene_audio_paths = [p_sc]
+
+            s_start = round(current_audio_time, 2)
+            s_end = round(s_start + dur, 2)
+            current_audio_time = round(s_end + pause_between_scenes, 2)
+
+            scene_records.append({
+                "index": idx,
+                "speaker": spk,
+                "entity": ent,
+                "text": text,
+                "shot": shot,
+                "start": s_start,
+                "end": s_end,
+                "audio_paths": scene_audio_paths
+            })
+
+        total_duration = round(max(current_audio_time + 0.6, 8.0), 2)
+        print(f"   • Línea de Tiempo Dialéctica Multi-Escena ({len(scene_records)} escenas):")
+        for sc in scene_records:
+            print(f"     - Escena {sc['index']+1} [{sc['speaker']}] ({sc['shot']}): {sc['start']}s -> {sc['end']}s | \"{sc['text'][:45]}...\"")
+        print(f"     - Duración Total: {total_duration}s")
 
         # Synthesize camera transition SFX & entity stingers
-        sfx_q_hum_path = output_path.parent / "_temp_sfx_q_hum.wav"
-        sfx_s_flare_path = output_path.parent / "_temp_sfx_s_flare.wav"
+        sfx_intro_path = output_path.parent / "_temp_sfx_intro.wav"
+        sfx_zoom_path = output_path.parent / "_temp_sfx_zoom.wav"
+        sfx_pan_path = output_path.parent / "_temp_sfx_pan.wav"
+        sfx_res_path = output_path.parent / "_temp_sfx_res.wav"
+        music_bg_path = output_path.parent / "_temp_music_ambient.wav"
+        temp_audio_files_to_clean.extend([sfx_intro_path, sfx_zoom_path, sfx_pan_path, sfx_res_path])
 
         synthesize_camera_servo_sfx(sfx_intro_path, duration=1.1, sfx_type="intro")
         synthesize_camera_servo_sfx(sfx_zoom_path, duration=0.52, sfx_type="whoosh_quantum")
         synthesize_camera_servo_sfx(sfx_pan_path, duration=0.52, sfx_type="whoosh_solar")
-        synthesize_camera_servo_sfx(sfx_wide_path, duration=0.60, sfx_type="pull_back")
         synthesize_camera_servo_sfx(sfx_res_path, duration=2.5, sfx_type="cosmic_resonance")
-        synthesize_camera_servo_sfx(sfx_q_hum_path, duration=1.2, sfx_type="quantum_hum")
-        synthesize_camera_servo_sfx(sfx_s_flare_path, duration=0.9, sfx_type="solar_flare")
 
-        # Prepare background soundtrack
+        # Background soundtrack
         music_mgr = MusicManager()
         bg_track = music_mgr.get_background_track()
         if bg_track and bg_track.exists():
             music_bg_path = bg_track
         else:
             synthesize_space_ambient_pad(music_bg_path, duration=total_duration)
+            temp_audio_files_to_clean.append(music_bg_path)
 
-        if syn1 and syn2 and syn3 and part1_path.exists() and part2_path.exists() and part3_path.exists():
-            v1_delay = 0
-            v2_delay = int(t1 * 1000)
-            v3_delay = int(t2 * 1000)
-            v4_delay = int(t3 * 1000)
-            sfx0_delay = 20
-            sfx1_delay = int(max(0.0, t1 - 0.08) * 1000)
-            sfx2_delay = int(max(0.0, t2 - 0.08) * 1000)
-            sfx3_delay = int(max(0.0, t3 - 0.08) * 1000)
-            sfx_res_delay = int(t3 * 1000)
-            sfx_q_hum_delay = int(t1 * 1000)
-            sfx_s_flare_delay = int(t2 * 1000)
+        # Build dynamic audio concat ffmpeg command
+        audio_inputs = []
+        audio_filter_lines = []
+        mix_inputs = []
 
-            concat_cmd = [
-                "ffmpeg", "-y",
-                "-i", str(part1_path),
-                "-i", str(part2_path),
-                "-i", str(part3_path),
-                "-i", str(part4_q_path),
-                "-i", str(part4_s_path),
-                "-i", str(sfx_intro_path),
-                "-i", str(sfx_zoom_path),
-                "-i", str(sfx_pan_path),
-                "-i", str(sfx_wide_path),
-                "-i", str(sfx_res_path),
-                "-i", str(sfx_q_hum_path),
-                "-i", str(sfx_s_flare_path),
-                "-stream_loop", "-1", "-i", str(music_bg_path),
-                "-filter_complex",
-                f"[0:a]adelay={v1_delay}|{v1_delay},volume=1.0[v1];"
-                f"[1:a]adelay={v2_delay}|{v2_delay},volume=1.0[v2];"
-                f"[2:a]adelay={v3_delay}|{v3_delay},volume=1.0[v3];"
-                f"[3:a]adelay={v4_delay}|{v4_delay},volume=0.90[v4_q];"
-                f"[4:a]adelay={v4_delay}|{v4_delay},volume=0.90[v4_s];"
-                f"[5:a]adelay={sfx0_delay}|{sfx0_delay},volume=0.42[sfx0];"
-                f"[6:a]adelay={sfx1_delay}|{sfx1_delay},volume=0.38[sfx1];"
-                f"[7:a]adelay={sfx2_delay}|{sfx2_delay},volume=0.38[sfx2];"
-                f"[8:a]adelay={sfx3_delay}|{sfx3_delay},volume=0.42[sfx3];"
-                f"[9:a]adelay={sfx_res_delay}|{sfx_res_delay},volume=0.45[sfx_res];"
-                f"[10:a]adelay={sfx_q_hum_delay}|{sfx_q_hum_delay},volume=0.32[sfx_q_hum];"
-                f"[11:a]adelay={sfx_s_flare_delay}|{sfx_s_flare_delay},volume=0.28[sfx_s_flare];"
-                f"[12:a]volume=0.16,afade=t=in:st=0:d=1.0,afade=t=out:st={round(total_duration - 1.4, 2)}:d=1.4[bgm];"
-                "[v1][v2][v3][v4_q][v4_s][sfx0][sfx1][sfx2][sfx3][sfx_res][sfx_q_hum][sfx_s_flare][bgm]amix=inputs=13:dropout_transition=0:normalize=0[aout]",
-                "-map", "[aout]",
-                "-t", str(total_duration),
-                "-c:a", "libmp3lame",
-                "-b:a", "192k",
-                str(temp_test_audio)
-            ]
-            try:
-                subprocess.run(concat_cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                if temp_test_audio.exists():
-                    resolved_audio = temp_test_audio
-            except Exception as e:
-                print(f"  ⚠️ Test co-host audio concat error: {e}")
-                resolved_audio = part1_path
+        stream_idx = 0
+        for sc in scene_records:
+            delay_ms = int(sc["start"] * 1000)
+            for p_path in sc["audio_paths"]:
+                audio_inputs.extend(["-i", str(p_path)])
+                vol = 0.90 if sc["entity"] == "both" else 1.0
+                audio_filter_lines.append(f"[{stream_idx}:a]adelay={delay_ms}|{delay_ms},volume={vol}[a_{stream_idx}]")
+                mix_inputs.append(f"[a_{stream_idx}]")
+                stream_idx += 1
 
-            for p in [part1_path, part2_path, part3_path, part4_q_path, part4_s_path, sfx_intro_path, sfx_zoom_path, sfx_pan_path, sfx_wide_path, sfx_res_path, sfx_q_hum_path, sfx_s_flare_path]:
-                if p.exists():
-                    try:
-                        p.unlink()
-                    except Exception:
-                        pass
-                    except Exception:
-                        pass
-            if music_bg_path.name == "_temp_music_ambient.wav" and music_bg_path.exists():
+        # Add SFX
+        audio_inputs.extend(["-i", str(sfx_intro_path)])
+        audio_filter_lines.append(f"[{stream_idx}:a]adelay=20|20,volume=0.40[sfx_intro]")
+        mix_inputs.append("[sfx_intro]")
+        stream_idx += 1
+
+        for sc in scene_records[1:]:
+            sfx_delay_ms = int(max(0.0, sc["start"] - 0.08) * 1000)
+            if sc["shot"] == "close_solar":
+                audio_inputs.extend(["-i", str(sfx_pan_path)])
+                audio_filter_lines.append(f"[{stream_idx}:a]adelay={sfx_delay_ms}|{sfx_delay_ms},volume=0.35[sfx_{stream_idx}]")
+            elif sc["shot"] == "both":
+                audio_inputs.extend(["-i", str(sfx_res_path)])
+                audio_filter_lines.append(f"[{stream_idx}:a]adelay={sfx_delay_ms}|{sfx_delay_ms},volume=0.42[sfx_{stream_idx}]")
+            else:
+                audio_inputs.extend(["-i", str(sfx_zoom_path)])
+                audio_filter_lines.append(f"[{stream_idx}:a]adelay={sfx_delay_ms}|{sfx_delay_ms},volume=0.35[sfx_{stream_idx}]")
+            mix_inputs.append(f"[sfx_{stream_idx}]")
+            stream_idx += 1
+
+        # Add Background Music
+        audio_inputs.extend(["-stream_loop", "-1", "-i", str(music_bg_path)])
+        audio_filter_lines.append(f"[{stream_idx}:a]volume=0.16,afade=t=in:st=0:d=1.0,afade=t=out:st={round(total_duration - 1.4, 2)}:d=1.4[bgm]")
+        mix_inputs.append("[bgm]")
+        stream_idx += 1
+
+        audio_filter_lines.append(f"{''.join(mix_inputs)}amix=inputs={len(mix_inputs)}:dropout_transition=0:normalize=0[aout]")
+
+        audio_concat_cmd = [
+            "ffmpeg", "-y",
+            *audio_inputs,
+            "-filter_complex", ";".join(audio_filter_lines),
+            "-map", "[aout]",
+            "-t", str(total_duration),
+            "-c:a", "libmp3lame",
+            "-b:a", "192k",
+            str(temp_test_audio)
+        ]
+
+        try:
+            subprocess.run(audio_concat_cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if temp_test_audio.exists():
+                resolved_audio = temp_test_audio
+        except Exception as e:
+            print(f"  ⚠️ Multi-scene audio mixing error: {e}")
+            if scene_records and scene_records[0]["audio_paths"]:
+                resolved_audio = scene_records[0]["audio_paths"][0]
+
+        for p in temp_audio_files_to_clean:
+            if p.exists() and p != resolved_audio:
                 try:
-                    music_bg_path.unlink()
+                    p.unlink()
                 except Exception:
                     pass
     else:
         total_duration = _get_audio_duration_secs(resolved_audio, 12.0)
-        t1 = round(total_duration * 0.27, 2)
-        t2 = round(total_duration * 0.54, 2)
-        t3 = round(total_duration * 0.80, 2)
+        # Create proportional scene records if using pre-baked audio
+        n_sc = max(1, len(scenes))
+        slice_dur = total_duration / n_sc
+        for idx, sc in enumerate(scenes):
+            scene_records.append({
+                "index": idx,
+                "speaker": sc.get("speaker", "Quantum"),
+                "entity": sc.get("entity", "quantum").lower(),
+                "text": sc.get("text", ""),
+                "shot": sc.get("shot", "wide"),
+                "start": round(idx * slice_dur, 2),
+                "end": round((idx + 1) * slice_dur, 2),
+                "audio_paths": []
+            })
 
-    # Build advanced video filter chains for double overlays & scale changes (Virtual Camera)
-    # Audio-reactive speech cadence ripple (Dynamic pulsing & physical expansion on speech peaks)
+    # Build dynamic speech reactive masks
+    speech_q_conditions = [f"between(t,{sc['start']},{sc['end']})" for sc in scene_records if sc["entity"] in ["quantum", "both"]]
+    speech_mask_q = " + ".join(speech_q_conditions) if speech_q_conditions else "0"
+
+    speech_s_conditions = [f"between(t,{sc['start']},{sc['end']})" for sc in scene_records if sc["entity"] in ["solar", "both"]]
+    speech_mask_s = " + ".join(speech_s_conditions) if speech_s_conditions else "0"
+
     voice_pulse_q = "(0.5 + 0.35*sin(2*PI*t/0.16) + 0.15*cos(2*PI*t/0.28))"
-    speech_mask_q = f"(between(t,0,{t2}) + between(t,{t3},{total_duration}))"
-    eq_q = f"brightness='-0.18 + (0.36 + 0.12*{voice_pulse_q})*{speech_mask_q}':contrast='0.70 + (0.60 + 0.22*{voice_pulse_q})*{speech_mask_q}'"
-    hue_q = f"h='(14 + 6*{voice_pulse_q})*{speech_mask_q} + 6*sin(2*PI*t/2.4)':s='0.60 + (0.70 + 0.25*{voice_pulse_q})*{speech_mask_q}'"
+    eq_q = f"brightness='-0.18 + (0.36 + 0.12*{voice_pulse_q})*({speech_mask_q})':contrast='0.70 + (0.60 + 0.22*{voice_pulse_q})*({speech_mask_q})'"
+    hue_q = f"h='(14 + 6*{voice_pulse_q})*({speech_mask_q}) + 6*sin(2*PI*t/2.4)':s='0.60 + (0.70 + 0.25*{voice_pulse_q})*({speech_mask_q})'"
 
     voice_pulse_s = "(0.5 + 0.35*sin(2*PI*t/0.14) + 0.15*cos(2*PI*t/0.26))"
-    speech_mask_s = f"between(t,{t2},{total_duration})"
-    eq_s = f"brightness='-0.04 + (0.22 + 0.10*{voice_pulse_s})*{speech_mask_s}':contrast='0.92 + (0.28 + 0.14*{voice_pulse_s})*{speech_mask_s}'"
-    hue_s = f"h='(14 + 6*{voice_pulse_s})*{speech_mask_s} + 6*sin(2*PI*t/2.4)':s='0.85 + (0.50 + 0.20*{voice_pulse_s})*{speech_mask_s}'"
+    eq_s = f"brightness='-0.04 + (0.22 + 0.10*{voice_pulse_s})*({speech_mask_s})':contrast='0.92 + (0.28 + 0.14*{voice_pulse_s})*({speech_mask_s})'"
+    hue_s = f"h='(14 + 6*{voice_pulse_s})*({speech_mask_s}) + 6*sin(2*PI*t/2.4)':s='0.85 + (0.50 + 0.20*{voice_pulse_s})*({speech_mask_s})'"
 
-    # Precise structural drift controls (Calm when passive/resting, full dynamic swing when active)
     drift_q_active_x = "14.0*sin(2*PI*t/3.6)"
     drift_q_active_y = "18.0*sin(2*PI*t/2.4)"
     drift_q_resting_x = "4.0*sin(2*PI*t/3.6)"
@@ -901,7 +950,6 @@ def render_orb_test_preview(
     drift_s_resting_x = "4.0*sin(2*PI*t/3.2)"
     drift_s_resting_y = "5.0*sin(2*PI*t/2.8)"
 
-    # Power ignition spring on intro (0-0.8s)
     drift_intro_x = "30.0*exp(-7.0*t)*cos(16.0*t)"
     drift_intro_y = "35.0*exp(-7.0*t)*sin(16.0*t)"
 
@@ -910,20 +958,15 @@ def render_orb_test_preview(
 
     escaped_headline_hook = headline_hook.replace(":", "\\:").replace("'", "\\'")
 
-    # High-Performance Futuristic ASS Karaoke Subtitles (Entity Palettes, Pop-In Animation & Word Glow)
+    # High-Performance Futuristic ASS Karaoke Subtitles (Using ALL dynamic scenes)
     from subtitles.generator import generate_cosmic_debate_karaoke_ass
     ass_sub_path = output_path.parent / "_temp_debate_karaoke.ass"
-    scenes_sub_data = [
-        {"speaker": "Quantum", "entity": "quantum", "text": q_part1, "start": 0.0, "end": t1},
-        {"speaker": "Quantum", "entity": "quantum", "text": q_part2, "start": t1, "end": t2},
-        {"speaker": "Solar", "entity": "solar", "text": s_part3, "start": t2, "end": t3},
-        {"speaker": "Ambos", "entity": "both", "text": both_part4, "start": t3, "end": total_duration},
-    ]
-    generate_cosmic_debate_karaoke_ass(scenes_sub_data, ass_sub_path, width=width, height=height)
+    generate_cosmic_debate_karaoke_ass(scene_records, ass_sub_path, width=width, height=height)
     escaped_ass_path = str(ass_sub_path.resolve()).replace("\\", "/").replace(":", "\\:").replace("'", "\\'")
 
     bg_input = f"color=c=0x08090f:s={width}x{height}:r=30:d={total_duration}"
 
+    # Build FFmpeg command inputs
     cmd_inputs = [
         "-f", "lavfi", "-i", bg_input,
         "-stream_loop", "-1", "-i", str(orb_quantum),
@@ -958,71 +1001,119 @@ def render_orb_test_preview(
         cmd_inputs.extend(["-f", "lavfi", "-i", "anullsrc=r=44100:cl=stereo"])
 
     pre_scale_lines = []
-    if has_holo_q:
+    if has_holo_q and holo_q_idx is not None:
         pre_scale_lines.append(f"[{holo_q_idx}:v]scale=540:-2,format=yuva420p[holo_q]")
-    if has_holo_s:
+    if has_holo_s and holo_s_idx is not None:
         pre_scale_lines.append(f"[{holo_s_idx}:v]scale=540:-2,format=yuva420p[holo_s]")
     pre_scale_lines.append(f"[{badge_q_idx}:v]scale=340:-2,format=yuva420p[badge_q]")
     pre_scale_lines.append(f"[{badge_s_idx}:v]scale=340:-2,format=yuva420p[badge_s]")
 
+    # Calculate exact number of split pads needed for Quantum and Solar
+    q_uses = 1 + sum(1 for sc in scene_records if sc["shot"] in ["wide", "both", "close_quantum"])
+    s_uses = 1 + sum(1 for sc in scene_records if sc["shot"] in ["wide", "both", "close_solar"])
+
     filter_complex = [
-        # 0. Hologram Reference Card & Presenter Badge Pre-scaling
         *pre_scale_lines,
+        f"[1:v]split={q_uses}" + "".join(f"[q_in_{k}]" for k in range(q_uses)),
+        f"[2:v]split={s_uses}" + "".join(f"[s_in_{k}]" for k in range(s_needed_pad_count := s_uses)),
 
-        # 1. Split streams to apply physical static transparency to separate active/resting layers
-        "[1:v]split=4[q_t1][q_t2][q_t4][q_glow]",
-        "[2:v]split=4[s_t1][s_t3][s_t4][s_glow]",
+        # Background Ambient Luminescence
+        f"[q_in_0]scale=120:120,eq={eq_q},hue={hue_q},boxblur=24:3,scale=1080:1920,format=yuva420p,colorchannelmixer=aa=0.25[bg_glow_q]",
+        f"[s_in_0]scale=120:120,eq={eq_s},hue={hue_s},boxblur=24:3,scale=1080:1920,format=yuva420p,colorchannelmixer=aa=0.25[bg_glow_s]",
 
-        # 2. Render each state independently with speech-reactive color surges, contrast flares and luminescence
-        f"[q_t1]scale=355:355,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.95[orb_q_wide_t1]",
-        f"[q_t2]scale=550:550,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.95[orb_q_close_t2]",
-        f"[q_t4]scale=355:355,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.98[orb_q_wide_t4]",
-
-        f"[s_t1]scale=310:310,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.52[orb_s_wide_t1]",
-        f"[s_t3]scale=550:550,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.95[orb_s_close_t3]",
-        f"[s_t4]scale=355:355,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.98[orb_s_wide_t4]",
-
-        # 3. Render dynamic ambient glow backplates using ultra-fast pre-scaled blur with audio-reactive intensity
-        f"[q_glow]scale=120:120,eq={eq_q},hue={hue_q},boxblur=24:3,scale=1080:1920,format=yuva420p,colorchannelmixer=aa=0.25[bg_glow_q]",
-        f"[s_glow]scale=120:120,eq={eq_s},hue={hue_s},boxblur=24:3,scale=1080:1920,format=yuva420p,colorchannelmixer=aa=0.25[bg_glow_s]",
-
-        # 4. Apply background grading and overlay dynamic glows first to make the ambient background
         f"[0:v]eq=brightness=-0.01:contrast=1.05[bg_graded]",
-        f"[bg_graded][bg_glow_q]overlay=eval=frame:enable='between(t,0,{t2}) + between(t,{t3},{total_duration})'[bg_glowed_1]",
-        f"[bg_glowed_1][bg_glow_s]overlay=eval=frame:enable='between(t,{t2},{total_duration})'[bg_ambient]",
-
-        # 5. Sequentially overlay the foreground orbs with power ignition snap on frame 0 and matching drifts
-        # Toma 1 (0 -> t1): Wide Shot. Power ignition snap + Presenter Badges Floating below each orb
-        f"[bg_ambient][orb_q_wide_t1]overlay=eval=frame:x='W*0.25-w/2 + {drift_q_active_x} + {drift_intro_x}':y='H*0.38-h/2 + {drift_q_active_y} + {drift_intro_y}':enable='between(t,0,{t1})'[v1]",
-        f"[v1][orb_s_wide_t1]overlay=eval=frame:x='W*0.75-w/2 - 28 + {drift_s_resting_x} + {drift_intro_x}':y='H*0.39-h/2 + {drift_s_resting_y} + {drift_intro_y}':enable='between(t,0,{t1})'[v1_orbs]",
-        f"[v1_orbs][badge_q]overlay=eval=frame:x='W*0.25-w/2 + 5.0*sin(2*PI*(t-0.4)/2.2)':y='H*0.52-h/2 + 4.0*cos(2*PI*(t-0.4)/2.2)':enable='between(t,0.3,{max(0.4, round(t1-0.2, 2))})'[v1_bdg_q]",
-        f"[v1_bdg_q][badge_s]overlay=eval=frame:x='W*0.75-w/2 - 28 + 5.0*cos(2*PI*(t-0.4)/2.4)':y='H*0.52-h/2 + 4.0*sin(2*PI*(t-0.4)/2.4)':enable='between(t,0.3,{max(0.4, round(t1-0.2, 2))})'[v2]",
-
-        # Toma 2 (t1 -> t2): Close Up Quantum active + Floating Sci-Fi Hologram Card 1 (if enabled)
-        (f"[v2][orb_q_close_t2]overlay=eval=frame:x='W/2-w/2 + {drift_q_active_x} + 25.0*exp(-6.5*(t-{t1}))*cos(16.0*(t-{t1}))':y='H*0.38-h/2 + {drift_q_active_y} + 30.0*exp(-6.5*(t-{t1}))*sin(16.0*(t-{t1}))':enable='between(t,{t1},{t2})'[v3]; "
-         f"[v3][holo_q]overlay=eval=frame:x='(W-w)/2':y='H*0.12-h/2 + 6.0*sin(2*PI*(t-{round(t1+0.1, 2)})/2.4)':enable='between(t,{round(t1+0.1, 2)},{max(round(t1+0.2, 2), round(t2-0.2, 2))})'[v3_holo]")
-        if has_holo_q else
-        f"[v2][orb_q_close_t2]overlay=eval=frame:x='W/2-w/2 + {drift_q_active_x} + 25.0*exp(-6.5*(t-{t1}))*cos(16.0*(t-{t1}))':y='H*0.38-h/2 + {drift_q_active_y} + 30.0*exp(-6.5*(t-{t1}))*sin(16.0*(t-{t1}))':enable='between(t,{t1},{t2})'[v3_holo]",
-
-        # Toma 3 (t2 -> t3): Close Up Solar active + Floating Sci-Fi Hologram Card 2 (if enabled)
-        (f"[v3_holo][orb_s_close_t3]overlay=eval=frame:x='W/2-w/2 + {drift_s_active_x} + 25.0*exp(-6.5*(t-{t2}))*cos(16.0*(t-{t2}))':y='H*0.38-h/2 + {drift_s_active_y} + 30.0*exp(-6.5*(t-{t2}))*sin(16.0*(t-{t2}))':enable='between(t,{t2},{t3})'[v4]; "
-         f"[v4][holo_s]overlay=eval=frame:x='(W-w)/2':y='H*0.12-h/2 + 6.0*cos(2*PI*(t-{round(t2+0.1, 2)})/2.6)':enable='between(t,{round(t2+0.1, 2)},{max(round(t2+0.2, 2), round(t3-0.2, 2))})'[v4_holo]")
-        if has_holo_s else
-        f"[v3_holo][orb_s_close_t3]overlay=eval=frame:x='W/2-w/2 + {drift_s_active_x} + 25.0*exp(-6.5*(t-{t2}))*cos(16.0*(t-{t2}))':y='H*0.38-h/2 + {drift_s_active_y} + 30.0*exp(-6.5*(t-{t2}))*sin(16.0*(t-{t2}))':enable='between(t,{t2},{t3})'[v4_holo]",
-
-        # Toma 4 (t3 -> total_duration): Wide Shot Harmonic Resonance Outro (Both Orbs Glow in Resonance)
-        f"[v4_holo][orb_q_wide_t4]overlay=eval=frame:x='W*0.25-w/2 + {drift_q_active_x} + 15.0*exp(-6.5*(t-{t3}))*cos(16.0*(t-{t3}))':y='H*0.38-h/2 + {drift_q_active_y} + 18.0*exp(-6.5*(t-{t3}))*sin(16.0*(t-{t3}))':enable='between(t,{t3},{total_duration})'[v5]",
-        f"[v5][orb_s_wide_t4]overlay=eval=frame:x='W*0.75-w/2 - 28 + {drift_s_active_x} + 15.0*exp(-6.5*(t-{t3}))*cos(16.0*(t-{t3}))':y='H*0.39-h/2 + {drift_s_active_y} + 18.0*exp(-6.5*(t-{t3}))*sin(16.0*(t-{t3}))':enable='between(t,{t3},{total_duration})'[v6]",
-
-        # 6. Headline Hook Badge Overlay (Top Center 0.0s -> min(t1, 2.8s))
-        f"[v6]drawtext=text='{escaped_headline_hook}':{font_param}:fontcolor=white:fontsize=34:box=1:boxcolor=0x08101e@0.92:boxborderw=20:borderw=2:bordercolor=0x00f0ff:x=(w-text_w)/2:y=140:enable='between(t,0,{min(round(t1, 2), 2.8)})'[v_hook]",
-
-        # 7. Outro Verdict Header Badge Overlay (Top Center t3 -> total_duration)
-        f"[v_hook]drawtext=text='⚡ VEREDICTO CÓSMICO ⚡':{font_param}:fontcolor=white:fontsize=34:box=1:boxcolor=0x08101e@0.92:boxborderw=20:borderw=2:bordercolor=0xffb300:x=(w-text_w)/2:y=140:enable='between(t,{t3},{total_duration})'[v_outro_badge]",
-
-        # 8. High-Performance Futuristic ASS Karaoke Subtitles (Word-by-word glow active highlights & speaker palettes)
-        f"[v_outro_badge]ass='{escaped_ass_path}'[vout]"
+        f"[bg_graded][bg_glow_q]overlay=eval=frame:enable='{speech_mask_q}'[bg_glowed_1]",
+        f"[bg_glowed_1][bg_glow_s]overlay=eval=frame:enable='{speech_mask_s}'[bg_ambient]"
     ]
+
+    cur_v = "bg_ambient"
+    q_cur = 1
+    s_cur = 1
+    holo_q_used = False
+    holo_s_used = False
+
+    for idx, sc in enumerate(scene_records):
+        st = sc["start"]
+        et = sc["end"]
+        ent = sc["entity"]
+        shot = sc["shot"]
+
+        intro_dx = f" + {drift_intro_x}" if idx == 0 else ""
+        intro_dy = f" + {drift_intro_y}" if idx == 0 else ""
+
+        if shot == "wide":
+            is_q_active = (ent in ["quantum", "both"])
+            dq_x = drift_q_active_x if is_q_active else drift_q_resting_x
+            dq_y = drift_q_active_y if is_q_active else drift_q_resting_y
+            q_alpha = 0.95 if is_q_active else 0.65
+
+            is_s_active = (ent in ["solar", "both"])
+            ds_x = drift_s_active_x if is_s_active else drift_s_resting_x
+            ds_y = drift_s_active_y if is_s_active else drift_s_resting_y
+            s_alpha = 0.95 if is_s_active else 0.65
+
+            filter_complex.append(f"[q_in_{q_cur}]scale=355:355,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa={q_alpha}[q_sc_{idx}]")
+            filter_complex.append(f"[{cur_v}][q_sc_{idx}]overlay=eval=frame:x='W*0.25-w/2 + {dq_x}{intro_dx}':y='H*0.38-h/2 + {dq_y}{intro_dy}':enable='between(t,{st},{et})'[v_sc_{idx}_q]")
+            cur_v = f"v_sc_{idx}_q"
+            q_cur += 1
+
+            filter_complex.append(f"[s_in_{s_cur}]scale=310:310,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa={s_alpha}[s_sc_{idx}]")
+            filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W*0.75-w/2 - 28 + {ds_x}{intro_dx}':y='H*0.39-h/2 + {ds_y}{intro_dy}':enable='between(t,{st},{et})'[v_sc_{idx}_s]")
+            cur_v = f"v_sc_{idx}_s"
+            s_cur += 1
+
+            if idx == 0:
+                bdg_end = min(round(et - 0.2, 2), 2.8)
+                filter_complex.append(f"[{cur_v}][badge_q]overlay=eval=frame:x='W*0.25-w/2 + 5.0*sin(2*PI*(t-0.4)/2.2)':y='H*0.52-h/2 + 4.0*cos(2*PI*(t-0.4)/2.2)':enable='between(t,0.3,{bdg_end})'[v_sc_{idx}_bq]")
+                filter_complex.append(f"[v_sc_{idx}_bq][badge_s]overlay=eval=frame:x='W*0.75-w/2 - 28 + 5.0*cos(2*PI*(t-0.4)/2.4)':y='H*0.52-h/2 + 4.0*sin(2*PI*(t-0.4)/2.4)':enable='between(t,0.3,{bdg_end})'[v_sc_{idx}_bs]")
+                cur_v = f"v_sc_{idx}_bs"
+
+        elif shot == "close_quantum":
+            filter_complex.append(f"[q_in_{q_cur}]scale=550:550,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.98[q_sc_{idx}]")
+            filter_complex.append(f"[{cur_v}][q_sc_{idx}]overlay=eval=frame:x='W/2-w/2 + {drift_q_active_x} + 25.0*exp(-6.5*(t-{st}))*cos(16.0*(t-{st}))':y='H*0.38-h/2 + {drift_q_active_y} + 30.0*exp(-6.5*(t-{st}))*sin(16.0*(t-{st}))':enable='between(t,{st},{et})'[v_sc_{idx}_q]")
+            cur_v = f"v_sc_{idx}_q"
+            q_cur += 1
+
+            if has_holo_q and not holo_q_used:
+                holo_q_used = True
+                filter_complex.append(f"[{cur_v}][holo_q]overlay=eval=frame:x='(W-w)/2':y='H*0.12-h/2 + 6.0*sin(2*PI*(t-{round(st+0.1, 2)})/2.4)':enable='between(t,{round(st+0.1, 2)},{max(round(st+0.2, 2), round(et-0.2, 2))})'[v_sc_{idx}_hq]")
+                cur_v = f"v_sc_{idx}_hq"
+
+        elif shot == "close_solar":
+            filter_complex.append(f"[s_in_{s_cur}]scale=550:550,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.98[s_sc_{idx}]")
+            filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W/2-w/2 + {drift_s_active_x} + 25.0*exp(-6.5*(t-{st}))*cos(16.0*(t-{st}))':y='H*0.38-h/2 + {drift_s_active_y} + 30.0*exp(-6.5*(t-{st}))*sin(16.0*(t-{st}))':enable='between(t,{st},{et})'[v_sc_{idx}_s]")
+            cur_v = f"v_sc_{idx}_s"
+            s_cur += 1
+
+            if has_holo_s and not holo_s_used:
+                holo_s_used = True
+                filter_complex.append(f"[{cur_v}][holo_s]overlay=eval=frame:x='(W-w)/2':y='H*0.12-h/2 + 6.0*cos(2*PI*(t-{round(st+0.1, 2)})/2.6)':enable='between(t,{round(st+0.1, 2)},{max(round(st+0.2, 2), round(et-0.2, 2))})'[v_sc_{idx}_hs]")
+                cur_v = f"v_sc_{idx}_hs"
+
+        elif shot == "both":
+            filter_complex.append(f"[q_in_{q_cur}]scale=355:355,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.98[q_sc_{idx}]")
+            filter_complex.append(f"[{cur_v}][q_sc_{idx}]overlay=eval=frame:x='W*0.25-w/2 + {drift_q_active_x} + 15.0*exp(-6.5*(t-{st}))*cos(16.0*(t-{st}))':y='H*0.38-h/2 + {drift_q_active_y} + 18.0*exp(-6.5*(t-{st}))*sin(16.0*(t-{st}))':enable='between(t,{st},{et})'[v_sc_{idx}_q]")
+            cur_v = f"v_sc_{idx}_q"
+            q_cur += 1
+
+            filter_complex.append(f"[s_in_{s_cur}]scale=355:355,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.98[s_sc_{idx}]")
+            filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W*0.75-w/2 - 28 + {drift_s_active_x} + 15.0*exp(-6.5*(t-{st}))*cos(16.0*(t-{st}))':y='H*0.39-h/2 + {drift_s_active_y} + 18.0*exp(-6.5*(t-{st}))*sin(16.0*(t-{st}))':enable='between(t,{st},{et})'[v_sc_{idx}_s]")
+            cur_v = f"v_sc_{idx}_s"
+            s_cur += 1
+
+    # Headline Hook Badge (Top Center during first scene)
+    first_sc_end = min(scene_records[0]["end"] if scene_records else 2.8, 2.8)
+    filter_complex.append(f"[{cur_v}]drawtext=text='{escaped_headline_hook}':{font_param}:fontcolor=white:fontsize=34:box=1:boxcolor=0x08101e@0.92:boxborderw=20:borderw=2:bordercolor=0x00f0ff:x=(w-text_w)/2:y=140:enable='between(t,0,{first_sc_end})'[v_hook]")
+    cur_v = "v_hook"
+
+    # Outro Verdict Badge (during last scene)
+    last_sc_st = scene_records[-1]["start"] if len(scene_records) > 1 else total_duration * 0.75
+    filter_complex.append(f"[{cur_v}]drawtext=text='⚡ VEREDICTO CÓSMICO ⚡':{font_param}:fontcolor=white:fontsize=34:box=1:boxcolor=0x08101e@0.92:boxborderw=20:borderw=2:bordercolor=0xffb300:x=(w-text_w)/2:y=140:enable='between(t,{last_sc_st},{total_duration})'[v_outro_badge]")
+    cur_v = "v_outro_badge"
+
+    # Subtitles overlay
+    filter_complex.append(f"[{cur_v}]ass='{escaped_ass_path}'[vout]")
+
     filter_str = ";".join(filter_complex)
 
     cmd = [
