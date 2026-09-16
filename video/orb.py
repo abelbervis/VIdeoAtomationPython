@@ -1023,9 +1023,9 @@ def render_orb_test_preview(
         f"[1:v]split={q_uses}" + "".join(f"[q_in_{k}]" for k in range(q_uses)),
         f"[2:v]split={s_uses}" + "".join(f"[s_in_{k}]" for k in range(s_uses)),
 
-        # Background Ambient Luminescence (Ultra-fast bicubic downscale + bilinear upscale: 80% less CPU than boxblur)
-        f"[q_in_0]scale=32:56:flags=bicubic,eq={eq_q},hue={hue_q},scale={width}:{height}:flags=bilinear,format=yuva420p,colorchannelmixer=aa=0.25[bg_glow_q]",
-        f"[s_in_0]scale=32:56:flags=bicubic,eq={eq_s},hue={hue_s},scale={width}:{height}:flags=bilinear,format=yuva420p,colorchannelmixer=aa=0.25[bg_glow_s]",
+        # Background Ambient Luminescence (Ultra-smooth diffuse glow via 120x120 3-pass boxblur without oval ring artifacts)
+        f"[q_in_0]scale=120:120,eq={eq_q},hue={hue_q},boxblur=26:3,scale={width}:{height},format=yuva420p,colorchannelmixer=aa=0.25[bg_glow_q]",
+        f"[s_in_0]scale=120:120,eq={eq_s},hue={hue_s},boxblur=26:3,scale={width}:{height},format=yuva420p,colorchannelmixer=aa=0.25[bg_glow_s]",
 
         f"[0:v]eq=brightness=-0.01:contrast=1.05[bg_graded]",
         f"[bg_graded][bg_glow_q]overlay=eval=frame:enable='{speech_mask_q}'[bg_glowed_1]",
