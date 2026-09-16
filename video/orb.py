@@ -626,20 +626,26 @@ def render_orb_test_preview(
     holo_s_sub = "Fusión Nuclear: 15,000,000 K"
     holo_s_cat = "POSTULADO S"
 
+    has_holo_q = False
+    has_holo_s = False
+
     if debate_script:
         if debate_script.get("headline_hook"):
             headline_hook = debate_script["headline_hook"]
-        holograms = debate_script.get("holograms") or {}
-        if isinstance(holograms, dict) and "quantum" in holograms and isinstance(holograms.get("quantum"), dict):
-            hq = holograms["quantum"]
-            holo_q_title = str(hq.get("title", holo_q_title)).upper()
-            holo_q_sub = str(hq.get("subtitle", holo_q_sub))
-            holo_q_cat = str(hq.get("category", holo_q_cat))
-        if isinstance(holograms, dict) and "solar" in holograms and isinstance(holograms.get("solar"), dict):
-            hs = holograms["solar"]
-            holo_s_title = str(hs.get("title", holo_s_title)).upper()
-            holo_s_sub = str(hs.get("subtitle", holo_s_sub))
-            holo_s_cat = str(hs.get("category", holo_s_cat))
+        holograms = debate_script.get("holograms")
+        if isinstance(holograms, dict):
+            if "quantum" in holograms and isinstance(holograms["quantum"], dict):
+                has_holo_q = True
+                hq = holograms["quantum"]
+                holo_q_title = str(hq.get("title", holo_q_title)).upper()
+                holo_q_sub = str(hq.get("subtitle", holo_q_sub))
+                holo_q_cat = str(hq.get("category", holo_q_cat))
+            if "solar" in holograms and isinstance(holograms["solar"], dict):
+                has_holo_s = True
+                hs = holograms["solar"]
+                holo_s_title = str(hs.get("title", holo_s_title)).upper()
+                holo_s_sub = str(hs.get("subtitle", holo_s_sub))
+                holo_s_cat = str(hs.get("category", holo_s_cat))
 
         scenes = debate_script.get("scenes", [])
         if len(scenes) > 0 and scenes[0].get("text"):
@@ -951,13 +957,13 @@ def render_orb_test_preview(
         f"[v1_orbs][badge_q]overlay=eval=frame:x='W*0.25-w/2 + 5.0*sin(2*PI*(t-0.4)/2.2)':y='H*0.52-h/2 + 4.0*cos(2*PI*(t-0.4)/2.2)':enable='between(t,0.3,{max(0.4, round(t1-0.2, 2))})'[v1_bdg_q]",
         f"[v1_bdg_q][badge_s]overlay=eval=frame:x='W*0.75-w/2 - 28 + 5.0*cos(2*PI*(t-0.4)/2.4)':y='H*0.52-h/2 + 4.0*sin(2*PI*(t-0.4)/2.4)':enable='between(t,0.3,{max(0.4, round(t1-0.2, 2))})'[v2]",
 
-        # Toma 2 (t1 -> t2): Close Up Quantum active + Floating Sci-Fi Hologram Card 1
+        # Toma 2 (t1 -> t2): Close Up Quantum active + Floating Sci-Fi Hologram Card 1 (if enabled)
         f"[v2][orb_q_close_t2]overlay=eval=frame:x='W/2-w/2 + {drift_q_active_x} + 25.0*exp(-6.5*(t-{t1}))*cos(16.0*(t-{t1}))':y='H*0.38-h/2 + {drift_q_active_y} + 30.0*exp(-6.5*(t-{t1}))*sin(16.0*(t-{t1}))':enable='between(t,{t1},{t2})'[v3]",
-        f"[v3][holo_q]overlay=eval=frame:x='(W-w)/2':y='H*0.12-h/2 + 6.0*sin(2*PI*(t-{round(t1+0.1, 2)})/2.4)':enable='between(t,{round(t1+0.1, 2)},{max(round(t1+0.2, 2), round(t2-0.2, 2))})'[v3_holo]",
+        f"[v3][holo_q]overlay=eval=frame:x='(W-w)/2':y='H*0.12-h/2 + 6.0*sin(2*PI*(t-{round(t1+0.1, 2)})/2.4)':enable='between(t,{round(t1+0.1, 2)},{max(round(t1+0.2, 2), round(t2-0.2, 2))})'[v3_holo]" if has_holo_q else "[v3]null[v3_holo]",
 
-        # Toma 3 (t2 -> t3): Close Up Solar active + Floating Sci-Fi Hologram Card 2
+        # Toma 3 (t2 -> t3): Close Up Solar active + Floating Sci-Fi Hologram Card 2 (if enabled)
         f"[v3_holo][orb_s_close_t3]overlay=eval=frame:x='W/2-w/2 + {drift_s_active_x} + 25.0*exp(-6.5*(t-{t2}))*cos(16.0*(t-{t2}))':y='H*0.38-h/2 + {drift_s_active_y} + 30.0*exp(-6.5*(t-{t2}))*sin(16.0*(t-{t2}))':enable='between(t,{t2},{t3})'[v4]",
-        f"[v4][holo_s]overlay=eval=frame:x='(W-w)/2':y='H*0.12-h/2 + 6.0*cos(2*PI*(t-{round(t2+0.1, 2)})/2.6)':enable='between(t,{round(t2+0.1, 2)},{max(round(t2+0.2, 2), round(t3-0.2, 2))})'[v4_holo]",
+        f"[v4][holo_s]overlay=eval=frame:x='(W-w)/2':y='H*0.12-h/2 + 6.0*cos(2*PI*(t-{round(t2+0.1, 2)})/2.6)':enable='between(t,{round(t2+0.1, 2)},{max(round(t2+0.2, 2), round(t3-0.2, 2))})'[v4_holo]" if has_holo_s else "[v4]null[v4_holo]",
 
         # Toma 4 (t3 -> total_duration): Wide Shot Harmonic Resonance Outro (Both Orbs Glow in Resonance)
         f"[v4_holo][orb_q_wide_t4]overlay=eval=frame:x='W*0.25-w/2 + {drift_q_active_x} + 15.0*exp(-6.5*(t-{t3}))*cos(16.0*(t-{t3}))':y='H*0.38-h/2 + {drift_q_active_y} + 18.0*exp(-6.5*(t-{t3}))*sin(16.0*(t-{t3}))':enable='between(t,{t3},{total_duration})'[v5]",
