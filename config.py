@@ -168,7 +168,7 @@ VIDEO_FORMATS = {
         "height": 1920,
         "aspect_ratio": "9:16",
         "orientation": "portrait",
-        "subtitle_margin_bottom": 540,
+        "subtitle_margin_bottom": 560,
         "subtitle_font_size": 44,
         "description": "Vertical 9:16 (1080x1920) - YouTube Shorts, TikTok, Instagram Reels (Shorts Safe Zone)",
     },

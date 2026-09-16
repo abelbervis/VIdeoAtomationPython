@@ -613,6 +613,7 @@ def generate_cosmic_debate_karaoke_ass(
     height: int = 1920,
     custom_font: Optional[str] = None,
     max_words_per_cue: int = 3,
+    margin_v: Optional[int] = None,
 ) -> Path:
     """
     Generates a futuristic, high-retention karaoke .ass subtitle track designed
@@ -622,7 +623,7 @@ def generate_cosmic_debate_karaoke_ass(
       - Custom distinct cybernetic palettes for Quantum (Electric Cyan) and Solar (Amber Plasma)
       - Word-by-word active highlight sync with energetic pop-in entrance tags
       - Speaker entity badges and high-contrast glowing outlines for maximum short-form retention
-      - Mobile safe-zone positioning (MarginV=260) floating smoothly beneath the holographic HUD
+      - Elevated mobile safe-zone positioning (MarginV=560) floating smoothly beneath the holographic HUD
     """
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -635,7 +636,8 @@ def generate_cosmic_debate_karaoke_ass(
     font_size = 44 if width < height else 36
     badge_fs = 26 if width < height else 22
     outline_val = 5.8
-    margin_v = 380 if width < height else 160
+    if margin_v is None:
+        margin_v = 560 if width < height else 160
     margin_side = 80 if width < height else 60
 
     header = f"""[Script Info]
