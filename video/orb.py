@@ -1015,7 +1015,7 @@ def render_orb_test_preview(
     filter_complex = [
         *pre_scale_lines,
         f"[1:v]split={q_uses}" + "".join(f"[q_in_{k}]" for k in range(q_uses)),
-        f"[2:v]split={s_uses}" + "".join(f"[s_in_{k}]" for k in range(s_needed_pad_count := s_uses)),
+        f"[2:v]split={s_uses}" + "".join(f"[s_in_{k}]" for k in range(s_uses)),
 
         # Background Ambient Luminescence
         f"[q_in_0]scale=120:120,eq={eq_q},hue={hue_q},boxblur=24:3,scale=1080:1920,format=yuva420p,colorchannelmixer=aa=0.25[bg_glow_q]",
