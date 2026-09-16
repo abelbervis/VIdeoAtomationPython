@@ -933,18 +933,18 @@ def render_orb_test_preview(
 
     # Build dynamic speech reactive masks
     speech_q_conditions = [f"between(t,{sc['start']},{sc['end']})" for sc in scene_records if sc["entity"] in ["quantum", "both"]]
-    speech_mask_q = " + ".join(speech_q_conditions) if speech_q_conditions else "0"
+    speech_mask_q = f"({' + '.join(speech_q_conditions)})" if speech_q_conditions else "0"
 
     speech_s_conditions = [f"between(t,{sc['start']},{sc['end']})" for sc in scene_records if sc["entity"] in ["solar", "both"]]
-    speech_mask_s = " + ".join(speech_s_conditions) if speech_s_conditions else "0"
+    speech_mask_s = f"({' + '.join(speech_s_conditions)})" if speech_s_conditions else "0"
 
     voice_pulse_q = "(0.5 + 0.35*sin(2*PI*t/0.16) + 0.15*cos(2*PI*t/0.28))"
-    eq_q = f"brightness='-0.18 + (0.36 + 0.12*{voice_pulse_q})*({speech_mask_q})':contrast='0.70 + (0.60 + 0.22*{voice_pulse_q})*({speech_mask_q})'"
-    hue_q = f"h='(14 + 6*{voice_pulse_q})*({speech_mask_q}) + 6*sin(2*PI*t/2.4)':s='0.60 + (0.70 + 0.25*{voice_pulse_q})*({speech_mask_q})'"
+    eq_q = f"eval=frame:brightness='-0.05 + (0.20 + 0.14*{voice_pulse_q})*({speech_mask_q})':contrast='1.0 + (0.30 + 0.15*{voice_pulse_q})*({speech_mask_q})':saturation='1.0 + (0.35 + 0.20*{voice_pulse_q})*({speech_mask_q})'"
+    hue_q = f"h='(14 + 6*{voice_pulse_q})*({speech_mask_q}) + 6*sin(2*PI*t/2.4)':s='1.0 + (0.30 + 0.20*{voice_pulse_q})*({speech_mask_q})'"
 
     voice_pulse_s = "(0.5 + 0.35*sin(2*PI*t/0.14) + 0.15*cos(2*PI*t/0.26))"
-    eq_s = f"brightness='-0.04 + (0.22 + 0.10*{voice_pulse_s})*({speech_mask_s})':contrast='0.92 + (0.28 + 0.14*{voice_pulse_s})*({speech_mask_s})'"
-    hue_s = f"h='(14 + 6*{voice_pulse_s})*({speech_mask_s}) + 6*sin(2*PI*t/2.4)':s='0.85 + (0.50 + 0.20*{voice_pulse_s})*({speech_mask_s})'"
+    eq_s = f"eval=frame:brightness='-0.05 + (0.20 + 0.14*{voice_pulse_s})*({speech_mask_s})':contrast='1.0 + (0.30 + 0.15*{voice_pulse_s})*({speech_mask_s})':saturation='1.0 + (0.35 + 0.20*{voice_pulse_s})*({speech_mask_s})'"
+    hue_s = f"h='(14 + 6*{voice_pulse_s})*({speech_mask_s}) + 6*sin(2*PI*t/2.4)':s='1.0 + (0.30 + 0.20*{voice_pulse_s})*({speech_mask_s})'"
 
     drift_q_active_x = "14.0*sin(2*PI*t/3.6)"
     drift_q_active_y = "18.0*sin(2*PI*t/2.4)"
@@ -1051,12 +1051,12 @@ def render_orb_test_preview(
             is_q_active = (ent in ["quantum", "both"])
             dq_x = drift_q_active_x if is_q_active else drift_q_resting_x
             dq_y = drift_q_active_y if is_q_active else drift_q_resting_y
-            q_alpha = 0.95 if is_q_active else 0.65
+            q_alpha = 1.0 if is_q_active else 0.70
 
             is_s_active = (ent in ["solar", "both"])
             ds_x = drift_s_active_x if is_s_active else drift_s_resting_x
             ds_y = drift_s_active_y if is_s_active else drift_s_resting_y
-            s_alpha = 0.95 if is_s_active else 0.65
+            s_alpha = 1.0 if is_s_active else 0.70
 
             filter_complex.append(f"[q_in_{q_cur}]scale=355:355,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa={q_alpha}[q_sc_{idx}]")
             filter_complex.append(f"[{cur_v}][q_sc_{idx}]overlay=eval=frame:x='W*0.25-w/2 + {dq_x}{intro_dx}':y='H*0.38-h/2 + {dq_y}{intro_dy}':enable='between(t,{st},{et})'[v_sc_{idx}_q]")
