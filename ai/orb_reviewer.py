@@ -28,6 +28,11 @@ CRITICAL CHECKLIST TO VALIDATE AND CORRECT:
    - Ensure all sentences use proper articles (el, la, los, las, un, una) and natural phrasing.
    - Each scene should be punchy (~10-18 words, max 95 characters).
 
+5. CAMERA SHOT MUST STRICTLY MATCH SPEAKER:
+   - If Quantum speaks solo: shot MUST be "close_quantum" or "wide". (NEVER "close_solar").
+   - If Solar speaks solo: shot MUST be "close_solar" or "wide". (NEVER "close_quantum").
+   - If Both speak: shot MUST be "both" or "wide".
+
 INPUT JSON:
 {INSERT_GENERATED_JSON_HERE}
 

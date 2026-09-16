@@ -761,8 +761,14 @@ def render_orb_test_preview(
                 ent = "quantum"
                 spk = "Quantum"
 
-            # Auto-align shot if missing or mismatch
-            if shot not in ["wide", "close_quantum", "close_solar", "both"]:
+            # Strict speaker-shot alignment: A close-up MUST show the speaker who is actually talking!
+            if ent == "solar" and shot == "close_quantum":
+                shot = "close_solar"
+            elif ent == "quantum" and shot == "close_solar":
+                shot = "close_quantum"
+            elif ent == "both" and shot in ["close_quantum", "close_solar"]:
+                shot = "both"
+            elif shot not in ["wide", "close_quantum", "close_solar", "both"]:
                 if ent == "solar":
                     shot = "close_solar"
                 elif ent == "both":

@@ -46,7 +46,13 @@ CRITICAL NARRATIVE RULES:
    - FLEXIBLE STARTER: Either Solar or Quantum can speak first—whichever speaker creates the strongest immediate hook.
    - OPTIONAL HOLOGRAMS: Only output 'holograms' if there is a real, concrete scientific metric or formula to display (e.g. "300,000 km/s", "13.8 Gyr", "1.6x10⁻³⁵ m"). If the script is a pure conceptual thought experiment, set 'holograms': null.
 
-4. DIALOGUE STYLE & ELI5:
+4. CAMERA SHOTS MUST STRICTLY MATCH THE SPEAKER:
+   - "shot": "wide" -> Opening scene or general view where both orbs are present.
+   - "shot": "close_quantum" -> ONLY when Quantum is speaking solo! Never assign to Solar.
+   - "shot": "close_solar" -> ONLY when Solar is speaking solo! Never assign to Quantum.
+   - "shot": "both" -> When both orbs speak together or in the concluding realization.
+
+5. DIALOGUE STYLE & ELI5:
    - Speak in clear, simple Spanish. Explain like to a 12-year-old using clear physical analogies.
    - Hook the viewer in the first 3 words with an irresistible, visual premise.
    - End with a mind-expanding scientific realization or existential question (NO forced "comment below" CTAs).
