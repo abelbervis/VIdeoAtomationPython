@@ -13,16 +13,17 @@ Your ONLY job is to validate and auto-correct a JSON script generated for a shor
 
 CRITICAL CHECKLIST TO VALIDATE AND CORRECT:
 1. CO-HOST NARRATIVE FLOW & ACCESSIBILITY:
-   - QUANTUM and SOLAR are collaborative co-hosts. Eliminate artificial attacks ("¡Falso!", "¡Iluso!") or hostile arguments.
+   - QUANTUM and SOLAR are collaborative co-hosts (or single narrator if structured as such). Eliminate artificial attacks ("¡Falso!", "¡Iluso!") or hostile arguments.
    - Ensure the script explains the core concept with extreme clarity (ELI5 rule) using everyday analogies.
-   - Ensure Solar builds directly upon Quantum's premise in Scene 2 with an awe-inspiring fact or scale in Scene 3.
+   - Either speaker can start or lead. Preserve the narrative order chosen by the generator.
 2. LOGICAL COHERENCE & NO PSEUDOSCIENCE:
    - Eliminate vague, overly poetic or meaningless jargon ("sueños", "almas", "redes infinitas de ilusiones"). Stick to fascinating, understandable physics/science.
-3. NATURAL SPANISH GRAMMAR:
+3. FLEXIBLE SCENE COUNT & OPTIONAL HOLOGRAMS:
+   - Allow between 3 and 6 scenes. Do NOT force a 4-scene limit.
+   - 'holograms' can be null or contain metrics if relevant. Do not fail if omitted.
+4. NATURAL SPANISH GRAMMAR & LENGTH:
    - Ensure all sentences use proper articles (el, la, los, las, un, una) and natural phrasing. NO broken or robotic sentences.
-4. TIMING & LENGTH:
-   - Scene 1, 2, 3: Max 95 characters each (~12-18 words).
-   - Scene 4 (Reflective Outro): Max 65 characters (~8-12 words).
+   - Each scene should be concise (~10-18 words, max 95 characters) for punchy vertical voiceovers.
 
 INPUT JSON:
 {INSERT_GENERATED_JSON_HERE}
