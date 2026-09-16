@@ -419,12 +419,14 @@ def generate_animated_orb_loop(
 </svg>"""
             (frames_dir / f"frame_{i:03d}.svg").write_text(svg, encoding="utf-8")
 
+        temp_mov = frames_dir / f"orb_{palette_key}.mov"
         subprocess.run([
             "ffmpeg", "-y", "-framerate", str(fps),
             "-i", str(frames_dir / "frame_%03d.svg"),
             "-c:v", "qtrle",
-            str(mov_path)
+            str(temp_mov)
         ], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        temp_mov.replace(mov_path)
 
         return mov_path
     finally:
@@ -674,9 +676,9 @@ def render_orb_test_preview(
     if has_holo_s:
         print(f"   • HUD Holográfico S: [{holo_s_cat}] {holo_s_title} -> {holo_s_sub}")
 
-    # Generate both orb visual assets
-    orb_quantum = get_or_create_orb_asset(palette="quantum", force_refresh=True)
-    orb_solar = get_or_create_orb_asset(palette="solar", force_refresh=True)
+    # Generate or retrieve cached orb visual assets (100% identical output, 0ms latency)
+    orb_quantum = get_or_create_orb_asset(palette="quantum", force_refresh=False)
+    orb_solar = get_or_create_orb_asset(palette="solar", force_refresh=False)
 
     # Generate Holographic Floating Reference Cards (Only if required by script)
     from video.hologram import generate_hologram_card_svg, generate_presenter_badge_svg

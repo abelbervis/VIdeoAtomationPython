@@ -21,12 +21,16 @@ assets/*.jpeg
 assets/*.png
 assets/*.mp4
 assets/*.json
+assets/orbs/*.mov
+assets/orbs/_temp*
 assets/fonts/*.ttc
 assets/fonts/*.ttf
 assets/music/*
 !assets/music/.gitkeep
 assets/sfx/*
 !assets/sfx/.gitkeep
+assets/sfx/cached/*
+!assets/sfx/cached/.gitkeep
 !assets/sfx/intro/
 !assets/sfx/intro/.gitkeep
 !assets/sfx/swoosh/
@@ -40,6 +44,8 @@ assets/sfx/swoosh/*
 *.mp3
 *.wav
 *.mp4
+*.mov
+_temp_*
 audio/*.mp3
 audio/*.wav
 

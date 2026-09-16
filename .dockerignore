@@ -1,8 +1,49 @@
+# Version control & OS
+.git
+.gitignore
+.DS_Store
+*.log
+
+# Node dependencies & web builds (Not needed in Python container)
+node_modules/
+dist/
+build/
+coverage/
+
+# Python cache and environments
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
-.env
+*.py[cod]
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+venv/
+.venv/
+env/
+
+# Environment secrets
+.env*
+!.env.example
+system_prompt.txt
+!system_prompt.txt.example
+
+# Temporary outputs and runtime generation
 output/
 temp/
-.git
+_temp_*
+subtitles/*.ass
+subtitles/*.srt
+
+# Media cache and binary files (Keep docker build context lightweight; mount via volumes)
+assets/orbs/*.mov
+assets/orbs/_temp*
+assets/sfx/cached/*
+!assets/sfx/cached/.gitkeep
+assets/scene_*
+*.mp3
+*.wav
+*.mp4
+*.mov
+audio/*.mp3
+audio/*.wav
+
