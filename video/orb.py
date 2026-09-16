@@ -629,13 +629,13 @@ def render_orb_test_preview(
     if debate_script:
         if debate_script.get("headline_hook"):
             headline_hook = debate_script["headline_hook"]
-        holograms = debate_script.get("holograms", {})
-        if "quantum" in holograms:
+        holograms = debate_script.get("holograms") or {}
+        if isinstance(holograms, dict) and "quantum" in holograms and isinstance(holograms.get("quantum"), dict):
             hq = holograms["quantum"]
             holo_q_title = str(hq.get("title", holo_q_title)).upper()
             holo_q_sub = str(hq.get("subtitle", holo_q_sub))
             holo_q_cat = str(hq.get("category", holo_q_cat))
-        if "solar" in holograms:
+        if isinstance(holograms, dict) and "solar" in holograms and isinstance(holograms.get("solar"), dict):
             hs = holograms["solar"]
             holo_s_title = str(hs.get("title", holo_s_title)).upper()
             holo_s_sub = str(hs.get("subtitle", holo_s_sub))
