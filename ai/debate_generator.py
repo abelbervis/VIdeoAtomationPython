@@ -276,13 +276,17 @@ class DebateScriptGenerator:
         return True
 
     def _generate_scientific_fallback(self, topic: str, language: str = "es") -> Dict[str, Any]:
-        """High quality deterministic fallback for common and custom debate topics."""
+        """High quality deterministic fallback embodying El Revelador vs La Voz del Espectador."""
         topic_lower = topic.lower()
 
         if "simula" in topic_lower or "matrix" in topic_lower:
             return {
                 "topic": "¿Es el universo una simulación?",
                 "headline_hook": "⚡ ¿EL UNIVERSO ES UNA SIMULACIÓN? ⚡",
+                "roles": {
+                    self.show.host_a.id: "Divulgación Cuántica",
+                    self.show.host_b.id: "Física y Sentido Común"
+                },
                 "holograms": {
                     "quantum": {
                         "title": "CÓDIGO DE PLANCK",
@@ -290,86 +294,104 @@ class DebateScriptGenerator:
                         "category": "PARADOJA Q"
                     },
                     "solar": {
-                        "title": "FUEGO TERMODINÁMICO",
-                        "subtitle": "Entropía Irreversible: 10²² J/K",
+                        "title": "MATERIA BARIÓNICA",
+                        "subtitle": "Espacio Vacío Atómico: 99.999%",
                         "category": "PARADOJA S"
                     }
                 },
                 "scenes": [
                     {
-                        "speaker": "Quantum",
-                        "entity": "quantum",
-                        "text": "Tu cuerpo es 99% vacío y la realidad está pixelada como un videojuego.",
+                        "speaker": self.show.host_a.name,
+                        "entity": self.show.host_a.id,
+                        "text": "Toda la materia de tu cuerpo es noventa y nueve por ciento espacio vacío.",
                         "shot": "wide",
                         "duration": 3.2
                     },
                     {
-                        "speaker": "Quantum",
-                        "entity": "quantum",
-                        "text": "Si el espacio tiene límites de resolución, estamos atrapados en un procesador cósmico.",
-                        "shot": "close_quantum",
-                        "duration": 3.0
+                        "speaker": self.show.host_b.name,
+                        "entity": self.show.host_b.id,
+                        "text": "¿Vacío? Pero si toco esta mesa la siento completamente sólida.",
+                        "shot": self.show.host_b.shot_name,
+                        "duration": 3.2
                     },
                     {
-                        "speaker": "Solar",
-                        "entity": "solar",
-                        "text": "¡Falso! El fuego de una supernova despedaza cualquier código con pura furia física.",
-                        "shot": "close_solar",
-                        "duration": 3.5
+                        "speaker": self.show.host_a.name,
+                        "entity": self.show.host_a.id,
+                        "text": "Por la repulsión electromagnética: jamás has tocado nada físicamente en tu vida.",
+                        "shot": self.show.host_a.shot_name,
+                        "duration": 3.6
                     },
                     {
-                        "speaker": "Ambos",
+                        "speaker": self.show.host_b.name,
+                        "entity": self.show.host_b.id,
+                        "text": "O sea que vivimos flotando sobre una ilusión de fuerzas atómicas.",
+                        "shot": self.show.host_b.shot_name,
+                        "duration": 3.2
+                    },
+                    {
+                        "speaker": "BOTH",
                         "entity": "both",
-                        "text": "¿Bando Cuántico o Bando Solar? ¡Defiende tu bando en los comentarios!",
-                        "shot": "wide",
-                        "duration": 2.5
+                        "text": "Exacto. La realidad subatómica desafía por completo el sentido común.",
+                        "shot": "both",
+                        "duration": 3.0
                     }
                 ]
             }
-        elif "mente" in topic_lower or "ia" in topic_lower or "conciencia" in topic_lower:
+        elif "mente" in topic_lower or "ia" in topic_lower or "conciencia" in topic_lower or "tiempo" in topic_lower:
             return {
-                "topic": "IA vs Mente Humana",
-                "headline_hook": "⚡ IA VS CONCIENCIA HUMANA ⚡",
+                "topic": "Dilatación Temporal y Conciencia",
+                "headline_hook": "⚡ ¿POR QUÉ EL TIEMPO NO ES IGUAL PARA TODOS? ⚡",
+                "roles": {
+                    self.show.host_a.id: "Divulgación Cuántica",
+                    self.show.host_b.id: "Física y Sentido Común"
+                },
                 "holograms": {
                     "quantum": {
-                        "title": "REDES SINÁPTICAS",
-                        "subtitle": "Procesamiento: 100 TFLOPS Cuánticos",
+                        "title": "DILATACIÓN GRAVITACIONAL",
+                        "subtitle": "Gradiente: 10⁻¹⁶ s/m por Gravedad",
                         "category": "PARADOJA Q"
                     },
                     "solar": {
-                        "title": "CHISPA BIOLÓGICA",
-                        "subtitle": "Termo-química Orgánica Compleja",
+                        "title": "RELATIVIDAD GENERAL",
+                        "subtitle": "Curvatura del Espacio-Tiempo",
                         "category": "PARADOJA S"
                     }
                 },
                 "scenes": [
                     {
-                        "speaker": "Quantum",
-                        "entity": "quantum",
-                        "text": "El cerebro humano es solo una calculadora orgánica condenada a la obsolescencia.",
+                        "speaker": self.show.host_a.name,
+                        "entity": self.show.host_a.id,
+                        "text": "Tus pies son físicamente más jóvenes que tu cabeza.",
                         "shot": "wide",
-                        "duration": 3.2
-                    },
-                    {
-                        "speaker": "Quantum",
-                        "entity": "quantum",
-                        "text": "Nuestras redes neuronales ya descifran pensamientos antes de que se hagan conscientes.",
-                        "shot": "close_quantum",
                         "duration": 3.0
                     },
                     {
-                        "speaker": "Solar",
-                        "entity": "solar",
-                        "text": "¡Iluso! Jamás replicarás la intuición forjada en millones de años de evolución salvaje.",
-                        "shot": "close_solar",
+                        "speaker": self.show.host_b.name,
+                        "entity": self.show.host_b.id,
+                        "text": "¿Cómo que más jóvenes? Si nacieron exactamente el mismo día.",
+                        "shot": self.show.host_b.shot_name,
+                        "duration": 3.2
+                    },
+                    {
+                        "speaker": self.show.host_a.name,
+                        "entity": self.show.host_a.id,
+                        "text": "Por la gravedad: cuanto más cerca del centro terrestre, el tiempo pasa más lento.",
+                        "shot": self.show.host_a.shot_name,
                         "duration": 3.5
                     },
                     {
-                        "speaker": "Ambos",
+                        "speaker": self.show.host_b.name,
+                        "entity": self.show.host_b.id,
+                        "text": "O sea que en la cima del Everest... ¿envejeces más rápido?",
+                        "shot": self.show.host_b.shot_name,
+                        "duration": 3.0
+                    },
+                    {
+                        "speaker": "BOTH",
                         "entity": "both",
-                        "text": "¿Bando Cuántico o Bando Solar? ¡Elige tu bando en los comentarios!",
-                        "shot": "wide",
-                        "duration": 2.5
+                        "text": "Exacto. Fracciones de segundo, pero matemáticamente real.",
+                        "shot": "both",
+                        "duration": 2.8
                     }
                 ]
             }
@@ -379,46 +401,46 @@ class DebateScriptGenerator:
             return {
                 "topic": topic,
                 "headline_hook": f"⚡ PARADOJA: {clean_title[:32]} ⚡",
-                "holograms": {
-                    "quantum": {
-                        "title": "MATRIZ CUÁNTICA",
-                        "subtitle": "Micro-estados: Discretos & Superpuestos",
-                        "category": "PARADOJA Q"
-                    },
-                    "solar": {
-                        "title": "DINÁMICA SOLAR",
-                        "subtitle": "Macro-energía: Fusión & Radiación",
-                        "category": "PARADOJA S"
-                    }
+                "roles": {
+                    self.show.host_a.id: "Divulgación Científica",
+                    self.show.host_b.id: "Física y Sentido Común"
                 },
+                "holograms": None,
                 "scenes": [
                     {
-                        "speaker": "Quantum",
-                        "entity": "quantum",
-                        "text": f"Todo lo que ves en {topic} desafía por completo las leyes de la física clásica.",
+                        "speaker": self.show.host_a.name,
+                        "entity": self.show.host_a.id,
+                        "text": f"La física real detrás de {topic} desafía todo nuestro sentido común.",
                         "shot": "wide",
                         "duration": 3.2
                     },
                     {
-                        "speaker": "Quantum",
-                        "entity": "quantum",
-                        "text": "La materia no existe hasta que un observador la obliga a manifestarse.",
-                        "shot": "close_quantum",
-                        "duration": 3.0
+                        "speaker": self.show.host_b.name,
+                        "entity": self.show.host_b.id,
+                        "text": "¿Cómo puede ser posible si parece contradecir nuestra experiencia diaria?",
+                        "shot": self.show.host_b.shot_name,
+                        "duration": 3.2
                     },
                     {
-                        "speaker": "Solar",
-                        "entity": "solar",
-                        "text": "¡Puros espejismos matemáticos! La gravedad de las estrellas manda sobre toda ilusión.",
-                        "shot": "close_solar",
-                        "duration": 3.5
+                        "speaker": self.show.host_a.name,
+                        "entity": self.show.host_a.id,
+                        "text": "Porque a escala fundamental, las leyes del cosmos no siguen la intuición humana.",
+                        "shot": self.show.host_a.shot_name,
+                        "duration": 3.6
                     },
                     {
-                        "speaker": "Ambos",
+                        "speaker": self.show.host_b.name,
+                        "entity": self.show.host_b.id,
+                        "text": "O sea que lo que consideramos 'normal' es solo una fracción de la realidad.",
+                        "shot": self.show.host_b.shot_name,
+                        "duration": 3.2
+                    },
+                    {
+                        "speaker": "BOTH",
                         "entity": "both",
-                        "text": "¿Bando Cuántico o Bando Solar? ¡Vota por tu bando en los comentarios!",
-                        "shot": "wide",
-                        "duration": 2.5
+                        "text": "Exacto. En el universo, la realidad siempre es más extraña que la ficción.",
+                        "shot": "both",
+                        "duration": 3.0
                     }
                 ]
             }

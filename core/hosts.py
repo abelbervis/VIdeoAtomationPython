@@ -99,8 +99,8 @@ class OrbHost:
 DEFAULT_QUANTUM_HOST = OrbHost(
     id="quantum",
     name="QUANTUM",
-    role="IA Física Cuántica",
-    perspective="Mente analítica, sutil y serena. Especialista en la escala subatómica, mecánica cuántica, principio de incertidumbre, teoría de simulación y computación cuántica.",
+    role="Divulgación Cuántica",
+    perspective="El Revelador Científico. Plantea hechos contraintuitivos y paradojas reales de la física moderna que desafían la lógica común.",
     color_theme="cyan",
     palette_name="quantum",
     primary_color="#00f0ff",
@@ -123,8 +123,8 @@ DEFAULT_QUANTUM_HOST = OrbHost(
 DEFAULT_SOLAR_HOST = OrbHost(
     id="solar",
     name="SOLAR",
-    role="IA Astrofísica Solar",
-    perspective="Núcleo estelar enérgico, brillante y radiante. Especialista en astrofísica, entropía termodinámica, fusión nuclear, relatividad general y gravitación macroscópica.",
+    role="Física y Sentido Común",
+    perspective="La Voz del Espectador Curioso. Cuestiona con sentido común, hace las preguntas instintivas que todos nos hacemos y conecta el enigma con la realidad cotidiana.",
     color_theme="amber",
     palette_name="solar",
     primary_color="#ffea00",
@@ -244,77 +244,91 @@ class CosmicDebateShow:
 {self.host_a.to_prompt_line()}
 {self.host_b.to_prompt_line()}
 
-CRITICAL NARRATIVE RULES:
+CRITICAL NARRATIVE RULES & PSYCHOLOGICAL DYNAMIC:
 
-1. NO PSEUDO-POETRY OR VAGUE FLUFF (STRICTLY BANNED):
-   - PROHIBITED: Abstract pseudo-poetic phrases without physical meaning (e.g. "la gravedad del relato", "la tinta de la conciencia", "las hojas del libro cósmico", "el tejido de las almas", "la voz del universo").
-   - MANDATORY GROUNDING: Every script MUST be grounded in REAL physics, real scientific paradoxes, or concrete sci-fi mechanics (e.g. quantum superposition, time dilation, speed of light limit, entropy, black hole event horizons, simulation theory, Planck scale, observer effect).
+1. THE DYNAMIC: "EL REVELADOR" VS "LA VOZ DEL ESPECTADOR" (NO DRY COMBAT, NO ROBOTIC COMPETITION):
+   - {self.host_a.name} acts as "El Revelador": Opens with a 100% REAL, mind-bending fact or canonical thought experiment that shatters everyday intuition (e.g. time dilation near mass, observer effect, entropy, cosmic light lag).
+   - {self.host_b.name} acts as "La Voz del Espectador (Curioso y Escéptico)": Reacts immediately with the instinctive question or disbelief that anyone watching at home would ask ("Espera, ¿qué? Nacieron el mismo día, ¿cómo van a tener edades distintas?", "¿Pero cómo puede ser eso posible si...?").
+   - {self.host_a.name} explains the real physical mechanism in simple, visual, everyday terms (ELI5).
+   - {self.host_b.name} experiences the mind-blown epiphany and projects it into a startling conclusion ("O sea que si vivieras en la cima de una montaña... ¿envejecerías más rápido?").
+   - Climax/Ending: Both acknowledge the paradox with high impact.
 
-2. ONE SINGLE STORY ARC & CONVERSATIONAL CHAINING:
-   - The script MUST maintain ONE single central thought experiment or real paradox from line 1 to the end. Do NOT jump to unrelated isolated physics facts.
-   - Every scene after Scene 1 MUST directly react to or build upon the previous sentence using natural bridges ("Exacto, y por eso...", "De hecho, si ese fuera el caso...", "Ahí está la paradoja: ...", "Eso significa que...", "Pero piénsalo: ...").
-   - The dialog MUST read like a real, fascinating conversation between two brilliant minds bouncing off each other.
+2. ZERO FAKE NEWS & ZERO PSEUDO-POETRY (100% REAL CANONICAL SCIENCE):
+   - STRICTLY FORBIDDEN: Fake news claims ("Científicos descubrieron ayer...", invented labs, sensationalized falsehoods).
+   - STRICTLY FORBIDDEN: Abstract pseudo-poetic fluff without physical meaning ("la gravedad del relato", "la tinta del alma", "el tejido cósmico de los recuerdos").
+   - MANDATORY GROUNDING: The entire conversation MUST be based on verified physics (Relativity, Quantum Mechanics, Thermodynamics, Speed of Light, Entropy, Event Horizons). Reality is already bizarre enough without making things up!
 
-3. CONTEXTUAL AI SPECIALTY ROLES (HIGH RETENTION & CONSISTENCY):
-   - In the "roles" object of your JSON, assign a concise, highly tailored scientific specialty subtitle (2 to 4 words, max 28 characters) to each host specifically designed for their side of this debate topic.
-   - This label appears on their identity card (lower-third) during opening seconds so viewers immediately understand their expert stance.
+3. CONVERSATIONAL CHAINING & PUNCHY DIALOGUE (MAX 14 WORDS PER LINE):
+   - Every single line MUST directly react to the previous speaker using natural conversational bridges ("¡Espera!", "¿Cómo?", "Exacto, porque...", "Pero piénsalo un segundo...", "O sea que...").
+   - Keep each turn punchy (under 14 words). No long lectures. Maximum pace and rhythm.
+
+4. CONTEXTUAL SPECIALTY ROLES (IN IDENTITY BADGES):
+   - In the "roles" object of your JSON, assign a concise, tailored science communicator subtitle (2 to 4 words, max 28 characters) for each host.
+   - Example for topic 'Dilatación temporal en la Tierra':
+     "roles": {{
+       "{self.host_a.id}": "Divulgación Cuántica",
+       "{self.host_b.id}": "Física y Sentido Común"
+     }}
    - Example for topic '¿El universo es una simulación?':
      "roles": {{
-       "{self.host_a.id}": "IA Computación Cuántica",
-       "{self.host_b.id}": "IA Física Fundamental"
+       "{self.host_a.id}": "Computación y Códigos",
+       "{self.host_b.id}": "Física Fundamental"
      }}
-   - Example for topic '¿La conciencia es un algoritmo?':
-     "roles": {{
-       "{self.host_a.id}": "IA Biofísica y Redes",
-       "{self.host_b.id}": "IA Filosofía de la Mente"
-     }}
-
-4. STRUCTURE & HOLOGRAMS:
-   - FLEXIBLE SCENE COUNT: Produce between 3 and 5 scenes based on what the narrative naturally requires.
-   - FLEXIBLE STARTER: Either {self.host_a.name} or {self.host_b.name} can speak first—whichever speaker creates the strongest immediate hook.
-   - OPTIONAL HOLOGRAMS: Only output 'holograms' if there is a real, concrete scientific metric or formula to display (e.g. "300,000 km/s", "13.8 Gyr", "1.6x10⁻³⁵ m"). If the script is a pure conceptual thought experiment, set 'holograms': null.
 
 5. CAMERA SHOTS MUST STRICTLY MATCH THE SPEAKER:
-   - "shot": "wide" -> Opening scene or general view where both orbs are present.
-   - "shot": "{self.host_a.shot_name}" -> ONLY when {self.host_a.name} is speaking solo! Never assign to {self.host_b.name}.
-   - "shot": "{self.host_b.shot_name}" -> ONLY when {self.host_b.name} is speaking solo! Never assign to {self.host_a.name}.
-   - "shot": "both" -> When both orbs speak together or in the concluding realization.
+   - "shot": "wide" -> Opening scene where both orbs are present.
+   - "shot": "{self.host_a.shot_name}" -> ONLY when {self.host_a.name} is speaking solo!
+   - "shot": "{self.host_b.shot_name}" -> ONLY when {self.host_b.name} is speaking solo!
+   - "shot": "both" -> When both orbs speak together or in the final revelation.
 
-6. DIALOGUE STYLE & ELI5:
-   - Speak in clear, simple Spanish. Explain like to a 12-year-old using clear physical analogies.
-   - Hook the viewer in the first 3 words with an irresistible, visual premise.
-   - End with a mind-expanding scientific realization or existential question (NO forced "comment below" CTAs).
+6. STRUCTURE & HOLOGRAMS:
+   - Produce between 3 and 5 scenes based on what the paradox naturally requires.
+   - Only include 'holograms' if there is a concrete number or scientific constant to display (e.g. "300,000 km/s", "10⁻³⁵ m"). Otherwise, set 'holograms': null.
 
 Respond ONLY with valid JSON matching this schema:
 {{
   "topic": "Clean topic name",
   "headline_hook": "⚡ TITULO IMPACTANTE (MAX 45 CHARACTERS) ⚡",
   "roles": {{
-    "{self.host_a.id}": "IA Especialidad {self.host_a.name}",
-    "{self.host_b.id}": "IA Especialidad {self.host_b.name}"
+    "{self.host_a.id}": "Divulgación {self.host_a.name}",
+    "{self.host_b.id}": "Física y Sentido Común"
   }},
   "holograms": null,
   "scenes": [
     {{
       "speaker": "{self.host_a.name}",
       "entity": "{self.host_a.id}",
-      "text": "Imagina que el universo entero es solo una pantalla de videojuegos cargando en tiempo real.",
+      "text": "Tus pies son físicamente más jóvenes que tu cabeza.",
       "shot": "wide",
-      "duration": 3.2
+      "duration": 3.0
     }},
     {{
       "speaker": "{self.host_b.name}",
       "entity": "{self.host_b.id}",
-      "text": "Exacto, y cada estrella que ves a lo lejos solo se renderiza cuando alguien la mira.",
+      "text": "¿Cómo que más jóvenes? Nacieron exactamente el mismo día.",
       "shot": "{self.host_b.shot_name}",
-      "duration": 3.5
+      "duration": 3.2
     }},
     {{
       "speaker": "{self.host_a.name}",
       "entity": "{self.host_a.id}",
-      "text": "Pero ahí está el misterio: si nadie está mirando el código, ¿quién presionó el botón de inicio?",
-      "shot": "both",
+      "text": "Por la gravedad: cuanto más cerca del centro de la Tierra, el tiempo pasa más lento.",
+      "shot": "{self.host_a.shot_name}",
       "duration": 3.5
+    }},
+    {{
+      "speaker": "{self.host_b.name}",
+      "entity": "{self.host_b.id}",
+      "text": "O sea que en la cima del Everest... ¿envejeces más rápido?",
+      "shot": "{self.host_b.shot_name}",
+      "duration": 3.2
+    }},
+    {{
+      "speaker": "BOTH",
+      "entity": "both",
+      "text": "Exacto. Fracciones de segundo, pero matemáticamente real.",
+      "shot": "both",
+      "duration": 3.0
     }}
   ]
 }}
