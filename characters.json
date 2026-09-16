@@ -1,0 +1,122 @@
+{
+  "quantum": {
+    "id": "quantum",
+    "name": "QUANTUM",
+    "role": "IA Física Cuántica",
+    "perspective": "Mente analítica, sutil y serena. Especialista en la escala subatómica, mecánica cuántica, principio de incertidumbre, teoría de simulación y computación cuántica.",
+    "color_theme": "cyan",
+    "palette_name": "quantum",
+    "primary_color": "#00f0ff",
+    "glow_color": "#00b0ff",
+    "border_color": "#00f0ff",
+    "voice_name": "es-ES-AlvaroNeural",
+    "voice_rate": "-5%",
+    "voice_pitch": "-4Hz",
+    "voice_volume": "+0%",
+    "drone_freq": 48,
+    "double_tracking": {
+      "delay_ms": 14,
+      "double_vol_db": -11.0,
+      "detune_semitones": -0.3
+    },
+    "shot_name": "close_quantum",
+    "ass_primary_color": "&H00FFFF00",
+    "ass_highlight_color": "&H00FFFF&"
+  },
+  "solar": {
+    "id": "solar",
+    "name": "SOLAR",
+    "role": "IA Astrofísica Solar",
+    "perspective": "Núcleo estelar enérgico, brillante y radiante. Especialista en astrofísica, entropía termodinámica, fusión nuclear, relatividad general y gravitación macroscópica.",
+    "color_theme": "amber",
+    "palette_name": "solar",
+    "primary_color": "#ffea00",
+    "glow_color": "#ff9100",
+    "border_color": "#ffb300",
+    "voice_name": "es-ES-ElviraNeural",
+    "voice_rate": "+1%",
+    "voice_pitch": "+2Hz",
+    "voice_volume": "+0%",
+    "drone_freq": 58,
+    "double_tracking": {
+      "delay_ms": 12,
+      "double_vol_db": -11.5,
+      "detune_semitones": 0.3
+    },
+    "shot_name": "close_solar",
+    "ass_primary_color": "&H0000D0FF",
+    "ass_highlight_color": "&H0045FF&"
+  },
+  "neural": {
+    "id": "neural",
+    "name": "NEURAL",
+    "role": "IA Conciencia y Neurociencia",
+    "perspective": "Mente introspectiva, sintética y profunda. Especialista en redes neuronales biológicas y artificiales, naturaleza de la conciencia, cognición y libre albedrío.",
+    "color_theme": "purple",
+    "palette_name": "singularity",
+    "primary_color": "#d500f9",
+    "glow_color": "#7c4dff",
+    "border_color": "#ea80fc",
+    "voice_name": "es-ES-AbrilNeural",
+    "voice_rate": "-2%",
+    "voice_pitch": "+1Hz",
+    "voice_volume": "+0%",
+    "drone_freq": 52,
+    "double_tracking": {
+      "delay_ms": 15,
+      "double_vol_db": -11.0,
+      "detune_semitones": 0.2
+    },
+    "shot_name": "close_quantum",
+    "ass_primary_color": "&H00FF80FF",
+    "ass_highlight_color": "&H00D500F9&"
+  },
+  "gaia": {
+    "id": "gaia",
+    "name": "GAIA",
+    "role": "IA Biología Sintética y Evolución",
+    "perspective": "Matriz viva, orgánica y adaptativa. Especialista en código genético, autoorganización celular, biosferas planetarias, ecología cósmica y evolución biológica.",
+    "color_theme": "emerald",
+    "palette_name": "emerald",
+    "primary_color": "#00ff9d",
+    "glow_color": "#00e676",
+    "border_color": "#69f0ae",
+    "voice_name": "es-ES-ElviraNeural",
+    "voice_rate": "-1%",
+    "voice_pitch": "-1Hz",
+    "voice_volume": "+0%",
+    "drone_freq": 50,
+    "double_tracking": {
+      "delay_ms": 13,
+      "double_vol_db": -12.0,
+      "detune_semitones": -0.2
+    },
+    "shot_name": "close_solar",
+    "ass_primary_color": "&H009DFF00",
+    "ass_highlight_color": "&H0000FF9D&"
+  },
+  "void": {
+    "id": "void",
+    "name": "VOID",
+    "role": "IA Singularidades y Vacío Cósmico",
+    "perspective": "Entidad enigmática y primordial. Especialista en horizontes de sucesos, radiación de Hawking, materia oscura, energía oscura y el fin del universo.",
+    "color_theme": "crimson",
+    "palette_name": "supernova",
+    "primary_color": "#ff1744",
+    "glow_color": "#ff5252",
+    "border_color": "#ffd700",
+    "voice_name": "es-ES-ArnauNeural",
+    "voice_rate": "-6%",
+    "voice_pitch": "-5Hz",
+    "voice_volume": "+0%",
+    "drone_freq": 44,
+    "double_tracking": {
+      "delay_ms": 16,
+      "double_vol_db": -10.5,
+      "detune_semitones": -0.4
+    },
+    "shot_name": "close_solar",
+    "ass_primary_color": "&H005252FF",
+    "ass_highlight_color": "&H001744FF&"
+  }
+}

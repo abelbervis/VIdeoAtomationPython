@@ -287,8 +287,9 @@ class EdgeTTSProvider(BaseTTSProvider):
         Adaptive DBZ Cell-style Double Tracking (detuned micro-delay), 3D Haas binaural width, and sub-harmonics.
         Automatically scales presence between subtle narration and high-impact emphasis.
         """
-        entity_key = entity.lower()
-        profile = COSMIC_VOICE_PROFILES.get(entity_key, COSMIC_VOICE_PROFILES["quantum"])
+        entity_key = entity.lower().strip()
+        profiles = HostRegistry.all_voice_profiles()
+        profile = profiles.get(entity_key, profiles.get("quantum", COSMIC_VOICE_PROFILES.get("quantum", {})))
 
         # Dynamic speech impact detection
         auto_impact, auto_intensity, reason = detect_speech_impact_intensity(text)

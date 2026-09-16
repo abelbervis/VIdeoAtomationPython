@@ -261,6 +261,18 @@ class DebateScriptGenerator:
             return False
         if not script.get("headline_hook"):
             return False
+        
+        # Ensure contextual roles are present and within clean character limits
+        if "roles" not in script or not isinstance(script["roles"], dict):
+            script["roles"] = {
+                self.show.host_a.id: self.show.host_a.role,
+                self.show.host_b.id: self.show.host_b.role,
+            }
+        else:
+            for k in list(script["roles"].keys()):
+                val = str(script["roles"][k]).strip()
+                if len(val) > 30:
+                    script["roles"][k] = val[:28]
         return True
 
     def _generate_scientific_fallback(self, topic: str, language: str = "es") -> Dict[str, Any]:

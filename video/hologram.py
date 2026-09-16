@@ -37,6 +37,18 @@ def generate_hologram_card_svg(
         pill_border = "#8e00b3"
         glow_color = "#d500f9"
         beam_color = "#aa00ff"
+    elif color_theme == "emerald":
+        accent_color = "#00ff9d"
+        pill_bg = "#003822"
+        pill_border = "#009960"
+        glow_color = "#00e676"
+        beam_color = "#00ff9d"
+    elif color_theme == "crimson":
+        accent_color = "#ff1744"
+        pill_bg = "#380008"
+        pill_border = "#990018"
+        glow_color = "#ff5252"
+        beam_color = "#ff1744"
     else:  # cyan / default
         accent_color = "#00f0ff"
         pill_bg = "#002838"
@@ -175,6 +187,18 @@ def generate_presenter_badge_svg(
         accent_color = "#ffb300"
         bg_glow = "#ff8f00"
         border_color = "#ffb300"
+    elif color_theme == "purple":
+        accent_color = "#d500f9"
+        bg_glow = "#aa00ff"
+        border_color = "#ea80fc"
+    elif color_theme == "emerald":
+        accent_color = "#00ff9d"
+        bg_glow = "#00e676"
+        border_color = "#69f0ae"
+    elif color_theme == "crimson":
+        accent_color = "#ff1744"
+        bg_glow = "#ff5252"
+        border_color = "#ffd700"
     else:  # cyan
         accent_color = "#00f0ff"
         bg_glow = "#00b0ff"

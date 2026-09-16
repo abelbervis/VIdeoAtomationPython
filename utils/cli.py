@@ -565,6 +565,13 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Topic for the AI Co-Host Debate Express (e.g. '¿Es el universo una simulación?', 'IA vs Cerebro Humano'). Automatically triggers --debate mode."
     )
+    parser.add_argument(
+        "--hosts", "--cohosts",
+        dest="cohosts",
+        type=str,
+        default="quantum,solar",
+        help="Comma-separated IDs of two co-hosts from characters.json (e.g. 'quantum,solar', 'neural,solar', 'gaia,quantum', 'void,solar') (default: 'quantum,solar')"
+    )
 
     # Custom Script Option (Pre-edited scenes JSON)
     parser.add_argument(

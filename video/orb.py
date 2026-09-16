@@ -571,6 +571,7 @@ def render_orb_test_preview(
     headline_hook: str = "⚡ PARADOJA CUÁNTICA VS FÍSICA SOLAR ⚡",
     topic: Optional[str] = None,
     debate_script: Optional[Dict[str, Any]] = None,
+    cohosts: Optional[str] = "quantum,solar",
     llm_provider: str = "groq",
     gemini_key: Optional[str] = None,
     groq_key: Optional[str] = None,
@@ -578,6 +579,18 @@ def render_orb_test_preview(
     enable_review: bool = True,
 ) -> Optional[Path]:
     """Renders a stunning co-host conversation video with two bio-reactive orbs and dynamic camera cuts."""
+    from core.hosts import CosmicDebateShow, HostRegistry, DEFAULT_QUANTUM_HOST, DEFAULT_SOLAR_HOST
+
+    # 0. Resolve co-hosts from parameter, script, or defaults
+    target_hosts = cohosts or "quantum,solar"
+    if debate_script and "cohosts" in debate_script and isinstance(debate_script["cohosts"], str):
+        target_hosts = debate_script["cohosts"]
+    
+    parts = [p.strip() for p in target_hosts.split(",") if p.strip()]
+    resolved_host_a = HostRegistry.get(parts[0]) if len(parts) >= 1 else DEFAULT_QUANTUM_HOST
+    resolved_host_b = HostRegistry.get(parts[1]) if len(parts) >= 2 else DEFAULT_SOLAR_HOST
+    debate_show = CosmicDebateShow(host_a=resolved_host_a, host_b=resolved_host_b)
+
     # 1. If topic is provided and debate_script is not provided, generate with AI
     if not debate_script and topic:
         from ai.debate_generator import DebateScriptGenerator
@@ -586,7 +599,8 @@ def render_orb_test_preview(
             gemini_key=gemini_key,
             groq_key=groq_key,
             openai_key=openai_key,
-            enable_review=enable_review
+            enable_review=enable_review,
+            show=debate_show
         )
         debate_script = gen.generate(topic, language="es", allow_fallback=False)
         if not debate_script:
@@ -676,13 +690,12 @@ def render_orb_test_preview(
     if has_holo_s:
         print(f"   • HUD Holográfico S: [{holo_s_cat}] {holo_s_title} -> {holo_s_sub}")
 
-    # Generate or retrieve cached orb visual assets (100% identical output, 0ms latency)
-    orb_quantum = get_or_create_orb_asset(palette="quantum", force_refresh=False)
-    orb_solar = get_or_create_orb_asset(palette="solar", force_refresh=False)
+    # Generate or retrieve cached orb visual assets for both hosts' specific palettes
+    orb_quantum = get_or_create_orb_asset(palette=debate_show.host_a.palette_name, force_refresh=False)
+    orb_solar = get_or_create_orb_asset(palette=debate_show.host_b.palette_name, force_refresh=False)
 
     # Generate Holographic Floating Reference Cards (Only if required by script)
     from video.hologram import generate_hologram_card_svg
-    from core.hosts import CosmicDebateShow, DEFAULT_QUANTUM_HOST, DEFAULT_SOLAR_HOST
 
     holo_q_path = output_path.parent / "_holo_q.svg"
     holo_s_path = output_path.parent / "_holo_s.svg"
@@ -692,7 +705,7 @@ def render_orb_test_preview(
             title=holo_q_title,
             subtitle=holo_q_sub,
             category=holo_q_cat,
-            color_theme="cyan",
+            color_theme=debate_show.host_a.color_theme,
             width=620,
             height=240,
             output_path=holo_q_path
@@ -702,13 +715,13 @@ def render_orb_test_preview(
             title=holo_s_title,
             subtitle=holo_s_sub,
             category=holo_s_cat,
-            color_theme="amber",
+            color_theme=debate_show.host_b.color_theme,
             width=620,
             height=240,
             output_path=holo_s_path
         )
 
-    # Resolve OOP Show model and optional dynamic roles from script
+    # Resolve optional dynamic roles from script or AI generation
     custom_roles = {}
     if debate_script:
         if "roles" in debate_script and isinstance(debate_script["roles"], dict):
@@ -720,7 +733,6 @@ def render_orb_test_preview(
                 elif isinstance(h_v, str):
                     custom_roles[h_k] = h_v
 
-    debate_show = CosmicDebateShow(host_a=DEFAULT_QUANTUM_HOST, host_b=DEFAULT_SOLAR_HOST)
     badge_q_path, badge_s_path = debate_show.generate_all_badges(
         output_dir=output_path.parent,
         custom_roles=custom_roles

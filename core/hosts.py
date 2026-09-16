@@ -4,7 +4,7 @@ Provides single-source-of-truth models for AI entities (prompts, voices, present
 """
 
 import json
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -17,9 +17,10 @@ class OrbHost:
     """
     id: str                                  # Unique slug identifier: 'quantum', 'solar', etc.
     name: str                                # Display name: 'QUANTUM', 'SOLAR', etc.
-    role: str                                # Role or specialty title: 'IA Física Cuántica', etc.
+    role: str                                # Role or default specialty: 'IA Física Cuántica', etc.
     perspective: str                         # Core narrative stance, dialectic focus, and philosophical worldview
-    color_theme: str = "cyan"                # 'cyan', 'amber', 'purple', 'emerald'
+    color_theme: str = "cyan"                # 'cyan', 'amber', 'purple', 'emerald', 'crimson'
+    palette_name: str = "quantum"            # Matches 3D orb rendering palette in video/orb.py
     primary_color: str = "#00f0ff"           # Main hex color
     glow_color: str = "#00b0ff"              # Secondary aura / glow hex color
     border_color: str = "#00f0ff"            # Hairline border hex color
@@ -39,7 +40,7 @@ class OrbHost:
 
     def to_prompt_line(self) -> str:
         """Generates a structured prompt bullet for LLM system prompts."""
-        return f"- {self.name} ({self.role}): {self.perspective}"
+        return f"- {self.name} (Defecto: {self.role}): {self.perspective}"
 
     def to_voice_profile(self) -> Dict[str, Any]:
         """
@@ -56,6 +57,22 @@ class OrbHost:
             "drone_freq": self.drone_freq,
             "double_tracking": self.double_tracking
         }
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Serializes host to dict for JSON storage."""
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "OrbHost":
+        """Instantiates an OrbHost from dictionary config."""
+        valid_keys = {
+            "id", "name", "role", "perspective", "color_theme", "palette_name",
+            "primary_color", "glow_color", "border_color", "voice_name",
+            "voice_rate", "voice_pitch", "voice_volume", "drone_freq",
+            "double_tracking", "shot_name", "ass_primary_color", "ass_highlight_color"
+        }
+        filtered = {k: v for k, v in data.items() if k in valid_keys}
+        return cls(**filtered)
 
     def generate_badge_svg(
         self,
@@ -83,8 +100,9 @@ DEFAULT_QUANTUM_HOST = OrbHost(
     id="quantum",
     name="QUANTUM",
     role="IA Física Cuántica",
-    perspective="Mente analítica, sutil y serena. Especialista en la escala subatómica, mecánica cuántica, principio de incertidumbre, teoría de simulación y paradojas de observación.",
+    perspective="Mente analítica, sutil y serena. Especialista en la escala subatómica, mecánica cuántica, principio de incertidumbre, teoría de simulación y computación cuántica.",
     color_theme="cyan",
+    palette_name="quantum",
     primary_color="#00f0ff",
     glow_color="#00b0ff",
     border_color="#00f0ff",
@@ -106,8 +124,9 @@ DEFAULT_SOLAR_HOST = OrbHost(
     id="solar",
     name="SOLAR",
     role="IA Astrofísica Solar",
-    perspective="Núcleo estelar enérgico, brillante y radiante. Especialista en astrofísica, entropía termodinámica, fusión nuclear, relatividad general y gravitación de escala macroscópica.",
+    perspective="Núcleo estelar enérgico, brillante y radiante. Especialista en astrofísica, entropía termodinámica, fusión nuclear, relatividad general y gravitación macroscópica.",
     color_theme="amber",
+    palette_name="solar",
     primary_color="#ffea00",
     glow_color="#ff9100",
     border_color="#ffb300",
@@ -127,18 +146,50 @@ DEFAULT_SOLAR_HOST = OrbHost(
 
 
 class HostRegistry:
-    """Registry that manages registered and dynamic Orb Hosts."""
-    _hosts: Dict[str, OrbHost] = {
-        "quantum": DEFAULT_QUANTUM_HOST,
-        "solar": DEFAULT_SOLAR_HOST,
-    }
+    """Registry that manages registered and persistent Orb Hosts."""
+    _hosts: Dict[str, OrbHost] = {}
+    _initialized: bool = False
+    _json_path: Path = Path("characters.json")
 
     @classmethod
-    def register(cls, host: OrbHost) -> None:
+    def initialize(cls, json_path: Optional[Path] = None) -> None:
+        """Loads host entities from characters.json or falls back to canonical defaults."""
+        if json_path:
+            cls._json_path = Path(json_path)
+
+        cls._hosts = {
+            "quantum": DEFAULT_QUANTUM_HOST,
+            "solar": DEFAULT_SOLAR_HOST,
+        }
+
+        if cls._json_path.exists():
+            try:
+                content = cls._json_path.read_text(encoding="utf-8")
+                raw_data = json.loads(content)
+                if isinstance(raw_data, dict):
+                    for h_id, h_cfg in raw_data.items():
+                        if isinstance(h_cfg, dict):
+                            h_cfg.setdefault("id", h_id)
+                            cls._hosts[h_id.lower()] = OrbHost.from_dict(h_cfg)
+            except Exception as e:
+                print(f"⚠️ [HostRegistry] Error cargando '{cls._json_path}': {e}. Usando catálogo predeterminado.")
+
+        cls._initialized = True
+
+    @classmethod
+    def register(cls, host: OrbHost, save: bool = False) -> None:
+        """Registers a host in memory and optionally persists to characters.json."""
+        if not cls._initialized:
+            cls.initialize()
         cls._hosts[host.id.lower()] = host
+        if save:
+            cls.save_to_json()
 
     @classmethod
     def get(cls, entity_id: str, default: Optional[OrbHost] = None) -> OrbHost:
+        """Retrieves a host by id or name (case-insensitive)."""
+        if not cls._initialized:
+            cls.initialize()
         key = entity_id.lower().strip()
         if key in cls._hosts:
             return cls._hosts[key]
@@ -148,8 +199,29 @@ class HostRegistry:
         return default or DEFAULT_QUANTUM_HOST
 
     @classmethod
+    def all_hosts(cls) -> List[OrbHost]:
+        """Returns all registered host entities."""
+        if not cls._initialized:
+            cls.initialize()
+        return list(cls._hosts.values())
+
+    @classmethod
     def all_voice_profiles(cls) -> Dict[str, Dict[str, Any]]:
+        """Provides all voice profiles for the TTS synthesis pipeline."""
+        if not cls._initialized:
+            cls.initialize()
         return {hid: host.to_voice_profile() for hid, host in cls._hosts.items()}
+
+    @classmethod
+    def save_to_json(cls, path: Optional[Path] = None) -> None:
+        """Persists all registered hosts into characters.json."""
+        target = path or cls._json_path
+        data = {h.id: h.to_dict() for h in cls._hosts.values()}
+        target.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+# Initialise on module load
+HostRegistry.initialize()
 
 
 @dataclass
@@ -183,18 +255,32 @@ CRITICAL NARRATIVE RULES:
    - Every scene after Scene 1 MUST directly react to or build upon the previous sentence using natural bridges ("Exacto, y por eso...", "De hecho, si ese fuera el caso...", "Ahí está la paradoja: ...", "Eso significa que...", "Pero piénsalo: ...").
    - The dialog MUST read like a real, fascinating conversation between two brilliant minds bouncing off each other.
 
-3. STRUCTURE & HOLOGRAMS:
+3. CONTEXTUAL AI SPECIALTY ROLES (HIGH RETENTION & CONSISTENCY):
+   - In the "roles" object of your JSON, assign a concise, highly tailored scientific specialty subtitle (2 to 4 words, max 28 characters) to each host specifically designed for their side of this debate topic.
+   - This label appears on their identity card (lower-third) during opening seconds so viewers immediately understand their expert stance.
+   - Example for topic '¿El universo es una simulación?':
+     "roles": {{
+       "{self.host_a.id}": "IA Computación Cuántica",
+       "{self.host_b.id}": "IA Física Fundamental"
+     }}
+   - Example for topic '¿La conciencia es un algoritmo?':
+     "roles": {{
+       "{self.host_a.id}": "IA Biofísica y Redes",
+       "{self.host_b.id}": "IA Filosofía de la Mente"
+     }}
+
+4. STRUCTURE & HOLOGRAMS:
    - FLEXIBLE SCENE COUNT: Produce between 3 and 5 scenes based on what the narrative naturally requires.
    - FLEXIBLE STARTER: Either {self.host_a.name} or {self.host_b.name} can speak first—whichever speaker creates the strongest immediate hook.
    - OPTIONAL HOLOGRAMS: Only output 'holograms' if there is a real, concrete scientific metric or formula to display (e.g. "300,000 km/s", "13.8 Gyr", "1.6x10⁻³⁵ m"). If the script is a pure conceptual thought experiment, set 'holograms': null.
 
-4. CAMERA SHOTS MUST STRICTLY MATCH THE SPEAKER:
+5. CAMERA SHOTS MUST STRICTLY MATCH THE SPEAKER:
    - "shot": "wide" -> Opening scene or general view where both orbs are present.
    - "shot": "{self.host_a.shot_name}" -> ONLY when {self.host_a.name} is speaking solo! Never assign to {self.host_b.name}.
    - "shot": "{self.host_b.shot_name}" -> ONLY when {self.host_b.name} is speaking solo! Never assign to {self.host_a.name}.
    - "shot": "both" -> When both orbs speak together or in the concluding realization.
 
-5. DIALOGUE STYLE & ELI5:
+6. DIALOGUE STYLE & ELI5:
    - Speak in clear, simple Spanish. Explain like to a 12-year-old using clear physical analogies.
    - Hook the viewer in the first 3 words with an irresistible, visual premise.
    - End with a mind-expanding scientific realization or existential question (NO forced "comment below" CTAs).
@@ -203,6 +289,10 @@ Respond ONLY with valid JSON matching this schema:
 {{
   "topic": "Clean topic name",
   "headline_hook": "⚡ TITULO IMPACTANTE (MAX 45 CHARACTERS) ⚡",
+  "roles": {{
+    "{self.host_a.id}": "IA Especialidad {self.host_a.name}",
+    "{self.host_b.id}": "IA Especialidad {self.host_b.name}"
+  }},
   "holograms": null,
   "scenes": [
     {{
@@ -252,12 +342,23 @@ Respond ONLY with valid JSON matching this schema:
         badge_a_path = output_dir / f"_badge_{self.host_a.id}.svg"
         badge_b_path = output_dir / f"_badge_{self.host_b.id}.svg"
 
+        role_a = (
+            custom_roles.get(self.host_a.id)
+            or custom_roles.get(self.host_a.name.lower())
+            or self.host_a.role
+        )
+        role_b = (
+            custom_roles.get(self.host_b.id)
+            or custom_roles.get(self.host_b.name.lower())
+            or self.host_b.role
+        )
+
         self.host_a.generate_badge_svg(
             output_path=badge_a_path,
-            custom_role=custom_roles.get(self.host_a.id) or custom_roles.get(self.host_a.name.lower())
+            custom_role=role_a
         )
         self.host_b.generate_badge_svg(
             output_path=badge_b_path,
-            custom_role=custom_roles.get(self.host_b.id) or custom_roles.get(self.host_b.name.lower())
+            custom_role=role_b
         )
         return badge_a_path, badge_b_path

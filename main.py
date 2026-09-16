@@ -111,6 +111,7 @@ def main():
             output_path=out_path,
             width=fmt_cfg["width"],
             height=fmt_cfg["height"],
+            cohosts=getattr(args, "cohosts", "quantum,solar"),
             llm_provider=llm_prov,
             gemini_key=getattr(args, "gemini_key", None),
             groq_key=getattr(args, "groq_key", None),

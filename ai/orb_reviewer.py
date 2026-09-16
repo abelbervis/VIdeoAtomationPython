@@ -103,6 +103,8 @@ class OrbScriptReviewer:
 
                 if reviewed and reviewed.get("scenes") and len(reviewed["scenes"]) > 0:
                     print("  ✨ ¡Guión de debate auditado y corregido con éxito por el Editor Ejecutivo!")
+                    if "roles" in draft_script and "roles" not in reviewed:
+                        reviewed["roles"] = draft_script["roles"]
                     return reviewed
             except Exception as e:
                 print(f"  ⚠️ Revisión de orbes con {prov} falló ({e}), manteniendo borrador original...")
