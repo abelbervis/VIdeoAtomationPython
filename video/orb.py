@@ -1023,9 +1023,9 @@ def render_orb_test_preview(
         f"[1:v]split={q_uses}" + "".join(f"[q_in_{k}]" for k in range(q_uses)),
         f"[2:v]split={s_uses}" + "".join(f"[s_in_{k}]" for k in range(s_uses)),
 
-        # Background Ambient Luminescence
-        f"[q_in_0]scale=120:120,eq={eq_q},hue={hue_q},boxblur=24:3,scale=1080:1920,format=yuva420p,colorchannelmixer=aa=0.25[bg_glow_q]",
-        f"[s_in_0]scale=120:120,eq={eq_s},hue={hue_s},boxblur=24:3,scale=1080:1920,format=yuva420p,colorchannelmixer=aa=0.25[bg_glow_s]",
+        # Background Ambient Luminescence (Ultra-fast silk-smooth aura via bilinear upsampling)
+        f"[q_in_0]scale=32:32,eq={eq_q},hue={hue_q},scale=1080:1920:flags=bilinear,format=yuva420p,colorchannelmixer=aa=0.25[bg_glow_q]",
+        f"[s_in_0]scale=32:32,eq={eq_s},hue={hue_s},scale=1080:1920:flags=bilinear,format=yuva420p,colorchannelmixer=aa=0.25[bg_glow_s]",
 
         f"[0:v]eq=brightness=-0.01:contrast=1.05[bg_graded]",
         f"[bg_graded][bg_glow_q]overlay=eval=frame:enable='{speech_mask_q}'[bg_glowed_1]",
