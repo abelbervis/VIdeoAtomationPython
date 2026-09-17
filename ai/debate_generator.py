@@ -433,7 +433,7 @@ class DebateScriptGenerator:
                     }
                 ]
             }
-        elif "mente" in topic_lower or "ia" in topic_lower or "conciencia" in topic_lower:
+        elif any(w in topic_lower for w in ["mente", "cerebro", "conciencia", "inteligencia artificial", "redes neuronales"]) or re.search(r"\b(ia|ai)\b", topic_lower):
             return {
                 "topic": "IA vs Mente Humana",
                 "headline_hook": "⚡ IA VS CONCIENCIA HUMANA ⚡",
@@ -502,72 +502,119 @@ class DebateScriptGenerator:
                     }
                 ]
             }
-        else:
-            # Generic dynamic fallback
-            clean_title = topic.upper()
+        elif any(w in topic_lower for w in ["biolog", "genétic", "genom", "evoluc", "celular", "célula", "virus", "clonac"]) or re.search(r"\b(gen|genes|adn|dna|bio)\b", topic_lower):
             return {
-                "topic": topic,
-                "headline_hook": f"⚡ PARADOJA: {clean_title[:32]} ⚡",
+                "topic": f"El Enigma Biológico: {topic.strip()}",
+                "headline_hook": f"⚡ EL SECRETO DEL ADN: {topic.upper()[:24]} ⚡",
                 "roles": topic_roles,
-                "holograms": {
-                    "quantum": {
-                        "title": "MATRIZ CUÁNTICA",
-                        "subtitle": "Micro-estados: Discretos & Superpuestos",
-                        "category": "PARADOJA Q"
-                    },
-                    "solar": {
-                        "title": "DINÁMICA SOLAR",
-                        "subtitle": "Macro-energía: Fusión & Radiación",
-                        "category": "PARADOJA S"
-                    }
-                },
+                "holograms": None,
                 "scenes": [
                     {
                         "speaker": "Quantum",
                         "entity": "quantum",
-                        "text": f"La base fundamental de {topic} esconde una contradicción insalvable en las ecuaciones actuales.",
+                        "text": f"El código biológico detrás de {topic} opera como un sistema de información estructurado y preciso.",
                         "shot": "wide",
                         "duration": 3.2
                     },
                     {
                         "speaker": "Solar",
                         "entity": "solar",
-                        "text": "Las ecuaciones son solo mapas; los fenómenos físicos reales funcionan sin contradicciones.",
+                        "text": "Pero la vida no es un programa rígido; responde a presiones ambientales y epigenéticas dinámicas.",
                         "shot": "close_solar",
                         "duration": 3.4
                     },
                     {
                         "speaker": "Quantum",
                         "entity": "quantum",
-                        "text": "Sin embargo, los experimentos a escala atómica confirman que los estados se superponen sin decidirse.",
+                        "text": "Aun así, las secuencias moleculares determinan los límites fundamentales de cada organismo.",
                         "shot": "close_quantum",
                         "duration": 3.4
                     },
                     {
                         "speaker": "Solar",
                         "entity": "solar",
-                        "text": "En cuanto interactúan con el entorno macroscópico, esa superposición se desvanece de inmediato.",
+                        "text": "La evolución demuestra que la flexibilidad adaptativa es más poderosa que cualquier secuencia fija.",
                         "shot": "close_solar",
-                        "duration": 3.4
+                        "duration": 3.5
                     },
                     {
                         "speaker": "Quantum",
                         "entity": "quantum",
-                        "text": "Pero la información cuántica nunca se destruye, queda entrelazada con el resto del cosmos.",
+                        "text": "Si desciframos todas las instrucciones moleculares, podríamos reprogramar los límites de la vida.",
                         "shot": "close_quantum",
                         "duration": 3.3
                     },
                     {
                         "speaker": "Solar",
                         "entity": "solar",
-                        "text": "Y esa conexión universal demuestra que la realidad es un sistema indivisible en constante evolución.",
+                        "text": "Intervenir sistemas vivos tan complejos suele desatar consecuencias imprevistas e incontrolables.",
                         "shot": "close_solar",
                         "duration": 3.5
                     },
                     {
                         "speaker": "Ambos",
                         "entity": "both",
-                        "text": "¿Qué postura describe mejor la realidad de este fenómeno?",
+                        "text": "¿Somos el resultado de un código estricto o de una constante reinvención adaptativa?",
+                        "shot": "both",
+                        "duration": 3.2
+                    }
+                ]
+            }
+        else:
+            # Generic dynamic fallback - neutral and domain-agnostic
+            clean_title = topic.upper()
+            return {
+                "topic": topic,
+                "headline_hook": f"⚡ EL GRAN DILEMA: {clean_title[:28]} ⚡",
+                "roles": topic_roles,
+                "holograms": None,
+                "scenes": [
+                    {
+                        "speaker": "Quantum",
+                        "entity": "quantum",
+                        "text": f"El análisis sistemático de {topic} revela un dilema profundo que desafía lo que creíamos saber.",
+                        "shot": "wide",
+                        "duration": 3.2
+                    },
+                    {
+                        "speaker": "Solar",
+                        "entity": "solar",
+                        "text": "Ese dilema surge al confundir modelos teóricos con el comportamiento real del fenómeno en la práctica.",
+                        "shot": "close_solar",
+                        "duration": 3.4
+                    },
+                    {
+                        "speaker": "Quantum",
+                        "entity": "quantum",
+                        "text": "Sin embargo, los datos empíricos demuestran que las variables clave contradicen las explicaciones clásicas.",
+                        "shot": "close_quantum",
+                        "duration": 3.4
+                    },
+                    {
+                        "speaker": "Solar",
+                        "entity": "solar",
+                        "text": "La aparente contradicción se resuelve si observamos el sistema como un todo dinámico y no como piezas aisladas.",
+                        "shot": "close_solar",
+                        "duration": 3.5
+                    },
+                    {
+                        "speaker": "Quantum",
+                        "entity": "quantum",
+                        "text": "Aun así, si esta evidencia se confirma, obligaría a replantear los fundamentos mismos de esta disciplina.",
+                        "shot": "close_quantum",
+                        "duration": 3.4
+                    },
+                    {
+                        "speaker": "Solar",
+                        "entity": "solar",
+                        "text": "Esa tensión constante entre certeza y descubrimiento es exactamente lo que impulsa el avance del conocimiento.",
+                        "shot": "close_solar",
+                        "duration": 3.5
+                    },
+                    {
+                        "speaker": "Ambos",
+                        "entity": "both",
+                        "text": "¿Hacia qué postura te inclinas al reflexionar sobre este dilema?",
                         "shot": "both",
                         "duration": 3.0
                     }

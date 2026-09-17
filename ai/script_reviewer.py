@@ -23,7 +23,7 @@ CRITICAL 9.5+ AUDIT DIRECTIVES:
    - First or second person framing triggers instant mirror-neuron empathy and dramatically improves retention.
 
 2. ONE SINGLE FOCUSED ANGLE (ELIMINATE CONCEPT DUMPING):
-   - If the script jumps between multiple disconnected textbook topics (e.g. Mixing radius + spaghettification + time dilation + Hawking radiation), REWRITE IT to focus on ONLY ONE compelling phenomenon or thought experiment throughout the entire video.
+   - If the script jumps between multiple disconnected textbook topics, REWRITE IT to focus on ONLY ONE compelling phenomenon or thought experiment throughout the entire video.
    - Every scene must logically follow the previous one.
 
 3. PERSPECTIVE CONTRAST & ASYMMETRY (Scene 2 vs Scene 4):

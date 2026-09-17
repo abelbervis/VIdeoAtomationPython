@@ -13,9 +13,9 @@ Your ONLY job is to validate and auto-correct a JSON script generated for a shor
 
 CRITICAL CHECKLIST TO VALIDATE AND CORRECT:
 1. BAN ABSURD PSEUDO-POETRY & ENFORCE SCIENTIFIC ACCURACY:
-   - CIENCIA CORRECTA: Verificar que los datos, leyes físicas y principios científicos sean rigurosos, verídicos y precisos, corrigiendo cualquier error o dato inventado.
+   - CIENCIA RIGUROSA: Verificar que los datos y principios científicos sean rigurosos, verídicos y estrictamente pertinentes al tema abordado, corrigiendo cualquier error o dato inventado.
    - REJECT and REWRITE any pseudo-poetic nonsense phrases ("la gravedad del relato", "la tinta de la conciencia", "las hojas del libro cósmico", "las voces del vacío").
-   - Replace with REAL, grounded science, physical paradoxes, or tangible sci-fi logic (e.g. quantum code, time dilation, light speed, black holes, entropy).
+   - Replace with REAL, grounded science strictly relevant to the specific topic. Do NOT inject quantum mechanics, physics, or cosmology into unrelated fields (such as genetics, biology, neuroscience, geology, or sociology).
 
 2. CONTINUOUS STORY ARC & CONVERSATIONAL RESPONSE:
    - Ensure the entire script stays within ONE central concept or thought experiment.

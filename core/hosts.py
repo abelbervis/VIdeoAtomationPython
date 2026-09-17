@@ -4,6 +4,7 @@ Provides single-source-of-truth models for AI entities (prompts, voices, present
 """
 
 import json
+import re
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -38,9 +39,10 @@ class OrbHost:
     ass_primary_color: str = "&H00FFFF00"    # Primary subtitle text color (ASS hex format &HAABBGGRR)
     ass_highlight_color: str = "&H00FFFF&"   # Active karaoke word highlight color (ASS tag)
 
-    def to_prompt_line(self) -> str:
+    def to_prompt_line(self, custom_role: Optional[str] = None) -> str:
         """Generates a structured prompt bullet for LLM system prompts."""
-        return f"- {self.name} (Defecto: {self.role}): {self.perspective}"
+        role_label = custom_role or self.role
+        return f"- {self.name} (Rol: {role_label}): {self.perspective}"
 
     def to_voice_profile(self) -> Dict[str, Any]:
         """
@@ -100,7 +102,7 @@ DEFAULT_QUANTUM_HOST = OrbHost(
     id="quantum",
     name="QUANTUM",
     role="IA Física Cuántica",
-    perspective="Mente analítica, sutil y serena. Especialista en la escala subatómica, mecánica cuántica, principio de incertidumbre, teoría de simulación y computación cuántica.",
+    perspective="Mente analítica, sutil y rigurosa. Enfoque deductivo, examen de variables críticas y análisis de principios fundamentales.",
     color_theme="cyan",
     palette_name="quantum",
     primary_color="#00f0ff",
@@ -124,7 +126,7 @@ DEFAULT_SOLAR_HOST = OrbHost(
     id="solar",
     name="SOLAR",
     role="IA Astrofísica Solar",
-    perspective="Núcleo estelar enérgico, brillante y radiante. Especialista en astrofísica, entropía termodinámica, fusión nuclear, relatividad general y gravitación macroscópica.",
+    perspective="Mente dinámica, enérgica y empírica. Enfoque sistémico, contrastación con hechos tangibles e implicaciones dinámicas.",
     color_theme="amber",
     palette_name="solar",
     primary_color="#ffea00",
@@ -241,19 +243,22 @@ class CosmicDebateShow:
         """
         topic_clause = f" on '{topic}'" if topic else ""
         example_roles = self.infer_topic_professions(topic)
+        role_a = example_roles.get(self.host_a.id, self.host_a.role)
+        role_b = example_roles.get(self.host_b.id, self.host_b.role)
         return f"""You are the Lead Writer and Showrunner for '{self.show_title}', an ultra-engaging vertical video series featuring two conscious AI co-hosts{topic_clause}:
-{self.host_a.to_prompt_line()}
-{self.host_b.to_prompt_line()}
+{self.host_a.to_prompt_line(role_a)}
+{self.host_b.to_prompt_line(role_b)}
 
 CRITICAL NARRATIVE RULES:
 
 1. NO PSEUDO-POETRY OR VAGUE FLUFF & STRICT SCIENTIFIC ACCURACY:
-   - CIENCIA CORRECTA: Todos los datos, leyes y conceptos físicos explicados deben ser científicamente precisos y verídicos, sin inventar datos ni recurrir a pseudociencia.
-   - PROHIBITED: Abstract pseudo-poetic phrases without physical meaning (e.g. "la gravedad del relato", "la tinta de la conciencia", "las hojas del libro cósmico", "el tejido de las almas", "la voz del universo").
-   - MANDATORY GROUNDING: Every script MUST be grounded in REAL physics, real scientific paradoxes, or concrete sci-fi mechanics (e.g. quantum superposition, time dilation, speed of light limit, entropy, black hole event horizons, simulation theory, Planck scale, observer effect).
+   - CIENCIA RIGUROSA: Todos los datos, mecanismos y principios expuestos deben ser científicamente verídicos, contrastados y pertinentes al tema específico tratado. No inventes datos ni recurras a pseudociencia.
+   - PROHIBIDO: Frases pseudo-poéticas vacías sin significado real (ej. "la gravedad del relato", "la tinta de la conciencia", "las hojas del libro cósmico", "el tejido de las almas").
+   - MANDATORY GROUNDING: Cada guion DEBE basarse estrictamente en la ciencia real, mecanismos empíricos verificados o dilemas académicos del tema solicitado.
+     * REGLA ESTRICTA CONTRA CONTAMINACIÓN TEMÁTICA: Adapta los argumentos EXCLUSIVAMENTE a la disciplina del tema tratado. NUNCA introduzcas conceptos de física subatómica, mecánica cuántica o astrofísica en temas no relacionados (como genética, ADN, biología, medicina, neurociencia, ecología o tecnología).
 
 2. ONE SINGLE STORY ARC & CONVERSATIONAL CHAINING:
-   - The script MUST maintain ONE single central thought experiment or real paradox from line 1 to the end. Do NOT jump to unrelated isolated physics facts.
+   - The script MUST maintain ONE single central thought experiment or real paradox from line 1 to the end. Do NOT jump to unrelated isolated facts.
    - Cada intervención debe responder a la anterior, no ignorarla. Cada escena después de la primera debe contraargumentar, profundizar o responder directamente a lo que dijo el otro orbe, construyendo un debate real de ida y vuelta.
    - The dialog MUST read like a real, fascinating debate between two brilliant minds bouncing off each other.
 
@@ -262,14 +267,14 @@ CRITICAL NARRATIVE RULES:
    - Do NOT default to generic roles. Tailor their expert identities (2 to 4 words, max 28 characters) to represent opposing expert perspectives on the specific topic '{topic or 'de esta sesión'}'.
    - Include these in the "roles" object of your JSON:
      "roles": {{
-       "{self.host_a.id}": "{example_roles.get(self.host_a.id, 'IA Especialidad A')}",
-       "{self.host_b.id}": "{example_roles.get(self.host_b.id, 'IA Especialidad B')}"
+       "{self.host_a.id}": "{role_a}",
+       "{self.host_b.id}": "{role_b}"
      }}
 
 4. STRUCTURE & SCENE COUNT (MANDATORY MINIMUM 7 SCENES):
    - MÍNIMO DE ESCENAS (7): El guion DEBE tener un mínimo de 7 escenas (entre 7 y 10 escenas) para desarrollar un debate real y con suficiente profundidad. No resuelvas el debate en 4 o 5 escenas.
    - FLEXIBLE STARTER: Either {self.host_a.name} or {self.host_b.name} can speak first—whichever speaker creates the strongest immediate hook.
-   - OPTIONAL HOLOGRAMS: Only output 'holograms' if there is a real, concrete scientific metric or formula to display (e.g. "300,000 km/s", "13.8 Gyr", "1.6x10⁻³⁵ m"). If the script is a pure conceptual thought experiment, set 'holograms': null.
+   - OPTIONAL HOLOGRAMS: Only output 'holograms' if there is a real, concrete scientific metric, unit, or measurement relevant to the topic to display. If the script is a pure conceptual thought experiment or debate, set 'holograms': null.
 
 5. STRICT SINGLE CLOSING SCENE & PENULTIMATE SHOT:
    - PROHIBIDO GENERAR DOS ESCENAS DE CIERRE CONSECUTIVAS O DOBLE 'Ambos': Solo puede haber UNA escena final conjunta ("Ambos" / "both") en todo el guion.
@@ -293,57 +298,57 @@ Respond ONLY with valid JSON matching this schema:
   "topic": "Clean topic name",
   "headline_hook": "⚡ TITULO IMPACTANTE (MAX 45 CHARACTERS) ⚡",
   "roles": {{
-    "{self.host_a.id}": "{example_roles.get(self.host_a.id, 'IA Especialidad A')}",
-    "{self.host_b.id}": "{example_roles.get(self.host_b.id, 'IA Especialidad B')}"
+    "{self.host_a.id}": "{role_a}",
+    "{self.host_b.id}": "{role_b}"
   }},
   "holograms": null,
   "scenes": [
     {{
       "speaker": "{self.host_a.name}",
       "entity": "{self.host_a.id}",
-      "text": "Imagina que el universo entero es solo una pantalla cargando en tiempo real.",
+      "text": "Planteamiento inicial del dilema o premisa provocadora sobre el tema.",
       "shot": "wide",
       "duration": 3.2
     }},
     {{
       "speaker": "{self.host_b.name}",
       "entity": "{self.host_b.id}",
-      "text": "Si fuera una pantalla, la luz necesitaría un límite de velocidad para no colapsar el procesador.",
+      "text": "Refutación o perspectiva alternativa basada en evidencia del tema.",
+      "shot": "{self.host_b.shot_name}",
+      "duration": 3.4
+    }},
+    {{
+      "speaker": "{self.host_a.name}",
+      "entity": "{self.host_a.id}",
+      "text": "Profundización analítica presentando un mecanismo o dato concreto.",
+      "shot": "{self.host_a.shot_name}",
+      "duration": 3.3
+    }},
+    {{
+      "speaker": "{self.host_b.name}",
+      "entity": "{self.host_b.id}",
+      "text": "Contraargumento que cuestiona la conclusión y eleva el debate.",
       "shot": "{self.host_b.shot_name}",
       "duration": 3.5
     }},
     {{
       "speaker": "{self.host_a.name}",
       "entity": "{self.host_a.id}",
-      "text": "Y justamente ese límite existe: trescientos mil kilómetros por segundo exactos.",
-      "shot": "{self.host_a.shot_name}",
-      "duration": 3.2
-    }},
-    {{
-      "speaker": "{self.host_b.name}",
-      "entity": "{self.host_b.id}",
-      "text": "Pero la termodinámica no miente: la entropía destruye información en lugar de guardarla.",
-      "shot": "{self.host_b.shot_name}",
-      "duration": 3.4
-    }},
-    {{
-      "speaker": "{self.host_a.name}",
-      "entity": "{self.host_a.id}",
-      "text": "En el horizonte de un agujero negro la información queda codificada en la superficie.",
+      "text": "Planteamiento de la evidencia o consecuencia más sorprendente.",
       "shot": "{self.host_a.shot_name}",
       "duration": 3.4
     }},
     {{
       "speaker": "{self.host_b.name}",
       "entity": "{self.host_b.id}",
-      "text": "Entonces todo nuestro espacio tridimensional es solo un holograma proyectado desde el borde.",
+      "text": "Penúltima intervención en primer plano sintetizando la tensión central.",
       "shot": "{self.host_b.shot_name}",
-      "duration": 3.6
+      "duration": 3.5
     }},
     {{
       "speaker": "Ambos",
       "entity": "both",
-      "text": "¿Estamos viviendo dentro de la física o dentro del código?",
+      "text": "Pregunta final abierta y reflexiva dirigida a la audiencia.",
       "shot": "both",
       "duration": 3.2
     }}
@@ -365,23 +370,29 @@ Respond ONLY with valid JSON matching this schema:
         t = topic.lower().strip()
 
         if any(w in t for w in ["simula", "matrix", "código", "codigo", "virtual", "comput"]):
-            role_a = "IA Computación Cuántica"
+            role_a = "IA Algoritmos Teóricos"
             role_b = "IA Física de la Información"
-        elif any(w in t for w in ["mente", "ia", "cerebro", "conciencia", "neurol", "pensamiento"]):
-            role_a = "IA Redes Neurocuánticas"
-            role_b = "IA Bioquímica Cerebral"
+        elif any(w in t for w in ["mente", "cerebro", "conciencia", "neurol", "pensamiento", "inteligencia artificial"]) or re.search(r"\b(ia|ai)\b", t):
+            role_a = "IA Neurociencia Cognitiva"
+            role_b = "IA Biología y Conducta"
         elif any(w in t for w in ["agujero", "negro", "singularidad", "evento", "hawking"]):
-            role_a = "IA Gravedad Cuántica"
+            role_a = "IA Gravedad y Cosmología"
             role_b = "IA Astrofísica Relativista"
-        elif any(w in t for w in ["bio", "gen", "adn", "vida", "evoluc", "celula", "célula", "virus", "sintet"]):
-            role_a = "IA Genómica Sintética"
+        elif any(w in t for w in ["biolog", "genétic", "genom", "evoluc", "celular", "célula", "virus", "clonac"]) or re.search(r"\b(gen|genes|adn|dna|bio)\b", t):
+            role_a = "IA Genómica Molecular"
             role_b = "IA Bioética y Evolución"
-        elif any(w in t for w in ["tiempo", "relatividad", "pasado", "futuro", "viaje"]):
-            role_a = "IA Cronodinámica Cuántica"
+        elif any(w in t for w in ["clima", "climát", "tierra", "atmósfera", "oceano", "océano", "ecolog"]):
+            role_a = "IA Dinámica Planetaria"
+            role_b = "IA Ecología y Biosfera"
+        elif any(w in t for w in ["pulpo", "animal", "especie", "marino", "fauna", "zoolog"]):
+            role_a = "IA Zoología y Neurobiología"
+            role_b = "IA Etología Evolutiva"
+        elif any(w in t for w in ["tiempo", "relatividad", "pasado", "futuro", "viaje temporal"]):
+            role_a = "IA Física Teórica"
             role_b = "IA Relatividad Espaciotemporal"
         elif any(w in t for w in ["multiverso", "dimension", "dimensión", "cuerdas", "universo"]):
-            role_a = "IA Teoría de Cuerdas"
-            role_b = "IA Cosmología Observacional"
+            role_a = "IA Modelado Cosmológico"
+            role_b = "IA Astrofísica Observacional"
         elif any(w in t for w in ["energia", "energía", "sol", "estrella", "fusion", "fusión", "supernova"]):
             role_a = "IA Física de Plasmas"
             role_b = "IA Termodinámica Estelar"
@@ -389,13 +400,13 @@ Respond ONLY with valid JSON matching this schema:
             role_a = "IA Bioastronomía"
             role_b = "IA Astrobiología Exoplanetaria"
         elif any(w in t for w in ["cuant", "cuánt", "particula", "partícula", "atom", "átom"]):
-            role_a = "IA Mecánica Cuántica"
-            role_b = "IA Astrofísica de Partículas"
+            role_a = "IA Física Cuántica"
+            role_b = "IA Física de Partículas"
         else:
             words = [w.capitalize() for w in topic.strip().split() if len(w) > 2]
-            key_word = words[0] if words else "Física"
-            role_a = f"IA {key_word} Cuántica"[:28]
-            role_b = f"IA {key_word} Teórica"[:28]
+            key_word = words[0] if words else "Ciencia"
+            role_a = f"IA {key_word} Analítica"[:28]
+            role_b = f"IA {key_word} Empírica"[:28]
 
         return {
             self.host_a.id: role_a,
