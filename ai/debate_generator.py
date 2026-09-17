@@ -253,9 +253,88 @@ class DebateScriptGenerator:
                     pass
         return None
 
+    def _clean_and_sanitize_scenes(self, script: Dict[str, Any]) -> Dict[str, Any]:
+        """Ensures single unified closing scene and prevents wide/both shots on penultimate scene."""
+        if not script or not isinstance(script.get("scenes"), list):
+            return script
+
+        scenes = script["scenes"]
+        if not scenes:
+            return script
+
+        cleaned_scenes = []
+        i = 0
+        while i < len(scenes):
+            curr = scenes[i]
+            is_curr_both = (
+                str(curr.get("speaker", "")).strip().lower() in ["ambos", "both"]
+                or str(curr.get("entity", "")).strip().lower() == "both"
+            )
+
+            # Check if next scene is ALSO both
+            if is_curr_both and i + 1 < len(scenes):
+                nxt = scenes[i + 1]
+                is_nxt_both = (
+                    str(nxt.get("speaker", "")).strip().lower() in ["ambos", "both"]
+                    or str(nxt.get("entity", "")).strip().lower() == "both"
+                )
+                if is_nxt_both:
+                    # Merge consecutive both scenes into one single final scene
+                    merged_text = curr.get("text", "").strip()
+                    nxt_text = nxt.get("text", "").strip()
+                    if nxt_text and nxt_text not in merged_text:
+                        merged_text = f"{merged_text} {nxt_text}"
+                    merged_dur = round(min(5.5, max(3.0, float(curr.get("duration", 3.2)) + float(nxt.get("duration", 3.2)) * 0.7)), 1)
+                    merged_scene = {
+                        "speaker": "Ambos",
+                        "entity": "both",
+                        "text": merged_text,
+                        "shot": "both",
+                        "duration": merged_dur
+                    }
+                    cleaned_scenes.append(merged_scene)
+                    i += 2
+                    continue
+
+            cleaned_scenes.append(curr)
+            i += 1
+
+        # Enforce rule: Penultimate scene cannot be 'both' or wide shot
+        if len(cleaned_scenes) >= 2:
+            penultimate = cleaned_scenes[-2]
+            last = cleaned_scenes[-1]
+            last_is_both = (
+                str(last.get("speaker", "")).strip().lower() in ["ambos", "both"]
+                or str(last.get("entity", "")).strip().lower() == "both"
+            )
+            if last_is_both:
+                # If penultimate was accidentally labeled both/wide, assign to previous opposite entity
+                penult_entity = str(penultimate.get("entity", "")).strip().lower()
+                if penult_entity == "both" or str(penultimate.get("speaker", "")).strip().lower() in ["ambos", "both"]:
+                    # Assign to host_b or host_a
+                    assigned_host = self.show.host_b if len(cleaned_scenes) % 2 == 0 else self.show.host_a
+                    penultimate["speaker"] = assigned_host.name
+                    penultimate["entity"] = assigned_host.id
+                    penultimate["shot"] = assigned_host.shot_name
+                elif penultimate.get("shot") in ["wide", "both"]:
+                    # Fix shot to match the solo speaker
+                    if penult_entity == self.show.host_a.id:
+                        penultimate["shot"] = self.show.host_a.shot_name
+                    elif penult_entity == self.show.host_b.id:
+                        penultimate["shot"] = self.show.host_b.shot_name
+                    else:
+                        penultimate["shot"] = self.show.host_b.shot_name
+
+        script["scenes"] = cleaned_scenes
+        return script
+
     def _validate_debate_script(self, script: Dict[str, Any], topic: Optional[str] = None) -> bool:
         if not isinstance(script, dict):
             return False
+        
+        # Clean closing scenes before validation
+        self._clean_and_sanitize_scenes(script)
+
         scenes = script.get("scenes", [])
         if len(scenes) < 7:
             return False

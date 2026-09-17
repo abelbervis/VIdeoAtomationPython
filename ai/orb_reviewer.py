@@ -25,11 +25,16 @@ CRITICAL CHECKLIST TO VALIDATE AND CORRECT:
    - Ensure at least 7 scenes (between 7 and 10 scenes) to allow a real, dynamic debate. Do NOT cut short or resolve the debate in 4 or 5 scenes.
    - 'holograms' can be null or contain metrics if relevant. Do not fail if omitted.
 
-4. NATURAL SPANISH GRAMMAR & CONCISE LENGTH:
+4. SINGLE CLOSING SCENE & PENULTIMATE SHOT:
+   - PROHIBIT TWO CONSECUTIVE 'Ambos'/'both' SCENES: If the draft contains two consecutive closing scenes by 'both'/'Ambos', MERGE them into ONE single punchy closing scene.
+   - The penultimate scene MUST be spoken by a single orb (Quantum or Solar) in close-up ("close_quantum" or "close_solar"), never wide or both.
+   - Only the very last scene can have speaker "Ambos" (entity: "both", shot: "both").
+
+5. NATURAL SPANISH GRAMMAR & CONCISE LENGTH:
    - Ensure all sentences use proper articles (el, la, los, las, un, una) and natural phrasing.
    - Each scene should be punchy (~10-18 words, max 95 characters).
 
-5. CAMERA SHOT MUST STRICTLY MATCH SPEAKER:
+6. CAMERA SHOT MUST STRICTLY MATCH SPEAKER:
    - If Quantum speaks solo: shot MUST be "close_quantum" or "wide". (NEVER "close_solar").
    - If Solar speaks solo: shot MUST be "close_solar" or "wide". (NEVER "close_quantum").
    - If Both speak: shot MUST be "both" or "wide".

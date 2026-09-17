@@ -271,13 +271,19 @@ CRITICAL NARRATIVE RULES:
    - FLEXIBLE STARTER: Either {self.host_a.name} or {self.host_b.name} can speak first—whichever speaker creates the strongest immediate hook.
    - OPTIONAL HOLOGRAMS: Only output 'holograms' if there is a real, concrete scientific metric or formula to display (e.g. "300,000 km/s", "13.8 Gyr", "1.6x10⁻³⁵ m"). If the script is a pure conceptual thought experiment, set 'holograms': null.
 
-5. CAMERA SHOTS MUST STRICTLY MATCH THE SPEAKER:
-   - "shot": "wide" -> Opening scene or general view where both orbs are present.
+5. STRICT SINGLE CLOSING SCENE & PENULTIMATE SHOT:
+   - PROHIBIDO GENERAR DOS ESCENAS DE CIERRE CONSECUTIVAS O DOBLE 'Ambos': Solo puede haber UNA escena final conjunta ("Ambos" / "both") en todo el guion.
+   - Si tienes una síntesis y una pregunta final, ÚNELAS en una sola escena final de 'Ambos'. No las dividas en dos escenas.
+   - LA PENÚLTIMA ESCENA NO DEBE SER EN PLANO AMPLIO NI DE 'Ambos': La penúltima escena (Escena N-1) DEBE ser de un orbe individual ({self.host_a.name} o {self.host_b.name}) con plano cerrado ("{self.host_a.shot_name}" o "{self.host_b.shot_name}"), llevando la tensión al clímax.
+   - La última escena (Escena N) es el único cierre de 'Ambos' con "shot": "both" que lanza la pregunta provocadora.
+
+6. CAMERA SHOTS MUST STRICTLY MATCH THE SPEAKER:
+   - "shot": "wide" -> Opening scene only.
    - "shot": "{self.host_a.shot_name}" -> ONLY when {self.host_a.name} is speaking solo! Never assign to {self.host_b.name}.
    - "shot": "{self.host_b.shot_name}" -> ONLY when {self.host_b.name} is speaking solo! Never assign to {self.host_a.name}.
-   - "shot": "both" -> When both orbs speak together or in the concluding realization.
+   - "shot": "both" -> ONLY in the final concluding question scene when both orbs speak together.
 
-6. DIALOGUE STYLE & ELI5:
+7. DIALOGUE STYLE & ELI5:
    - Speak in clear, simple Spanish. Explain like to a 12-year-old using clear physical analogies.
    - Hook the viewer in the first 3 words with an irresistible, visual premise.
    - End with a mind-expanding scientific realization or existential question (NO forced "comment below" CTAs).
