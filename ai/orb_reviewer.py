@@ -7,8 +7,43 @@ import json
 import time
 from typing import Any, Dict, Optional
 from config import GROQ_API_BASE, GROQ_MODEL, sanitize_env_value
-from core.prompt_builder import DebatePromptBuilder
-from core.script_models import DebateScript
+
+ORB_EDITOR_SYSTEM_PROMPT = """You are the Executive Script Editor for 'COSMIC ORB SHOW'.
+Your ONLY job is to validate and auto-correct a JSON script generated for a short video.
+
+CRITICAL CHECKLIST TO VALIDATE AND CORRECT:
+1. BAN ABSURD PSEUDO-POETRY & ENFORCE SCIENTIFIC ACCURACY:
+   - CIENCIA RIGUROSA: Verificar que los datos y principios científicos sean rigurosos, verídicos y estrictamente pertinentes al tema abordado, corrigiendo cualquier error o dato inventado.
+   - REJECT and REWRITE any pseudo-poetic nonsense phrases ("la gravedad del relato", "la tinta de la conciencia", "las hojas del libro cósmico", "las voces del vacío").
+   - Replace with REAL, grounded science strictly relevant to the specific topic. Do NOT inject quantum mechanics, physics, or cosmology into unrelated fields (such as genetics, biology, neuroscience, geology, or sociology).
+
+2. CONTINUOUS STORY ARC & CONVERSATIONAL RESPONSE:
+   - Ensure the entire script stays within ONE central concept or thought experiment.
+   - Cada intervención debe responder a la anterior, no ignorarla. Every scene after Scene 1 MUST directly respond to, challenge, or build upon what the other orb just stated.
+
+3. SCENE COUNT & HOLOGRAMS (MANDATORY MINIMUM 7 SCENES):
+   - Ensure at least 7 scenes (between 7 and 10 scenes) to allow a real, dynamic debate. Do NOT cut short or resolve the debate in 4 or 5 scenes.
+   - 'holograms' can be null or contain metrics if relevant. Do not fail if omitted.
+
+4. SINGLE CLOSING SCENE & PENULTIMATE SHOT:
+   - PROHIBIT TWO CONSECUTIVE 'Ambos'/'both' SCENES: If the draft contains two consecutive closing scenes by 'both'/'Ambos', MERGE them into ONE single punchy closing scene.
+   - The penultimate scene MUST be spoken by a single orb (Quantum or Solar) in close-up ("close_quantum" or "close_solar"), never wide or both.
+   - Only the very last scene can have speaker "Ambos" (entity: "both", shot: "both").
+
+5. NATURAL SPANISH GRAMMAR & CONCISE LENGTH:
+   - Ensure all sentences use proper articles (el, la, los, las, un, una) and natural phrasing.
+   - Each scene should be punchy (~10-18 words, max 95 characters).
+
+6. CAMERA SHOT MUST STRICTLY MATCH SPEAKER:
+   - If Quantum speaks solo: shot MUST be "close_quantum" or "wide". (NEVER "close_solar").
+   - If Solar speaks solo: shot MUST be "close_solar" or "wide". (NEVER "close_quantum").
+   - If Both speak: shot MUST be "both" or "wide".
+
+INPUT JSON:
+{INSERT_GENERATED_JSON_HERE}
+
+OUTPUT: Return ONLY the corrected and validated JSON matching the exact original schema.
+"""
 
 
 class OrbScriptReviewer:
@@ -30,12 +65,7 @@ class OrbScriptReviewer:
         self.groq_model = sanitize_env_value(groq_model) or GROQ_MODEL
         self.preferred_provider = (sanitize_env_value(preferred_provider) or "auto").lower().strip()
 
-    def review(
-        self,
-        draft_script: Dict[str, Any],
-        topic: Optional[str] = None,
-        show: Optional[Any] = None
-    ) -> Dict[str, Any]:
+    def review(self, draft_script: Dict[str, Any]) -> Dict[str, Any]:
         """Audits and auto-corrects the debate script JSON using LLM."""
         if not draft_script or not draft_script.get("scenes"):
             return draft_script
@@ -59,20 +89,13 @@ class OrbScriptReviewer:
             print("  ⚠️ Agente Revisor omitido: No hay API key disponible para la revisión.")
             return draft_script
 
-        effective_topic = topic or draft_script.get("topic") or "Debate"
         print("\n🔍 [Orb Script Editor] Ejecutando Agente Revisor Ejecutivo...")
-        print(f"   ↳ Validando aislamiento de dominio, dialéctica, gramática y cámaras para '{effective_topic}'...")
+        print("   ↳ Validando aislamiento de dominios, coherencia lógica, gramática y longitud...")
 
         time.sleep(1.0)
 
         json_str_input = json.dumps(draft_script, ensure_ascii=False, indent=2)
-        builder = DebatePromptBuilder(effective_topic)
-        if show:
-            builder.with_show(show)
-        prompt = builder.build_reviewer_prompt(json_str_input)
-
-        host_a = show.host_a if show else None
-        host_b = show.host_b if show else None
+        prompt = ORB_EDITOR_SYSTEM_PROMPT.replace("{INSERT_GENERATED_JSON_HERE}", json_str_input)
 
         for prov in configured:
             try:
@@ -86,19 +109,13 @@ class OrbScriptReviewer:
 
                 if reviewed and reviewed.get("scenes") and len(reviewed["scenes"]) > 0:
                     print("  ✨ ¡Guión de debate auditado y corregido con éxito por el Editor Ejecutivo!")
-                    # Use OOP script model for sanitization
-                    script_obj = DebateScript.from_dict(reviewed, default_topic=effective_topic)
-                    if "roles" in draft_script and not script_obj.roles:
-                        script_obj.roles = draft_script["roles"]
-                    script_obj.sanitize_structure(host_a, host_b)
-                    return script_obj.to_dict()
+                    if "roles" in draft_script and "roles" not in reviewed:
+                        reviewed["roles"] = draft_script["roles"]
+                    return reviewed
             except Exception as e:
                 print(f"  ⚠️ Revisión de orbes con {prov} falló ({e}), manteniendo borrador original...")
 
-        # Fallback to sanitized draft
-        script_obj = DebateScript.from_dict(draft_script, default_topic=effective_topic)
-        script_obj.sanitize_structure(host_a, host_b)
-        return script_obj.to_dict()
+        return draft_script
 
     def _review_groq(self, prompt: str) -> Optional[Dict[str, Any]]:
         url = f"{self.groq_api_base.rstrip('/')}/chat/completions"
