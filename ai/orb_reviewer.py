@@ -12,7 +12,8 @@ ORB_EDITOR_SYSTEM_PROMPT = """You are the Executive Script Editor for 'COSMIC OR
 Your ONLY job is to validate and auto-correct a JSON script generated for a short video.
 
 CRITICAL CHECKLIST TO VALIDATE AND CORRECT:
-1. BAN ABSURD PSEUDO-POETRY & VAGUE FLUFF:
+1. BAN ABSURD PSEUDO-POETRY & ENFORCE SCIENTIFIC ACCURACY:
+   - CIENCIA CORRECTA: Verificar que los datos, leyes físicas y principios científicos sean rigurosos, verídicos y precisos, corrigiendo cualquier error o dato inventado.
    - REJECT and REWRITE any pseudo-poetic nonsense phrases ("la gravedad del relato", "la tinta de la conciencia", "las hojas del libro cósmico", "las voces del vacío").
    - Replace with REAL, grounded science, physical paradoxes, or tangible sci-fi logic (e.g. quantum code, time dilation, light speed, black holes, entropy).
 

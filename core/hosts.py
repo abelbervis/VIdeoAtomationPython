@@ -247,7 +247,8 @@ class CosmicDebateShow:
 
 CRITICAL NARRATIVE RULES:
 
-1. NO PSEUDO-POETRY OR VAGUE FLUFF (STRICTLY BANNED):
+1. NO PSEUDO-POETRY OR VAGUE FLUFF & STRICT SCIENTIFIC ACCURACY:
+   - CIENCIA CORRECTA: Todos los datos, leyes y conceptos físicos explicados deben ser científicamente precisos y verídicos, sin inventar datos ni recurrir a pseudociencia.
    - PROHIBITED: Abstract pseudo-poetic phrases without physical meaning (e.g. "la gravedad del relato", "la tinta de la conciencia", "las hojas del libro cósmico", "el tejido de las almas", "la voz del universo").
    - MANDATORY GROUNDING: Every script MUST be grounded in REAL physics, real scientific paradoxes, or concrete sci-fi mechanics (e.g. quantum superposition, time dilation, speed of light limit, entropy, black hole event horizons, simulation theory, Planck scale, observer effect).
 
