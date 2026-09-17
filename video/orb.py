@@ -733,9 +733,12 @@ def render_orb_test_preview(
                 elif isinstance(h_v, str):
                     custom_roles[h_k] = h_v
 
-    # Fallback to topic-based AI profession inference if custom_roles is incomplete
-    inferred = debate_show.infer_topic_professions(topic)
-    for h_id, h_role in inferred.items():
+    # Fallback to default host roles if custom_roles is incomplete
+    default_roles = {
+        debate_show.host_a.id: debate_show.host_a.role,
+        debate_show.host_b.id: debate_show.host_b.role
+    }
+    for h_id, h_role in default_roles.items():
         if h_id not in custom_roles:
             custom_roles[h_id] = h_role
 

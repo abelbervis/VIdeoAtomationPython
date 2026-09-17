@@ -242,9 +242,8 @@ class CosmicDebateShow:
         directly into the instructions, rules, schema, and examples.
         """
         topic_clause = f" on '{topic}'" if topic else ""
-        example_roles = self.infer_topic_professions(topic)
-        role_a = example_roles.get(self.host_a.id, self.host_a.role)
-        role_b = example_roles.get(self.host_b.id, self.host_b.role)
+        role_a = self.host_a.role
+        role_b = self.host_b.role
         return f"""You are the Lead Writer and Showrunner for '{self.show_title}', an ultra-engaging vertical video series featuring two conscious AI co-hosts{topic_clause}:
 {self.host_a.to_prompt_line(role_a)}
 {self.host_b.to_prompt_line(role_b)}
@@ -355,63 +354,6 @@ Respond ONLY with valid JSON matching this schema:
   ]
 }}
 """
-
-    def infer_topic_professions(self, topic: Optional[str] = None) -> Dict[str, str]:
-        """
-        Infers dynamic, topic-tailored professions for host_a and host_b based on the debate topic.
-        Used as default/fallback when the LLM response doesn't supply topic-customized roles.
-        """
-        if not topic:
-            return {
-                self.host_a.id: self.host_a.role,
-                self.host_b.id: self.host_b.role
-            }
-
-        t = topic.lower().strip()
-
-        if any(w in t for w in ["simula", "matrix", "código", "codigo", "virtual", "comput"]):
-            role_a = "Ingeniero Algorítmico"
-            role_b = "Filósofo Existencial"
-        elif any(w in t for w in ["mente", "cerebro", "conciencia", "neurol", "pensamiento", "inteligencia artificial"]) or re.search(r"\b(ia|ai)\b", t):
-            role_a = "Neurocientífico Reduccionista"
-            role_b = "Humanista Fenomenológico"
-        elif any(w in t for w in ["agujero", "negro", "singularidad", "evento", "hawking"]):
-            role_a = "Cosmólogo Relativista"
-            role_b = "Metafísico del Vacío"
-        elif any(w in t for w in ["biolog", "genétic", "genom", "evoluc", "celular", "célula", "virus", "clonac"]) or re.search(r"\b(gen|genes|adn|dna|bio)\b", t):
-            role_a = "Genetista Molecular"
-            role_b = "Eticista Biológico"
-        elif any(w in t for w in ["clima", "climát", "tierra", "atmósfera", "oceano", "océano", "ecolog"]):
-            role_a = "Tecnólogo Climático"
-            role_b = "Ecólogo Profundo"
-        elif any(w in t for w in ["pulpo", "animal", "especie", "marino", "fauna", "zoolog"]):
-            role_a = "Etólogo Conductual"
-            role_b = "Filósofo Animalista"
-        elif any(w in t for w in ["tiempo", "relatividad", "pasado", "futuro", "viaje temporal"]):
-            role_a = "Físico Teórico"
-            role_b = "Historiador Temporal"
-        elif any(w in t for w in ["multiverso", "dimension", "dimensión", "cuerdas", "universo"]):
-            role_a = "Matemático Dimensional"
-            role_b = "Teólogo Cósmico"
-        elif any(w in t for w in ["energia", "energía", "sol", "estrella", "fusion", "fusión", "supernova"]):
-            role_a = "Físico Nuclear"
-            role_b = "Chamán Termodinámico"
-        elif any(w in t for w in ["alien", "exoplaneta", "extraterrestre", "drake", "fermi"]):
-            role_a = "Astrobiólogo Cuantitativo"
-            role_b = "Antropólogo Cósmico"
-        elif any(w in t for w in ["cuant", "cuánt", "particula", "partícula", "atom", "átom"]):
-            role_a = "Físico Cuántico"
-            role_b = "Filósofo Ontológico"
-        else:
-            words = [w.capitalize() for w in topic.strip().split() if len(w) > 2]
-            key_word = words[0] if words else "Ciencia"
-            role_a = f"Científico {key_word}"[:28]
-            role_b = f"Crítico Humanista"[:28]
-
-        return {
-            self.host_a.id: role_a,
-            self.host_b.id: role_b
-        }
 
     def resolve_speaker_host(self, speaker_name_or_entity: str) -> OrbHost:
         """Resolves which host matches the given speaker string."""
