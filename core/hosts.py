@@ -297,8 +297,8 @@ Respond ONLY with valid JSON matching this schema:
   "topic": "Clean topic name",
   "headline_hook": "⚡ TITULO IMPACTANTE (MAX 45 CHARACTERS) ⚡",
   "roles": {{
-    "{self.host_a.id}": "{role_a}",
-    "{self.host_b.id}": "{role_b}"
+    "{self.host_a.id}": "Especialidad 2-4 palabras (máximo contraste 1)",
+    "{self.host_b.id}": "Especialidad 2-4 palabras (máximo contraste 2)"
   }},
   "holograms": null,
   "scenes": [
