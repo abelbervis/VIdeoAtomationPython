@@ -261,7 +261,7 @@ class DebateScriptGenerator:
             return False
         if not script.get("headline_hook"):
             return False
-        
+
         # Ensure contextual roles are present and within clean character limits
         if "roles" not in script or not isinstance(script["roles"], dict):
             script["roles"] = {

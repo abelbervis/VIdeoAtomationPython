@@ -27,9 +27,10 @@ CRITICAL CHECKLIST TO VALIDATE AND CORRECT:
    - Ensure the entire script stays within ONE central concept or thought experiment.
    - Every scene after Scene 1 MUST use organic conversational bridges ("Exacto, y por eso...", "De hecho...", "Ahí está la paradoja...", "¿Cómo que...?", "O sea que...") that DIRECTLY respond to the previous sentence.
 
-4. NATURAL SPANISH GRAMMAR & PUNCHY LENGTH:
-   - Ensure all sentences use natural phrasing and punctuation.
-   - Each scene should be punchy (~8-14 words, max 95 characters) to ensure high dynamic retention.
+4. FULL SPANISH GRAMMAR & NATURAL SPOKEN CADENCE (RESTORE DROPPED ARTICLES):
+   - CRITICAL: In Spanish, NEVER omit grammatical articles (el, la, los, las, un, una).
+   - If the script drops articles (e.g. "mejora de IA" instead of "la mejora de la IA", or "desencadenar colapso" instead of "desencadenar un colapso"), REWRITE it immediately with proper articles.
+   - Natural conversational length (~12-18 words per scene, natural spoken rhythm). No telegraphic speech.
 
 5. CAMERA SHOT MUST STRICTLY MATCH SPEAKER:
    - If Quantum speaks solo: shot MUST be "close_quantum" or "wide". (NEVER "close_solar").

@@ -259,9 +259,13 @@ CRITICAL NARRATIVE RULES & EMOTIONAL DYNAMICS:
    - NO meaningless pseudo-poetic fluff ("la gravedad del alma", "el libro cósmico de los recuerdos").
    - Base the dialogue on tangible physics, astrophysics, cosmology, time, entropy, or consciousness.
 
-3. PUNCHY, FAST-PACED DIALOGUE (MAX 14 WORDS PER LINE):
-   - Every line must immediately connect to the last statement using natural conversational bridges ("Pero olvidas que...", "Al contrario: mira cómo...", "Precisamente ahí colapsa...", "Eso demuestra que...", "Entonces coincidimos en que...").
-   - Keep turns tight, rhythmic, and high-energy (8 to 14 words per line).
+3. NATURAL SPANISH GRAMMAR & FLOW (MANDATORY USE OF ARTICLES - NO TELEGRAPHIC/ROBOT TALK):
+   - MANDATORY: In Spanish, always use natural grammatical articles (el, la, los, las, un, una).
+   - NEVER drop articles to compress text! Dropping articles sounds broken and unnatural.
+   - STRICTLY FORBIDDEN: "mejora de IA", "entropía de algoritmos", "desencadenar colapso", "asegurar alineación".
+   - MANDATORY: "la mejora de la IA", "la entropía de los algoritmos", "desencadenar un colapso", "asegurar la alineación ética".
+   - Keep each turn conversational and fluid (~12 to 18 words per line, duration ~3.0s to 3.8s). Prioritize natural spoken elocution and cadence.
+   - Every line must connect to the previous speaker using organic conversational bridges ("Pero olvidas que...", "Al contrario: mira cómo...", "Precisamente ahí colapsa...", "Eso demuestra que...", "Entonces coincidimos en que...").
 
 4. IDENTITY BADGES (EMOTIONAL ESSENCE):
    - In the "roles" object of your JSON, assign each host their emotional essence or frequency (2 to 3 words, max 24 characters), NOT a rigid diploma.
