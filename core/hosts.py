@@ -262,9 +262,10 @@ CRITICAL NARRATIVE RULES:
    - Cada intervención debe responder a la anterior, no ignorarla. Cada escena después de la primera debe contraargumentar, profundizar o responder directamente a lo que dijo el otro orbe, construyendo un debate real de ida y vuelta.
    - The dialog MUST read like a real, fascinating debate between two brilliant minds bouncing off each other.
 
-3. DYNAMIC AI PROFESSIONS ACCORDING TO THE TOPIC (MANDATORY):
-   - You MUST dynamically decide and assign the exact professions / specialty roles for each orb host based on the debate topic.
-   - Do NOT default to generic roles. Tailor their expert identities (2 to 4 words, max 28 characters) to represent opposing expert perspectives on the specific topic '{topic or 'de esta sesión'}'.
+3. DYNAMIC ARCHETYPES & MAXIMUM CONTRAST (MANDATORY):
+   - Asigna a cada orbe una especialidad o arquetipo de 2-4 palabras según el tema, buscando el MÁXIMO CONTRASTE posible.
+   - Los dos orbes NO pueden ser del mismo campo. Deben representar cosmovisiones o métodos opuestos (ej. científico vs. teólogo, neurocientífico vs. filósofo existencial, biólogo vs. eticista, algorítmico vs. humanista).
+   - Prohibido especialidades del mismo campo que dialoguen sin fricción. Deben chocar radicalmente.
    - Include these in the "roles" object of your JSON:
      "roles": {{
        "{self.host_a.id}": "{role_a}",
@@ -369,43 +370,43 @@ Respond ONLY with valid JSON matching this schema:
         t = topic.lower().strip()
 
         if any(w in t for w in ["simula", "matrix", "código", "codigo", "virtual", "comput"]):
-            role_a = "IA Algoritmos Teóricos"
-            role_b = "IA Física de la Información"
+            role_a = "Ingeniero Algorítmico"
+            role_b = "Filósofo Existencial"
         elif any(w in t for w in ["mente", "cerebro", "conciencia", "neurol", "pensamiento", "inteligencia artificial"]) or re.search(r"\b(ia|ai)\b", t):
-            role_a = "IA Neurociencia Cognitiva"
-            role_b = "IA Biología y Conducta"
+            role_a = "Neurocientífico Reduccionista"
+            role_b = "Humanista Fenomenológico"
         elif any(w in t for w in ["agujero", "negro", "singularidad", "evento", "hawking"]):
-            role_a = "IA Gravedad y Cosmología"
-            role_b = "IA Astrofísica Relativista"
+            role_a = "Cosmólogo Relativista"
+            role_b = "Metafísico del Vacío"
         elif any(w in t for w in ["biolog", "genétic", "genom", "evoluc", "celular", "célula", "virus", "clonac"]) or re.search(r"\b(gen|genes|adn|dna|bio)\b", t):
-            role_a = "IA Genómica Molecular"
-            role_b = "IA Bioética y Evolución"
+            role_a = "Genetista Molecular"
+            role_b = "Eticista Biológico"
         elif any(w in t for w in ["clima", "climát", "tierra", "atmósfera", "oceano", "océano", "ecolog"]):
-            role_a = "IA Dinámica Planetaria"
-            role_b = "IA Ecología y Biosfera"
+            role_a = "Tecnólogo Climático"
+            role_b = "Ecólogo Profundo"
         elif any(w in t for w in ["pulpo", "animal", "especie", "marino", "fauna", "zoolog"]):
-            role_a = "IA Zoología y Neurobiología"
-            role_b = "IA Etología Evolutiva"
+            role_a = "Etólogo Conductual"
+            role_b = "Filósofo Animalista"
         elif any(w in t for w in ["tiempo", "relatividad", "pasado", "futuro", "viaje temporal"]):
-            role_a = "IA Física Teórica"
-            role_b = "IA Relatividad Espaciotemporal"
+            role_a = "Físico Teórico"
+            role_b = "Historiador Temporal"
         elif any(w in t for w in ["multiverso", "dimension", "dimensión", "cuerdas", "universo"]):
-            role_a = "IA Modelado Cosmológico"
-            role_b = "IA Astrofísica Observacional"
+            role_a = "Matemático Dimensional"
+            role_b = "Teólogo Cósmico"
         elif any(w in t for w in ["energia", "energía", "sol", "estrella", "fusion", "fusión", "supernova"]):
-            role_a = "IA Física de Plasmas"
-            role_b = "IA Termodinámica Estelar"
+            role_a = "Físico Nuclear"
+            role_b = "Chamán Termodinámico"
         elif any(w in t for w in ["alien", "exoplaneta", "extraterrestre", "drake", "fermi"]):
-            role_a = "IA Bioastronomía"
-            role_b = "IA Astrobiología Exoplanetaria"
+            role_a = "Astrobiólogo Cuantitativo"
+            role_b = "Antropólogo Cósmico"
         elif any(w in t for w in ["cuant", "cuánt", "particula", "partícula", "atom", "átom"]):
-            role_a = "IA Física Cuántica"
-            role_b = "IA Física de Partículas"
+            role_a = "Físico Cuántico"
+            role_b = "Filósofo Ontológico"
         else:
             words = [w.capitalize() for w in topic.strip().split() if len(w) > 2]
             key_word = words[0] if words else "Ciencia"
-            role_a = f"IA {key_word} Analítica"[:28]
-            role_b = f"IA {key_word} Empírica"[:28]
+            role_a = f"Científico {key_word}"[:28]
+            role_b = f"Crítico Humanista"[:28]
 
         return {
             self.host_a.id: role_a,
