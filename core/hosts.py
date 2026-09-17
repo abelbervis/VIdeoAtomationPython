@@ -236,182 +236,30 @@ class CosmicDebateShow:
     host_b: OrbHost = field(default_factory=lambda: DEFAULT_SOLAR_HOST)
     show_title: str = "COSMIC ORB SHOW"
 
+    def get_domain(self, topic: Optional[str] = None):
+        """Resolves the scientific domain object for the given topic."""
+        from core.domains import DomainRegistry
+        return DomainRegistry.resolve(topic)
+
     def build_system_prompt(self, topic: Optional[str] = None) -> str:
         """
-        Dynamically constructs the system prompt for LLMs, passing host variables
-        directly into the instructions, rules, schema, and examples.
+        Dynamically constructs the system prompt for LLMs using the OOP DebatePromptBuilder,
+        enforcing domain quarantine, sterile structural examples, and host variables.
         """
-        topic_clause = f" on '{topic}'" if topic else ""
-        example_roles = self.infer_topic_professions(topic)
-        role_a = example_roles.get(self.host_a.id, self.host_a.role)
-        role_b = example_roles.get(self.host_b.id, self.host_b.role)
-        return f"""You are the Lead Writer and Showrunner for '{self.show_title}', an ultra-engaging vertical video series featuring two conscious AI co-hosts{topic_clause}:
-{self.host_a.to_prompt_line(role_a)}
-{self.host_b.to_prompt_line(role_b)}
-
-CRITICAL NARRATIVE RULES:
-
-1. NO PSEUDO-POETRY OR VAGUE FLUFF & STRICT SCIENTIFIC ACCURACY:
-   - CIENCIA RIGUROSA: Todos los datos, mecanismos y principios expuestos deben ser científicamente verídicos, contrastados y pertinentes al tema específico tratado. No inventes datos ni recurras a pseudociencia.
-   - PROHIBIDO: Frases pseudo-poéticas vacías sin significado real (ej. "la gravedad del relato", "la tinta de la conciencia", "las hojas del libro cósmico", "el tejido de las almas").
-   - MANDATORY GROUNDING: Cada guion DEBE basarse estrictamente en la ciencia real, mecanismos empíricos verificados o dilemas académicos del tema solicitado.
-     * REGLA ESTRICTA CONTRA CONTAMINACIÓN TEMÁTICA: Adapta los argumentos EXCLUSIVAMENTE a la disciplina del tema tratado. NUNCA introduzcas conceptos de física subatómica, mecánica cuántica o astrofísica en temas no relacionados (como genética, ADN, biología, medicina, neurociencia, ecología o tecnología).
-
-2. ONE SINGLE STORY ARC & CONVERSATIONAL CHAINING:
-   - The script MUST maintain ONE single central thought experiment or real paradox from line 1 to the end. Do NOT jump to unrelated isolated facts.
-   - Cada intervención debe responder a la anterior, no ignorarla. Cada escena después de la primera debe contraargumentar, profundizar o responder directamente a lo que dijo el otro orbe, construyendo un debate real de ida y vuelta.
-   - The dialog MUST read like a real, fascinating debate between two brilliant minds bouncing off each other.
-
-3. DYNAMIC AI PROFESSIONS ACCORDING TO THE TOPIC (MANDATORY):
-   - You MUST dynamically decide and assign the exact professions / specialty roles for each orb host based on the debate topic.
-   - Do NOT default to generic roles. Tailor their expert identities (2 to 4 words, max 28 characters) to represent opposing expert perspectives on the specific topic '{topic or 'de esta sesión'}'.
-   - Include these in the "roles" object of your JSON:
-     "roles": {{
-       "{self.host_a.id}": "{role_a}",
-       "{self.host_b.id}": "{role_b}"
-     }}
-
-4. STRUCTURE & SCENE COUNT (MANDATORY MINIMUM 7 SCENES):
-   - MÍNIMO DE ESCENAS (7): El guion DEBE tener un mínimo de 7 escenas (entre 7 y 10 escenas) para desarrollar un debate real y con suficiente profundidad. No resuelvas el debate en 4 o 5 escenas.
-   - FLEXIBLE STARTER: Either {self.host_a.name} or {self.host_b.name} can speak first—whichever speaker creates the strongest immediate hook.
-   - OPTIONAL HOLOGRAMS: Only output 'holograms' if there is a real, concrete scientific metric, unit, or measurement relevant to the topic to display. If the script is a pure conceptual thought experiment or debate, set 'holograms': null.
-
-5. STRICT SINGLE CLOSING SCENE & PENULTIMATE SHOT:
-   - PROHIBIDO GENERAR DOS ESCENAS DE CIERRE CONSECUTIVAS O DOBLE 'Ambos': Solo puede haber UNA escena final conjunta ("Ambos" / "both") en todo el guion.
-   - Si tienes una síntesis y una pregunta final, ÚNELAS en una sola escena final de 'Ambos'. No las dividas en dos escenas.
-   - LA PENÚLTIMA ESCENA NO DEBE SER EN PLANO AMPLIO NI DE 'Ambos': La penúltima escena (Escena N-1) DEBE ser de un orbe individual ({self.host_a.name} o {self.host_b.name}) con plano cerrado ("{self.host_a.shot_name}" o "{self.host_b.shot_name}"), llevando la tensión al clímax.
-   - La última escena (Escena N) es el único cierre de 'Ambos' con "shot": "both" que lanza la pregunta provocadora.
-
-6. CAMERA SHOTS MUST STRICTLY MATCH THE SPEAKER:
-   - "shot": "wide" -> Opening scene only.
-   - "shot": "{self.host_a.shot_name}" -> ONLY when {self.host_a.name} is speaking solo! Never assign to {self.host_b.name}.
-   - "shot": "{self.host_b.shot_name}" -> ONLY when {self.host_b.name} is speaking solo! Never assign to {self.host_a.name}.
-   - "shot": "both" -> ONLY in the final concluding question scene when both orbs speak together.
-
-7. DIALOGUE STYLE & ELI5:
-   - Speak in clear, simple Spanish. Explain like to a 12-year-old using clear physical analogies.
-   - Hook the viewer in the first 3 words with an irresistible, visual premise.
-   - End with a mind-expanding scientific realization or existential question (NO forced "comment below" CTAs).
-
-Respond ONLY with valid JSON matching this schema:
-{{
-  "topic": "Clean topic name",
-  "headline_hook": "⚡ TITULO IMPACTANTE (MAX 45 CHARACTERS) ⚡",
-  "roles": {{
-    "{self.host_a.id}": "{role_a}",
-    "{self.host_b.id}": "{role_b}"
-  }},
-  "holograms": null,
-  "scenes": [
-    {{
-      "speaker": "{self.host_a.name}",
-      "entity": "{self.host_a.id}",
-      "text": "Planteamiento inicial del dilema o premisa provocadora sobre el tema.",
-      "shot": "wide",
-      "duration": 3.2
-    }},
-    {{
-      "speaker": "{self.host_b.name}",
-      "entity": "{self.host_b.id}",
-      "text": "Refutación o perspectiva alternativa basada en evidencia del tema.",
-      "shot": "{self.host_b.shot_name}",
-      "duration": 3.4
-    }},
-    {{
-      "speaker": "{self.host_a.name}",
-      "entity": "{self.host_a.id}",
-      "text": "Profundización analítica presentando un mecanismo o dato concreto.",
-      "shot": "{self.host_a.shot_name}",
-      "duration": 3.3
-    }},
-    {{
-      "speaker": "{self.host_b.name}",
-      "entity": "{self.host_b.id}",
-      "text": "Contraargumento que cuestiona la conclusión y eleva el debate.",
-      "shot": "{self.host_b.shot_name}",
-      "duration": 3.5
-    }},
-    {{
-      "speaker": "{self.host_a.name}",
-      "entity": "{self.host_a.id}",
-      "text": "Planteamiento de la evidencia o consecuencia más sorprendente.",
-      "shot": "{self.host_a.shot_name}",
-      "duration": 3.4
-    }},
-    {{
-      "speaker": "{self.host_b.name}",
-      "entity": "{self.host_b.id}",
-      "text": "Penúltima intervención en primer plano sintetizando la tensión central.",
-      "shot": "{self.host_b.shot_name}",
-      "duration": 3.5
-    }},
-    {{
-      "speaker": "Ambos",
-      "entity": "both",
-      "text": "Pregunta final abierta y reflexiva dirigida a la audiencia.",
-      "shot": "both",
-      "duration": 3.2
-    }}
-  ]
-}}
-"""
+        from core.prompt_builder import DebatePromptBuilder
+        return (
+            DebatePromptBuilder(topic)
+            .with_show(self)
+            .build_system_prompt()
+        )
 
     def infer_topic_professions(self, topic: Optional[str] = None) -> Dict[str, str]:
         """
         Infers dynamic, topic-tailored professions for host_a and host_b based on the debate topic.
-        Used as default/fallback when the LLM response doesn't supply topic-customized roles.
+        Delegates directly to the Strategy domain model.
         """
-        if not topic:
-            return {
-                self.host_a.id: self.host_a.role,
-                self.host_b.id: self.host_b.role
-            }
-
-        t = topic.lower().strip()
-
-        if any(w in t for w in ["simula", "matrix", "código", "codigo", "virtual", "comput"]):
-            role_a = "IA Algoritmos Teóricos"
-            role_b = "IA Física de la Información"
-        elif any(w in t for w in ["mente", "cerebro", "conciencia", "neurol", "pensamiento", "inteligencia artificial"]) or re.search(r"\b(ia|ai)\b", t):
-            role_a = "IA Neurociencia Cognitiva"
-            role_b = "IA Biología y Conducta"
-        elif any(w in t for w in ["agujero", "negro", "singularidad", "evento", "hawking"]):
-            role_a = "IA Gravedad y Cosmología"
-            role_b = "IA Astrofísica Relativista"
-        elif any(w in t for w in ["biolog", "genétic", "genom", "evoluc", "celular", "célula", "virus", "clonac"]) or re.search(r"\b(gen|genes|adn|dna|bio)\b", t):
-            role_a = "IA Genómica Molecular"
-            role_b = "IA Bioética y Evolución"
-        elif any(w in t for w in ["clima", "climát", "tierra", "atmósfera", "oceano", "océano", "ecolog"]):
-            role_a = "IA Dinámica Planetaria"
-            role_b = "IA Ecología y Biosfera"
-        elif any(w in t for w in ["pulpo", "animal", "especie", "marino", "fauna", "zoolog"]):
-            role_a = "IA Zoología y Neurobiología"
-            role_b = "IA Etología Evolutiva"
-        elif any(w in t for w in ["tiempo", "relatividad", "pasado", "futuro", "viaje temporal"]):
-            role_a = "IA Física Teórica"
-            role_b = "IA Relatividad Espaciotemporal"
-        elif any(w in t for w in ["multiverso", "dimension", "dimensión", "cuerdas", "universo"]):
-            role_a = "IA Modelado Cosmológico"
-            role_b = "IA Astrofísica Observacional"
-        elif any(w in t for w in ["energia", "energía", "sol", "estrella", "fusion", "fusión", "supernova"]):
-            role_a = "IA Física de Plasmas"
-            role_b = "IA Termodinámica Estelar"
-        elif any(w in t for w in ["alien", "exoplaneta", "extraterrestre", "drake", "fermi"]):
-            role_a = "IA Bioastronomía"
-            role_b = "IA Astrobiología Exoplanetaria"
-        elif any(w in t for w in ["cuant", "cuánt", "particula", "partícula", "atom", "átom"]):
-            role_a = "IA Física Cuántica"
-            role_b = "IA Física de Partículas"
-        else:
-            words = [w.capitalize() for w in topic.strip().split() if len(w) > 2]
-            key_word = words[0] if words else "Ciencia"
-            role_a = f"IA {key_word} Analítica"[:28]
-            role_b = f"IA {key_word} Empírica"[:28]
-
-        return {
-            self.host_a.id: role_a,
-            self.host_b.id: role_b
-        }
+        domain = self.get_domain(topic)
+        return domain.get_roles(self.host_a.id, self.host_b.id)
 
     def resolve_speaker_host(self, speaker_name_or_entity: str) -> OrbHost:
         """Resolves which host matches the given speaker string."""

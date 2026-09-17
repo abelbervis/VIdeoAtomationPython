@@ -15,6 +15,9 @@ from typing import Dict, Any, Optional, Tuple
 
 from ai.orb_reviewer import OrbScriptReviewer
 from core.hosts import CosmicDebateShow, DEFAULT_QUANTUM_HOST, DEFAULT_SOLAR_HOST, OrbHost
+from core.domains import DomainRegistry, TopicDomain
+from core.prompt_builder import DebatePromptBuilder
+from core.script_models import DebateScript
 
 from config import (
     BASE_DIR,
@@ -119,7 +122,7 @@ class DebateScriptGenerator:
             if script and self._validate_debate_script(script, clean_topic):
                 print(f"  ✨ Guion de debate generado con éxito por {prov.upper()}!")
                 if self.enable_review:
-                    script = self.reviewer.review(script)
+                    script = self.reviewer.review(script, topic=clean_topic, show=self.show)
                 return script
 
         # If fallback is explicitly allowed
@@ -127,7 +130,7 @@ class DebateScriptGenerator:
             print("  🛰️ Generando guion dialéctico con el motor científico especializado (Fallback)...")
             script = self._generate_scientific_fallback(clean_topic, language)
             if script and self.enable_review:
-                script = self.reviewer.review(script)
+                script = self.reviewer.review(script, topic=clean_topic, show=self.show)
             return script
 
         print("\n❌ [Debate Express AI] No se pudo generar el guion con ninguno de los proveedores de IA configurados.")
@@ -135,13 +138,11 @@ class DebateScriptGenerator:
         return None
 
     def _call_gemini(self, topic: str, language: str) -> Optional[Dict[str, Any]]:
-        system_prompt = self.show.build_system_prompt(topic)
-        full_prompt = (
-            f"{system_prompt}\n\n"
-            f"Topic for Script: {topic}\n"
-            f"Language: Spanish (Español)\n"
-            f"Generate the JSON script following all narrative continuity rules and schema:"
-        )
+        builder = DebatePromptBuilder(topic).with_show(self.show)
+        system_prompt = builder.build_system_prompt()
+        user_prompt = builder.build_user_prompt(language)
+        full_prompt = f"{system_prompt}\n\n{user_prompt}"
+
         models_to_try = ["gemini-2.5-flash", "gemini-flash-latest"]
         headers = {
             "Content-Type": "application/json",
@@ -181,13 +182,16 @@ class DebateScriptGenerator:
         return None
 
     def _call_groq(self, topic: str, language: str) -> Optional[Dict[str, Any]]:
-        system_prompt = self.show.build_system_prompt(topic)
+        builder = DebatePromptBuilder(topic).with_show(self.show)
+        system_prompt = builder.build_system_prompt()
+        user_prompt = builder.build_user_prompt(language)
+
         url = f"{GROQ_API_BASE}/chat/completions"
         payload = {
             "model": GROQ_MODEL or "llama-3.3-70b-versatile",
             "messages": [
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": f"Topic: {topic}\nLanguage: Spanish\nGenerate the debate JSON:"}
+                {"role": "user", "content": user_prompt}
             ],
             "response_format": {"type": "json_object"},
             "temperature": 0.7
@@ -211,13 +215,16 @@ class DebateScriptGenerator:
             return self._parse_json(text)
 
     def _call_openai(self, topic: str, language: str) -> Optional[Dict[str, Any]]:
-        system_prompt = self.show.build_system_prompt(topic)
+        builder = DebatePromptBuilder(topic).with_show(self.show)
+        system_prompt = builder.build_system_prompt()
+        user_prompt = builder.build_user_prompt(language)
+
         url = "https://api.openai.com/v1/chat/completions"
         payload = {
             "model": "gpt-4o-mini",
             "messages": [
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": f"Topic: {topic}\nLanguage: Spanish\nGenerate the debate JSON:"}
+                {"role": "user", "content": user_prompt}
             ],
             "response_format": {"type": "json_object"},
             "temperature": 0.7
@@ -254,109 +261,51 @@ class DebateScriptGenerator:
         return None
 
     def _clean_and_sanitize_scenes(self, script: Dict[str, Any]) -> Dict[str, Any]:
-        """Ensures single unified closing scene and prevents wide/both shots on penultimate scene."""
-        if not script or not isinstance(script.get("scenes"), list):
+        """Encapsulated OOP structure sanitization via DebateScript model."""
+        if not script or not isinstance(script, dict):
             return script
-
-        scenes = script["scenes"]
-        if not scenes:
-            return script
-
-        cleaned_scenes = []
-        i = 0
-        while i < len(scenes):
-            curr = scenes[i]
-            is_curr_both = (
-                str(curr.get("speaker", "")).strip().lower() in ["ambos", "both"]
-                or str(curr.get("entity", "")).strip().lower() == "both"
-            )
-
-            # Check if next scene is ALSO both
-            if is_curr_both and i + 1 < len(scenes):
-                nxt = scenes[i + 1]
-                is_nxt_both = (
-                    str(nxt.get("speaker", "")).strip().lower() in ["ambos", "both"]
-                    or str(nxt.get("entity", "")).strip().lower() == "both"
-                )
-                if is_nxt_both:
-                    # Merge consecutive both scenes into one single final scene
-                    merged_text = curr.get("text", "").strip()
-                    nxt_text = nxt.get("text", "").strip()
-                    if nxt_text and nxt_text not in merged_text:
-                        merged_text = f"{merged_text} {nxt_text}"
-                    merged_dur = round(min(5.5, max(3.0, float(curr.get("duration", 3.2)) + float(nxt.get("duration", 3.2)) * 0.7)), 1)
-                    merged_scene = {
-                        "speaker": "Ambos",
-                        "entity": "both",
-                        "text": merged_text,
-                        "shot": "both",
-                        "duration": merged_dur
-                    }
-                    cleaned_scenes.append(merged_scene)
-                    i += 2
-                    continue
-
-            cleaned_scenes.append(curr)
-            i += 1
-
-        # Enforce rule: Penultimate scene cannot be 'both' or wide shot
-        if len(cleaned_scenes) >= 2:
-            penultimate = cleaned_scenes[-2]
-            last = cleaned_scenes[-1]
-            last_is_both = (
-                str(last.get("speaker", "")).strip().lower() in ["ambos", "both"]
-                or str(last.get("entity", "")).strip().lower() == "both"
-            )
-            if last_is_both:
-                # If penultimate was accidentally labeled both/wide, assign to previous opposite entity
-                penult_entity = str(penultimate.get("entity", "")).strip().lower()
-                if penult_entity == "both" or str(penultimate.get("speaker", "")).strip().lower() in ["ambos", "both"]:
-                    # Assign to host_b or host_a
-                    assigned_host = self.show.host_b if len(cleaned_scenes) % 2 == 0 else self.show.host_a
-                    penultimate["speaker"] = assigned_host.name
-                    penultimate["entity"] = assigned_host.id
-                    penultimate["shot"] = assigned_host.shot_name
-                elif penultimate.get("shot") in ["wide", "both"]:
-                    # Fix shot to match the solo speaker
-                    if penult_entity == self.show.host_a.id:
-                        penultimate["shot"] = self.show.host_a.shot_name
-                    elif penult_entity == self.show.host_b.id:
-                        penultimate["shot"] = self.show.host_b.shot_name
-                    else:
-                        penultimate["shot"] = self.show.host_b.shot_name
-
-        script["scenes"] = cleaned_scenes
+        script_obj = DebateScript.from_dict(script)
+        script_obj.sanitize_structure(self.show.host_a, self.show.host_b)
+        sanitized = script_obj.to_dict()
+        script.clear()
+        script.update(sanitized)
         return script
 
     def _validate_debate_script(self, script: Dict[str, Any], topic: Optional[str] = None) -> bool:
         if not isinstance(script, dict):
             return False
         
-        # Clean closing scenes before validation
+        # Clean closing scenes and camera alignments before validation
         self._clean_and_sanitize_scenes(script)
 
-        scenes = script.get("scenes", [])
-        if len(scenes) < 7:
-            return False
-        if not script.get("headline_hook"):
-            return False
+        topic_name = script.get("topic") or topic
+        script_obj = DebateScript.from_dict(script, default_topic=topic_name)
+        domain = self.show.get_domain(topic_name)
 
         # Ensure dynamic topic-tailored AI professions are present and valid
-        topic_name = script.get("topic") or topic
         inferred_roles = self.show.infer_topic_professions(topic_name)
-        if "roles" not in script or not isinstance(script["roles"], dict):
-            script["roles"] = inferred_roles
+        if not script_obj.roles:
+            script_obj.roles = inferred_roles
         else:
-            for k in list(script["roles"].keys()):
-                val = str(script["roles"][k]).strip()
+            for k in list(script_obj.roles.keys()):
+                val = str(script_obj.roles[k]).strip()
                 if len(val) > 30:
-                    script["roles"][k] = val[:28]
-            # Ensure host_a and host_b are present in script["roles"]
-            if self.show.host_a.id not in script["roles"]:
-                script["roles"][self.show.host_a.id] = inferred_roles.get(self.show.host_a.id, self.show.host_a.role)
-            if self.show.host_b.id not in script["roles"]:
-                script["roles"][self.show.host_b.id] = inferred_roles.get(self.show.host_b.id, self.show.host_b.role)
+                    script_obj.roles[k] = val[:28]
+            if self.show.host_a.id not in script_obj.roles:
+                script_obj.roles[self.show.host_a.id] = inferred_roles.get(self.show.host_a.id, self.show.host_a.role)
+            if self.show.host_b.id not in script_obj.roles:
+                script_obj.roles[self.show.host_b.id] = inferred_roles.get(self.show.host_b.id, self.show.host_b.role)
 
+        # Validate with OOP model (length, single closure, camera matches, domain contamination)
+        is_valid, errors = script_obj.validate(domain=domain, host_a=self.show.host_a, host_b=self.show.host_b)
+        if not is_valid:
+            print(f"  ⚠️ [Script Validation Check]: {', '.join(errors)}")
+            if len(script_obj.scenes) < 7 or not script_obj.headline_hook:
+                return False
+
+        # Sync back sanitized state to dict
+        script.clear()
+        script.update(script_obj.to_dict())
         return True
 
     def _generate_scientific_fallback(self, topic: str, language: str = "es") -> Dict[str, Any]:

@@ -580,6 +580,7 @@ def render_orb_test_preview(
 ) -> Optional[Path]:
     """Renders a stunning co-host conversation video with two bio-reactive orbs and dynamic camera cuts."""
     from core.hosts import CosmicDebateShow, HostRegistry, DEFAULT_QUANTUM_HOST, DEFAULT_SOLAR_HOST
+    from core.script_models import DebateScript
 
     # 0. Resolve co-hosts from parameter, script, or defaults
     target_hosts = cohosts or "quantum,solar"
@@ -646,6 +647,11 @@ def render_orb_test_preview(
     has_holo_s = False
 
     if debate_script:
+        # Enforce OOP structural rules (single closing scene, penultimate solo camera cut)
+        script_obj = DebateScript.from_dict(debate_script)
+        script_obj.sanitize_structure(debate_show.host_a, debate_show.host_b)
+        debate_script = script_obj.to_dict()
+
         if debate_script.get("headline_hook"):
             headline_hook = debate_script["headline_hook"]
         holograms = debate_script.get("holograms")
