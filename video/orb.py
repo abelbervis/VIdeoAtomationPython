@@ -721,7 +721,7 @@ def render_orb_test_preview(
             output_path=holo_s_path
         )
 
-    # Resolve optional dynamic roles from script or AI generation
+    # Resolve dynamic roles from AI script generation or infer from topic
     custom_roles = {}
     if debate_script:
         if "roles" in debate_script and isinstance(debate_script["roles"], dict):
@@ -732,6 +732,12 @@ def render_orb_test_preview(
                     custom_roles[h_k] = h_v["role"]
                 elif isinstance(h_v, str):
                     custom_roles[h_k] = h_v
+
+    # Fallback to topic-based AI profession inference if custom_roles is incomplete
+    inferred = debate_show.infer_topic_professions(topic)
+    for h_id, h_role in inferred.items():
+        if h_id not in custom_roles:
+            custom_roles[h_id] = h_role
 
     badge_q_path, badge_s_path = debate_show.generate_all_badges(
         output_dir=output_path.parent,

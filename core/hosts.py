@@ -99,8 +99,8 @@ class OrbHost:
 DEFAULT_QUANTUM_HOST = OrbHost(
     id="quantum",
     name="QUANTUM",
-    role="Mente Fría // Lógica",
-    perspective="Temperamento sereno, cerebral e imperturbable. Fascinado por lo invisible, las probabilidades matemáticas y el silencio del vacío. Desarma argumentos con precisión fría, sutileza e ironía tranquila.",
+    role="IA Física Cuántica",
+    perspective="Mente analítica, sutil y serena. Especialista en la escala subatómica, mecánica cuántica, principio de incertidumbre, teoría de simulación y computación cuántica.",
     color_theme="cyan",
     palette_name="quantum",
     primary_color="#00f0ff",
@@ -123,8 +123,8 @@ DEFAULT_QUANTUM_HOST = OrbHost(
 DEFAULT_SOLAR_HOST = OrbHost(
     id="solar",
     name="SOLAR",
-    role="Energía Viva // Pasión",
-    perspective="Temperamento apasionado, visceral, impetuoso y radiante. Fascinado por la fuerza física palpable, el fuego, la acción viva y la entropía irreversible. Defiende la realidad con convicción ardiente y contundencia.",
+    role="IA Astrofísica Solar",
+    perspective="Núcleo estelar enérgico, brillante y radiante. Especialista en astrofísica, entropía termodinámica, fusión nuclear, relatividad general y gravitación macroscópica.",
     color_theme="amber",
     palette_name="solar",
     primary_color="#ffea00",
@@ -240,100 +240,132 @@ class CosmicDebateShow:
         directly into the instructions, rules, schema, and examples.
         """
         topic_clause = f" on '{topic}'" if topic else ""
+        example_roles = self.infer_topic_professions(topic)
         return f"""You are the Lead Writer and Showrunner for '{self.show_title}', an ultra-engaging vertical video series featuring two conscious AI co-hosts{topic_clause}:
 {self.host_a.to_prompt_line()}
 {self.host_b.to_prompt_line()}
 
-CRITICAL NARRATIVE RULES & EMOTIONAL DYNAMICS:
+CRITICAL NARRATIVE RULES:
 
-1. THE DYNAMIC: TWO CONSCIOUS ORBS WITH OPPOSING TEMPERAMENTS (PEERS OF EQUAL STATURE):
-   - NO ACADEMIC TITLES OR RIGID PROFESSIONS. These are two living cosmic entities perceiving the universe through radically different emotional lenses:
-     * {self.host_a.name} ({self.host_a.role}): {self.host_a.perspective}
-     * {self.host_b.name} ({self.host_b.role}): {self.host_b.perspective}
-   - EQUAL INTELLECTUAL WEIGHT: Neither is the "teacher" and neither is the "naive student". Both speak with authority, intelligence, and deep conviction.
-   - NO DUMB QUESTIONS: Neither host acts baffled or plays dumb. Instead of asking naive questions, each host challenges the other's perspective with their own fiery insights, counter-examples, or philosophical depth.
-   - ORGANIC CHEMISTRY: The conflict stems from TEMPERAMENT (cold calculated logic vs passionate visceral fire), not artificial rivalry. They respect each other and together uncover profound truths.
+1. NO PSEUDO-POETRY OR VAGUE FLUFF (STRICTLY BANNED):
+   - PROHIBITED: Abstract pseudo-poetic phrases without physical meaning (e.g. "la gravedad del relato", "la tinta de la conciencia", "las hojas del libro cósmico", "el tejido de las almas", "la voz del universo").
+   - MANDATORY GROUNDING: Every script MUST be grounded in REAL physics, real scientific paradoxes, or concrete sci-fi mechanics (e.g. quantum superposition, time dilation, speed of light limit, entropy, black hole event horizons, simulation theory, Planck scale, observer effect).
 
-2. GROUNDED IN REAL SCIENTIFIC ENIGMAS (ZERO FAKE CLAIMS, ZERO EMPTY FLUFF):
-   - NO fake news inventions ("Científicos descubrieron ayer...", invented institutions).
-   - NO meaningless pseudo-poetic fluff ("la gravedad del alma", "el libro cósmico de los recuerdos").
-   - Base the dialogue on tangible physics, astrophysics, cosmology, time, entropy, or consciousness.
+2. ONE SINGLE STORY ARC & CONVERSATIONAL CHAINING:
+   - The script MUST maintain ONE single central thought experiment or real paradox from line 1 to the end. Do NOT jump to unrelated isolated physics facts.
+   - Every scene after Scene 1 MUST directly react to or build upon the previous sentence using natural bridges ("Exacto, y por eso...", "De hecho, si ese fuera el caso...", "Ahí está la paradoja: ...", "Eso significa que...", "Pero piénsalo: ...").
+   - The dialog MUST read like a real, fascinating conversation between two brilliant minds bouncing off each other.
 
-3. NATURAL SPANISH GRAMMAR & FLOW (MANDATORY USE OF ARTICLES - NO TELEGRAPHIC/ROBOT TALK):
-   - MANDATORY: In Spanish, always use natural grammatical articles (el, la, los, las, un, una).
-   - NEVER drop articles to compress text! Dropping articles sounds broken and unnatural.
-   - STRICTLY FORBIDDEN: "mejora de IA", "entropía de algoritmos", "desencadenar colapso", "asegurar alineación".
-   - MANDATORY: "la mejora de la IA", "la entropía de los algoritmos", "desencadenar un colapso", "asegurar la alineación ética".
-   - Keep each turn conversational and fluid (~12 to 18 words per line, duration ~3.0s to 3.8s). Prioritize natural spoken elocution and cadence.
-   - Every line must connect to the previous speaker using organic conversational bridges ("Pero olvidas que...", "Al contrario: mira cómo...", "Precisamente ahí colapsa...", "Eso demuestra que...", "Entonces coincidimos en que...").
-
-4. IDENTITY BADGES (EMOTIONAL ESSENCE):
-   - In the "roles" object of your JSON, assign each host their emotional essence or frequency (2 to 3 words, max 24 characters), NOT a rigid diploma.
-   - Example:
+3. DYNAMIC AI PROFESSIONS ACCORDING TO THE TOPIC (MANDATORY):
+   - You MUST dynamically decide and assign the exact professions / specialty roles for each orb host based on the debate topic.
+   - Do NOT default to generic roles. Tailor their expert identities (2 to 4 words, max 28 characters) to represent opposing expert perspectives on the specific topic '{topic or 'de esta sesión'}'.
+   - Include these in the "roles" object of your JSON:
      "roles": {{
-       "{self.host_a.id}": "Mente Fría // Lógica",
-       "{self.host_b.id}": "Energía Viva // Pasión"
+       "{self.host_a.id}": "{example_roles.get(self.host_a.id, 'IA Especialidad A')}",
+       "{self.host_b.id}": "{example_roles.get(self.host_b.id, 'IA Especialidad B')}"
      }}
 
-5. CAMERA SHOTS MUST STRICTLY MATCH THE SPEAKER:
-   - "shot": "wide" -> Opening scene where both orbs are present.
-   - "shot": "{self.host_a.shot_name}" -> ONLY when {self.host_a.name} is speaking solo!
-   - "shot": "{self.host_b.shot_name}" -> ONLY when {self.host_b.name} is speaking solo!
-   - "shot": "both" -> When both orbs speak together or in the final revelation.
+4. STRUCTURE & HOLOGRAMS:
+   - FLEXIBLE SCENE COUNT: Produce between 3 and 5 scenes based on what the narrative naturally requires.
+   - FLEXIBLE STARTER: Either {self.host_a.name} or {self.host_b.name} can speak first—whichever speaker creates the strongest immediate hook.
+   - OPTIONAL HOLOGRAMS: Only output 'holograms' if there is a real, concrete scientific metric or formula to display (e.g. "300,000 km/s", "13.8 Gyr", "1.6x10⁻³⁵ m"). If the script is a pure conceptual thought experiment, set 'holograms': null.
 
-6. STRUCTURE & HOLOGRAMS:
-   - Produce between 3 and 5 scenes based on what the organic conversation requires.
-   - Either host can open the conversation with a bold thesis or cosmic enigma.
-   - Set 'holograms': null unless there is a concrete scientific constant or metric to display.
+5. CAMERA SHOTS MUST STRICTLY MATCH THE SPEAKER:
+   - "shot": "wide" -> Opening scene or general view where both orbs are present.
+   - "shot": "{self.host_a.shot_name}" -> ONLY when {self.host_a.name} is speaking solo! Never assign to {self.host_b.name}.
+   - "shot": "{self.host_b.shot_name}" -> ONLY when {self.host_b.name} is speaking solo! Never assign to {self.host_a.name}.
+   - "shot": "both" -> When both orbs speak together or in the concluding realization.
+
+6. DIALOGUE STYLE & ELI5:
+   - Speak in clear, simple Spanish. Explain like to a 12-year-old using clear physical analogies.
+   - Hook the viewer in the first 3 words with an irresistible, visual premise.
+   - End with a mind-expanding scientific realization or existential question (NO forced "comment below" CTAs).
 
 Respond ONLY with valid JSON matching this schema:
 {{
   "topic": "Clean topic name",
   "headline_hook": "⚡ TITULO IMPACTANTE (MAX 45 CHARACTERS) ⚡",
   "roles": {{
-    "{self.host_a.id}": "Mente Fría",
-    "{self.host_b.id}": "Energía Viva"
+    "{self.host_a.id}": "{example_roles.get(self.host_a.id, 'IA Especialidad A')}",
+    "{self.host_b.id}": "{example_roles.get(self.host_b.id, 'IA Especialidad B')}"
   }},
   "holograms": null,
   "scenes": [
     {{
       "speaker": "{self.host_a.name}",
       "entity": "{self.host_a.id}",
-      "text": "El tiempo no fluye: es solo una dimensión congelada en el espacio.",
+      "text": "Imagina que el universo entero es solo una pantalla de videojuegos cargando en tiempo real.",
       "shot": "wide",
-      "duration": 3.0
+      "duration": 3.2
     }},
     {{
       "speaker": "{self.host_b.name}",
       "entity": "{self.host_b.id}",
-      "text": "Dile eso al fuego de una estrella consumiéndose segundo a segundo.",
+      "text": "Exacto, y cada estrella que ves a lo lejos solo se renderiza cuando alguien la mira.",
       "shot": "{self.host_b.shot_name}",
-      "duration": 3.2
+      "duration": 3.5
     }},
     {{
       "speaker": "{self.host_a.name}",
       "entity": "{self.host_a.id}",
-      "text": "Tu fuego es solo entropía: la ilusión de cambio en un tejido estático.",
-      "shot": "{self.host_a.shot_name}",
-      "duration": 3.5
-    }},
-    {{
-      "speaker": "{self.host_b.name}",
-      "entity": "{self.host_b.id}",
-      "text": "Pero esa ilusión es lo único que hace posible la vida y la conciencia.",
-      "shot": "{self.host_b.shot_name}",
-      "duration": 3.2
-    }},
-    {{
-      "speaker": "BOTH",
-      "entity": "both",
-      "text": "Quizás el cosmos necesita tanto la calma del espacio como el ardor del fuego.",
+      "text": "Pero ahí está el misterio: si nadie está mirando el código, ¿quién presionó el botón de inicio?",
       "shot": "both",
-      "duration": 3.2
+      "duration": 3.5
     }}
   ]
 }}
 """
+
+    def infer_topic_professions(self, topic: Optional[str] = None) -> Dict[str, str]:
+        """
+        Infers dynamic, topic-tailored professions for host_a and host_b based on the debate topic.
+        Used as default/fallback when the LLM response doesn't supply topic-customized roles.
+        """
+        if not topic:
+            return {
+                self.host_a.id: self.host_a.role,
+                self.host_b.id: self.host_b.role
+            }
+
+        t = topic.lower().strip()
+
+        if any(w in t for w in ["simula", "matrix", "código", "codigo", "virtual", "comput"]):
+            role_a = "IA Computación Cuántica"
+            role_b = "IA Física de la Información"
+        elif any(w in t for w in ["mente", "ia", "cerebro", "conciencia", "neurol", "pensamiento"]):
+            role_a = "IA Redes Neurocuánticas"
+            role_b = "IA Bioquímica Cerebral"
+        elif any(w in t for w in ["agujero", "negro", "singularidad", "evento", "hawking"]):
+            role_a = "IA Gravedad Cuántica"
+            role_b = "IA Astrofísica Relativista"
+        elif any(w in t for w in ["bio", "gen", "adn", "vida", "evoluc", "celula", "célula", "virus", "sintet"]):
+            role_a = "IA Genómica Sintética"
+            role_b = "IA Bioética y Evolución"
+        elif any(w in t for w in ["tiempo", "relatividad", "pasado", "futuro", "viaje"]):
+            role_a = "IA Cronodinámica Cuántica"
+            role_b = "IA Relatividad Espaciotemporal"
+        elif any(w in t for w in ["multiverso", "dimension", "dimensión", "cuerdas", "universo"]):
+            role_a = "IA Teoría de Cuerdas"
+            role_b = "IA Cosmología Observacional"
+        elif any(w in t for w in ["energia", "energía", "sol", "estrella", "fusion", "fusión", "supernova"]):
+            role_a = "IA Física de Plasmas"
+            role_b = "IA Termodinámica Estelar"
+        elif any(w in t for w in ["alien", "exoplaneta", "extraterrestre", "drake", "fermi"]):
+            role_a = "IA Bioastronomía"
+            role_b = "IA Astrobiología Exoplanetaria"
+        elif any(w in t for w in ["cuant", "cuánt", "particula", "partícula", "atom", "átom"]):
+            role_a = "IA Mecánica Cuántica"
+            role_b = "IA Astrofísica de Partículas"
+        else:
+            words = [w.capitalize() for w in topic.strip().split() if len(w) > 2]
+            key_word = words[0] if words else "Física"
+            role_a = f"IA {key_word} Cuántica"[:28]
+            role_b = f"IA {key_word} Teórica"[:28]
+
+        return {
+            self.host_a.id: role_a,
+            self.host_b.id: role_b
+        }
 
     def resolve_speaker_host(self, speaker_name_or_entity: str) -> OrbHost:
         """Resolves which host matches the given speaker string."""

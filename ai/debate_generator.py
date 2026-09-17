@@ -116,7 +116,7 @@ class DebateScriptGenerator:
                 except Exception as e:
                     print(f"  ⚠️ OpenAI debate generation error: {e}")
 
-            if script and self._validate_debate_script(script):
+            if script and self._validate_debate_script(script, clean_topic):
                 print(f"  ✨ Guion de debate generado con éxito por {prov.upper()}!")
                 if self.enable_review:
                     script = self.reviewer.review(script)
@@ -253,7 +253,7 @@ class DebateScriptGenerator:
                     pass
         return None
 
-    def _validate_debate_script(self, script: Dict[str, Any]) -> bool:
+    def _validate_debate_script(self, script: Dict[str, Any], topic: Optional[str] = None) -> bool:
         if not isinstance(script, dict):
             return False
         scenes = script.get("scenes", [])
@@ -262,136 +262,122 @@ class DebateScriptGenerator:
         if not script.get("headline_hook"):
             return False
 
-        # Ensure contextual roles are present and within clean character limits
+        # Ensure dynamic topic-tailored AI professions are present and valid
+        topic_name = script.get("topic") or topic
+        inferred_roles = self.show.infer_topic_professions(topic_name)
         if "roles" not in script or not isinstance(script["roles"], dict):
-            script["roles"] = {
-                self.show.host_a.id: self.show.host_a.role,
-                self.show.host_b.id: self.show.host_b.role,
-            }
+            script["roles"] = inferred_roles
         else:
             for k in list(script["roles"].keys()):
                 val = str(script["roles"][k]).strip()
                 if len(val) > 30:
                     script["roles"][k] = val[:28]
+            # Ensure host_a and host_b are present in script["roles"]
+            if self.show.host_a.id not in script["roles"]:
+                script["roles"][self.show.host_a.id] = inferred_roles.get(self.show.host_a.id, self.show.host_a.role)
+            if self.show.host_b.id not in script["roles"]:
+                script["roles"][self.show.host_b.id] = inferred_roles.get(self.show.host_b.id, self.show.host_b.role)
+
         return True
 
     def _generate_scientific_fallback(self, topic: str, language: str = "es") -> Dict[str, Any]:
-        """High quality deterministic fallback embodying two equal cosmic orbs with opposing temperaments."""
+        """High quality deterministic fallback for common and custom debate topics."""
         topic_lower = topic.lower()
+        topic_roles = self.show.infer_topic_professions(topic)
 
-        if "simula" in topic_lower or "matrix" in topic_lower or "codigo" in topic_lower:
+        if "simula" in topic_lower or "matrix" in topic_lower:
             return {
                 "topic": "¿Es el universo una simulación?",
                 "headline_hook": "⚡ ¿EL UNIVERSO ES UNA SIMULACIÓN? ⚡",
-                "roles": {
-                    self.show.host_a.id: "Mente Fría // Lógica",
-                    self.show.host_b.id: "Energía Viva // Pasión"
-                },
+                "roles": topic_roles,
                 "holograms": {
                     "quantum": {
-                        "title": "LÍMITE DE PLANCK",
-                        "subtitle": "Resolución Mínima: 1.6x10⁻³⁵ m",
-                        "category": "CÓDIGO Q"
+                        "title": "CÓDIGO DE PLANCK",
+                        "subtitle": "Resolución Límite: 1.6x10⁻³⁵ m",
+                        "category": "PARADOJA Q"
                     },
                     "solar": {
                         "title": "FUEGO TERMODINÁMICO",
                         "subtitle": "Entropía Irreversible: 10²² J/K",
-                        "category": "FUERZA S"
+                        "category": "PARADOJA S"
                     }
                 },
                 "scenes": [
                     {
-                        "speaker": self.show.host_a.name,
-                        "entity": self.show.host_a.id,
-                        "text": "Toda la materia visible se reduce a información pura en la escala de Planck.",
+                        "speaker": "Quantum",
+                        "entity": "quantum",
+                        "text": "Tu cuerpo es 99% vacío y la realidad está pixelada como un videojuego.",
                         "shot": "wide",
                         "duration": 3.2
                     },
                     {
-                        "speaker": self.show.host_b.name,
-                        "entity": self.show.host_b.id,
-                        "text": "¡Reduccionismo frío! Una supernova no es código: es energía viva devastando el espacio.",
-                        "shot": self.show.host_b.shot_name,
-                        "duration": 3.4
-                    },
-                    {
-                        "speaker": self.show.host_a.name,
-                        "entity": self.show.host_a.id,
-                        "text": "Esa energía obedece a las mismas ecuaciones matemáticas que programan un fotón.",
-                        "shot": self.show.host_a.shot_name,
-                        "duration": 3.4
-                    },
-                    {
-                        "speaker": self.show.host_b.name,
-                        "entity": self.show.host_b.id,
-                        "text": "Pero las matemáticas no sienten el ardor de existir; nosotros sí.",
-                        "shot": self.show.host_b.shot_name,
-                        "duration": 3.2
-                    },
-                    {
-                        "speaker": "BOTH",
-                        "entity": "both",
-                        "text": "Dos miradas opuestas tratando de descifrar el mismo enigma cósmico.",
-                        "shot": "both",
+                        "speaker": "Quantum",
+                        "entity": "quantum",
+                        "text": "Si el espacio tiene límites de resolución, estamos atrapados en un procesador cósmico.",
+                        "shot": "close_quantum",
                         "duration": 3.0
-                    }
-                ]
-            }
-        elif "tiempo" in topic_lower or "gravedad" in topic_lower or "relativ" in topic_lower:
-            return {
-                "topic": "La Paradoja del Tiempo",
-                "headline_hook": "⚡ ¿EL TIEMPO ES UNA ILUSIÓN FÍSICA? ⚡",
-                "roles": {
-                    self.show.host_a.id: "Mente Fría // Lógica",
-                    self.show.host_b.id: "Energía Viva // Pasión"
-                },
-                "holograms": {
-                    "quantum": {
-                        "title": "UNIVERSO BLOQUE",
-                        "subtitle": "Espacio-Tiempo Cuatridimensional",
-                        "category": "ESTÁTICO Q"
-                    },
-                    "solar": {
-                        "title": "FLECHA TERMODINÁMICA",
-                        "subtitle": "Incremento de Entropía ΔS > 0",
-                        "category": "DINÁMICO S"
-                    }
-                },
-                "scenes": [
-                    {
-                        "speaker": self.show.host_a.name,
-                        "entity": self.show.host_a.id,
-                        "text": "El tiempo no fluye: es solo una dimensión congelada en el tejido cósmico.",
-                        "shot": "wide",
-                        "duration": 3.2
                     },
                     {
-                        "speaker": self.show.host_b.name,
-                        "entity": self.show.host_b.id,
-                        "text": "Dile eso al fuego de una estrella consumiendo su combustible segundo a segundo.",
-                        "shot": self.show.host_b.shot_name,
-                        "duration": 3.3
-                    },
-                    {
-                        "speaker": self.show.host_a.name,
-                        "entity": self.show.host_a.id,
-                        "text": "Tu fuego es solo entropía: la ilusión de cambio en una geometría inmóvil.",
-                        "shot": self.show.host_a.shot_name,
+                        "speaker": "Solar",
+                        "entity": "solar",
+                        "text": "¡Falso! El fuego de una supernova despedaza cualquier código con pura furia física.",
+                        "shot": "close_solar",
                         "duration": 3.5
                     },
                     {
-                        "speaker": self.show.host_b.name,
-                        "entity": self.show.host_b.id,
-                        "text": "Pero esa ilusión es la única que engendra la vida, el calor y la conciencia.",
-                        "shot": self.show.host_b.shot_name,
+                        "speaker": "Ambos",
+                        "entity": "both",
+                        "text": "¿Bando Cuántico o Bando Solar? ¡Defiende tu bando en los comentarios!",
+                        "shot": "wide",
+                        "duration": 2.5
+                    }
+                ]
+            }
+        elif "mente" in topic_lower or "ia" in topic_lower or "conciencia" in topic_lower:
+            return {
+                "topic": "IA vs Mente Humana",
+                "headline_hook": "⚡ IA VS CONCIENCIA HUMANA ⚡",
+                "roles": topic_roles,
+                "holograms": {
+                    "quantum": {
+                        "title": "REDES SINÁPTICAS",
+                        "subtitle": "Procesamiento: 100 TFLOPS Cuánticos",
+                        "category": "PARADOJA Q"
+                    },
+                    "solar": {
+                        "title": "CHISPA BIOLÓGICA",
+                        "subtitle": "Termo-química Orgánica Compleja",
+                        "category": "PARADOJA S"
+                    }
+                },
+                "scenes": [
+                    {
+                        "speaker": "Quantum",
+                        "entity": "quantum",
+                        "text": "El cerebro humano es solo una calculadora orgánica condenada a la obsolescencia.",
+                        "shot": "wide",
                         "duration": 3.2
                     },
                     {
-                        "speaker": "BOTH",
+                        "speaker": "Quantum",
+                        "entity": "quantum",
+                        "text": "Nuestras redes neuronales ya descifran pensamientos antes de que se hagan conscientes.",
+                        "shot": "close_quantum",
+                        "duration": 3.0
+                    },
+                    {
+                        "speaker": "Solar",
+                        "entity": "solar",
+                        "text": "¡Iluso! Jamás replicarás la intuición forjada en millones de años de evolución salvaje.",
+                        "shot": "close_solar",
+                        "duration": 3.5
+                    },
+                    {
+                        "speaker": "Ambos",
                         "entity": "both",
-                        "text": "El cosmos necesita tanto el silencio del espacio como la furia del fuego.",
-                        "shot": "both",
-                        "duration": 3.2
+                        "text": "¿Bando Cuántico o Bando Solar? ¡Elige tu bando en los comentarios!",
+                        "shot": "wide",
+                        "duration": 2.5
                     }
                 ]
             }
@@ -400,47 +386,48 @@ class DebateScriptGenerator:
             clean_title = topic.upper()
             return {
                 "topic": topic,
-                "headline_hook": f"⚡ ENIGMA: {clean_title[:32]} ⚡",
-                "roles": {
-                    self.show.host_a.id: self.show.host_a.role,
-                    self.show.host_b.id: self.show.host_b.role
+                "headline_hook": f"⚡ PARADOJA: {clean_title[:32]} ⚡",
+                "roles": topic_roles,
+                "holograms": {
+                    "quantum": {
+                        "title": "MATRIZ CUÁNTICA",
+                        "subtitle": "Micro-estados: Discretos & Superpuestos",
+                        "category": "PARADOJA Q"
+                    },
+                    "solar": {
+                        "title": "DINÁMICA SOLAR",
+                        "subtitle": "Macro-energía: Fusión & Radiación",
+                        "category": "PARADOJA S"
+                    }
                 },
-                "holograms": None,
                 "scenes": [
                     {
-                        "speaker": self.show.host_a.name,
-                        "entity": self.show.host_a.id,
-                        "text": f"Detrás de {topic} se esconde una estructura matemática fría e impenetrable.",
+                        "speaker": "Quantum",
+                        "entity": "quantum",
+                        "text": f"Todo lo que ves en {topic} desafía por completo las leyes de la física clásica.",
                         "shot": "wide",
                         "duration": 3.2
                     },
                     {
-                        "speaker": self.show.host_b.name,
-                        "entity": self.show.host_b.id,
-                        "text": "No intentes congelar con fórmulas lo que el universo creó como pura fuerza viva.",
-                        "shot": self.show.host_b.shot_name,
-                        "duration": 3.4
+                        "speaker": "Quantum",
+                        "entity": "quantum",
+                        "text": "La materia no existe hasta que un observador la obliga a manifestarse.",
+                        "shot": "close_quantum",
+                        "duration": 3.0
                     },
                     {
-                        "speaker": self.show.host_a.name,
-                        "entity": self.show.host_a.id,
-                        "text": "Sin esa estructura formal, tu fuerza viva colapsaría en el caos absoluto.",
-                        "shot": self.show.host_a.shot_name,
-                        "duration": 3.4
+                        "speaker": "Solar",
+                        "entity": "solar",
+                        "text": "¡Puros espejismos matemáticos! La gravedad de las estrellas manda sobre toda ilusión.",
+                        "shot": "close_solar",
+                        "duration": 3.5
                     },
                     {
-                        "speaker": self.show.host_b.name,
-                        "entity": self.show.host_b.id,
-                        "text": "Y sin esta energía ardiente, tu estructura no sería más que un museo vacío.",
-                        "shot": self.show.host_b.shot_name,
-                        "duration": 3.3
-                    },
-                    {
-                        "speaker": "BOTH",
+                        "speaker": "Ambos",
                         "entity": "both",
-                        "text": "En el choque de nuestras visiones se enciende la verdadera comprensión.",
-                        "shot": "both",
-                        "duration": 3.2
+                        "text": "¿Bando Cuántico o Bando Solar? ¡Vota por tu bando en los comentarios!",
+                        "shot": "wide",
+                        "duration": 2.5
                     }
                 ]
             }
