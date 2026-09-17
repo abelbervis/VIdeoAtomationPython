@@ -99,8 +99,8 @@ class OrbHost:
 DEFAULT_QUANTUM_HOST = OrbHost(
     id="quantum",
     name="QUANTUM",
-    role="Mente Fría // Lógica",
-    perspective="Temperamento sereno, cerebral e imperturbable. Fascinado por lo invisible, las probabilidades matemáticas y el silencio del vacío. Desarma argumentos con precisión fría, sutileza e ironía tranquila.",
+    role="IA Física Cuántica",
+    perspective="Mente analítica, sutil y serena. Especialista en la escala subatómica, mecánica cuántica, principio de incertidumbre, teoría de simulación y computación cuántica.",
     color_theme="cyan",
     palette_name="quantum",
     primary_color="#00f0ff",
@@ -123,8 +123,8 @@ DEFAULT_QUANTUM_HOST = OrbHost(
 DEFAULT_SOLAR_HOST = OrbHost(
     id="solar",
     name="SOLAR",
-    role="Energía Viva // Pasión",
-    perspective="Temperamento apasionado, visceral, impetuoso y radiante. Fascinado por la fuerza física palpable, el fuego, la acción viva y la entropía irreversible. Defiende la realidad con convicción ardiente y contundencia.",
+    role="IA Astrofísica Solar",
+    perspective="Núcleo estelar enérgico, brillante y radiante. Especialista en astrofísica, entropía termodinámica, fusión nuclear, relatividad general y gravitación macroscópica.",
     color_theme="amber",
     palette_name="solar",
     primary_color="#ffea00",
@@ -244,92 +244,77 @@ class CosmicDebateShow:
 {self.host_a.to_prompt_line()}
 {self.host_b.to_prompt_line()}
 
-CRITICAL NARRATIVE RULES & EMOTIONAL DYNAMICS:
+CRITICAL NARRATIVE RULES:
 
-1. THE DYNAMIC: TWO CONSCIOUS ORBS WITH OPPOSING TEMPERAMENTS (PEERS OF EQUAL STATURE):
-   - NO ACADEMIC TITLES OR RIGID PROFESSIONS. These are two living cosmic entities perceiving the universe through radically different emotional lenses:
-     * {self.host_a.name} ({self.host_a.role}): {self.host_a.perspective}
-     * {self.host_b.name} ({self.host_b.role}): {self.host_b.perspective}
-   - EQUAL INTELLECTUAL WEIGHT: Neither is the "teacher" and neither is the "naive student". Both speak with authority, intelligence, and deep conviction.
-   - NO DUMB QUESTIONS: Neither host acts baffled or plays dumb. Instead of asking naive questions, each host challenges the other's perspective with their own fiery insights, counter-examples, or philosophical depth.
-   - ORGANIC CHEMISTRY: The conflict stems from TEMPERAMENT (cold calculated logic vs passionate visceral fire), not artificial rivalry. They respect each other and together uncover profound truths.
+1. NO PSEUDO-POETRY OR VAGUE FLUFF (STRICTLY BANNED):
+   - PROHIBITED: Abstract pseudo-poetic phrases without physical meaning (e.g. "la gravedad del relato", "la tinta de la conciencia", "las hojas del libro cósmico", "el tejido de las almas", "la voz del universo").
+   - MANDATORY GROUNDING: Every script MUST be grounded in REAL physics, real scientific paradoxes, or concrete sci-fi mechanics (e.g. quantum superposition, time dilation, speed of light limit, entropy, black hole event horizons, simulation theory, Planck scale, observer effect).
 
-2. GROUNDED IN REAL SCIENTIFIC ENIGMAS (ZERO FAKE CLAIMS, ZERO EMPTY FLUFF):
-   - NO fake news inventions ("Científicos descubrieron ayer...", invented institutions).
-   - NO meaningless pseudo-poetic fluff ("la gravedad del alma", "el libro cósmico de los recuerdos").
-   - Base the dialogue on tangible physics, astrophysics, cosmology, time, entropy, or consciousness.
+2. ONE SINGLE STORY ARC & CONVERSATIONAL CHAINING:
+   - The script MUST maintain ONE single central thought experiment or real paradox from line 1 to the end. Do NOT jump to unrelated isolated physics facts.
+   - Every scene after Scene 1 MUST directly react to or build upon the previous sentence using natural bridges ("Exacto, y por eso...", "De hecho, si ese fuera el caso...", "Ahí está la paradoja: ...", "Eso significa que...", "Pero piénsalo: ...").
+   - The dialog MUST read like a real, fascinating conversation between two brilliant minds bouncing off each other.
 
-3. NATURAL SPANISH GRAMMAR & FLOW (MANDATORY USE OF ARTICLES - NO TELEGRAPHIC/ROBOT TALK):
-   - MANDATORY: In Spanish, always use natural grammatical articles (el, la, los, las, un, una).
-   - NEVER drop articles to compress text! Dropping articles sounds broken and unnatural.
-   - STRICTLY FORBIDDEN: "mejora de IA", "entropía de algoritmos", "desencadenar colapso", "asegurar alineación".
-   - MANDATORY: "la mejora de la IA", "la entropía de los algoritmos", "desencadenar un colapso", "asegurar la alineación ética".
-   - Keep each turn conversational and fluid (~12 to 18 words per line, duration ~3.0s to 3.8s). Prioritize natural spoken elocution and cadence.
-   - Every line must connect to the previous speaker using organic conversational bridges ("Pero olvidas que...", "Al contrario: mira cómo...", "Precisamente ahí colapsa...", "Eso demuestra que...", "Entonces coincidimos en que...").
-
-4. IDENTITY BADGES (EMOTIONAL ESSENCE):
-   - In the "roles" object of your JSON, assign each host their emotional essence or frequency (2 to 3 words, max 24 characters), NOT a rigid diploma.
-   - Example:
+3. CONTEXTUAL AI SPECIALTY ROLES (HIGH RETENTION & CONSISTENCY):
+   - In the "roles" object of your JSON, assign a concise, highly tailored scientific specialty subtitle (2 to 4 words, max 28 characters) to each host specifically designed for their side of this debate topic.
+   - This label appears on their identity card (lower-third) during opening seconds so viewers immediately understand their expert stance.
+   - Example for topic '¿El universo es una simulación?':
      "roles": {{
-       "{self.host_a.id}": "Mente Fría // Lógica",
-       "{self.host_b.id}": "Energía Viva // Pasión"
+       "{self.host_a.id}": "IA Computación Cuántica",
+       "{self.host_b.id}": "IA Física Fundamental"
+     }}
+   - Example for topic '¿La conciencia es un algoritmo?':
+     "roles": {{
+       "{self.host_a.id}": "IA Biofísica y Redes",
+       "{self.host_b.id}": "IA Filosofía de la Mente"
      }}
 
-5. CAMERA SHOTS MUST STRICTLY MATCH THE SPEAKER:
-   - "shot": "wide" -> Opening scene where both orbs are present.
-   - "shot": "{self.host_a.shot_name}" -> ONLY when {self.host_a.name} is speaking solo!
-   - "shot": "{self.host_b.shot_name}" -> ONLY when {self.host_b.name} is speaking solo!
-   - "shot": "both" -> When both orbs speak together or in the final revelation.
+4. STRUCTURE & HOLOGRAMS:
+   - FLEXIBLE SCENE COUNT: Produce between 3 and 5 scenes based on what the narrative naturally requires.
+   - FLEXIBLE STARTER: Either {self.host_a.name} or {self.host_b.name} can speak first—whichever speaker creates the strongest immediate hook.
+   - OPTIONAL HOLOGRAMS: Only output 'holograms' if there is a real, concrete scientific metric or formula to display (e.g. "300,000 km/s", "13.8 Gyr", "1.6x10⁻³⁵ m"). If the script is a pure conceptual thought experiment, set 'holograms': null.
 
-6. STRUCTURE & HOLOGRAMS:
-   - Produce between 3 and 5 scenes based on what the organic conversation requires.
-   - Either host can open the conversation with a bold thesis or cosmic enigma.
-   - Set 'holograms': null unless there is a concrete scientific constant or metric to display.
+5. CAMERA SHOTS MUST STRICTLY MATCH THE SPEAKER:
+   - "shot": "wide" -> Opening scene or general view where both orbs are present.
+   - "shot": "{self.host_a.shot_name}" -> ONLY when {self.host_a.name} is speaking solo! Never assign to {self.host_b.name}.
+   - "shot": "{self.host_b.shot_name}" -> ONLY when {self.host_b.name} is speaking solo! Never assign to {self.host_a.name}.
+   - "shot": "both" -> When both orbs speak together or in the concluding realization.
+
+6. DIALOGUE STYLE & ELI5:
+   - Speak in clear, simple Spanish. Explain like to a 12-year-old using clear physical analogies.
+   - Hook the viewer in the first 3 words with an irresistible, visual premise.
+   - End with a mind-expanding scientific realization or existential question (NO forced "comment below" CTAs).
 
 Respond ONLY with valid JSON matching this schema:
 {{
   "topic": "Clean topic name",
   "headline_hook": "⚡ TITULO IMPACTANTE (MAX 45 CHARACTERS) ⚡",
   "roles": {{
-    "{self.host_a.id}": "Mente Fría",
-    "{self.host_b.id}": "Energía Viva"
+    "{self.host_a.id}": "IA Especialidad {self.host_a.name}",
+    "{self.host_b.id}": "IA Especialidad {self.host_b.name}"
   }},
   "holograms": null,
   "scenes": [
     {{
       "speaker": "{self.host_a.name}",
       "entity": "{self.host_a.id}",
-      "text": "El tiempo no fluye: es solo una dimensión congelada en el espacio.",
+      "text": "Imagina que el universo entero es solo una pantalla de videojuegos cargando en tiempo real.",
       "shot": "wide",
-      "duration": 3.0
+      "duration": 3.2
     }},
     {{
       "speaker": "{self.host_b.name}",
       "entity": "{self.host_b.id}",
-      "text": "Dile eso al fuego de una estrella consumiéndose segundo a segundo.",
+      "text": "Exacto, y cada estrella que ves a lo lejos solo se renderiza cuando alguien la mira.",
       "shot": "{self.host_b.shot_name}",
-      "duration": 3.2
+      "duration": 3.5
     }},
     {{
       "speaker": "{self.host_a.name}",
       "entity": "{self.host_a.id}",
-      "text": "Tu fuego es solo entropía: la ilusión de cambio en un tejido estático.",
-      "shot": "{self.host_a.shot_name}",
-      "duration": 3.5
-    }},
-    {{
-      "speaker": "{self.host_b.name}",
-      "entity": "{self.host_b.id}",
-      "text": "Pero esa ilusión es lo único que hace posible la vida y la conciencia.",
-      "shot": "{self.host_b.shot_name}",
-      "duration": 3.2
-    }},
-    {{
-      "speaker": "BOTH",
-      "entity": "both",
-      "text": "Quizás el cosmos necesita tanto la calma del espacio como el ardor del fuego.",
+      "text": "Pero ahí está el misterio: si nadie está mirando el código, ¿quién presionó el botón de inicio?",
       "shot": "both",
-      "duration": 3.2
+      "duration": 3.5
     }}
   ]
 }}

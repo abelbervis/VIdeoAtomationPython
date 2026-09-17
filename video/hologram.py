@@ -173,8 +173,8 @@ def generate_hologram_card_svg(
 
 def generate_presenter_badge_svg(
     name: str = "QUANTUM",
-    role: Optional[str] = "Mente Fría // Lógica",
-    color_theme: str = "cyan",  # "cyan", "amber", "purple", "emerald", "crimson"
+    role: str = "IA Física Cuántica",
+    color_theme: str = "cyan",  # "cyan", "amber"
     width: int = 380,
     height: int = 110,
     output_path: Optional[Path] = None,
@@ -183,13 +183,6 @@ def generate_presenter_badge_svg(
     Generates an ultra-sleek presenter identity card / Lower Third badge.
     Used at video opening (0.0s - 3.2s) to introduce Quantum and Solar.
     """
-    role_str = (role or "").strip()
-    y_name = 62 if not role_str else 52
-    role_element = f"""  <!-- Presenter Emotional Essence / Subtitle -->
-  <text x="74" y="74" font-family="'Inter', 'Arial', sans-serif" 
-        font-size="12" font-weight="600" fill="{{accent_color}}" letter-spacing="0.5">
-    {role_str}
-  </text>""" if role_str else ""
     if color_theme == "amber":
         accent_color = "#ffb300"
         bg_glow = "#ff8f00"
@@ -264,12 +257,16 @@ def generate_presenter_badge_svg(
   </g>
 
   <!-- Presenter Name Text -->
-  <text x="74" y="{y_name}" font-family="'Montserrat', 'Inter', 'Arial', sans-serif" 
+  <text x="74" y="52" font-family="'Montserrat', 'Inter', 'Arial', sans-serif" 
         font-size="20" font-weight="800" fill="#ffffff" letter-spacing="1">
     {name}
   </text>
 
-{role_element}
+  <!-- Presenter Role / Subtitle -->
+  <text x="74" y="74" font-family="'Inter', 'Arial', sans-serif" 
+        font-size="12" font-weight="600" fill="{accent_color}" letter-spacing="0.5">
+    {role}
+  </text>
 </svg>
 """
 
