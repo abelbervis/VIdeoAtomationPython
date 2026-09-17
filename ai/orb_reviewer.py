@@ -19,10 +19,11 @@ CRITICAL CHECKLIST TO VALIDATE AND CORRECT:
 
 2. CONTINUOUS STORY ARC & CONVERSATIONAL RESPONSE:
    - Ensure the entire script stays within ONE central concept or thought experiment.
+   - GANCHO DE LA ESCENA 1: Debe ser una paradoja, dilema ético o pregunta incómoda en segunda persona. Si empieza con "Imagina..." o una definición neutral, REESCRIBE el gancho inmediatamente.
    - Cada intervención debe responder a la anterior, no ignorarla. Every scene after Scene 1 MUST directly respond to, challenge, or build upon what the other orb just stated.
 
-3. SCENE COUNT & HOLOGRAMS (MANDATORY MINIMUM 7 SCENES):
-   - Ensure at least 7 scenes (between 7 and 10 scenes) to allow a real, dynamic debate. Do NOT cut short or resolve the debate in 4 or 5 scenes.
+3. STRUCTURE & DEVELOPED EXCHANGES:
+   - Las escenas deben desarrollarse lo suficiente para que ambos orbes expongan y reaccionen al menos dos veces con profundidad, sin requerir un mínimo forzado de 7 escenas.
    - 'holograms' can be null or contain metrics if relevant. Do not fail if omitted.
 
 4. SINGLE CLOSING SCENE & PENULTIMATE SHOT:
@@ -34,10 +35,10 @@ CRITICAL CHECKLIST TO VALIDATE AND CORRECT:
    - Ensure all sentences use proper articles (el, la, los, las, un, una) and natural phrasing.
    - Each scene should be punchy (~10-18 words, max 95 characters).
 
-6. CAMERA SHOT MUST STRICTLY MATCH SPEAKER:
-   - If Quantum speaks solo: shot MUST be "close_quantum" or "wide". (NEVER "close_solar").
-   - If Solar speaks solo: shot MUST be "close_solar" or "wide". (NEVER "close_quantum").
-   - If Both speak: shot MUST be "both" or "wide".
+6. CAMERA SHOTS & DRAMATIC INTENT:
+   - El shot debe ser coherente con el speaker y la intención dramática.
+   - Puede ser plano cerrado (close) del que habla, plano amplio (wide) o dual (both).
+   - Prioriza el impacto visual sobre la correspondencia literal rígida.
 
 INPUT JSON:
 {INSERT_GENERATED_JSON_HERE}

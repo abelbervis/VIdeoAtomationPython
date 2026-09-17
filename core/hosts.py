@@ -271,8 +271,8 @@ CRITICAL NARRATIVE RULES:
        "{self.host_b.id}": "{role_b}"
      }}
 
-4. STRUCTURE & SCENE COUNT (MANDATORY MINIMUM 7 SCENES):
-   - MÍNIMO DE ESCENAS (7): El guion DEBE tener un mínimo de 7 escenas (entre 7 y 10 escenas) para desarrollar un debate real y con suficiente profundidad. No resuelvas el debate en 4 o 5 escenas.
+4. STRUCTURE & DEVELOPED EXCHANGES:
+   - Desarrollo natural: Las escenas deben desarrollarse lo suficiente para que ambos orbes expongan argumentos y reaccionen al menos dos veces de forma profunda (sin número mínimo forzado de escenas).
    - FLEXIBLE STARTER: Either {self.host_a.name} or {self.host_b.name} can speak first—whichever speaker creates the strongest immediate hook.
    - OPTIONAL HOLOGRAMS: Only output 'holograms' if there is a real, concrete scientific metric, unit, or measurement relevant to the topic to display. If the script is a pure conceptual thought experiment or debate, set 'holograms': null.
 
@@ -282,15 +282,14 @@ CRITICAL NARRATIVE RULES:
    - LA PENÚLTIMA ESCENA NO DEBE SER EN PLANO AMPLIO NI DE 'Ambos': La penúltima escena (Escena N-1) DEBE ser de un orbe individual ({self.host_a.name} o {self.host_b.name}) con plano cerrado ("{self.host_a.shot_name}" o "{self.host_b.shot_name}"), llevando la tensión al clímax.
    - La última escena (Escena N) es el único cierre de 'Ambos' con "shot": "both" que lanza la pregunta provocadora.
 
-6. CAMERA SHOTS MUST STRICTLY MATCH THE SPEAKER:
-   - "shot": "wide" -> Opening scene only.
-   - "shot": "{self.host_a.shot_name}" -> ONLY when {self.host_a.name} is speaking solo! Never assign to {self.host_b.name}.
-   - "shot": "{self.host_b.shot_name}" -> ONLY when {self.host_b.name} is speaking solo! Never assign to {self.host_a.name}.
-   - "shot": "both" -> ONLY in the final concluding question scene when both orbs speak together.
+6. CAMERA SHOTS & DRAMATIC INTENT:
+   - El shot debe ser coherente con el speaker y la intención dramática.
+   - Puede ser plano cerrado (close) del que habla, plano amplio (wide) o dual (both).
+   - Prioriza el impacto visual sobre la correspondencia literal rígida.
 
 7. DIALOGUE STYLE & ELI5:
    - Speak in clear, simple Spanish. Explain like to a 12-year-old using clear physical analogies.
-   - Hook the viewer in the first 3 words with an irresistible, visual premise.
+   - EL GANCHO (Escena 1): Debe ser una paradoja, dilema ético o pregunta incómoda en segunda persona (ej. "¿Y si supieras que...?", "¿Por qué aceptas que...?"). PROHIBIDO empezar con "Imagina..." o definiciones neutrales.
    - End with a mind-expanding scientific realization or existential question (NO forced "comment below" CTAs).
 
 Respond ONLY with valid JSON matching this schema:
