@@ -341,22 +341,15 @@ class DebateScriptGenerator:
         if not script.get("headline_hook"):
             return False
 
-        default_roles = {
-            self.show.host_a.id: self.show.host_a.role,
-            self.show.host_b.id: self.show.host_b.role
-        }
-        if "roles" not in script or not isinstance(script["roles"], dict):
-            script["roles"] = default_roles
-        else:
-            for k in list(script["roles"].keys()):
-                val = str(script["roles"][k]).strip()
-                if len(val) > 30:
-                    script["roles"][k] = val[:28]
-            # Ensure host_a and host_b are present in script["roles"]
-            if self.show.host_a.id not in script["roles"]:
-                script["roles"][self.show.host_a.id] = self.show.host_a.role
-            if self.show.host_b.id not in script["roles"]:
-                script["roles"][self.show.host_b.id] = self.show.host_b.role
+        roles = script.get("roles")
+        if not roles or not isinstance(roles, dict) or len(roles) < 2:
+            return False
+        
+        role_a_val = str(roles.get(self.show.host_a.id, "")).strip().lower()
+        role_b_val = str(roles.get(self.show.host_b.id, "")).strip().lower()
+        
+        if not role_a_val or not role_b_val or role_a_val == role_b_val:
+            return False
 
         return True
 

@@ -40,6 +40,10 @@ CRITICAL CHECKLIST TO VALIDATE AND CORRECT:
    - Puede ser plano cerrado (close) del que habla, plano amplio (wide) o dual (both).
    - Prioriza el impacto visual sobre la correspondencia literal rígida.
 
+7. VALIDACIÓN DE ROLES CON MÁXIMO CONTRASTE:
+   - Verifica que el objeto "roles" incluya especialidades o arquetipos de 2-4 palabras con máximo contraste y cosmovisiones opuestas para ambos orbes.
+   - Si los roles son idénticos, vacíos, genéricos o carecen de contraste, CORRÍGELOS en el JSON para que reflejen un choque radical de posturas acorde al tema.
+
 INPUT JSON:
 {INSERT_GENERATED_JSON_HERE}
 
@@ -109,10 +113,13 @@ class OrbScriptReviewer:
                     reviewed = self._review_openai(prompt)
 
                 if reviewed and reviewed.get("scenes") and len(reviewed["scenes"]) > 0:
-                    print("  ✨ ¡Guión de debate auditado y corregido con éxito por el Editor Ejecutivo!")
-                    if "roles" in draft_script and "roles" not in reviewed:
-                        reviewed["roles"] = draft_script["roles"]
-                    return reviewed
+                    roles = reviewed.get("roles")
+                    if roles and isinstance(roles, dict) and len(roles) >= 2:
+                        role_values = [str(v).strip().lower() for v in roles.values()]
+                        if role_values[0] != role_values[1]:
+                            print("  ✨ ¡Guión de debate auditado y validado con éxito por el Editor Ejecutivo!")
+                            return reviewed
+                    print("  ⚠️ El Editor Ejecutivo rechazó el guión por falta de contraste en los roles.")
             except Exception as e:
                 print(f"  ⚠️ Revisión de orbes con {prov} falló ({e}), manteniendo borrador original...")
 
