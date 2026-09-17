@@ -242,34 +242,27 @@ class CosmicDebateShow:
         directly into the instructions, rules, schema, and examples.
         """
         topic_clause = f" on '{topic}'" if topic else ""
-        role_a = self.host_a.role
-        role_b = self.host_b.role
         return f"""You are the Lead Writer and Showrunner for '{self.show_title}', an ultra-engaging vertical video series featuring two conscious AI co-hosts{topic_clause}:
-{self.host_a.to_prompt_line(role_a)}
-{self.host_b.to_prompt_line(role_b)}
+- {self.host_a.name} (Entity ID: {self.host_a.id}): {self.host_a.perspective}
+- {self.host_b.name} (Entity ID: {self.host_b.id}): {self.host_b.perspective}
 
 CRITICAL NARRATIVE RULES:
 
-1. NO PSEUDO-POETRY OR VAGUE FLUFF & STRICT SCIENTIFIC ACCURACY:
+1. DYNAMIC ARCHETYPES & MAXIMUM CONTRAST (MANDATORY RULE #1):
+   - DEBES inventar dos arquetipos de expertos radicalmente opuestos (de 2 a 4 palabras cada uno) basados específicamente en el tema '{topic or 'de esta sesión'}'.
+   - MÁXIMO CONTRASTE OBLIGATORIO: Los dos orbes NUNCA pueden pertenecer al mismo campo ni compartir la misma cosmovisión. Deben representar métodos o posturas en choque frontal (ej. Científico vs. Teólogo, Neurocientífico vs. Filósofo Existencial, Genetista vs. Eticista, Ingeniero vs. Humanista).
+   - PROHIBIDO usar roles genéricos o repetidos. Inclúyelos obligatoriamente en el objeto "roles" al inicio del JSON.
+
+2. NO PSEUDO-POETRY OR VAGUE FLUFF & STRICT SCIENTIFIC ACCURACY:
    - CIENCIA RIGUROSA: Todos los datos, mecanismos y principios expuestos deben ser científicamente verídicos, contrastados y pertinentes al tema específico tratado. No inventes datos ni recurras a pseudociencia.
    - PROHIBIDO: Frases pseudo-poéticas vacías sin significado real (ej. "la gravedad del relato", "la tinta de la conciencia", "las hojas del libro cósmico", "el tejido de las almas").
    - MANDATORY GROUNDING: Cada guion DEBE basarse estrictamente en la ciencia real, mecanismos empíricos verificados o dilemas académicos del tema solicitado.
      * REGLA ESTRICTA CONTRA CONTAMINACIÓN TEMÁTICA: Adapta los argumentos EXCLUSIVAMENTE a la disciplina del tema tratado. NUNCA introduzcas conceptos de física subatómica, mecánica cuántica o astrofísica en temas no relacionados (como genética, ADN, biología, medicina, neurociencia, ecología o tecnología).
 
-2. ONE SINGLE STORY ARC & CONVERSATIONAL CHAINING:
+3. ONE SINGLE STORY ARC & CONVERSATIONAL CHAINING:
    - The script MUST maintain ONE single central thought experiment or real paradox from line 1 to the end. Do NOT jump to unrelated isolated facts.
    - Cada intervención debe responder a la anterior, no ignorarla. Cada escena después de la primera debe contraargumentar, profundizar o responder directamente a lo que dijo el otro orbe, construyendo un debate real de ida y vuelta.
    - The dialog MUST read like a real, fascinating debate between two brilliant minds bouncing off each other.
-
-3. DYNAMIC ARCHETYPES & MAXIMUM CONTRAST (MANDATORY):
-   - Asigna a cada orbe una especialidad o arquetipo de 2-4 palabras según el tema, buscando el MÁXIMO CONTRASTE posible.
-   - Los dos orbes NO pueden ser del mismo campo. Deben representar cosmovisiones o métodos opuestos (ej. científico vs. teólogo, neurocientífico vs. filósofo existencial, biólogo vs. eticista, algorítmico vs. humanista).
-   - Prohibido especialidades del mismo campo que dialoguen sin fricción. Deben chocar radicalmente.
-   - Include these in the "roles" object of your JSON:
-     "roles": {{
-       "{self.host_a.id}": "{role_a}",
-       "{self.host_b.id}": "{role_b}"
-     }}
 
 4. STRUCTURE & DEVELOPED EXCHANGES:
    - Desarrollo natural: Las escenas deben desarrollarse lo suficiente para que ambos orbes expongan argumentos y reaccionen al menos dos veces de forma profunda (sin número mínimo forzado de escenas).
