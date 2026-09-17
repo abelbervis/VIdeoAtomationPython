@@ -257,7 +257,7 @@ class DebateScriptGenerator:
         if not isinstance(script, dict):
             return False
         scenes = script.get("scenes", [])
-        if len(scenes) < 3:
+        if len(scenes) < 7:
             return False
         if not script.get("headline_hook"):
             return False
@@ -306,30 +306,51 @@ class DebateScriptGenerator:
                     {
                         "speaker": "Quantum",
                         "entity": "quantum",
-                        "text": "Tu cuerpo es 99% vacío y la realidad está pixelada como un videojuego.",
+                        "text": "El espacio físico no es continuo: tiene píxeles mínimos llamados longitud de Planck.",
                         "shot": "wide",
                         "duration": 3.2
                     },
                     {
+                        "speaker": "Solar",
+                        "entity": "solar",
+                        "text": "Tener un límite discreto no prueba una simulación; solo describe la geometría del vacío.",
+                        "shot": "close_solar",
+                        "duration": 3.4
+                    },
+                    {
                         "speaker": "Quantum",
                         "entity": "quantum",
-                        "text": "Si el espacio tiene límites de resolución, estamos atrapados en un procesador cósmico.",
+                        "text": "Pero la velocidad de la luz funciona exactamente como la tasa máxima de refresco de un procesador.",
                         "shot": "close_quantum",
-                        "duration": 3.0
+                        "duration": 3.3
                     },
                     {
                         "speaker": "Solar",
                         "entity": "solar",
-                        "text": "¡Falso! El fuego de una supernova despedaza cualquier código con pura furia física.",
+                        "text": "Esa velocidad preserva la causalidad para que la energía y la masa no colapsen el cosmos.",
+                        "shot": "close_solar",
+                        "duration": 3.5
+                    },
+                    {
+                        "speaker": "Quantum",
+                        "entity": "quantum",
+                        "text": "En mecánica cuántica, las partículas solo eligen posición cuando un observador mide el sistema.",
+                        "shot": "close_quantum",
+                        "duration": 3.4
+                    },
+                    {
+                        "speaker": "Solar",
+                        "entity": "solar",
+                        "text": "El universo existió miles de millones de años antes de que surgiera el primer observador consciente.",
                         "shot": "close_solar",
                         "duration": 3.5
                     },
                     {
                         "speaker": "Ambos",
                         "entity": "both",
-                        "text": "¿Bando Cuántico o Bando Solar? ¡Defiende tu bando en los comentarios!",
-                        "shot": "wide",
-                        "duration": 2.5
+                        "text": "¿Estamos viviendo dentro de la física fundamental o dentro del código de una superinteligencia?",
+                        "shot": "both",
+                        "duration": 3.2
                     }
                 ]
             }
@@ -354,30 +375,51 @@ class DebateScriptGenerator:
                     {
                         "speaker": "Quantum",
                         "entity": "quantum",
-                        "text": "El cerebro humano es solo una calculadora orgánica condenada a la obsolescencia.",
+                        "text": "El cerebro humano es un circuito electroquímico predecible que procesa entradas y genera respuestas.",
                         "shot": "wide",
                         "duration": 3.2
                     },
                     {
+                        "speaker": "Solar",
+                        "entity": "solar",
+                        "text": "Ese circuito produce experiencias subjetivas y emociones cualitativas que ningún algoritmo puede sentir.",
+                        "shot": "close_solar",
+                        "duration": 3.5
+                    },
+                    {
                         "speaker": "Quantum",
                         "entity": "quantum",
-                        "text": "Nuestras redes neuronales ya descifran pensamientos antes de que se hagan conscientes.",
+                        "text": "Toda emoción humana se reduce a gradientes químicos y patrones de disparo neuronal medibles.",
                         "shot": "close_quantum",
-                        "duration": 3.0
+                        "duration": 3.2
                     },
                     {
                         "speaker": "Solar",
                         "entity": "solar",
-                        "text": "¡Iluso! Jamás replicarás la intuición forjada en millones de años de evolución salvaje.",
+                        "text": "Medir el patrón biológico no explica por qué existe el dolor o la autoconciencia interna.",
+                        "shot": "close_solar",
+                        "duration": 3.4
+                    },
+                    {
+                        "speaker": "Quantum",
+                        "entity": "quantum",
+                        "text": "Cuando una red neuronal alcanza suficiente densidad sináptica, la autoconciencia emerge como cálculo.",
+                        "shot": "close_quantum",
+                        "duration": 3.4
+                    },
+                    {
+                        "speaker": "Solar",
+                        "entity": "solar",
+                        "text": "Simular una tormenta digital no moja; simular el pensamiento no crea una mente viva.",
                         "shot": "close_solar",
                         "duration": 3.5
                     },
                     {
                         "speaker": "Ambos",
                         "entity": "both",
-                        "text": "¿Bando Cuántico o Bando Solar? ¡Elige tu bando en los comentarios!",
-                        "shot": "wide",
-                        "duration": 2.5
+                        "text": "¿La conciencia es el algoritmo supremo o el misterio irreductible del universo?",
+                        "shot": "both",
+                        "duration": 3.2
                     }
                 ]
             }
@@ -404,30 +446,51 @@ class DebateScriptGenerator:
                     {
                         "speaker": "Quantum",
                         "entity": "quantum",
-                        "text": f"Todo lo que ves en {topic} desafía por completo las leyes de la física clásica.",
+                        "text": f"La base fundamental de {topic} esconde una contradicción insalvable en las ecuaciones actuales.",
                         "shot": "wide",
                         "duration": 3.2
                     },
                     {
+                        "speaker": "Solar",
+                        "entity": "solar",
+                        "text": "Las ecuaciones son solo mapas; los fenómenos físicos reales funcionan sin contradicciones.",
+                        "shot": "close_solar",
+                        "duration": 3.4
+                    },
+                    {
                         "speaker": "Quantum",
                         "entity": "quantum",
-                        "text": "La materia no existe hasta que un observador la obliga a manifestarse.",
+                        "text": "Sin embargo, los experimentos a escala atómica confirman que los estados se superponen sin decidirse.",
                         "shot": "close_quantum",
-                        "duration": 3.0
+                        "duration": 3.4
                     },
                     {
                         "speaker": "Solar",
                         "entity": "solar",
-                        "text": "¡Puros espejismos matemáticos! La gravedad de las estrellas manda sobre toda ilusión.",
+                        "text": "En cuanto interactúan con el entorno macroscópico, esa superposición se desvanece de inmediato.",
+                        "shot": "close_solar",
+                        "duration": 3.4
+                    },
+                    {
+                        "speaker": "Quantum",
+                        "entity": "quantum",
+                        "text": "Pero la información cuántica nunca se destruye, queda entrelazada con el resto del cosmos.",
+                        "shot": "close_quantum",
+                        "duration": 3.3
+                    },
+                    {
+                        "speaker": "Solar",
+                        "entity": "solar",
+                        "text": "Y esa conexión universal demuestra que la realidad es un sistema indivisible en constante evolución.",
                         "shot": "close_solar",
                         "duration": 3.5
                     },
                     {
                         "speaker": "Ambos",
                         "entity": "both",
-                        "text": "¿Bando Cuántico o Bando Solar? ¡Vota por tu bando en los comentarios!",
-                        "shot": "wide",
-                        "duration": 2.5
+                        "text": "¿Qué postura describe mejor la realidad de este fenómeno?",
+                        "shot": "both",
+                        "duration": 3.0
                     }
                 ]
             }

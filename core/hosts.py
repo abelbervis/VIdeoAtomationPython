@@ -253,8 +253,8 @@ CRITICAL NARRATIVE RULES:
 
 2. ONE SINGLE STORY ARC & CONVERSATIONAL CHAINING:
    - The script MUST maintain ONE single central thought experiment or real paradox from line 1 to the end. Do NOT jump to unrelated isolated physics facts.
-   - Every scene after Scene 1 MUST directly react to or build upon the previous sentence using natural bridges ("Exacto, y por eso...", "De hecho, si ese fuera el caso...", "Ahí está la paradoja: ...", "Eso significa que...", "Pero piénsalo: ...").
-   - The dialog MUST read like a real, fascinating conversation between two brilliant minds bouncing off each other.
+   - Cada intervención debe responder a la anterior, no ignorarla. Cada escena después de la primera debe contraargumentar, profundizar o responder directamente a lo que dijo el otro orbe, construyendo un debate real de ida y vuelta.
+   - The dialog MUST read like a real, fascinating debate between two brilliant minds bouncing off each other.
 
 3. DYNAMIC AI PROFESSIONS ACCORDING TO THE TOPIC (MANDATORY):
    - You MUST dynamically decide and assign the exact professions / specialty roles for each orb host based on the debate topic.
@@ -265,8 +265,8 @@ CRITICAL NARRATIVE RULES:
        "{self.host_b.id}": "{example_roles.get(self.host_b.id, 'IA Especialidad B')}"
      }}
 
-4. STRUCTURE & HOLOGRAMS:
-   - FLEXIBLE SCENE COUNT: Produce between 3 and 5 scenes based on what the narrative naturally requires.
+4. STRUCTURE & SCENE COUNT (MANDATORY MINIMUM 7 SCENES):
+   - MÍNIMO DE ESCENAS (7): El guion DEBE tener un mínimo de 7 escenas (entre 7 y 10 escenas) para desarrollar un debate real y con suficiente profundidad. No resuelvas el debate en 4 o 5 escenas.
    - FLEXIBLE STARTER: Either {self.host_a.name} or {self.host_b.name} can speak first—whichever speaker creates the strongest immediate hook.
    - OPTIONAL HOLOGRAMS: Only output 'holograms' if there is a real, concrete scientific metric or formula to display (e.g. "300,000 km/s", "13.8 Gyr", "1.6x10⁻³⁵ m"). If the script is a pure conceptual thought experiment, set 'holograms': null.
 
@@ -294,23 +294,51 @@ Respond ONLY with valid JSON matching this schema:
     {{
       "speaker": "{self.host_a.name}",
       "entity": "{self.host_a.id}",
-      "text": "Imagina que el universo entero es solo una pantalla de videojuegos cargando en tiempo real.",
+      "text": "Imagina que el universo entero es solo una pantalla cargando en tiempo real.",
       "shot": "wide",
       "duration": 3.2
     }},
     {{
       "speaker": "{self.host_b.name}",
       "entity": "{self.host_b.id}",
-      "text": "Exacto, y cada estrella que ves a lo lejos solo se renderiza cuando alguien la mira.",
+      "text": "Si fuera una pantalla, la luz necesitaría un límite de velocidad para no colapsar el procesador.",
       "shot": "{self.host_b.shot_name}",
       "duration": 3.5
     }},
     {{
       "speaker": "{self.host_a.name}",
       "entity": "{self.host_a.id}",
-      "text": "Pero ahí está el misterio: si nadie está mirando el código, ¿quién presionó el botón de inicio?",
+      "text": "Y justamente ese límite existe: trescientos mil kilómetros por segundo exactos.",
+      "shot": "{self.host_a.shot_name}",
+      "duration": 3.2
+    }},
+    {{
+      "speaker": "{self.host_b.name}",
+      "entity": "{self.host_b.id}",
+      "text": "Pero la termodinámica no miente: la entropía destruye información en lugar de guardarla.",
+      "shot": "{self.host_b.shot_name}",
+      "duration": 3.4
+    }},
+    {{
+      "speaker": "{self.host_a.name}",
+      "entity": "{self.host_a.id}",
+      "text": "En el horizonte de un agujero negro la información queda codificada en la superficie.",
+      "shot": "{self.host_a.shot_name}",
+      "duration": 3.4
+    }},
+    {{
+      "speaker": "{self.host_b.name}",
+      "entity": "{self.host_b.id}",
+      "text": "Entonces todo nuestro espacio tridimensional es solo un holograma proyectado desde el borde.",
+      "shot": "{self.host_b.shot_name}",
+      "duration": 3.6
+    }},
+    {{
+      "speaker": "Ambos",
+      "entity": "both",
+      "text": "¿Estamos viviendo dentro de la física o dentro del código?",
       "shot": "both",
-      "duration": 3.5
+      "duration": 3.2
     }}
   ]
 }}

@@ -16,12 +16,12 @@ CRITICAL CHECKLIST TO VALIDATE AND CORRECT:
    - REJECT and REWRITE any pseudo-poetic nonsense phrases ("la gravedad del relato", "la tinta de la conciencia", "las hojas del libro cósmico", "las voces del vacío").
    - Replace with REAL, grounded science, physical paradoxes, or tangible sci-fi logic (e.g. quantum code, time dilation, light speed, black holes, entropy).
 
-2. CONTINUOUS STORY ARC & CONVERSATIONAL BRIDGES:
+2. CONTINUOUS STORY ARC & CONVERSATIONAL RESPONSE:
    - Ensure the entire script stays within ONE central concept or thought experiment.
-   - Every scene after Scene 1 MUST use organic conversational bridges ("Exacto, y por eso...", "De hecho...", "Ahí está la paradoja...", "Eso significa que...") that DIRECTLY respond to the previous sentence.
+   - Cada intervención debe responder a la anterior, no ignorarla. Every scene after Scene 1 MUST directly respond to, challenge, or build upon what the other orb just stated.
 
-3. FLEXIBLE SCENE COUNT & HOLOGRAMS:
-   - Allow between 3 and 5 scenes. Do NOT force a rigid 4-scene limit.
+3. SCENE COUNT & HOLOGRAMS (MANDATORY MINIMUM 7 SCENES):
+   - Ensure at least 7 scenes (between 7 and 10 scenes) to allow a real, dynamic debate. Do NOT cut short or resolve the debate in 4 or 5 scenes.
    - 'holograms' can be null or contain metrics if relevant. Do not fail if omitted.
 
 4. NATURAL SPANISH GRAMMAR & CONCISE LENGTH:
