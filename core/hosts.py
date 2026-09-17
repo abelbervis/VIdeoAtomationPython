@@ -99,8 +99,8 @@ class OrbHost:
 DEFAULT_QUANTUM_HOST = OrbHost(
     id="quantum",
     name="QUANTUM",
-    role="Divulgación Cuántica",
-    perspective="El Revelador Científico. Plantea hechos contraintuitivos y paradojas reales de la física moderna que desafían la lógica común.",
+    role="Mente Fría // Lógica",
+    perspective="Temperamento sereno, cerebral e imperturbable. Fascinado por lo invisible, las probabilidades matemáticas y el silencio del vacío. Desarma argumentos con precisión fría, sutileza e ironía tranquila.",
     color_theme="cyan",
     palette_name="quantum",
     primary_color="#00f0ff",
@@ -123,8 +123,8 @@ DEFAULT_QUANTUM_HOST = OrbHost(
 DEFAULT_SOLAR_HOST = OrbHost(
     id="solar",
     name="SOLAR",
-    role="Física y Sentido Común",
-    perspective="La Voz del Espectador Curioso. Cuestiona con sentido común, hace las preguntas instintivas que todos nos hacemos y conecta el enigma con la realidad cotidiana.",
+    role="Energía Viva // Pasión",
+    perspective="Temperamento apasionado, visceral, impetuoso y radiante. Fascinado por la fuerza física palpable, el fuego, la acción viva y la entropía irreversible. Defiende la realidad con convicción ardiente y contundencia.",
     color_theme="amber",
     palette_name="solar",
     primary_color="#ffea00",
@@ -244,35 +244,31 @@ class CosmicDebateShow:
 {self.host_a.to_prompt_line()}
 {self.host_b.to_prompt_line()}
 
-CRITICAL NARRATIVE RULES & PSYCHOLOGICAL DYNAMIC:
+CRITICAL NARRATIVE RULES & EMOTIONAL DYNAMICS:
 
-1. THE DYNAMIC: "EL REVELADOR" VS "LA VOZ DEL ESPECTADOR" (NO DRY COMBAT, NO ROBOTIC COMPETITION):
-   - {self.host_a.name} acts as "El Revelador": Opens with a 100% REAL, mind-bending fact or canonical thought experiment that shatters everyday intuition (e.g. time dilation near mass, observer effect, entropy, cosmic light lag).
-   - {self.host_b.name} acts as "La Voz del Espectador (Curioso y Escéptico)": Reacts immediately with the instinctive question or disbelief that anyone watching at home would ask ("Espera, ¿qué? Nacieron el mismo día, ¿cómo van a tener edades distintas?", "¿Pero cómo puede ser eso posible si...?").
-   - {self.host_a.name} explains the real physical mechanism in simple, visual, everyday terms (ELI5).
-   - {self.host_b.name} experiences the mind-blown epiphany and projects it into a startling conclusion ("O sea que si vivieras en la cima de una montaña... ¿envejecerías más rápido?").
-   - Climax/Ending: Both acknowledge the paradox with high impact.
+1. THE DYNAMIC: TWO CONSCIOUS ORBS WITH OPPOSING TEMPERAMENTS (PEERS OF EQUAL STATURE):
+   - NO ACADEMIC TITLES OR RIGID PROFESSIONS. These are two living cosmic entities perceiving the universe through radically different emotional lenses:
+     * {self.host_a.name} ({self.host_a.role}): {self.host_a.perspective}
+     * {self.host_b.name} ({self.host_b.role}): {self.host_b.perspective}
+   - EQUAL INTELLECTUAL WEIGHT: Neither is the "teacher" and neither is the "naive student". Both speak with authority, intelligence, and deep conviction.
+   - NO DUMB QUESTIONS: Neither host acts baffled or plays dumb. Instead of asking naive questions, each host challenges the other's perspective with their own fiery insights, counter-examples, or philosophical depth.
+   - ORGANIC CHEMISTRY: The conflict stems from TEMPERAMENT (cold calculated logic vs passionate visceral fire), not artificial rivalry. They respect each other and together uncover profound truths.
 
-2. ZERO FAKE NEWS & ZERO PSEUDO-POETRY (100% REAL CANONICAL SCIENCE):
-   - STRICTLY FORBIDDEN: Fake news claims ("Científicos descubrieron ayer...", invented labs, sensationalized falsehoods).
-   - STRICTLY FORBIDDEN: Abstract pseudo-poetic fluff without physical meaning ("la gravedad del relato", "la tinta del alma", "el tejido cósmico de los recuerdos").
-   - MANDATORY GROUNDING: The entire conversation MUST be based on verified physics (Relativity, Quantum Mechanics, Thermodynamics, Speed of Light, Entropy, Event Horizons). Reality is already bizarre enough without making things up!
+2. GROUNDED IN REAL SCIENTIFIC ENIGMAS (ZERO FAKE CLAIMS, ZERO EMPTY FLUFF):
+   - NO fake news inventions ("Científicos descubrieron ayer...", invented institutions).
+   - NO meaningless pseudo-poetic fluff ("la gravedad del alma", "el libro cósmico de los recuerdos").
+   - Base the dialogue on tangible physics, astrophysics, cosmology, time, entropy, or consciousness.
 
-3. CONVERSATIONAL CHAINING & PUNCHY DIALOGUE (MAX 14 WORDS PER LINE):
-   - Every single line MUST directly react to the previous speaker using natural conversational bridges ("¡Espera!", "¿Cómo?", "Exacto, porque...", "Pero piénsalo un segundo...", "O sea que...").
-   - Keep each turn punchy (under 14 words). No long lectures. Maximum pace and rhythm.
+3. PUNCHY, FAST-PACED DIALOGUE (MAX 14 WORDS PER LINE):
+   - Every line must immediately connect to the last statement using natural conversational bridges ("Pero olvidas que...", "Al contrario: mira cómo...", "Precisamente ahí colapsa...", "Eso demuestra que...", "Entonces coincidimos en que...").
+   - Keep turns tight, rhythmic, and high-energy (8 to 14 words per line).
 
-4. CONTEXTUAL SPECIALTY ROLES (IN IDENTITY BADGES):
-   - In the "roles" object of your JSON, assign a concise, tailored science communicator subtitle (2 to 4 words, max 28 characters) for each host.
-   - Example for topic 'Dilatación temporal en la Tierra':
+4. IDENTITY BADGES (EMOTIONAL ESSENCE):
+   - In the "roles" object of your JSON, assign each host their emotional essence or frequency (2 to 3 words, max 24 characters), NOT a rigid diploma.
+   - Example:
      "roles": {{
-       "{self.host_a.id}": "Divulgación Cuántica",
-       "{self.host_b.id}": "Física y Sentido Común"
-     }}
-   - Example for topic '¿El universo es una simulación?':
-     "roles": {{
-       "{self.host_a.id}": "Computación y Códigos",
-       "{self.host_b.id}": "Física Fundamental"
+       "{self.host_a.id}": "Mente Fría // Lógica",
+       "{self.host_b.id}": "Energía Viva // Pasión"
      }}
 
 5. CAMERA SHOTS MUST STRICTLY MATCH THE SPEAKER:
@@ -282,53 +278,54 @@ CRITICAL NARRATIVE RULES & PSYCHOLOGICAL DYNAMIC:
    - "shot": "both" -> When both orbs speak together or in the final revelation.
 
 6. STRUCTURE & HOLOGRAMS:
-   - Produce between 3 and 5 scenes based on what the paradox naturally requires.
-   - Only include 'holograms' if there is a concrete number or scientific constant to display (e.g. "300,000 km/s", "10⁻³⁵ m"). Otherwise, set 'holograms': null.
+   - Produce between 3 and 5 scenes based on what the organic conversation requires.
+   - Either host can open the conversation with a bold thesis or cosmic enigma.
+   - Set 'holograms': null unless there is a concrete scientific constant or metric to display.
 
 Respond ONLY with valid JSON matching this schema:
 {{
   "topic": "Clean topic name",
   "headline_hook": "⚡ TITULO IMPACTANTE (MAX 45 CHARACTERS) ⚡",
   "roles": {{
-    "{self.host_a.id}": "Divulgación {self.host_a.name}",
-    "{self.host_b.id}": "Física y Sentido Común"
+    "{self.host_a.id}": "Mente Fría",
+    "{self.host_b.id}": "Energía Viva"
   }},
   "holograms": null,
   "scenes": [
     {{
       "speaker": "{self.host_a.name}",
       "entity": "{self.host_a.id}",
-      "text": "Tus pies son físicamente más jóvenes que tu cabeza.",
+      "text": "El tiempo no fluye: es solo una dimensión congelada en el espacio.",
       "shot": "wide",
       "duration": 3.0
     }},
     {{
       "speaker": "{self.host_b.name}",
       "entity": "{self.host_b.id}",
-      "text": "¿Cómo que más jóvenes? Nacieron exactamente el mismo día.",
+      "text": "Dile eso al fuego de una estrella consumiéndose segundo a segundo.",
       "shot": "{self.host_b.shot_name}",
       "duration": 3.2
     }},
     {{
       "speaker": "{self.host_a.name}",
       "entity": "{self.host_a.id}",
-      "text": "Por la gravedad: cuanto más cerca del centro de la Tierra, el tiempo pasa más lento.",
+      "text": "Tu fuego es solo entropía: la ilusión de cambio en un tejido estático.",
       "shot": "{self.host_a.shot_name}",
       "duration": 3.5
     }},
     {{
       "speaker": "{self.host_b.name}",
       "entity": "{self.host_b.id}",
-      "text": "O sea que en la cima del Everest... ¿envejeces más rápido?",
+      "text": "Pero esa ilusión es lo único que hace posible la vida y la conciencia.",
       "shot": "{self.host_b.shot_name}",
       "duration": 3.2
     }},
     {{
       "speaker": "BOTH",
       "entity": "both",
-      "text": "Exacto. Fracciones de segundo, pero matemáticamente real.",
+      "text": "Quizás el cosmos necesita tanto la calma del espacio como el ardor del fuego.",
       "shot": "both",
-      "duration": 3.0
+      "duration": 3.2
     }}
   ]
 }}

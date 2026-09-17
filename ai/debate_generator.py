@@ -276,122 +276,122 @@ class DebateScriptGenerator:
         return True
 
     def _generate_scientific_fallback(self, topic: str, language: str = "es") -> Dict[str, Any]:
-        """High quality deterministic fallback embodying El Revelador vs La Voz del Espectador."""
+        """High quality deterministic fallback embodying two equal cosmic orbs with opposing temperaments."""
         topic_lower = topic.lower()
 
-        if "simula" in topic_lower or "matrix" in topic_lower:
+        if "simula" in topic_lower or "matrix" in topic_lower or "codigo" in topic_lower:
             return {
                 "topic": "¿Es el universo una simulación?",
                 "headline_hook": "⚡ ¿EL UNIVERSO ES UNA SIMULACIÓN? ⚡",
                 "roles": {
-                    self.show.host_a.id: "Divulgación Cuántica",
-                    self.show.host_b.id: "Física y Sentido Común"
+                    self.show.host_a.id: "Mente Fría // Lógica",
+                    self.show.host_b.id: "Energía Viva // Pasión"
                 },
                 "holograms": {
                     "quantum": {
-                        "title": "CÓDIGO DE PLANCK",
-                        "subtitle": "Resolución Límite: 1.6x10⁻³⁵ m",
-                        "category": "PARADOJA Q"
+                        "title": "LÍMITE DE PLANCK",
+                        "subtitle": "Resolución Mínima: 1.6x10⁻³⁵ m",
+                        "category": "CÓDIGO Q"
                     },
                     "solar": {
-                        "title": "MATERIA BARIÓNICA",
-                        "subtitle": "Espacio Vacío Atómico: 99.999%",
-                        "category": "PARADOJA S"
+                        "title": "FUEGO TERMODINÁMICO",
+                        "subtitle": "Entropía Irreversible: 10²² J/K",
+                        "category": "FUERZA S"
                     }
                 },
                 "scenes": [
                     {
                         "speaker": self.show.host_a.name,
                         "entity": self.show.host_a.id,
-                        "text": "Toda la materia de tu cuerpo es noventa y nueve por ciento espacio vacío.",
+                        "text": "Toda la materia visible se reduce a información pura en la escala de Planck.",
                         "shot": "wide",
                         "duration": 3.2
                     },
                     {
                         "speaker": self.show.host_b.name,
                         "entity": self.show.host_b.id,
-                        "text": "¿Vacío? Pero si toco esta mesa la siento completamente sólida.",
+                        "text": "¡Reduccionismo frío! Una supernova no es código: es energía viva devastando el espacio.",
                         "shot": self.show.host_b.shot_name,
-                        "duration": 3.2
+                        "duration": 3.4
                     },
                     {
                         "speaker": self.show.host_a.name,
                         "entity": self.show.host_a.id,
-                        "text": "Por la repulsión electromagnética: jamás has tocado nada físicamente en tu vida.",
+                        "text": "Esa energía obedece a las mismas ecuaciones matemáticas que programan un fotón.",
                         "shot": self.show.host_a.shot_name,
-                        "duration": 3.6
+                        "duration": 3.4
                     },
                     {
                         "speaker": self.show.host_b.name,
                         "entity": self.show.host_b.id,
-                        "text": "O sea que vivimos flotando sobre una ilusión de fuerzas atómicas.",
+                        "text": "Pero las matemáticas no sienten el ardor de existir; nosotros sí.",
                         "shot": self.show.host_b.shot_name,
                         "duration": 3.2
                     },
                     {
                         "speaker": "BOTH",
                         "entity": "both",
-                        "text": "Exacto. La realidad subatómica desafía por completo el sentido común.",
+                        "text": "Dos miradas opuestas tratando de descifrar el mismo enigma cósmico.",
                         "shot": "both",
                         "duration": 3.0
                     }
                 ]
             }
-        elif "mente" in topic_lower or "ia" in topic_lower or "conciencia" in topic_lower or "tiempo" in topic_lower:
+        elif "tiempo" in topic_lower or "gravedad" in topic_lower or "relativ" in topic_lower:
             return {
-                "topic": "Dilatación Temporal y Conciencia",
-                "headline_hook": "⚡ ¿POR QUÉ EL TIEMPO NO ES IGUAL PARA TODOS? ⚡",
+                "topic": "La Paradoja del Tiempo",
+                "headline_hook": "⚡ ¿EL TIEMPO ES UNA ILUSIÓN FÍSICA? ⚡",
                 "roles": {
-                    self.show.host_a.id: "Divulgación Cuántica",
-                    self.show.host_b.id: "Física y Sentido Común"
+                    self.show.host_a.id: "Mente Fría // Lógica",
+                    self.show.host_b.id: "Energía Viva // Pasión"
                 },
                 "holograms": {
                     "quantum": {
-                        "title": "DILATACIÓN GRAVITACIONAL",
-                        "subtitle": "Gradiente: 10⁻¹⁶ s/m por Gravedad",
-                        "category": "PARADOJA Q"
+                        "title": "UNIVERSO BLOQUE",
+                        "subtitle": "Espacio-Tiempo Cuatridimensional",
+                        "category": "ESTÁTICO Q"
                     },
                     "solar": {
-                        "title": "RELATIVIDAD GENERAL",
-                        "subtitle": "Curvatura del Espacio-Tiempo",
-                        "category": "PARADOJA S"
+                        "title": "FLECHA TERMODINÁMICA",
+                        "subtitle": "Incremento de Entropía ΔS > 0",
+                        "category": "DINÁMICO S"
                     }
                 },
                 "scenes": [
                     {
                         "speaker": self.show.host_a.name,
                         "entity": self.show.host_a.id,
-                        "text": "Tus pies son físicamente más jóvenes que tu cabeza.",
+                        "text": "El tiempo no fluye: es solo una dimensión congelada en el tejido cósmico.",
                         "shot": "wide",
-                        "duration": 3.0
+                        "duration": 3.2
                     },
                     {
                         "speaker": self.show.host_b.name,
                         "entity": self.show.host_b.id,
-                        "text": "¿Cómo que más jóvenes? Si nacieron exactamente el mismo día.",
+                        "text": "Dile eso al fuego de una estrella consumiendo su combustible segundo a segundo.",
                         "shot": self.show.host_b.shot_name,
-                        "duration": 3.2
+                        "duration": 3.3
                     },
                     {
                         "speaker": self.show.host_a.name,
                         "entity": self.show.host_a.id,
-                        "text": "Por la gravedad: cuanto más cerca del centro terrestre, el tiempo pasa más lento.",
+                        "text": "Tu fuego es solo entropía: la ilusión de cambio en una geometría inmóvil.",
                         "shot": self.show.host_a.shot_name,
                         "duration": 3.5
                     },
                     {
                         "speaker": self.show.host_b.name,
                         "entity": self.show.host_b.id,
-                        "text": "O sea que en la cima del Everest... ¿envejeces más rápido?",
+                        "text": "Pero esa ilusión es la única que engendra la vida, el calor y la conciencia.",
                         "shot": self.show.host_b.shot_name,
-                        "duration": 3.0
+                        "duration": 3.2
                     },
                     {
                         "speaker": "BOTH",
                         "entity": "both",
-                        "text": "Exacto. Fracciones de segundo, pero matemáticamente real.",
+                        "text": "El cosmos necesita tanto el silencio del espacio como la furia del fuego.",
                         "shot": "both",
-                        "duration": 2.8
+                        "duration": 3.2
                     }
                 ]
             }
@@ -400,47 +400,47 @@ class DebateScriptGenerator:
             clean_title = topic.upper()
             return {
                 "topic": topic,
-                "headline_hook": f"⚡ PARADOJA: {clean_title[:32]} ⚡",
+                "headline_hook": f"⚡ ENIGMA: {clean_title[:32]} ⚡",
                 "roles": {
-                    self.show.host_a.id: "Divulgación Científica",
-                    self.show.host_b.id: "Física y Sentido Común"
+                    self.show.host_a.id: self.show.host_a.role,
+                    self.show.host_b.id: self.show.host_b.role
                 },
                 "holograms": None,
                 "scenes": [
                     {
                         "speaker": self.show.host_a.name,
                         "entity": self.show.host_a.id,
-                        "text": f"La física real detrás de {topic} desafía todo nuestro sentido común.",
+                        "text": f"Detrás de {topic} se esconde una estructura matemática fría e impenetrable.",
                         "shot": "wide",
                         "duration": 3.2
                     },
                     {
                         "speaker": self.show.host_b.name,
                         "entity": self.show.host_b.id,
-                        "text": "¿Cómo puede ser posible si parece contradecir nuestra experiencia diaria?",
+                        "text": "No intentes congelar con fórmulas lo que el universo creó como pura fuerza viva.",
                         "shot": self.show.host_b.shot_name,
-                        "duration": 3.2
+                        "duration": 3.4
                     },
                     {
                         "speaker": self.show.host_a.name,
                         "entity": self.show.host_a.id,
-                        "text": "Porque a escala fundamental, las leyes del cosmos no siguen la intuición humana.",
+                        "text": "Sin esa estructura formal, tu fuerza viva colapsaría en el caos absoluto.",
                         "shot": self.show.host_a.shot_name,
-                        "duration": 3.6
+                        "duration": 3.4
                     },
                     {
                         "speaker": self.show.host_b.name,
                         "entity": self.show.host_b.id,
-                        "text": "O sea que lo que consideramos 'normal' es solo una fracción de la realidad.",
+                        "text": "Y sin esta energía ardiente, tu estructura no sería más que un museo vacío.",
                         "shot": self.show.host_b.shot_name,
-                        "duration": 3.2
+                        "duration": 3.3
                     },
                     {
                         "speaker": "BOTH",
                         "entity": "both",
-                        "text": "Exacto. En el universo, la realidad siempre es más extraña que la ficción.",
+                        "text": "En el choque de nuestras visiones se enciende la verdadera comprensión.",
                         "shot": "both",
-                        "duration": 3.0
+                        "duration": 3.2
                     }
                 ]
             }

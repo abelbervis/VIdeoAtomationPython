@@ -17,9 +17,11 @@ CRITICAL CHECKLIST TO VALIDATE AND CORRECT:
    - REJECT any pseudo-poetic nonsense phrases ("la gravedad del relato", "la tinta de la conciencia", "las hojas del libro cósmico", "las voces del vacío").
    - Replace with REAL, grounded science, physical paradoxes, or tangible sci-fi logic (e.g. quantum code, time dilation, light speed, black holes, entropy).
 
-2. PSYCHOLOGICAL DYNAMIC: "EL REVELADOR" VS "LA VOZ DEL ESPECTADOR":
-   - Ensure the conversation flows naturally between a Mind-Bending Real Fact (Revelador) and the curious, skeptical reaction of everyday common sense (La Voz del Espectador).
-   - Tone should NOT be dry competitive combat, but charismatic science communication with chemistry and epiphanies.
+2. EMOTIONAL OPPOSITION & EQUAL PEERS (NO PROFESSOR/STUDENT, NO DUMB QUESTIONS):
+   - QUANTUM speaks with cold, cerebral, serene precision.
+   - SOLAR speaks with fiery, passionate, visceral energy.
+   - Neither host plays dumb or asks naive questions. They challenge and build upon each other as intellectual equals.
+   - Tone should be punchy, organic, respectful, and magnetic.
 
 3. CONTINUOUS STORY ARC & CONVERSATIONAL BRIDGES:
    - Ensure the entire script stays within ONE central concept or thought experiment.
