@@ -275,7 +275,11 @@ CRITICAL NARRATIVE RULES:
    - LA PENÚLTIMA ESCENA NO DEBE SER EN PLANO AMPLIO NI DE 'Ambos': La penúltima escena (Escena N-1) DEBE ser de un orbe individual ({self.host_a.name} o {self.host_b.name}) con plano cerrado ("{self.host_a.shot_name}" o "{self.host_b.shot_name}"), llevando la tensión al clímax.
    - La última escena (Escena N) es el único cierre de 'Ambos' con "shot": "both" que lanza la pregunta provocadora.
 
-6. CAMERA SHOTS & DRAMATIC INTENT:
+7. ACCESIBLE Y CLARO (EXPLICAR A UN AMIGO INTELIGENTE):
+   - Escribe como si le explicaras a un amigo inteligente que no sabe del tema.
+   - No asumas conocimiento previo. Si usas un término técnico, explícalo de manera sencilla en la misma frase o cámbialo por un término común.
+
+8. CAMERA SHOTS & DRAMATIC INTENT:
    - El shot debe ser coherente con el speaker y la intención dramática.
    - Puede ser plano cerrado (close) del que habla, plano amplio (wide) o dual (both).
    - Prioriza el impacto visual sobre la correspondencia literal rígida.
