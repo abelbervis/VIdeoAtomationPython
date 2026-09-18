@@ -292,36 +292,30 @@ def generate_animated_orb_loop(
     r_aura_outer_base = int(canvas_size * 0.46)
     r_aura_inner_base = int(canvas_size * 0.36)
 
-    # Intelligent Conversational Gaze Geometry:
-    # 1. Close-up: Direct front-facing gaze addressing the viewer.
-    # 2. Wide Quantum (Left Host): Naturally looks across to Solar (right) while glancing smoothly forward.
-    # 3. Wide Solar (Right Host): Naturally looks across to Quantum (left) while glancing smoothly forward.
+    # Intelligent Multi-Target Conversational Gaze Geometry:
+    # Entities look at their debate partner, transition to address the audience/camera (2 shifts per cycle),
+    # and return to their partner smoothly like a real speaker in a room with multiple people.
     if is_close:
-        gaze_base_x = 0.0
-        gaze_base_y = -0.06
-        opp_base_x = 0.0
-        opp_base_y = 0.18
+        # Frontal Camera Close-up: Center primary focus with 2 natural thought/audience glances
+        gaze_primary_x = 0.0
+        gaze_primary_y = -0.06
         body_base_cx = 50
         body_base_cy = 48
     elif "quantum" in palette_key:
-        gaze_base_x = 0.15   # looking towards right partner
-        gaze_base_y = -0.10  # eye level
-        opp_base_x = -0.16
-        opp_base_y = 0.18
-        body_base_cx = 53
+        # Quantum (Left host): Interlocutor is at right (+0.18), camera is center (0.0), room is (+0.08)
+        gaze_primary_x = 0.18
+        gaze_primary_y = -0.10
+        body_base_cx = 54
         body_base_cy = 47
     elif "solar" in palette_key or "cosmic" in palette_key:
-        gaze_base_x = -0.15  # looking towards left partner
-        gaze_base_y = -0.10  # eye level
-        opp_base_x = 0.16
-        opp_base_y = 0.18
-        body_base_cx = 47
+        # Solar (Right host): Interlocutor is at left (-0.18), camera is center (0.0), room is (-0.08)
+        gaze_primary_x = -0.18
+        gaze_primary_y = -0.10
+        body_base_cx = 46
         body_base_cy = 47
     else:
-        gaze_base_x = 0.0
-        gaze_base_y = -0.10
-        opp_base_x = 0.0
-        opp_base_y = 0.18
+        gaze_primary_x = 0.0
+        gaze_primary_y = -0.10
         body_base_cx = 50
         body_base_cy = 48
 
@@ -330,31 +324,47 @@ def generate_animated_orb_loop(
             t = i / loop_frames
             tau = 2 * math.pi * t
 
+            # 2 Controlled Conversational Glance Transitions per cycle:
+            # Shift 1 (towards audience/camera): peaks at t ≈ 0.25
+            # Shift 2 (sweeping/thoughtful glance): peaks at t ≈ 0.75
+            # Smooth C-infinity Fourier transition ensures perfect seamless loop without snapping
+            glance_camera_weight = 0.5 - 0.35 * math.cos(2 * tau) - 0.15 * math.cos(4 * tau)
+            glance_alt_weight = 0.35 * math.sin(2 * tau)
+
+            if is_close:
+                # Close-up: Glances slightly to left and right while delivering intense monologue to camera
+                curr_gaze_x = gaze_primary_x + (0.10 * math.sin(tau) + 0.05 * math.sin(2 * tau))
+                curr_gaze_y = gaze_primary_y + (0.04 * math.cos(tau) + 0.02 * math.cos(2 * tau))
+                curr_body_cx = body_base_cx + (5.0 * math.sin(tau) + 2.5 * math.sin(2 * tau))
+                curr_body_cy = body_base_cy + (2.5 * math.cos(tau))
+            else:
+                # Wide Shot: Smoothly alternates between looking at partner (0%) and turning to audience/camera (100%)
+                # When glance_camera_weight is high, gaze shifts towards center (camera / audience)
+                curr_gaze_x = gaze_primary_x * (1.0 - 0.85 * glance_camera_weight) + (0.04 * glance_alt_weight)
+                curr_gaze_y = gaze_primary_y + (0.05 * glance_camera_weight) + (0.03 * math.cos(tau))
+                curr_body_cx = 50.0 + (body_base_cx - 50.0) * (1.0 - 0.75 * glance_camera_weight)
+                curr_body_cy = body_base_cy + (2.0 * math.sin(tau))
+
             if not is_talk:
                 # LISTENING / ATTENTIVE LIVING PRESENCE
-                # Breathing rhythm with controlled conversational glance shifts
+                # Breathing rhythm with gentle attentive glance shifts
                 r_sphere = int(r_sphere_base + 3.0 * math.sin(tau))
                 r_aura_outer = int(r_aura_outer_base + 5.0 * math.sin(tau))
                 r_aura_inner = int(r_aura_inner_base + 4.0 * math.sin(tau))
                 r_ambient_spill = int((canvas_size * 0.44) + 5.0 * math.sin(tau))
 
-                # Conversational Gaze Shift:
-                # Controlled organic saccades (gaze glances between listener focus and forward camera)
-                glance_shift_x = 4.0 * math.sin(tau) + 2.5 * math.cos(2 * tau)
-                glance_shift_y = 2.0 * math.cos(tau)
-
-                spot1_x = int(c + (r_sphere * gaze_base_x) + glance_shift_x)
-                spot1_y = int(c + (r_sphere * gaze_base_y) + glance_shift_y)
+                spot1_x = int(c + (r_sphere * curr_gaze_x))
+                spot1_y = int(c + (r_sphere * curr_gaze_y))
                 spot1_rx = int(r_sphere * 0.48 + 2.0 * math.sin(tau))
                 spot1_ry = int(r_sphere * 0.44 + 1.5 * math.cos(tau))
 
-                spot2_x = int(c + (r_sphere * opp_base_x) - glance_shift_x * 0.5)
-                spot2_y = int(c + (r_sphere * opp_base_y) - glance_shift_y * 0.5)
+                spot2_x = int(c - (r_sphere * curr_gaze_x * 0.85))
+                spot2_y = int(c - (r_sphere * curr_gaze_y * 0.85) + (r_sphere * 0.08))
                 spot2_rx = int(r_sphere * 0.40 + 1.5 * math.sin(tau))
                 spot2_ry = int(r_sphere * 0.36 + 1.5 * math.cos(tau))
 
-                body_cx_pct = int(body_base_cx + 2.5 * math.sin(tau))
-                body_cy_pct = int(body_base_cy + 1.5 * math.cos(tau))
+                body_cx_pct = int(curr_body_cx)
+                body_cy_pct = int(curr_body_cy)
 
                 calm_ring_r = int(r_sphere + 20 + 3.0 * math.sin(tau + 0.5))
                 calm_ring_glow = calm_ring_r + 4
@@ -365,30 +375,25 @@ def generate_animated_orb_loop(
   <circle cx="{c}" cy="{c}" r="{calm_ring_r}" fill="none" stroke="{palette['ring_stroke']}" stroke-width="1.8" opacity="0.65" />
 """
             else:
-                # ACTIVE SPEAKING ORB (Expressive Dialog)
-                # Voice pulses, dynamic focal gaze targeting interlocutor and camera
+                # ACTIVE SPEAKING ORB (Expressive Dialog & Audience Connection)
+                # Voice pulses with clear multi-point eye gaze transitions
                 r_sphere = int(r_sphere_base + 5.5 * math.sin(tau))
                 r_aura_outer = int(r_aura_outer_base + 9.0 * math.sin(tau))
                 r_aura_inner = int(r_aura_inner_base + 7.0 * math.sin(tau))
                 r_ambient_spill = int((canvas_size * 0.46) + 9.0 * math.sin(tau))
 
-                # Conversational Speaking Gaze Modulation:
-                # Glances fluidly between delivering the point and connecting with the viewer
-                glance_shift_x = 3.0 * math.sin(tau) + 2.0 * math.sin(2 * tau)
-                glance_shift_y = 1.8 * math.cos(tau)
-
-                spot1_x = int(c + (r_sphere * gaze_base_x) + glance_shift_x)
-                spot1_y = int(c + (r_sphere * gaze_base_y) + glance_shift_y)
+                spot1_x = int(c + (r_sphere * curr_gaze_x))
+                spot1_y = int(c + (r_sphere * curr_gaze_y))
                 spot1_rx = int(r_sphere * 0.52 + 3.0 * math.sin(tau))
                 spot1_ry = int(r_sphere * 0.48 + 2.0 * math.cos(tau))
 
-                spot2_x = int(c + (r_sphere * opp_base_x) - glance_shift_x * 0.5)
-                spot2_y = int(c + (r_sphere * opp_base_y) - glance_shift_y * 0.5)
+                spot2_x = int(c - (r_sphere * curr_gaze_x * 0.85))
+                spot2_y = int(c - (r_sphere * curr_gaze_y * 0.85) + (r_sphere * 0.08))
                 spot2_rx = int(r_sphere * 0.44 + 2.0 * math.sin(tau))
                 spot2_ry = int(r_sphere * 0.40 + 1.5 * math.cos(tau))
 
-                body_cx_pct = int(body_base_cx + 3.0 * math.sin(tau))
-                body_cy_pct = int(body_base_cy + 2.0 * math.cos(tau))
+                body_cx_pct = int(curr_body_cx)
+                body_cy_pct = int(curr_body_cy)
 
                 ring1_r = int(r_sphere + 18 + 5.0 * math.sin(tau))
                 ring1_glow = ring1_r + 4
