@@ -843,7 +843,7 @@ def render_orb_test_preview(
         pause_between_scenes = 0.18
 
         for item in parsed_scenes:
-            if item["entity"] == "both":
+            if item["entity"] == "both" and len(item["audio_paths"]) > 1:
                 dur = max(_get_audio_duration_secs(item["audio_paths"][0], 2.5), _get_audio_duration_secs(item["audio_paths"][1], 2.5))
             else:
                 dur = _get_audio_duration_secs(item["audio_paths"][0], 3.0)
