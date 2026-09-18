@@ -348,10 +348,10 @@ def generate_animated_orb_loop(
             if not is_talk:
                 # LISTENING / ATTENTIVE LIVING PRESENCE
                 # Breathing rhythm with steady attentive focus
-                r_sphere = int(r_sphere_base + 3.0 * math.sin(tau))
-                r_aura_outer = int(r_aura_outer_base + 5.0 * math.sin(tau))
-                r_aura_inner = int(r_aura_inner_base + 4.0 * math.sin(tau))
-                r_ambient_spill = int((canvas_size * 0.44) + 5.0 * math.sin(tau))
+                r_sphere = int(r_sphere_base + 3.5 * math.sin(tau))
+                r_aura_outer = int(r_aura_outer_base + 6.0 * math.sin(tau))
+                r_aura_inner = int(r_aura_inner_base + 4.5 * math.sin(tau))
+                r_ambient_spill = int((canvas_size * 0.44) + 6.0 * math.sin(tau))
 
                 spot1_x = int(c + (r_sphere * curr_gaze_x))
                 spot1_y = int(c + (r_sphere * curr_gaze_y))
@@ -366,48 +366,63 @@ def generate_animated_orb_loop(
                 body_cx_pct = int(curr_body_cx)
                 body_cy_pct = int(curr_body_cy)
 
-                calm_ring_r = int(r_sphere + 20 + 3.0 * math.sin(tau + 0.5))
-                calm_ring_glow = calm_ring_r + 4
+                calm_ring_r = int(r_sphere + 18 + 4.0 * math.sin(tau + 0.5))
+                calm_ring_glow = calm_ring_r + 5
+                calm_ring2_r = int(r_sphere + 36 + 3.0 * math.cos(tau))
+                orbit_dash_offset = int(i * 6)
 
                 rings_svg = f"""
-  <!-- Listening Harmonic Ring -->
-  <circle cx="{c}" cy="{c}" r="{calm_ring_glow}" fill="none" stroke="{palette['aura_inner']}" stroke-width="3.5" opacity="0.45" filter="url(#ringGlow_{i})" />
-  <circle cx="{c}" cy="{c}" r="{calm_ring_r}" fill="none" stroke="{palette['ring_stroke']}" stroke-width="1.8" opacity="0.65" />
+  <!-- Listening Harmonic Ring (Soft Glow Resonance) -->
+  <circle cx="{c}" cy="{c}" r="{calm_ring_glow}" fill="none" stroke="{palette['aura_inner']}" stroke-width="4.0" opacity="0.50" filter="url(#ringGlow_{i})" />
+  <circle cx="{c}" cy="{c}" r="{calm_ring_r}" fill="none" stroke="{palette['ring_stroke']}" stroke-width="1.8" opacity="0.75" />
+
+  <!-- Outer Orbital Energy Arc -->
+  <circle cx="{c}" cy="{c}" r="{calm_ring2_r}" fill="none" stroke="{palette['aura_bright']}" stroke-width="1.4" stroke-dasharray="14 24 36 24" stroke-dashoffset="{orbit_dash_offset}" opacity="0.45" />
 """
             else:
-                # ACTIVE SPEAKING ORB (Expressive Voice Pulses)
-                r_sphere = int(r_sphere_base + 5.5 * math.sin(tau))
-                r_aura_outer = int(r_aura_outer_base + 9.0 * math.sin(tau))
-                r_aura_inner = int(r_aura_inner_base + 7.0 * math.sin(tau))
-                r_ambient_spill = int((canvas_size * 0.46) + 9.0 * math.sin(tau))
+                # ACTIVE SPEAKING ORB (Dynamic High-Energy Acoustic Resonance Rings)
+                r_sphere = int(r_sphere_base + 7.0 * math.sin(tau) + 2.5 * math.sin(2 * tau))
+                r_aura_outer = int(r_aura_outer_base + 14.0 * math.sin(tau))
+                r_aura_inner = int(r_aura_inner_base + 10.0 * math.sin(tau))
+                r_ambient_spill = int((canvas_size * 0.48) + 12.0 * math.sin(tau))
 
                 spot1_x = int(c + (r_sphere * curr_gaze_x))
                 spot1_y = int(c + (r_sphere * curr_gaze_y))
-                spot1_rx = int(r_sphere * 0.52 + 3.0 * math.sin(tau))
-                spot1_ry = int(r_sphere * 0.48 + 2.0 * math.cos(tau))
+                spot1_rx = int(r_sphere * 0.54 + 3.5 * math.sin(tau))
+                spot1_ry = int(r_sphere * 0.50 + 2.5 * math.cos(tau))
 
                 spot2_x = int(c + (r_sphere * opp_primary_x))
                 spot2_y = int(c + (r_sphere * opp_primary_y))
-                spot2_rx = int(r_sphere * 0.44 + 2.0 * math.sin(tau))
-                spot2_ry = int(r_sphere * 0.40 + 1.5 * math.cos(tau))
+                spot2_rx = int(r_sphere * 0.46 + 2.5 * math.sin(tau))
+                spot2_ry = int(r_sphere * 0.42 + 2.0 * math.cos(tau))
 
                 body_cx_pct = int(curr_body_cx)
                 body_cy_pct = int(curr_body_cy)
 
-                ring1_r = int(r_sphere + 18 + 5.0 * math.sin(tau))
-                ring1_glow = ring1_r + 4
+                # Dynamic Wave 1: Primary Voice Expansion Ring
+                ring1_r = int(r_sphere + 16 + 9.0 * math.sin(tau) + 4.0 * math.sin(2 * tau))
+                ring1_glow = ring1_r + 6
 
-                ring2_r = int(r_sphere + 36 + 6.0 * math.sin(tau + 0.8))
-                ring2_glow = ring2_r + 5
+                # Dynamic Wave 2: Outer Acoustic Resonance Wave
+                ring2_r = int(r_sphere + 36 + 14.0 * math.sin(tau + 1.2) + 5.0 * math.cos(2 * tau))
+                ring2_glow = ring2_r + 8
+
+                # Dynamic Wave 3: Rotating Orbital Light Arc
+                ring3_r = int(r_sphere + 58 + 8.0 * math.cos(tau + 2.0))
+                orbit_dash_offset = int(i * 12)
 
                 rings_svg = f"""
-  <!-- Ring 2: Outer Resonance -->
-  <circle cx="{c}" cy="{c}" r="{ring2_glow}" fill="none" stroke="{palette['aura_inner']}" stroke-width="4.0" opacity="0.45" filter="url(#ringGlow_{i})" />
-  <circle cx="{c}" cy="{c}" r="{ring2_r}" fill="none" stroke="{palette['ring_stroke']}" stroke-width="1.6" opacity="0.60" />
+  <!-- Ring 3: Rotating Kinetic Energy Halo -->
+  <circle cx="{c}" cy="{c}" r="{ring3_r}" fill="none" stroke="{palette['aura_bright']}" stroke-width="2.2" stroke-dasharray="18 22 45 22" stroke-dashoffset="{orbit_dash_offset}" opacity="0.75" />
 
-  <!-- Ring 1: Primary Harmonic Voice Ring -->
-  <circle cx="{c}" cy="{c}" r="{ring1_glow}" fill="none" stroke="{palette['aura_inner']}" stroke-width="6.0" opacity="0.75" filter="url(#ringGlow_{i})" />
-  <circle cx="{c}" cy="{c}" r="{ring1_r}" fill="none" stroke="{palette['ring_stroke']}" stroke-width="2.2" opacity="0.90" />
+  <!-- Ring 2: Expanding Outer Resonance Wave -->
+  <circle cx="{c}" cy="{c}" r="{ring2_glow}" fill="none" stroke="{palette['aura_inner']}" stroke-width="5.0" opacity="0.60" filter="url(#ringGlow_{i})" />
+  <circle cx="{c}" cy="{c}" r="{ring2_r}" fill="none" stroke="{palette['ring_stroke']}" stroke-width="1.8" opacity="0.80" />
+
+  <!-- Ring 1: High-Power Radiant Voice Harmonic Core Ring -->
+  <circle cx="{c}" cy="{c}" r="{ring1_glow}" fill="none" stroke="{palette['aura_inner']}" stroke-width="7.5" opacity="0.85" filter="url(#ringGlow_{i})" />
+  <circle cx="{c}" cy="{c}" r="{ring1_r}" fill="none" stroke="{palette['ring_stroke']}" stroke-width="2.6" opacity="0.98" />
+  <circle cx="{c}" cy="{c}" r="{ring1_r - 1}" fill="none" stroke="#ffffff" stroke-width="1.0" opacity="0.80" />
 """
 
             svg = f"""<svg width="{canvas_size}" height="{canvas_size}" viewBox="0 0 {canvas_size} {canvas_size}" xmlns="http://www.w3.org/2000/svg">
@@ -1234,31 +1249,27 @@ def render_orb_test_preview(
             filter_complex.append(f"[{cur_v}]drawbox=x=0:y=0:w=iw:h=ih:color={flash_col}:t=fill:enable='between(t,{st},{flash_end})'[v_flash_{idx}]")
             cur_v = f"v_flash_{idx}"
 
-        # Kinetic camera cut snap impulse (smoothly settles in 0.22s)
-        snap_impulse_x = f" + 32.0*exp(-11.0*(t-{st}))*cos(18.0*(t-{st}))" if idx > 0 else ""
-        snap_impulse_y = f" + 36.0*exp(-11.0*(t-{st}))*sin(18.0*(t-{st}))" if idx > 0 else ""
+        # Subtle kinetic camera cut snap impulse
+        snap_impulse_x = f" + 10.0*exp(-8.0*(t-{st}))*cos(14.0*(t-{st}))" if idx > 0 else ""
+        snap_impulse_y = f" + 12.0*exp(-8.0*(t-{st}))*sin(14.0*(t-{st}))" if idx > 0 else ""
 
         if shot == "wide":
             is_q_active = (ent in ["quantum", "both"])
             if is_q_active:
                 q_src = f"q_talk_{q_talk_cur}"
                 q_talk_cur += 1
-                # 2 Distinct Conversational Shifts:
-                # Start (u=0): Leaning towards Solar (+45px)
-                # Shift 1 (u=0.25): Glides smoothly towards front audience/camera (-35px, lifts -34px)
-                # Shift 2 (u=0.75): Glides smoothly to outer flank/listeners (+95px)
-                # Return (u=1.0): Refocuses back towards debate partner (+45px)
-                dq_x = f"30.0 - 75.0*sin(2*PI*{u_expr}) + 15.0*cos(PI*{u_expr}) + 3.0*sin(2*PI*t/1.8)"
-                dq_y = f"-22.0*sin(PI*{u_expr}) - 12.0*cos(2*PI*{u_expr}) + 3.0*cos(2*PI*t/1.8)"
+                # Organic Floating Levitation with Conversational Presence:
+                dq_x = f"14.0*sin(2*PI*t/3.4) + 6.0*cos(2*PI*t/1.9) + 18.0*sin(PI*{u_expr})"
+                dq_y = f"-18.0*sin(2*PI*t/3.0) - 7.0*cos(2*PI*t/1.7) - 10.0*sin(PI*{u_expr})"
                 q_alpha = 1.0
                 q_filt = f"scale=420:420,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa={q_alpha}"
             else:
                 q_src = f"q_idle_{q_idle_cur}"
                 q_idle_cur += 1
-                # Attentive listener motion: nod and harmonic breathing
-                dq_x = f"-12.0 + 24.0*sin(PI*{u_expr}) + 4.0*sin(2*PI*t/2.2)"
-                dq_y = f"10.0*sin(2*PI*{u_expr}) + 4.0*cos(2*PI*t/2.2)"
-                q_alpha = 0.82
+                # Gentle Listening Floating Motion:
+                dq_x = f"14.0*sin(2*PI*t/3.4) + 6.0*cos(2*PI*t/1.9)"
+                dq_y = f"-18.0*sin(2*PI*t/3.0) - 7.0*cos(2*PI*t/1.7)"
+                q_alpha = 0.85
                 q_filt = f"scale=410:410,format=yuva420p,colorchannelmixer=aa={q_alpha}"
 
             filter_complex.append(f"[{q_src}]{q_filt}[q_sc_{idx}]")
@@ -1269,22 +1280,18 @@ def render_orb_test_preview(
             if is_s_active:
                 s_src = f"s_talk_{s_talk_cur}"
                 s_talk_cur += 1
-                # Solar 2 Conversational Shifts (Mirror):
-                # Start (u=0): Leaning towards Quantum (-45px)
-                # Shift 1 (u=0.25): Glides towards audience/camera (+35px, lifts -34px)
-                # Shift 2 (u=0.75): Glides towards outer flank (-95px)
-                # Return (u=1.0): Refocuses back towards debate partner (-45px)
-                ds_x = f"-30.0 + 75.0*sin(2*PI*{u_expr}) - 15.0*cos(PI*{u_expr}) + 3.0*cos(2*PI*t/1.8)"
-                ds_y = f"-22.0*sin(PI*{u_expr}) - 12.0*cos(2*PI*{u_expr}) + 3.0*sin(2*PI*t/1.8)"
+                # Organic Floating Levitation for Solar:
+                ds_x = f"-14.0*sin(2*PI*t/3.6) - 6.0*cos(2*PI*t/2.1) - 18.0*sin(PI*{u_expr})"
+                ds_y = f"-18.0*cos(2*PI*t/3.2) - 7.0*sin(2*PI*t/1.9) - 10.0*sin(PI*{u_expr})"
                 s_alpha = 1.0
                 s_filt = f"scale=370:370,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa={s_alpha}"
             else:
                 s_src = f"s_idle_{s_idle_cur}"
                 s_idle_cur += 1
-                # Attentive listener motion for Solar
-                ds_x = f"12.0 - 24.0*sin(PI*{u_expr}) + 4.0*cos(2*PI*t/2.2)"
-                ds_y = f"10.0*sin(2*PI*{u_expr}) + 4.0*sin(2*PI*t/2.2)"
-                s_alpha = 0.82
+                # Gentle Listening Floating Motion for Solar:
+                ds_x = f"-14.0*sin(2*PI*t/3.6) - 6.0*cos(2*PI*t/2.1)"
+                ds_y = f"-18.0*cos(2*PI*t/3.2) - 7.0*sin(2*PI*t/1.9)"
+                s_alpha = 0.85
                 s_filt = f"scale=360:360,format=yuva420p,colorchannelmixer=aa={s_alpha}"
 
             filter_complex.append(f"[{s_src}]{s_filt}[s_sc_{idx}]")
@@ -1300,9 +1307,9 @@ def render_orb_test_preview(
         elif shot == "close_quantum":
             q_src = f"q_close_{q_close_cur}"
             q_close_cur += 1
-            # Close-up 2 shifts: sweeps to right audience (+65px), passes through lens center, sweeps to left (-65px), centers
-            d_cq_x = f"65.0*sin(2*PI*{u_expr}) + 3.0*sin(2*PI*t/1.8)"
-            d_cq_y = f"-22.0*sin(PI*{u_expr}) - 10.0*cos(2*PI*{u_expr}) + 3.0*cos(2*PI*t/1.8)"
+            # Close-up Floating Levitation for Quantum:
+            d_cq_x = f"10.0*sin(2*PI*t/3.2) + 5.0*cos(2*PI*t/1.8) + 14.0*sin(PI*{u_expr})"
+            d_cq_y = f"-16.0*sin(2*PI*t/2.8) - 6.0*cos(2*PI*t/1.6) - 8.0*sin(PI*{u_expr})"
             filter_complex.append(f"[{q_src}]scale=820:820,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.98[q_sc_{idx}]")
             filter_complex.append(f"[{cur_v}][q_sc_{idx}]overlay=eval=frame:x='W/2-w/2 + {d_cq_x}{snap_impulse_x}':y='H*0.38-h/2 + {d_cq_y}{snap_impulse_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_q]")
             cur_v = f"v_sc_{idx}_q"
@@ -1315,9 +1322,9 @@ def render_orb_test_preview(
         elif shot == "close_solar":
             s_src = f"s_close_{s_close_cur}"
             s_close_cur += 1
-            # Close-up 2 shifts for Solar:
-            d_cs_x = f"-65.0*sin(2*PI*{u_expr}) + 3.0*cos(2*PI*t/1.8)"
-            d_cs_y = f"-22.0*sin(PI*{u_expr}) - 10.0*cos(2*PI*{u_expr}) + 3.0*sin(2*PI*t/1.8)"
+            # Close-up Floating Levitation for Solar:
+            d_cs_x = f"-10.0*sin(2*PI*t/3.2) - 5.0*cos(2*PI*t/1.8) - 14.0*sin(PI*{u_expr})"
+            d_cs_y = f"-16.0*sin(2*PI*t/2.8) - 6.0*cos(2*PI*t/1.6) - 8.0*sin(PI*{u_expr})"
             filter_complex.append(f"[{s_src}]scale=820:820,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.98[s_sc_{idx}]")
             filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W/2-w/2 + {d_cs_x}{snap_impulse_x}':y='H*0.38-h/2 + {d_cs_y}{snap_impulse_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_s]")
             cur_v = f"v_sc_{idx}_s"
@@ -1330,16 +1337,16 @@ def render_orb_test_preview(
         elif shot == "both":
             q_src = f"q_talk_{q_talk_cur}"
             q_talk_cur += 1
-            dq_x = f"25.0 - 60.0*sin(2*PI*{u_expr})"
-            dq_y = f"-20.0*sin(PI*{u_expr}) - 10.0*cos(2*PI*{u_expr})"
+            dq_x = "14.0*sin(2*PI*t/3.4) + 6.0*cos(2*PI*t/1.9)"
+            dq_y = "-18.0*sin(2*PI*t/3.0) - 7.0*cos(2*PI*t/1.7)"
             filter_complex.append(f"[{q_src}]scale=420:420,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.98[q_sc_{idx}]")
             filter_complex.append(f"[{cur_v}][q_sc_{idx}]overlay=eval=frame:x='W*0.25-w/2 + {dq_x}{snap_impulse_x}':y='H*0.38-h/2 + {dq_y}{snap_impulse_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_q]")
             cur_v = f"v_sc_{idx}_q"
 
             s_src = f"s_talk_{s_talk_cur}"
             s_talk_cur += 1
-            ds_x = f"-25.0 + 60.0*sin(2*PI*{u_expr})"
-            ds_y = f"-20.0*sin(PI*{u_expr}) - 10.0*cos(2*PI*{u_expr})"
+            ds_x = "-14.0*sin(2*PI*t/3.6) - 6.0*cos(2*PI*t/2.1)"
+            ds_y = "-18.0*cos(2*PI*t/3.2) - 7.0*sin(2*PI*t/1.9)"
             filter_complex.append(f"[{s_src}]scale=420:420,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.98[s_sc_{idx}]")
             filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W*0.75-w/2 - 28 + {ds_x}{snap_impulse_x}':y='H*0.39-h/2 + {ds_y}{snap_impulse_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_s]")
             cur_v = f"v_sc_{idx}_s"
