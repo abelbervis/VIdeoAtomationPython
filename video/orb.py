@@ -349,65 +349,72 @@ def generate_animated_orb_loop(
 
             if is_solar:
                 # ═════════════════════════════════════════════════════════════════════
-                # ☀️ SOLAR: LIVING RADIANT STAR WITH STELLAR FLARE VOICE EMISSION
+                # ☀️ SOLAR: LIVING CELESTIAL STAR WITH 3D TILTED ACCRETION BELT & WHITE-GLOW MOUTH
                 # ═════════════════════════════════════════════════════════════════════
                 if not is_talk:
-                    # Solar Listening / Quiescent Solar Rhythm (Calm Fusion Core)
-                    r_sphere = int(r_sphere_base + 4.0 * math.sin(tau))
-                    r_aura_outer = int(r_aura_outer_base + 8.0 * math.sin(tau))
-                    r_aura_inner = int(r_aura_inner_base + 6.0 * math.sin(tau))
-                    r_ambient_spill = int((canvas_size * 0.46) + 8.0 * math.sin(tau))
+                    # Solar Listening (Calm Quiescent Star Rhythm)
+                    r_sphere = int(r_sphere_base + 3.0 * math.sin(tau))
+                    r_aura_outer = int(r_aura_outer_base + 7.0 * math.sin(tau))
+                    r_aura_inner = int(r_aura_inner_base + 5.0 * math.sin(tau))
+                    r_ambient_spill = int((canvas_size * 0.45) + 6.0 * math.sin(tau))
 
-                    # Calibrated Calm Fusion Heart (Centered)
-                    mouth_rx = int(r_sphere * (0.34 + 0.04 * math.sin(tau)))
-                    mouth_ry = int(r_sphere * (0.34 + 0.04 * math.sin(tau)))
-                    mouth_core_r = int(mouth_rx * 0.45)
-                    beam_opacity = 0.35
+                    # Solar Mouth in Quiet / Rest: Soft horizontal white fusion slit
+                    mouth_white_w = int(r_sphere * (0.32 + 0.03 * math.sin(tau)))
+                    mouth_white_h = int(r_sphere * (0.10 + 0.02 * math.cos(tau)))
+                    mouth_glow_w = int(mouth_white_w * 1.5)
+                    mouth_glow_h = int(mouth_white_h * 1.8)
+                    mouth_beam_opacity = 0.25
 
-                    # Coronal Loops (Soft Ambient Solar Radiation)
-                    corona1_r = int(r_sphere + 18 + 5.0 * math.sin(tau + 0.4))
-                    corona1_glow = corona1_r + 6
-                    corona2_r = int(r_sphere + 38 + 4.0 * math.cos(tau))
+                    # Tilted 3D Heliospheric Equatorial Belts (Distinct Elliptical Geometry)
+                    belt1_rx = int(r_sphere + 42 + 4.0 * math.sin(tau))
+                    belt1_ry = int((r_sphere + 42) * 0.38 + 2.0 * math.sin(tau))
+                    belt2_rx = int(r_sphere + 64 + 5.0 * math.cos(tau))
+                    belt2_ry = int((r_sphere + 64) * 0.32 + 2.0 * math.cos(tau))
 
                     rings_svg = f"""
-  <!-- Solar Quiescent Coronal Loops -->
-  <circle cx="{c}" cy="{c}" r="{corona1_glow}" fill="none" stroke="{palette['aura_inner']}" stroke-width="5.0" opacity="0.45" filter="url(#ringGlow_{i})" />
-  <circle cx="{c}" cy="{c}" r="{corona1_r}" fill="none" stroke="{palette['ring_stroke']}" stroke-width="2.2" opacity="0.75" />
-  <circle cx="{c}" cy="{c}" r="{corona2_r}" fill="none" stroke="{palette['aura_bright']}" stroke-width="1.6" stroke-dasharray="24 18 36 18" stroke-dashoffset="{int(i * 4)}" opacity="0.50" />
+  <!-- Solar Tilted 3D Heliospheric Plasma Belt 1 (-22deg tilt) -->
+  <ellipse cx="{c}" cy="{c}" rx="{belt1_rx}" ry="{belt1_ry}" transform="rotate(-22 {c} {c})" fill="none" stroke="{palette['aura_inner']}" stroke-width="4.5" opacity="0.45" filter="url(#ringGlow_{i})" />
+  <ellipse cx="{c}" cy="{c}" rx="{belt1_rx}" ry="{belt1_ry}" transform="rotate(-22 {c} {c})" fill="none" stroke="{palette['ring_stroke']}" stroke-width="2.0" stroke-dasharray="28 14 42 14" stroke-dashoffset="{int(i * 3)}" opacity="0.80" />
+
+  <!-- Solar Magnetic Coronal Loop 2 (+32deg reverse tilt) -->
+  <ellipse cx="{c}" cy="{c}" rx="{belt2_rx}" ry="{belt2_ry}" transform="rotate(32 {c} {c})" fill="none" stroke="{palette['aura_bright']}" stroke-width="1.6" stroke-dasharray="18 24 36 24" stroke-dashoffset="{int(-i * 4)}" opacity="0.55" />
 """
                 else:
-                    # Solar Active Speaking (Dynamic Thermal Flare "Mouth" & Shockwave Waves)
-                    r_sphere = int(r_sphere_base + 8.5 * math.sin(tau) + 3.0 * math.sin(2 * tau))
-                    r_aura_outer = int(r_aura_outer_base + 18.0 * math.sin(tau))
-                    r_aura_inner = int(r_aura_inner_base + 14.0 * math.sin(tau))
-                    r_ambient_spill = int((canvas_size * 0.50) + 16.0 * math.sin(tau))
+                    # Solar Active Speaking (Thermal Flare Eruption & Dynamic White-Glow Mouth Modulation)
+                    r_sphere = int(r_sphere_base + 7.5 * math.sin(tau) + 2.5 * math.sin(2 * tau))
+                    r_aura_outer = int(r_aura_outer_base + 16.0 * math.sin(tau))
+                    r_aura_inner = int(r_aura_inner_base + 12.0 * math.sin(tau))
+                    r_ambient_spill = int((canvas_size * 0.48) + 14.0 * math.sin(tau))
 
-                    # Dynamic Solar Flare "Mouth" (Vertical & Radial Expansion in Sync with Speech)
-                    mouth_rx = int(r_sphere * (0.38 + 0.14 * math.cos(2 * tau) + 0.06 * math.sin(tau)))
-                    mouth_ry = int(r_sphere * (0.48 + 0.26 * abs(math.sin(2 * tau)) + 0.10 * math.cos(tau)))
-                    mouth_core_r = int(mouth_rx * 0.50 + 2.0 * abs(math.sin(2 * tau)))
-                    beam_opacity = min(0.95, 0.45 + 0.50 * abs(math.sin(2 * tau)))
+                    # 🌟 THE WHITE GLOW AS MOUTH (Acoustic Phoneme Aperture)
+                    # When open: flares into a radiant rounded vertical-horizontal ellipse
+                    # When closed: compresses into a sleek white fusion slit
+                    speech_energy = 0.5 + 0.5 * abs(math.sin(2.5 * tau + 0.3))
+                    mouth_white_w = int(r_sphere * (0.36 + 0.16 * speech_energy + 0.05 * math.sin(tau)))
+                    mouth_white_h = int(r_sphere * (0.14 + 0.32 * speech_energy + 0.08 * abs(math.cos(2 * tau))))
+                    mouth_glow_w = int(mouth_white_w * 1.6)
+                    mouth_glow_h = int(mouth_white_h * 1.5)
+                    mouth_beam_opacity = min(0.95, 0.40 + 0.55 * speech_energy)
 
-                    # Dynamic Eruptive Coronal Shockwaves & Radiant Arcs
-                    flare1_r = int(r_sphere + 18 + 12.0 * math.sin(tau) + 5.0 * math.sin(2 * tau))
-                    flare1_glow = flare1_r + 8
-                    flare2_r = int(r_sphere + 42 + 16.0 * math.sin(tau + 1.2) + 6.0 * math.cos(2 * tau))
-                    flare2_glow = flare2_r + 10
-                    flare3_r = int(r_sphere + 66 + 9.0 * math.cos(tau + 2.0))
+                    # Dynamic 3D Heliospheric Belts (Vibrating & Rotating during Speech)
+                    belt1_rx = int(r_sphere + 44 + 8.0 * math.sin(tau) + 3.0 * math.sin(2 * tau))
+                    belt1_ry = int((r_sphere + 44) * 0.38 + 4.0 * math.sin(tau))
+                    belt2_rx = int(r_sphere + 68 + 11.0 * math.sin(tau + 1.0))
+                    belt2_ry = int((r_sphere + 68) * 0.32 + 5.0 * math.cos(tau))
 
                     rings_svg = f"""
-  <!-- Solar Shockwave Coronal Radiation Waves -->
-  <circle cx="{c}" cy="{c}" r="{flare3_r}" fill="none" stroke="{palette['aura_bright']}" stroke-width="2.5" stroke-dasharray="32 16 48 16" stroke-dashoffset="{int(i * 8)}" opacity="0.80" />
-  <circle cx="{c}" cy="{c}" r="{flare2_glow}" fill="none" stroke="{palette['aura_inner']}" stroke-width="6.5" opacity="0.65" filter="url(#ringGlow_{i})" />
-  <circle cx="{c}" cy="{c}" r="{flare2_r}" fill="none" stroke="{palette['ring_stroke']}" stroke-width="2.2" opacity="0.85" />
-  <circle cx="{c}" cy="{c}" r="{flare1_glow}" fill="none" stroke="{palette['aura_inner']}" stroke-width="9.0" opacity="0.90" filter="url(#ringGlow_{i})" />
-  <circle cx="{c}" cy="{c}" r="{flare1_r}" fill="none" stroke="{palette['ring_stroke']}" stroke-width="3.2" opacity="0.98" />
-  <circle cx="{c}" cy="{c}" r="{flare1_r - 1}" fill="none" stroke="#ffffff" stroke-width="1.2" opacity="0.85" />
+  <!-- Solar Tilted 3D Heliospheric Plasma Belt 1 (-22deg tilt) -->
+  <ellipse cx="{c}" cy="{c}" rx="{belt1_rx}" ry="{belt1_ry}" transform="rotate(-22 {c} {c})" fill="none" stroke="{palette['aura_inner']}" stroke-width="6.5" opacity="0.65" filter="url(#ringGlow_{i})" />
+  <ellipse cx="{c}" cy="{c}" rx="{belt1_rx}" ry="{belt1_ry}" transform="rotate(-22 {c} {c})" fill="none" stroke="{palette['ring_stroke']}" stroke-width="2.8" stroke-dasharray="32 16 48 16" stroke-dashoffset="{int(i * 6)}" opacity="0.95" />
+  <ellipse cx="{c}" cy="{c}" rx="{belt1_rx - 1}" ry="{belt1_ry - 1}" transform="rotate(-22 {c} {c})" fill="none" stroke="#ffffff" stroke-width="1.2" opacity="0.75" />
+
+  <!-- Solar Magnetic Coronal Loop 2 (+32deg reverse tilt) -->
+  <ellipse cx="{c}" cy="{c}" rx="{belt2_rx}" ry="{belt2_ry}" transform="rotate(32 {c} {c})" fill="none" stroke="{palette['aura_bright']}" stroke-width="2.2" stroke-dasharray="24 20 40 20" stroke-dashoffset="{int(-i * 8)}" opacity="0.75" />
 """
 
-                # Solar SVG Construction: Centered Fusion Plasma Body + Solar Flare Mouth
-                beam_w = int(r_sphere * 0.82)
-                beam_h = int(r_sphere * 0.24)
+                # Solar SVG Construction: Centered Solar Body + Dynamic White-Glow Mouth
+                beam_w = int(r_sphere * 0.86)
+                beam_h = int(r_sphere * 0.20 + (mouth_white_h * 0.35))
 
                 svg = f"""<svg width="{canvas_size}" height="{canvas_size}" viewBox="0 0 {canvas_size} {canvas_size}" xmlns="http://www.w3.org/2000/svg">
   <defs>
@@ -419,6 +426,9 @@ def generate_animated_orb_loop(
     </filter>
     <filter id="coreBlur_{i}" x="-25%" y="-25%" width="150%" height="150%">
       <feGaussianBlur stdDeviation="8" />
+    </filter>
+    <filter id="mouthGlow_{i}" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="6" />
     </filter>
     <filter id="ringGlow_{i}" x="-30%" y="-30%" width="160%" height="160%">
       <feGaussianBlur stdDeviation="7" />
@@ -460,12 +470,12 @@ def generate_animated_orb_loop(
       <stop offset="100%" stop-color="{palette['body_c5']}" />
     </radialGradient>
 
-    <!-- Solar Flare Mouth Radiant Gradient -->
-    <radialGradient id="solarMouth_{i}" cx="50%" cy="50%" r="50%">
+    <!-- Radiant Solar Mouth Halo Gradient -->
+    <radialGradient id="mouthHalo_{i}" cx="50%" cy="50%" r="50%">
       <stop offset="0%" stop-color="{palette['spot1_core']}" stop-opacity="1.0" />
-      <stop offset="35%" stop-color="{palette['spot1_glow']}" stop-opacity="0.95" />
-      <stop offset="70%" stop-color="{palette['spot1_outer']}" stop-opacity="0.60" />
-      <stop offset="100%" stop-color="{palette['body_c3']}" stop-opacity="0.0" />
+      <stop offset="40%" stop-color="{palette['spot1_glow']}" stop-opacity="0.90" />
+      <stop offset="75%" stop-color="{palette['spot1_outer']}" stop-opacity="0.50" />
+      <stop offset="100%" stop-color="{palette['body_c2']}" stop-opacity="0.0" />
     </radialGradient>
   </defs>
 
@@ -476,27 +486,30 @@ def generate_animated_orb_loop(
   <circle cx="{c}" cy="{c}" r="{r_aura_outer}" fill="url(#outerAuraDeep_{i})" filter="url(#auraGlowDeep_{i})" />
   <circle cx="{c}" cy="{c}" r="{r_aura_inner}" fill="url(#innerAuraBright_{i})" filter="url(#auraGlowDeep_{i})" />
 
-  <!-- 2. Coronal Shockwaves & Eruptive Flares -->
+  <!-- 2. Distinct Tilted 3D Heliospheric Plasma Belts -->
   {rings_svg}
 
   <!-- 3. Living Sun Plasma Sphere -->
   <circle cx="{c}" cy="{c}" r="{r_sphere}" fill="url(#solarBody_{i})" />
 
-  <!-- 4. Solar Flare "Mouth" (Incandescent Fusion Speech Core) -->
+  <!-- 4. WHITE-GLOW FUSION MOUTH (Voice Acoustic Aperture) -->
   <g clip-path="url(#sphereClip_{i})">
-    <!-- Horizontal Solar Ejection Flare Beam -->
-    <ellipse cx="{c}" cy="{c}" rx="{beam_w}" ry="{beam_h}" fill="{palette['spot1_glow']}" opacity="{beam_opacity}" filter="url(#coreBlur_{i})" />
+    <!-- Horizontal Ejection Flare Behind Mouth -->
+    <ellipse cx="{c}" cy="{c}" rx="{beam_w}" ry="{beam_h}" fill="{palette['spot1_glow']}" opacity="{mouth_beam_opacity}" filter="url(#coreBlur_{i})" />
 
-    <!-- Radiant Solar Mouth Core (Pulsing Acoustic Fusion Center) -->
-    <ellipse cx="{c}" cy="{c}" rx="{mouth_rx}" ry="{mouth_ry}" fill="url(#solarMouth_{i})" filter="url(#coreBlur_{i})" />
-    <circle cx="{c}" cy="{c}" r="{mouth_core_r}" fill="{palette['spot1_core']}" opacity="0.98" filter="url(#coreBlur_{i})" />
+    <!-- Outer Amber/Gold Mouth Glow Ring -->
+    <ellipse cx="{c}" cy="{c}" rx="{mouth_glow_w}" ry="{mouth_glow_h}" fill="url(#mouthHalo_{i})" filter="url(#mouthGlow_{i})" />
+
+    <!-- Pure Incandescent White Fusion Mouth Core -->
+    <ellipse cx="{c}" cy="{c}" rx="{mouth_white_w}" ry="{mouth_white_h}" fill="#ffffff" opacity="0.98" filter="url(#coreBlur_{i})" />
+    <ellipse cx="{c}" cy="{c}" rx="{int(mouth_white_w * 0.65)}" ry="{int(mouth_white_h * 0.55)}" fill="#ffffff" opacity="1.0" />
 
     <!-- Thermal Subsurface Corona Rim -->
-    <circle cx="{c}" cy="{c}" r="{r_sphere - 3}" fill="none" stroke="{palette['rim_stroke']}" stroke-width="3.5" opacity="0.60" filter="url(#coreBlur_{i})" />
+    <circle cx="{c}" cy="{c}" r="{r_sphere - 3}" fill="none" stroke="{palette['rim_stroke']}" stroke-width="3.2" opacity="0.55" filter="url(#coreBlur_{i})" />
   </g>
 
-  <!-- 5. Inner Concentric Rim Light -->
-  <circle cx="{c}" cy="{c}" r="{r_sphere - 2}" fill="none" stroke="{palette['aura_inner']}" stroke-width="2.5" opacity="0.75" />
+  <!-- 5. Concentric Inner Star Edge Light -->
+  <circle cx="{c}" cy="{c}" r="{r_sphere - 2}" fill="none" stroke="{palette['aura_inner']}" stroke-width="2.2" opacity="0.75" />
 </svg>"""
 
             else:
