@@ -875,6 +875,7 @@ def render_orb_test_preview(
 
     if not resolved_audio:
         import concurrent.futures
+        import hashlib
         from audio.tts import EdgeTTSProvider, GoogleTTSProvider
         from audio.sfx import synthesize_camera_servo_sfx, synthesize_space_ambient_pad
         from audio.music import MusicManager
@@ -882,7 +883,11 @@ def render_orb_test_preview(
         tts_edge = EdgeTTSProvider()
         tts_fallback = GoogleTTSProvider(language="es")
 
-        # Prepare scene specs and parallel TTS tasks (Eliminates sequential roundtrips & test probe)
+        # Persistent Voice Cache Directory (Instant re-use across test runs & renders)
+        voice_cache_dir = Path(__file__).resolve().parent.parent / "assets" / "audio" / "cached_voices"
+        voice_cache_dir.mkdir(parents=True, exist_ok=True)
+
+        # Prepare scene specs and parallel TTS tasks (Eliminates redundant roundtrips)
         parsed_scenes = []
         tts_tasks = []
 
@@ -919,16 +924,16 @@ def render_orb_test_preview(
                 else:
                     shot = "close_quantum"
 
-            if ent == "both":
-                p_q = output_path.parent / f"_temp_sc_{idx}_both_q.mp3"
-                temp_audio_files_to_clean.append(p_q)
-                tts_tasks.append((text, p_q, "quantum"))
-                scene_audio_paths = [p_q]
+            # Smart Hashed Audio Cache Check
+            text_hash = hashlib.md5(f"{ent}:{text}".encode("utf-8")).hexdigest()[:12]
+            cached_voice_file = voice_cache_dir / f"voice_{ent}_{text_hash}.mp3"
+
+            if cached_voice_file.exists() and cached_voice_file.stat().st_size > 500:
+                # Already generated and cached: 0ms overhead, 0 API calls!
+                scene_audio_paths = [cached_voice_file]
             else:
-                p_sc = output_path.parent / f"_temp_sc_{idx}_{ent}.mp3"
-                temp_audio_files_to_clean.append(p_sc)
-                tts_tasks.append((text, p_sc, ent))
-                scene_audio_paths = [p_sc]
+                tts_tasks.append((text, cached_voice_file, ent))
+                scene_audio_paths = [cached_voice_file]
 
             parsed_scenes.append({
                 "index": idx,
@@ -941,6 +946,8 @@ def render_orb_test_preview(
 
         def _synthesize_voice_worker(task):
             txt, out_p, entity_name = task
+            if out_p.exists() and out_p.stat().st_size > 500:
+                return
             try:
                 ok = tts_edge.synthesize_cosmic_entity(txt, out_p, entity=entity_name)
                 if not ok or not out_p.exists() or out_p.stat().st_size == 0:
@@ -952,11 +959,13 @@ def render_orb_test_preview(
                 except Exception as fb_err:
                     print(f"  ❌ Fallback TTS failed: {fb_err}")
 
-        # Parallelize TTS synthesis across worker threads
+        # Parallelize TTS synthesis across worker threads only for uncached voices
         if tts_tasks:
-            print(f"  ⚡ Sintetizando {len(tts_tasks)} pistas vocales en paralelo...")
+            print(f"  ⚡ Sintetizando {len(tts_tasks)} pistas vocales nuevas en paralelo...")
             with concurrent.futures.ThreadPoolExecutor(max_workers=min(8, len(tts_tasks))) as executor:
                 list(executor.map(_synthesize_voice_worker, tts_tasks))
+        else:
+            print(f"  ⚡ [Caché Instantáneo] Reutilizando {len(parsed_scenes)} pistas vocales ya sintetizadas (0 llamadas a API)")
 
         # Build chronologically aligned timeline from generated audio files
         current_audio_time = 0.0
@@ -1381,17 +1390,27 @@ def render_orb_test_preview(
     print(f"🎬 Video listo: {output_path.resolve()}\n")
 
     # Generate companion studio-grade thumbnail
+    thumb_path = output_path.parent / "thumbnail.jpg"
     try:
         from ai.thumbnail_generator import ThumbnailGenerator
         thumb_gen = ThumbnailGenerator()
-        thumb_path = output_path.parent / "thumbnail.jpg"
         thumb_gen.render_studio_poster(
             hook=headline_hook,
             topic=topic or "Física Cuántica vs Astrofísica Solar",
             output_path=thumb_path
         )
-    except Exception as te:
-        print(f"  ⚠️ Error secundario generando portada automática: {te}")
+    except Exception:
+        # Robust zero-dependency fallback: Extract crisp video frame with FFmpeg
+        try:
+            subprocess.run([
+                "ffmpeg", "-y", "-ss", "00:00:02.000",
+                "-i", str(output_path),
+                "-vframes", "1",
+                "-q:v", "2",
+                str(thumb_path)
+            ], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        except Exception:
+            pass
 
     return output_path
 
