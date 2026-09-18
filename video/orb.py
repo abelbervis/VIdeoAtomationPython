@@ -249,17 +249,19 @@ ORB_PALETTES: Dict[str, Dict[str, Any]] = {
 
 def generate_animated_orb_loop(
     palette_key: str = "quantum",
-    mode: str = "talk",  # "talk" (speaking with energetic reactive shockwaves) or "idle" (resting, tranquil single ring)
-    canvas_size: int = 600,
+    mode: str = "talk",  # "talk" (speaking with 2 harmonic acoustic rings) or "idle" (serene living presence)
+    canvas_size: int = 500,
     fps: int = 30,
-    loop_frames: int = 60,
+    loop_frames: int = 45,
     target_dir: Optional[Path] = None,
     force_refresh: bool = False,
 ) -> Path:
     """
-    Generates a 60-frame (2.0s @ 30FPS) seamless, transparent QuickTime MOV loop (qtrle codec)
+    Generates a 45-frame (1.5s @ 30FPS) seamless, lightweight transparent QuickTime MOV loop (qtrle codec)
     containing an ultra-clean bio-reactive bioluminescent sphere matching the user's reference image.
-    Supports 'talk' mode (energetic acoustic resonant rings & shockwaves) and 'idle' mode (calm, steady, serene).
+    Balanced sweet spot:
+      - 'talk': 2 harmonic expanding acoustic shockwave rings + vocal pulse.
+      - 'idle': Living cosmic presence with organic breathing and calm orbital ring.
     """
     palette_key = palette_key.lower().strip()
     if palette_key not in ORB_PALETTES:
@@ -278,15 +280,15 @@ def generate_animated_orb_loop(
     if not force_refresh and mov_path.exists() and mov_path.stat().st_size > 10000:
         return mov_path
 
-    print(f"  🔮 Generando orbe bio-reactivo 3D ('{palette_key}' | modo '{mode}')...")
+    print(f"  🔮 Generando orbe bio-reactivo ('{palette_key}' | modo '{mode}' | optimizado)...")
 
     frames_dir = dest_dir / f"_temp_frames_{palette_key}_{mode}"
     frames_dir.mkdir(parents=True, exist_ok=True)
 
     c = canvas_size // 2
     r_sphere_base = int(canvas_size * 0.27)
-    r_aura_outer_base = int(canvas_size * 0.48)
-    r_aura_inner_base = int(canvas_size * 0.38)
+    r_aura_outer_base = int(canvas_size * 0.46)
+    r_aura_inner_base = int(canvas_size * 0.36)
 
     try:
         for i in range(loop_frames):
@@ -294,119 +296,106 @@ def generate_animated_orb_loop(
             tau = 2 * math.pi * t
 
             if mode == "idle":
-                # CALM / RESTING ORB: Serene, steady, minimal breathing, zero frantic agitation
-                r_sphere = int(r_sphere_base + 3 * math.sin(tau))
-                r_aura_outer = int(r_aura_outer_base + 4 * math.sin(tau))
-                r_aura_inner = int(r_aura_inner_base + 3 * math.sin(tau))
-                r_ambient_spill = int((canvas_size * 0.44) + 6 * math.sin(tau))
+                # LIVING PRESENCE / LISTENING ORB: Organic breathing, active presence, gentle living float
+                r_sphere = int(r_sphere_base + 6 * math.sin(tau))
+                r_aura_outer = int(r_aura_outer_base + 8 * math.sin(tau))
+                r_aura_inner = int(r_aura_inner_base + 6 * math.sin(tau))
+                r_ambient_spill = int((canvas_size * 0.44) + 8 * math.sin(tau))
 
-                spot1_x = int(c - r_sphere * 0.32 + 2 * math.sin(tau))
-                spot1_y = int(c - r_sphere * 0.28 + 2 * math.cos(tau))
-                spot1_rx = int(r_sphere * 0.50)
-                spot1_ry = int(r_sphere * 0.46)
+                spot1_x = int(c - r_sphere * 0.32 + 4 * math.sin(tau))
+                spot1_y = int(c - r_sphere * 0.28 + 3 * math.cos(tau))
+                spot1_rx = int(r_sphere * 0.50 + 3 * math.sin(tau))
+                spot1_ry = int(r_sphere * 0.46 + 2 * math.cos(tau))
 
-                spot2_x = int(c + r_sphere * 0.30 - 2 * math.sin(tau))
-                spot2_y = int(c + r_sphere * 0.28 - 2 * math.cos(tau))
-                spot2_rx = int(r_sphere * 0.42)
-                spot2_ry = int(r_sphere * 0.38)
+                spot2_x = int(c + r_sphere * 0.30 - 4 * math.sin(tau))
+                spot2_y = int(c + r_sphere * 0.28 - 3 * math.cos(tau))
+                spot2_rx = int(r_sphere * 0.42 + 2 * math.sin(tau))
+                spot2_ry = int(r_sphere * 0.38 + 2 * math.cos(tau))
 
-                # Single, tranquil concentric ring (stationary & calm)
-                calm_ring_r = int(r_sphere + 20 + 2 * math.sin(tau))
+                # Single, living harmonic ring breathing organically in subtle harmony
+                calm_ring_r = int(r_sphere + 22 + 5 * math.sin(tau + 0.6))
                 calm_ring_glow = calm_ring_r + 4
 
                 rings_svg = f"""
-  <!-- Tranquil Single Concentric Resting Ring -->
-  <circle cx="{c}" cy="{c}" r="{calm_ring_glow}" fill="none" stroke="{palette['aura_inner']}" stroke-width="4" opacity="0.45" filter="url(#ringGlow_{i})" />
-  <circle cx="{c}" cy="{c}" r="{calm_ring_r}" fill="none" stroke="{palette['ring_stroke']}" stroke-width="1.8" opacity="0.60" />
+  <!-- Living Concentric Listening Ring (Organic subtle pulsation) -->
+  <circle cx="{c}" cy="{c}" r="{calm_ring_glow}" fill="none" stroke="{palette['aura_inner']}" stroke-width="4" opacity="0.55" filter="url(#ringGlow_{i})" />
+  <circle cx="{c}" cy="{c}" r="{calm_ring_r}" fill="none" stroke="{palette['ring_stroke']}" stroke-width="2.0" opacity="0.75" />
 """
             else:
-                # ACTIVE / SPEAKING ORB: High-energy voice pulses, multi-layered acoustic shockwaves propagating outward
-                r_sphere = int(r_sphere_base + 13 * math.sin(2.0 * tau))
-                r_aura_outer = int(r_aura_outer_base + 22 * math.sin(tau))
-                r_aura_inner = int(r_aura_inner_base + 16 * math.sin(tau))
-                r_ambient_spill = int((canvas_size * 0.48) + 26 * math.sin(tau))
+                # ACTIVE / SPEAKING ORB: Sweet spot with 2 harmonic acoustic shockwave rings + vocal pulse
+                r_sphere = int(r_sphere_base + 9 * math.sin(tau))
+                r_aura_outer = int(r_aura_outer_base + 16 * math.sin(tau))
+                r_aura_inner = int(r_aura_inner_base + 12 * math.sin(tau))
+                r_ambient_spill = int((canvas_size * 0.46) + 16 * math.sin(tau))
 
-                spot1_x = int(c - r_sphere * 0.32 + 10 * math.sin(2 * tau))
-                spot1_y = int(c - r_sphere * 0.28 + 8 * math.cos(2 * tau))
-                spot1_rx = int(r_sphere * 0.54 + 8 * math.sin(3 * tau))
-                spot1_ry = int(r_sphere * 0.50 + 6 * math.cos(3 * tau))
+                spot1_x = int(c - r_sphere * 0.32 + 7 * math.sin(tau))
+                spot1_y = int(c - r_sphere * 0.28 + 6 * math.cos(tau))
+                spot1_rx = int(r_sphere * 0.54 + 5 * math.sin(2 * tau))
+                spot1_ry = int(r_sphere * 0.50 + 4 * math.cos(2 * tau))
 
-                spot2_x = int(c + r_sphere * 0.30 - 10 * math.sin(2 * tau))
-                spot2_y = int(c + r_sphere * 0.28 - 8 * math.cos(2 * tau))
-                spot2_rx = int(r_sphere * 0.46 + 6 * math.cos(3 * tau))
-                spot2_ry = int(r_sphere * 0.42 + 5 * math.sin(3 * tau))
+                spot2_x = int(c + r_sphere * 0.30 - 7 * math.sin(tau))
+                spot2_y = int(c + r_sphere * 0.28 - 6 * math.cos(tau))
+                spot2_rx = int(r_sphere * 0.46 + 4 * math.cos(2 * tau))
+                spot2_ry = int(r_sphere * 0.42 + 3 * math.sin(2 * tau))
 
-                # 3 High-Energy Expanding Acoustic Shockwave Rings
-                ring1_r = int(r_sphere + 18 + 12 * math.sin(4.0 * tau))
+                # 2 Balanced Concentric Harmonic Acoustic Rings
+                # Ring 1: Primary voice resonant ring
+                ring1_r = int(r_sphere + 22 + 9 * math.sin(2.0 * tau))
                 ring1_glow = ring1_r + 5
 
-                ring2_r = int(r_sphere + 38 - 24 * math.cos(3.0 * tau))
-                ring2_glow = ring2_r + 7
-
-                ring3_r = int(r_sphere + 64 - 32 * math.cos(2.0 * tau + 0.8))
-                ring3_glow = ring3_r + 9
+                # Ring 2: Outer expanding acoustic ripple
+                ring2_r = int(r_sphere + 44 - 14 * math.cos(tau))
+                ring2_glow = ring2_r + 6
 
                 rings_svg = f"""
-  <!-- Ring 3: Outer Acoustic Resonance Ripple -->
-  <circle cx="{c}" cy="{c}" r="{ring3_glow}" fill="none" stroke="{palette['aura_inner']}" stroke-width="6" opacity="0.45" filter="url(#ringGlow_{i})" />
-  <circle cx="{c}" cy="{c}" r="{ring3_r}" fill="none" stroke="{palette['ring_stroke']}" stroke-width="1.8" opacity="0.65" />
+  <!-- Ring 2: Outer Acoustic Resonance Ripple -->
+  <circle cx="{c}" cy="{c}" r="{ring2_glow}" fill="none" stroke="{palette['aura_inner']}" stroke-width="5" opacity="0.55" filter="url(#ringGlow_{i})" />
+  <circle cx="{c}" cy="{c}" r="{ring2_r}" fill="none" stroke="{palette['ring_stroke']}" stroke-width="1.8" opacity="0.70" />
 
-  <!-- Ring 2: Middle Expanding Acoustic Shockwave -->
-  <circle cx="{c}" cy="{c}" r="{ring2_glow}" fill="none" stroke="{palette['aura_inner']}" stroke-width="8" opacity="0.75" filter="url(#ringGlow_{i})" />
-  <circle cx="{c}" cy="{c}" r="{ring2_r}" fill="none" stroke="{palette['ring_stroke']}" stroke-width="2.6" opacity="0.88" />
-
-  <!-- Ring 1: Inner High-Frequency Voice Ripple -->
-  <circle cx="{c}" cy="{c}" r="{ring1_glow}" fill="none" stroke="{palette['aura_inner']}" stroke-width="9" opacity="0.90" filter="url(#ringGlow_{i})" />
-  <circle cx="{c}" cy="{c}" r="{ring1_r}" fill="none" stroke="{palette['ring_stroke']}" stroke-width="3.2" opacity="0.98" />
+  <!-- Ring 1: Primary Voice Resonant Ring -->
+  <circle cx="{c}" cy="{c}" r="{ring1_glow}" fill="none" stroke="{palette['aura_inner']}" stroke-width="7" opacity="0.85" filter="url(#ringGlow_{i})" />
+  <circle cx="{c}" cy="{c}" r="{ring1_r}" fill="none" stroke="{palette['ring_stroke']}" stroke-width="2.6" opacity="0.95" />
 """
 
             svg = f"""<svg width="{canvas_size}" height="{canvas_size}" viewBox="0 0 {canvas_size} {canvas_size}" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <!-- Enhanced Ultra-Wide Environmental Ambient Illumination Filter -->
-    <filter id="ambientSpillBlur_{i}" x="-90%" y="-90%" width="280%" height="280%">
-      <feGaussianBlur stdDeviation="70" />
+    <!-- Streamlined High-Performance Gaussian Filters -->
+    <filter id="ambientSpillBlur_{i}" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="40" />
     </filter>
-    <filter id="auraGlowDeep_{i}" x="-60%" y="-60%" width="220%" height="220%">
-      <feGaussianBlur stdDeviation="34" />
+    <filter id="auraGlowDeep_{i}" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="22" />
     </filter>
-    <filter id="auraGlowMid_{i}" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="20" />
-    </filter>
-    <filter id="coreBlur_{i}" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="11" />
-    </filter>
-    <filter id="secondaryBlur_{i}" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="14" />
-    </filter>
-    <filter id="ringGlow_{i}" x="-40%" y="-40%" width="180%" height="180%">
+    <filter id="coreBlur_{i}" x="-25%" y="-25%" width="150%" height="150%">
       <feGaussianBlur stdDeviation="9" />
+    </filter>
+    <filter id="ringGlow_{i}" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="7" />
     </filter>
 
     <clipPath id="sphereClip_{i}">
       <circle cx="{c}" cy="{c}" r="{r_sphere}" />
     </clipPath>
 
-    <!-- Environmental Ambient Light Spill (High-Intensity Radial Wash) -->
+    <!-- Environmental Ambient Light Spill -->
     <radialGradient id="ambientSpill_{i}" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="{palette['spot1_glow']}" stop-opacity="0.95" />
-      <stop offset="25%" stop-color="{palette['aura_inner']}" stop-opacity="0.75" />
-      <stop offset="55%" stop-color="{palette['aura_outer']}" stop-opacity="0.45" />
-      <stop offset="82%" stop-color="{palette['body_c3']}" stop-opacity="0.20" />
+      <stop offset="0%" stop-color="{palette['spot1_glow']}" stop-opacity="0.90" />
+      <stop offset="30%" stop-color="{palette['aura_inner']}" stop-opacity="0.65" />
+      <stop offset="65%" stop-color="{palette['aura_outer']}" stop-opacity="0.30" />
       <stop offset="100%" stop-color="#000000" stop-opacity="0.0" />
     </radialGradient>
 
-    <!-- Expansive Multi-Stop Atmospheric Neon Volumetric Aura -->
+    <!-- Expansive Atmospheric Neon Aura -->
     <radialGradient id="outerAuraDeep_{i}" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="{palette['aura_inner']}" stop-opacity="0.95" />
-      <stop offset="35%" stop-color="{palette['aura_mid']}" stop-opacity="0.75" />
-      <stop offset="68%" stop-color="{palette['aura_outer']}" stop-opacity="0.38" />
-      <stop offset="88%" stop-color="{palette['body_c3']}" stop-opacity="0.15" />
+      <stop offset="0%" stop-color="{palette['aura_inner']}" stop-opacity="0.90" />
+      <stop offset="40%" stop-color="{palette['aura_mid']}" stop-opacity="0.65" />
+      <stop offset="75%" stop-color="{palette['aura_outer']}" stop-opacity="0.30" />
       <stop offset="100%" stop-color="#000000" stop-opacity="0.0" />
     </radialGradient>
 
     <radialGradient id="innerAuraBright_{i}" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="{palette['aura_bright']}" stop-opacity="0.90" />
-      <stop offset="45%" stop-color="{palette['aura_inner']}" stop-opacity="0.60" />
+      <stop offset="0%" stop-color="{palette['aura_bright']}" stop-opacity="0.85" />
+      <stop offset="50%" stop-color="{palette['aura_inner']}" stop-opacity="0.50" />
       <stop offset="100%" stop-color="#000000" stop-opacity="0.0" />
     </radialGradient>
 
@@ -420,29 +409,28 @@ def generate_animated_orb_loop(
       <stop offset="100%" stop-color="{palette['body_c5']}" />
     </radialGradient>
 
-    <!-- Primary Off-Center Light Spot (White Center to Primary Flare) -->
+    <!-- Primary Off-Center Light Spot -->
     <radialGradient id="primarySpot_{i}" cx="50%" cy="50%" r="50%">
       <stop offset="0%" stop-color="{palette['spot1_core']}" stop-opacity="1.0" />
-      <stop offset="26%" stop-color="{palette['spot1_glow']}" stop-opacity="0.95" />
-      <stop offset="60%" stop-color="{palette['spot1_outer']}" stop-opacity="0.65" />
+      <stop offset="30%" stop-color="{palette['spot1_glow']}" stop-opacity="0.90" />
+      <stop offset="65%" stop-color="{palette['spot1_outer']}" stop-opacity="0.55" />
       <stop offset="100%" stop-color="{palette['body_c3']}" stop-opacity="0.0" />
     </radialGradient>
 
-    <!-- Secondary Counter-Tone Light Spot (Secondary Flare) -->
+    <!-- Secondary Counter-Tone Light Spot -->
     <radialGradient id="secondarySpot_{i}" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="{palette['spot2_core']}" stop-opacity="0.90" />
-      <stop offset="40%" stop-color="{palette['spot2_mid']}" stop-opacity="0.65" />
-      <stop offset="80%" stop-color="{palette['spot2_outer']}" stop-opacity="0.30" />
+      <stop offset="0%" stop-color="{palette['spot2_core']}" stop-opacity="0.85" />
+      <stop offset="45%" stop-color="{palette['spot2_mid']}" stop-opacity="0.55" />
       <stop offset="100%" stop-color="#000000" stop-opacity="0.0" />
     </radialGradient>
   </defs>
 
-  <!-- 0. Environmental Ambient Illumination (Radiates soft ambient light into surrounding space) -->
+  <!-- 0. Environmental Ambient Illumination -->
   <circle cx="{c}" cy="{c}" r="{canvas_size // 2 - 10}" fill="url(#ambientSpill_{i})" filter="url(#ambientSpillBlur_{i})" />
 
-  <!-- 1. Rich Atmospheric Neon Bloom (Deep + Mid Layered Aura) -->
+  <!-- 1. Atmospheric Neon Bloom -->
   <circle cx="{c}" cy="{c}" r="{r_aura_outer}" fill="url(#outerAuraDeep_{i})" filter="url(#auraGlowDeep_{i})" />
-  <circle cx="{c}" cy="{c}" r="{r_aura_inner}" fill="url(#innerAuraBright_{i})" filter="url(#auraGlowMid_{i})" />
+  <circle cx="{c}" cy="{c}" r="{r_aura_inner}" fill="url(#innerAuraBright_{i})" filter="url(#auraGlowDeep_{i})" />
 
   <!-- 2. Concentric Surrounding Acoustic Shockwave Rings -->
   {rings_svg}
@@ -453,18 +441,18 @@ def generate_animated_orb_loop(
   <!-- 4. Multi-Spectral Interior Light Layers -->
   <g clip-path="url(#sphereClip_{i})">
     <!-- Secondary Counter-Tone Flare (Bottom-Right) -->
-    <ellipse cx="{spot2_x}" cy="{spot2_y}" rx="{spot2_rx}" ry="{spot2_ry}" fill="url(#secondarySpot_{i})" filter="url(#secondaryBlur_{i})" />
+    <ellipse cx="{spot2_x}" cy="{spot2_y}" rx="{spot2_rx}" ry="{spot2_ry}" fill="url(#secondarySpot_{i})" filter="url(#coreBlur_{i})" />
 
     <!-- Primary Incandescent Flare (Top-Left) -->
     <ellipse cx="{spot1_x}" cy="{spot1_y}" rx="{spot1_rx}" ry="{spot1_ry}" fill="url(#primarySpot_{i})" filter="url(#coreBlur_{i})" />
-    <circle cx="{spot1_x}" cy="{spot1_y}" r="{int(spot1_rx * 0.45)}" fill="{palette['spot1_core']}" opacity="0.98" filter="url(#coreBlur_{i})" />
+    <circle cx="{spot1_x}" cy="{spot1_y}" r="{int(spot1_rx * 0.45)}" fill="{palette['spot1_core']}" opacity="0.95" filter="url(#coreBlur_{i})" />
 
     <!-- Subsurface Rim Accent -->
-    <circle cx="{c}" cy="{c}" r="{r_sphere - 3}" fill="none" stroke="{palette['rim_stroke']}" stroke-width="4" opacity="0.55" filter="url(#coreBlur_{i})" />
+    <circle cx="{c}" cy="{c}" r="{r_sphere - 3}" fill="none" stroke="{palette['rim_stroke']}" stroke-width="3" opacity="0.50" filter="url(#coreBlur_{i})" />
   </g>
 
   <!-- 5. Inner Concentric Rim Light -->
-  <circle cx="{c}" cy="{c}" r="{r_sphere - 2}" fill="none" stroke="{palette['aura_inner']}" stroke-width="3" opacity="0.75" />
+  <circle cx="{c}" cy="{c}" r="{r_sphere - 2}" fill="none" stroke="{palette['aura_inner']}" stroke-width="2.5" opacity="0.70" />
 </svg>"""
             (frames_dir / f"frame_{i:03d}.svg").write_text(svg, encoding="utf-8")
 
@@ -501,9 +489,9 @@ def get_or_create_orb_asset(
     return generate_animated_orb_loop(
         palette_key=palette,
         mode=mode,
-        canvas_size=600,
+        canvas_size=500,
         fps=30,
-        loop_frames=60,
+        loop_frames=45,
         target_dir=target_dir,
         force_refresh=force_refresh
     )
@@ -1061,13 +1049,13 @@ def render_orb_test_preview(
 
     drift_q_active_x = "14.0*sin(2*PI*t/3.6)"
     drift_q_active_y = "18.0*sin(2*PI*t/2.4)"
-    drift_q_resting_x = "4.0*sin(2*PI*t/3.6)"
-    drift_q_resting_y = "5.0*sin(2*PI*t/2.4)"
+    drift_q_resting_x = "6.5*sin(2*PI*t/3.8)"
+    drift_q_resting_y = "8.0*sin(2*PI*t/2.6)"
 
     drift_s_active_x = "14.0*sin(2*PI*t/3.2)"
     drift_s_active_y = "18.0*sin(2*PI*t/2.8)"
-    drift_s_resting_x = "4.0*sin(2*PI*t/3.2)"
-    drift_s_resting_y = "5.0*sin(2*PI*t/2.8)"
+    drift_s_resting_x = "6.5*sin(2*PI*t/3.5)"
+    drift_s_resting_y = "8.0*sin(2*PI*t/2.7)"
 
     drift_intro_x = "30.0*exp(-7.0*t)*cos(16.0*t)"
     drift_intro_y = "35.0*exp(-7.0*t)*sin(16.0*t)"
@@ -1183,8 +1171,8 @@ def render_orb_test_preview(
                 q_idle_cur += 1
                 dq_x = drift_q_resting_x
                 dq_y = drift_q_resting_y
-                q_alpha = 0.65
-                q_filt = f"scale=400:400,format=yuva420p,colorchannelmixer=aa={q_alpha}"
+                q_alpha = 0.80
+                q_filt = f"scale=410:410,format=yuva420p,colorchannelmixer=aa={q_alpha}"
 
             filter_complex.append(f"[{q_src}]{q_filt}[q_sc_{idx}]")
             filter_complex.append(f"[{cur_v}][q_sc_{idx}]overlay=eval=frame:x='W*0.25-w/2 + {dq_x}{intro_dx}':y='H*0.38-h/2 + {dq_y}{intro_dy}':enable='between(t,{st},{et})'[v_sc_{idx}_q]")
@@ -1203,8 +1191,8 @@ def render_orb_test_preview(
                 s_idle_cur += 1
                 ds_x = drift_s_resting_x
                 ds_y = drift_s_resting_y
-                s_alpha = 0.65
-                s_filt = f"scale=350:350,format=yuva420p,colorchannelmixer=aa={s_alpha}"
+                s_alpha = 0.80
+                s_filt = f"scale=360:360,format=yuva420p,colorchannelmixer=aa={s_alpha}"
 
             filter_complex.append(f"[{s_src}]{s_filt}[s_sc_{idx}]")
             filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W*0.75-w/2 - 28 + {ds_x}{intro_dx}':y='H*0.39-h/2 + {ds_y}{intro_dy}':enable='between(t,{st},{et})'[v_sc_{idx}_s]")
