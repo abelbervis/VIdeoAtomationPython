@@ -296,21 +296,28 @@ def generate_animated_orb_loop(
             tau = 2 * math.pi * t
 
             if mode == "idle":
-                # LIVING PRESENCE / LISTENING ORB: Organic breathing, active presence, gentle living float
+                # LIVING PRESENCE / LISTENING ORB: Organic breathing, rotating plasma core, serene orbital presence
                 r_sphere = int(r_sphere_base + 6 * math.sin(tau))
                 r_aura_outer = int(r_aura_outer_base + 8 * math.sin(tau))
                 r_aura_inner = int(r_aura_inner_base + 6 * math.sin(tau))
                 r_ambient_spill = int((canvas_size * 0.44) + 8 * math.sin(tau))
 
-                spot1_x = int(c - r_sphere * 0.32 + 4 * math.sin(tau))
-                spot1_y = int(c - r_sphere * 0.28 + 3 * math.cos(tau))
+                # Internal Differential Plasma Vortex (Slow, hypnotic celestial rotation)
+                plasma_angle_1 = tau
+                plasma_angle_2 = -tau * 0.75 + math.pi
+                
+                spot1_x = int(c + (r_sphere * 0.30) * math.cos(plasma_angle_1))
+                spot1_y = int(c + (r_sphere * 0.26) * math.sin(plasma_angle_1))
                 spot1_rx = int(r_sphere * 0.50 + 3 * math.sin(tau))
                 spot1_ry = int(r_sphere * 0.46 + 2 * math.cos(tau))
 
-                spot2_x = int(c + r_sphere * 0.30 - 4 * math.sin(tau))
-                spot2_y = int(c + r_sphere * 0.28 - 3 * math.cos(tau))
+                spot2_x = int(c + (r_sphere * 0.32) * math.cos(plasma_angle_2))
+                spot2_y = int(c + (r_sphere * 0.28) * math.sin(plasma_angle_2))
                 spot2_rx = int(r_sphere * 0.42 + 2 * math.sin(tau))
                 spot2_ry = int(r_sphere * 0.38 + 2 * math.cos(tau))
+
+                body_cx_pct = int(50 + 6 * math.cos(tau))
+                body_cy_pct = int(48 + 5 * math.sin(tau))
 
                 # Single, living harmonic ring breathing organically in subtle harmony
                 calm_ring_r = int(r_sphere + 22 + 5 * math.sin(tau + 0.6))
@@ -322,21 +329,28 @@ def generate_animated_orb_loop(
   <circle cx="{c}" cy="{c}" r="{calm_ring_r}" fill="none" stroke="{palette['ring_stroke']}" stroke-width="2.0" opacity="0.75" />
 """
             else:
-                # ACTIVE / SPEAKING ORB: Sweet spot with 2 harmonic acoustic shockwave rings + vocal pulse
+                # ACTIVE / SPEAKING ORB: High-energy acoustic resonant shockwaves + active churning plasma core
                 r_sphere = int(r_sphere_base + 9 * math.sin(tau))
                 r_aura_outer = int(r_aura_outer_base + 16 * math.sin(tau))
                 r_aura_inner = int(r_aura_inner_base + 12 * math.sin(tau))
                 r_ambient_spill = int((canvas_size * 0.46) + 16 * math.sin(tau))
 
-                spot1_x = int(c - r_sphere * 0.32 + 7 * math.sin(tau))
-                spot1_y = int(c - r_sphere * 0.28 + 6 * math.cos(tau))
+                # Dynamic Plasma Vortex Swirl (Accelerated energetic rotation)
+                plasma_angle_1 = 1.6 * tau
+                plasma_angle_2 = -1.4 * tau + math.pi
+
+                spot1_x = int(c + (r_sphere * 0.32) * math.cos(plasma_angle_1))
+                spot1_y = int(c + (r_sphere * 0.28) * math.sin(plasma_angle_1))
                 spot1_rx = int(r_sphere * 0.54 + 5 * math.sin(2 * tau))
                 spot1_ry = int(r_sphere * 0.50 + 4 * math.cos(2 * tau))
 
-                spot2_x = int(c + r_sphere * 0.30 - 7 * math.sin(tau))
-                spot2_y = int(c + r_sphere * 0.28 - 6 * math.cos(tau))
+                spot2_x = int(c + (r_sphere * 0.34) * math.cos(plasma_angle_2))
+                spot2_y = int(c + (r_sphere * 0.30) * math.sin(plasma_angle_2))
                 spot2_rx = int(r_sphere * 0.46 + 4 * math.cos(2 * tau))
                 spot2_ry = int(r_sphere * 0.42 + 3 * math.sin(2 * tau))
+
+                body_cx_pct = int(50 + 9 * math.cos(1.5 * tau))
+                body_cy_pct = int(48 + 8 * math.sin(1.5 * tau))
 
                 # 2 Balanced Concentric Harmonic Acoustic Rings
                 # Ring 1: Primary voice resonant ring
@@ -399,8 +413,8 @@ def generate_animated_orb_loop(
       <stop offset="100%" stop-color="#000000" stop-opacity="0.0" />
     </radialGradient>
 
-    <!-- Multi-Spectral Chromatic Sphere Body Gradient -->
-    <radialGradient id="sphereBody_{i}" cx="42%" cy="38%" r="62%">
+    <!-- Multi-Spectral Chromatic Dynamic Plasma Body Gradient -->
+    <radialGradient id="sphereBody_{i}" cx="{body_cx_pct}%" cy="{body_cy_pct}%" r="62%">
       <stop offset="0%" stop-color="{palette['body_c0']}" />
       <stop offset="22%" stop-color="{palette['body_c1']}" />
       <stop offset="48%" stop-color="{palette['body_c2']}" />
@@ -1047,15 +1061,18 @@ def render_orb_test_preview(
     eq_s = f"eval=frame:brightness='-0.05 + (0.20 + 0.14*{voice_pulse_s})*({speech_mask_s})':contrast='1.0 + (0.30 + 0.15*{voice_pulse_s})*({speech_mask_s})':saturation='1.0 + (0.35 + 0.20*{voice_pulse_s})*({speech_mask_s})'"
     hue_s = f"h='(14 + 6*{voice_pulse_s})*({speech_mask_s}) + 6*sin(2*PI*t/2.4)':s='1.0 + (0.30 + 0.20*{voice_pulse_s})*({speech_mask_s})'"
 
-    drift_q_active_x = "14.0*sin(2*PI*t/3.6)"
-    drift_q_active_y = "18.0*sin(2*PI*t/2.4)"
-    drift_q_resting_x = "6.5*sin(2*PI*t/3.8)"
-    drift_q_resting_y = "8.0*sin(2*PI*t/2.6)"
+    # Cosmic Lissajous Gravitational Orbit & Conversational Leaning
+    # When speaking, an entity leans inward into the conversational gravity well.
+    # When listening, an entity floats in a majestic, wider Lissajous orbital trajectory with alive breathing presence.
+    drift_q_active_x = "(18.0 + 12.0*sin(2*PI*t/3.2) + 4.0*cos(2*PI*t/1.6))"
+    drift_q_active_y = "(16.0*sin(2*PI*t/2.4) + 6.0*cos(2*PI*t/1.2))"
+    drift_q_resting_x = "(-8.0 + 10.0*sin(2*PI*t/4.0))"
+    drift_q_resting_y = "(12.0*cos(2*PI*t/3.0) + 4.0*sin(2*PI*t/1.5))"
 
-    drift_s_active_x = "14.0*sin(2*PI*t/3.2)"
-    drift_s_active_y = "18.0*sin(2*PI*t/2.8)"
-    drift_s_resting_x = "6.5*sin(2*PI*t/3.5)"
-    drift_s_resting_y = "8.0*sin(2*PI*t/2.7)"
+    drift_s_active_x = "(-18.0 - 12.0*sin(2*PI*t/3.0) - 4.0*cos(2*PI*t/1.5))"
+    drift_s_active_y = "(16.0*sin(2*PI*t/2.6) + 6.0*cos(2*PI*t/1.3))"
+    drift_s_resting_x = "(8.0 + 10.0*sin(2*PI*t/3.8))"
+    drift_s_resting_y = "(12.0*cos(2*PI*t/3.2) + 4.0*sin(2*PI*t/1.6))"
 
     drift_intro_x = "30.0*exp(-7.0*t)*cos(16.0*t)"
     drift_intro_y = "35.0*exp(-7.0*t)*sin(16.0*t)"
