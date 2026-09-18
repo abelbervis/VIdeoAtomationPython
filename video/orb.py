@@ -280,7 +280,7 @@ def generate_animated_orb_loop(
     if not force_refresh and mov_path.exists() and mov_path.stat().st_size > 10000:
         return mov_path
 
-    print(f"  🔮 Generando orbe bio-reactivo ('{palette_key}' | modo '{mode}' | optimizado)...")
+    print(f"  🔮 Generando orbe consciente ('{palette_key}' | modo '{mode}' | mirada sutil)...")
 
     frames_dir = dest_dir / f"_temp_frames_{palette_key}_{mode}"
     frames_dir.mkdir(parents=True, exist_ok=True)
@@ -290,85 +290,110 @@ def generate_animated_orb_loop(
     r_aura_outer_base = int(canvas_size * 0.46)
     r_aura_inner_base = int(canvas_size * 0.36)
 
+    # Intelligent Conscious Gaze Geometry
+    # - Quantum (left host) naturally focuses gaze towards Solar (right) and audience
+    # - Solar/Cosmic (right host) naturally focuses gaze towards Quantum (left) and audience
+    if "quantum" in palette_key:
+        gaze_base_x = 0.16   # oriented right towards partner
+        gaze_base_y = -0.14  # slightly upper focus
+        opp_base_x = -0.18
+        opp_base_y = 0.20
+        body_base_cx = 54
+        body_base_cy = 46
+    elif "solar" in palette_key or "cosmic" in palette_key:
+        gaze_base_x = -0.16  # oriented left towards partner
+        gaze_base_y = -0.14  # slightly upper focus
+        opp_base_x = 0.18
+        opp_base_y = 0.20
+        body_base_cx = 46
+        body_base_cy = 46
+    else:
+        gaze_base_x = 0.0
+        gaze_base_y = -0.16
+        opp_base_x = 0.0
+        opp_base_y = 0.22
+        body_base_cx = 50
+        body_base_cy = 46
+
     try:
         for i in range(loop_frames):
             t = i / loop_frames
             tau = 2 * math.pi * t
 
             if mode == "idle":
-                # LIVING PRESENCE / LISTENING ORB: Organic breathing, rotating plasma core, serene orbital presence
-                r_sphere = int(r_sphere_base + 6 * math.sin(tau))
-                r_aura_outer = int(r_aura_outer_base + 8 * math.sin(tau))
-                r_aura_inner = int(r_aura_inner_base + 6 * math.sin(tau))
-                r_ambient_spill = int((canvas_size * 0.44) + 8 * math.sin(tau))
+                # LIVING CONSCIOUS PRESENCE (Listening / Attentive)
+                # Gentle organic breathing, subtle attentive micro-gaze tracking
+                r_sphere = int(r_sphere_base + 3.5 * math.sin(tau))
+                r_aura_outer = int(r_aura_outer_base + 5.0 * math.sin(tau))
+                r_aura_inner = int(r_aura_inner_base + 4.0 * math.sin(tau))
+                r_ambient_spill = int((canvas_size * 0.44) + 6.0 * math.sin(tau))
 
-                # Internal Differential Plasma Vortex (Slow, hypnotic celestial rotation)
-                plasma_angle_1 = tau
-                plasma_angle_2 = -tau * 0.75 + math.pi
-                
-                spot1_x = int(c + (r_sphere * 0.30) * math.cos(plasma_angle_1))
-                spot1_y = int(c + (r_sphere * 0.26) * math.sin(plasma_angle_1))
-                spot1_rx = int(r_sphere * 0.50 + 3 * math.sin(tau))
-                spot1_ry = int(r_sphere * 0.46 + 2 * math.cos(tau))
+                # Subtle Ocular Micro-Saccades (attentive listening gaze without chaotic rotation)
+                micro_gaze_x = 3.5 * math.sin(tau)
+                micro_gaze_y = 2.0 * math.cos(tau)
 
-                spot2_x = int(c + (r_sphere * 0.32) * math.cos(plasma_angle_2))
-                spot2_y = int(c + (r_sphere * 0.28) * math.sin(plasma_angle_2))
-                spot2_rx = int(r_sphere * 0.42 + 2 * math.sin(tau))
-                spot2_ry = int(r_sphere * 0.38 + 2 * math.cos(tau))
+                spot1_x = int(c + (r_sphere * gaze_base_x) + micro_gaze_x)
+                spot1_y = int(c + (r_sphere * gaze_base_y) + micro_gaze_y)
+                spot1_rx = int(r_sphere * 0.48 + 2.0 * math.sin(tau))
+                spot1_ry = int(r_sphere * 0.44 + 1.5 * math.cos(tau))
 
-                body_cx_pct = int(50 + 6 * math.cos(tau))
-                body_cy_pct = int(48 + 5 * math.sin(tau))
+                spot2_x = int(c + (r_sphere * opp_base_x) - micro_gaze_x * 0.6)
+                spot2_y = int(c + (r_sphere * opp_base_y) - micro_gaze_y * 0.6)
+                spot2_rx = int(r_sphere * 0.40 + 1.5 * math.sin(tau))
+                spot2_ry = int(r_sphere * 0.36 + 1.5 * math.cos(tau))
 
-                # Single, living harmonic ring breathing organically in subtle harmony
-                calm_ring_r = int(r_sphere + 22 + 5 * math.sin(tau + 0.6))
+                body_cx_pct = int(body_base_cx + 2.0 * math.sin(tau))
+                body_cy_pct = int(body_base_cy + 1.5 * math.cos(tau))
+
+                # Single, living harmonic ring breathing serenely
+                calm_ring_r = int(r_sphere + 20 + 3.0 * math.sin(tau + 0.5))
                 calm_ring_glow = calm_ring_r + 4
 
                 rings_svg = f"""
-  <!-- Living Concentric Listening Ring (Organic subtle pulsation) -->
-  <circle cx="{c}" cy="{c}" r="{calm_ring_glow}" fill="none" stroke="{palette['aura_inner']}" stroke-width="4" opacity="0.55" filter="url(#ringGlow_{i})" />
-  <circle cx="{c}" cy="{c}" r="{calm_ring_r}" fill="none" stroke="{palette['ring_stroke']}" stroke-width="2.0" opacity="0.75" />
+  <!-- Attentive Concentric Listening Ring (Subtle steady aura) -->
+  <circle cx="{c}" cy="{c}" r="{calm_ring_glow}" fill="none" stroke="{palette['aura_inner']}" stroke-width="3.5" opacity="0.45" filter="url(#ringGlow_{i})" />
+  <circle cx="{c}" cy="{c}" r="{calm_ring_r}" fill="none" stroke="{palette['ring_stroke']}" stroke-width="1.8" opacity="0.65" />
 """
             else:
-                # ACTIVE / SPEAKING ORB: High-energy acoustic resonant shockwaves + active churning plasma core
-                r_sphere = int(r_sphere_base + 9 * math.sin(tau))
-                r_aura_outer = int(r_aura_outer_base + 16 * math.sin(tau))
-                r_aura_inner = int(r_aura_inner_base + 12 * math.sin(tau))
-                r_ambient_spill = int((canvas_size * 0.46) + 16 * math.sin(tau))
+                # ACTIVE SPEAKING ORB (Speaking with Focused Intent)
+                # Clear voice pulse with firm, direct focal gaze and clean harmonic shockwave rings
+                r_sphere = int(r_sphere_base + 6.0 * math.sin(tau))
+                r_aura_outer = int(r_aura_outer_base + 10.0 * math.sin(tau))
+                r_aura_inner = int(r_aura_inner_base + 8.0 * math.sin(tau))
+                r_ambient_spill = int((canvas_size * 0.46) + 10.0 * math.sin(tau))
 
-                # Dynamic Plasma Vortex Swirl (Accelerated energetic rotation)
-                plasma_angle_1 = 1.6 * tau
-                plasma_angle_2 = -1.4 * tau + math.pi
+                # Direct, Focused Conversational Gaze (Steady locked gaze with gentle intensity pulsation)
+                micro_gaze_x = 2.0 * math.sin(tau)
+                micro_gaze_y = 1.5 * math.cos(tau)
 
-                spot1_x = int(c + (r_sphere * 0.32) * math.cos(plasma_angle_1))
-                spot1_y = int(c + (r_sphere * 0.28) * math.sin(plasma_angle_1))
-                spot1_rx = int(r_sphere * 0.54 + 5 * math.sin(2 * tau))
-                spot1_ry = int(r_sphere * 0.50 + 4 * math.cos(2 * tau))
+                spot1_x = int(c + (r_sphere * (gaze_base_x * 1.05)) + micro_gaze_x)
+                spot1_y = int(c + (r_sphere * gaze_base_y) + micro_gaze_y)
+                spot1_rx = int(r_sphere * 0.52 + 3.0 * math.sin(tau))
+                spot1_ry = int(r_sphere * 0.48 + 2.5 * math.cos(tau))
 
-                spot2_x = int(c + (r_sphere * 0.34) * math.cos(plasma_angle_2))
-                spot2_y = int(c + (r_sphere * 0.30) * math.sin(plasma_angle_2))
-                spot2_rx = int(r_sphere * 0.46 + 4 * math.cos(2 * tau))
-                spot2_ry = int(r_sphere * 0.42 + 3 * math.sin(2 * tau))
+                spot2_x = int(c + (r_sphere * opp_base_x) - micro_gaze_x * 0.5)
+                spot2_y = int(c + (r_sphere * opp_base_y) - micro_gaze_y * 0.5)
+                spot2_rx = int(r_sphere * 0.44 + 2.0 * math.sin(tau))
+                spot2_ry = int(r_sphere * 0.40 + 2.0 * math.cos(tau))
 
-                body_cx_pct = int(50 + 9 * math.cos(1.5 * tau))
-                body_cy_pct = int(48 + 8 * math.sin(1.5 * tau))
+                body_cx_pct = int(body_base_cx + 3.0 * math.sin(tau))
+                body_cy_pct = int(body_base_cy + 2.0 * math.cos(tau))
 
-                # 2 Balanced Concentric Harmonic Acoustic Rings
-                # Ring 1: Primary voice resonant ring
-                ring1_r = int(r_sphere + 22 + 9 * math.sin(2.0 * tau))
-                ring1_glow = ring1_r + 5
+                # 2 Elegant, Harmonic Acoustic Rings (Smooth voice pulse without chaos)
+                ring1_r = int(r_sphere + 18 + 5.0 * math.sin(tau))
+                ring1_glow = ring1_r + 4
 
-                # Ring 2: Outer expanding acoustic ripple
-                ring2_r = int(r_sphere + 44 - 14 * math.cos(tau))
-                ring2_glow = ring2_r + 6
+                ring2_r = int(r_sphere + 36 + 7.0 * math.sin(tau + 0.8))
+                ring2_glow = ring2_r + 5
 
                 rings_svg = f"""
-  <!-- Ring 2: Outer Acoustic Resonance Ripple -->
-  <circle cx="{c}" cy="{c}" r="{ring2_glow}" fill="none" stroke="{palette['aura_inner']}" stroke-width="5" opacity="0.55" filter="url(#ringGlow_{i})" />
-  <circle cx="{c}" cy="{c}" r="{ring2_r}" fill="none" stroke="{palette['ring_stroke']}" stroke-width="1.8" opacity="0.70" />
+  <!-- Ring 2: Outer Acoustic Resonance -->
+  <circle cx="{c}" cy="{c}" r="{ring2_glow}" fill="none" stroke="{palette['aura_inner']}" stroke-width="4.0" opacity="0.45" filter="url(#ringGlow_{i})" />
+  <circle cx="{c}" cy="{c}" r="{ring2_r}" fill="none" stroke="{palette['ring_stroke']}" stroke-width="1.6" opacity="0.60" />
 
-  <!-- Ring 1: Primary Voice Resonant Ring -->
-  <circle cx="{c}" cy="{c}" r="{ring1_glow}" fill="none" stroke="{palette['aura_inner']}" stroke-width="7" opacity="0.85" filter="url(#ringGlow_{i})" />
-  <circle cx="{c}" cy="{c}" r="{ring1_r}" fill="none" stroke="{palette['ring_stroke']}" stroke-width="2.6" opacity="0.95" />
+  <!-- Ring 1: Primary Harmonic Voice Ring -->
+  <circle cx="{c}" cy="{c}" r="{ring1_glow}" fill="none" stroke="{palette['aura_inner']}" stroke-width="6.0" opacity="0.75" filter="url(#ringGlow_{i})" />
+  <circle cx="{c}" cy="{c}" r="{ring1_r}" fill="none" stroke="{palette['ring_stroke']}" stroke-width="2.2" opacity="0.90" />
 """
 
             svg = f"""<svg width="{canvas_size}" height="{canvas_size}" viewBox="0 0 {canvas_size} {canvas_size}" xmlns="http://www.w3.org/2000/svg">
@@ -1053,29 +1078,28 @@ def render_orb_test_preview(
     speech_s_conditions = [f"between(t,{sc['start']},{sc['end']})" for sc in scene_records if sc["entity"] in ["solar", "both"]]
     speech_mask_s = f"({' + '.join(speech_s_conditions)})" if speech_s_conditions else "0"
 
-    voice_pulse_q = "(0.5 + 0.35*sin(2*PI*t/0.16) + 0.15*cos(2*PI*t/0.28))"
-    eq_q = f"eval=frame:brightness='-0.05 + (0.20 + 0.14*{voice_pulse_q})*({speech_mask_q})':contrast='1.0 + (0.30 + 0.15*{voice_pulse_q})*({speech_mask_q})':saturation='1.0 + (0.35 + 0.20*{voice_pulse_q})*({speech_mask_q})'"
-    hue_q = f"h='(14 + 6*{voice_pulse_q})*({speech_mask_q}) + 6*sin(2*PI*t/2.4)':s='1.0 + (0.30 + 0.20*{voice_pulse_q})*({speech_mask_q})'"
+    voice_pulse_q = "(0.5 + 0.30*sin(2*PI*t/0.24))"
+    eq_q = f"eval=frame:brightness='-0.03 + (0.16 + 0.10*{voice_pulse_q})*({speech_mask_q})':contrast='1.0 + (0.22 + 0.10*{voice_pulse_q})*({speech_mask_q})':saturation='1.0 + (0.25 + 0.12*{voice_pulse_q})*({speech_mask_q})'"
+    hue_q = f"h='(10 + 4*{voice_pulse_q})*({speech_mask_q}) + 4*sin(2*PI*t/3.6)':s='1.0 + (0.22 + 0.12*{voice_pulse_q})*({speech_mask_q})'"
 
-    voice_pulse_s = "(0.5 + 0.35*sin(2*PI*t/0.14) + 0.15*cos(2*PI*t/0.26))"
-    eq_s = f"eval=frame:brightness='-0.05 + (0.20 + 0.14*{voice_pulse_s})*({speech_mask_s})':contrast='1.0 + (0.30 + 0.15*{voice_pulse_s})*({speech_mask_s})':saturation='1.0 + (0.35 + 0.20*{voice_pulse_s})*({speech_mask_s})'"
-    hue_s = f"h='(14 + 6*{voice_pulse_s})*({speech_mask_s}) + 6*sin(2*PI*t/2.4)':s='1.0 + (0.30 + 0.20*{voice_pulse_s})*({speech_mask_s})'"
+    voice_pulse_s = "(0.5 + 0.30*sin(2*PI*t/0.24))"
+    eq_s = f"eval=frame:brightness='-0.03 + (0.16 + 0.10*{voice_pulse_s})*({speech_mask_s})':contrast='1.0 + (0.22 + 0.10*{voice_pulse_s})*({speech_mask_s})':saturation='1.0 + (0.25 + 0.12*{voice_pulse_s})*({speech_mask_s})'"
+    hue_s = f"h='(10 + 4*{voice_pulse_s})*({speech_mask_s}) + 4*sin(2*PI*t/3.6)':s='1.0 + (0.22 + 0.12*{voice_pulse_s})*({speech_mask_s})'"
 
-    # Cosmic Lissajous Gravitational Orbit & Conversational Leaning
-    # When speaking, an entity leans inward into the conversational gravity well.
-    # When listening, an entity floats in a majestic, wider Lissajous orbital trajectory with alive breathing presence.
-    drift_q_active_x = "(18.0 + 12.0*sin(2*PI*t/3.2) + 4.0*cos(2*PI*t/1.6))"
-    drift_q_active_y = "(16.0*sin(2*PI*t/2.4) + 6.0*cos(2*PI*t/1.2))"
-    drift_q_resting_x = "(-8.0 + 10.0*sin(2*PI*t/4.0))"
-    drift_q_resting_y = "(12.0*cos(2*PI*t/3.0) + 4.0*sin(2*PI*t/1.5))"
+    # Smooth Celestial Orbit & Natural Conversational Leaning
+    # Slow 5.0 - 7.5 second harmonic period, smooth and elegant without jitter
+    drift_q_active_x = "(10.0 + 5.0*sin(2*PI*t/6.0))"
+    drift_q_active_y = "(7.0*sin(2*PI*t/4.8))"
+    drift_q_resting_x = "(-4.0 + 5.0*sin(2*PI*t/7.0))"
+    drift_q_resting_y = "(6.0*cos(2*PI*t/5.4))"
 
-    drift_s_active_x = "(-18.0 - 12.0*sin(2*PI*t/3.0) - 4.0*cos(2*PI*t/1.5))"
-    drift_s_active_y = "(16.0*sin(2*PI*t/2.6) + 6.0*cos(2*PI*t/1.3))"
-    drift_s_resting_x = "(8.0 + 10.0*sin(2*PI*t/3.8))"
-    drift_s_resting_y = "(12.0*cos(2*PI*t/3.2) + 4.0*sin(2*PI*t/1.6))"
+    drift_s_active_x = "(-10.0 - 5.0*sin(2*PI*t/5.8))"
+    drift_s_active_y = "(7.0*sin(2*PI*t/4.6))"
+    drift_s_resting_x = "(4.0 + 5.0*sin(2*PI*t/6.8))"
+    drift_s_resting_y = "(6.0*cos(2*PI*t/5.2))"
 
-    drift_intro_x = "30.0*exp(-7.0*t)*cos(16.0*t)"
-    drift_intro_y = "35.0*exp(-7.0*t)*sin(16.0*t)"
+    drift_intro_x = "20.0*exp(-6.0*t)*cos(12.0*t)"
+    drift_intro_y = "24.0*exp(-6.0*t)*sin(12.0*t)"
 
     from utils.fonts import resolve_best_font_path
     font_param, _ = resolve_best_font_path()
