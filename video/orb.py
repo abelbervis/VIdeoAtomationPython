@@ -1235,67 +1235,50 @@ def render_orb_test_preview(
         sc_visual_end = scene_records[idx + 1]["start"] if idx + 1 < len(scene_records) else total_duration
         ent = sc["entity"]
         shot = sc["shot"]
-        sc_dur = max(round(sc_visual_end - st, 3), 0.5)
-        u_expr = f"(t-{st})/{sc_dur}"
-
-        intro_dx = f" + {drift_intro_x}" if idx == 0 else ""
-        intro_dy = f" + {drift_intro_y}" if idx == 0 else ""
-
-        # High-impact camera cut transition effects (Scenes 2, 3, 4...)
-        if idx > 0:
-            # 1. Optical Lens Transition Flash (0.12s pulse matching whoosh sound effect)
-            flash_col = "0x00e5ff@0.22" if ent == "quantum" else ("0xffaa00@0.22" if ent == "solar" else "white@0.25")
-            flash_end = round(st + 0.12, 2)
-            filter_complex.append(f"[{cur_v}]drawbox=x=0:y=0:w=iw:h=ih:color={flash_col}:t=fill:enable='between(t,{st},{flash_end})'[v_flash_{idx}]")
-            cur_v = f"v_flash_{idx}"
-
-        # Subtle kinetic camera cut snap impulse
-        snap_impulse_x = f" + 10.0*exp(-8.0*(t-{st}))*cos(14.0*(t-{st}))" if idx > 0 else ""
-        snap_impulse_y = f" + 12.0*exp(-8.0*(t-{st}))*sin(14.0*(t-{st}))" if idx > 0 else ""
 
         if shot == "wide":
             is_q_active = (ent in ["quantum", "both"])
             if is_q_active:
                 q_src = f"q_talk_{q_talk_cur}"
                 q_talk_cur += 1
-                # Organic Floating Levitation with Conversational Presence:
-                dq_x = f"14.0*sin(2*PI*t/3.4) + 6.0*cos(2*PI*t/1.9) + 18.0*sin(PI*{u_expr})"
-                dq_y = f"-18.0*sin(2*PI*t/3.0) - 7.0*cos(2*PI*t/1.7) - 10.0*sin(PI*{u_expr})"
+                # Pure Majestic Floating Levitation with Subtle Harmonic Resonance:
+                dq_x = "14.0*sin(2*PI*t/3.4) + 6.0*cos(2*PI*t/1.9)"
+                dq_y = "-18.0*sin(2*PI*t/3.0) - 7.0*cos(2*PI*t/1.7)"
                 q_alpha = 1.0
                 q_filt = f"scale=420:420,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa={q_alpha}"
             else:
                 q_src = f"q_idle_{q_idle_cur}"
                 q_idle_cur += 1
                 # Gentle Listening Floating Motion:
-                dq_x = f"14.0*sin(2*PI*t/3.4) + 6.0*cos(2*PI*t/1.9)"
-                dq_y = f"-18.0*sin(2*PI*t/3.0) - 7.0*cos(2*PI*t/1.7)"
+                dq_x = "14.0*sin(2*PI*t/3.4) + 6.0*cos(2*PI*t/1.9)"
+                dq_y = "-18.0*sin(2*PI*t/3.0) - 7.0*cos(2*PI*t/1.7)"
                 q_alpha = 0.85
                 q_filt = f"scale=410:410,format=yuva420p,colorchannelmixer=aa={q_alpha}"
 
             filter_complex.append(f"[{q_src}]{q_filt}[q_sc_{idx}]")
-            filter_complex.append(f"[{cur_v}][q_sc_{idx}]overlay=eval=frame:x='W*0.25-w/2 + {dq_x}{intro_dx}{snap_impulse_x}':y='H*0.38-h/2 + {dq_y}{intro_dy}{snap_impulse_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_q]")
+            filter_complex.append(f"[{cur_v}][q_sc_{idx}]overlay=eval=frame:x='W*0.25-w/2 + {dq_x}':y='H*0.38-h/2 + {dq_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_q]")
             cur_v = f"v_sc_{idx}_q"
 
             is_s_active = (ent in ["solar", "both"])
             if is_s_active:
                 s_src = f"s_talk_{s_talk_cur}"
                 s_talk_cur += 1
-                # Organic Floating Levitation for Solar:
-                ds_x = f"-14.0*sin(2*PI*t/3.6) - 6.0*cos(2*PI*t/2.1) - 18.0*sin(PI*{u_expr})"
-                ds_y = f"-18.0*cos(2*PI*t/3.2) - 7.0*sin(2*PI*t/1.9) - 10.0*sin(PI*{u_expr})"
+                # Pure Majestic Floating Levitation for Solar:
+                ds_x = "-14.0*sin(2*PI*t/3.6) - 6.0*cos(2*PI*t/2.1)"
+                ds_y = "-18.0*cos(2*PI*t/3.2) - 7.0*sin(2*PI*t/1.9)"
                 s_alpha = 1.0
                 s_filt = f"scale=370:370,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa={s_alpha}"
             else:
                 s_src = f"s_idle_{s_idle_cur}"
                 s_idle_cur += 1
                 # Gentle Listening Floating Motion for Solar:
-                ds_x = f"-14.0*sin(2*PI*t/3.6) - 6.0*cos(2*PI*t/2.1)"
-                ds_y = f"-18.0*cos(2*PI*t/3.2) - 7.0*sin(2*PI*t/1.9)"
+                ds_x = "-14.0*sin(2*PI*t/3.6) - 6.0*cos(2*PI*t/2.1)"
+                ds_y = "-18.0*cos(2*PI*t/3.2) - 7.0*sin(2*PI*t/1.9)"
                 s_alpha = 0.85
                 s_filt = f"scale=360:360,format=yuva420p,colorchannelmixer=aa={s_alpha}"
 
             filter_complex.append(f"[{s_src}]{s_filt}[s_sc_{idx}]")
-            filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W*0.75-w/2 - 28 + {ds_x}{intro_dx}{snap_impulse_x}':y='H*0.39-h/2 + {ds_y}{intro_dy}{snap_impulse_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_s]")
+            filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W*0.75-w/2 - 28 + {ds_x}':y='H*0.39-h/2 + {ds_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_s]")
             cur_v = f"v_sc_{idx}_s"
 
             if idx == 0:
@@ -1307,11 +1290,11 @@ def render_orb_test_preview(
         elif shot == "close_quantum":
             q_src = f"q_close_{q_close_cur}"
             q_close_cur += 1
-            # Close-up Floating Levitation for Quantum:
-            d_cq_x = f"10.0*sin(2*PI*t/3.2) + 5.0*cos(2*PI*t/1.8) + 14.0*sin(PI*{u_expr})"
-            d_cq_y = f"-16.0*sin(2*PI*t/2.8) - 6.0*cos(2*PI*t/1.6) - 8.0*sin(PI*{u_expr})"
+            # Close-up Floating Levitation for Quantum (Clean, centered, continuous):
+            d_cq_x = "10.0*sin(2*PI*t/3.4) + 5.0*cos(2*PI*t/1.9)"
+            d_cq_y = "-16.0*sin(2*PI*t/3.0) - 6.0*cos(2*PI*t/1.7)"
             filter_complex.append(f"[{q_src}]scale=820:820,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.98[q_sc_{idx}]")
-            filter_complex.append(f"[{cur_v}][q_sc_{idx}]overlay=eval=frame:x='W/2-w/2 + {d_cq_x}{snap_impulse_x}':y='H*0.38-h/2 + {d_cq_y}{snap_impulse_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_q]")
+            filter_complex.append(f"[{cur_v}][q_sc_{idx}]overlay=eval=frame:x='W/2-w/2 + {d_cq_x}':y='H*0.38-h/2 + {d_cq_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_q]")
             cur_v = f"v_sc_{idx}_q"
 
             if has_holo_q and not holo_q_used:
@@ -1323,10 +1306,10 @@ def render_orb_test_preview(
             s_src = f"s_close_{s_close_cur}"
             s_close_cur += 1
             # Close-up Floating Levitation for Solar:
-            d_cs_x = f"-10.0*sin(2*PI*t/3.2) - 5.0*cos(2*PI*t/1.8) - 14.0*sin(PI*{u_expr})"
-            d_cs_y = f"-16.0*sin(2*PI*t/2.8) - 6.0*cos(2*PI*t/1.6) - 8.0*sin(PI*{u_expr})"
+            d_cs_x = "-10.0*sin(2*PI*t/3.6) - 5.0*cos(2*PI*t/2.1)"
+            d_cs_y = "-16.0*cos(2*PI*t/3.2) - 6.0*sin(2*PI*t/1.9)"
             filter_complex.append(f"[{s_src}]scale=820:820,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.98[s_sc_{idx}]")
-            filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W/2-w/2 + {d_cs_x}{snap_impulse_x}':y='H*0.38-h/2 + {d_cs_y}{snap_impulse_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_s]")
+            filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W/2-w/2 + {d_cs_x}':y='H*0.38-h/2 + {d_cs_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_s]")
             cur_v = f"v_sc_{idx}_s"
 
             if has_holo_s and not holo_s_used:
@@ -1340,7 +1323,7 @@ def render_orb_test_preview(
             dq_x = "14.0*sin(2*PI*t/3.4) + 6.0*cos(2*PI*t/1.9)"
             dq_y = "-18.0*sin(2*PI*t/3.0) - 7.0*cos(2*PI*t/1.7)"
             filter_complex.append(f"[{q_src}]scale=420:420,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.98[q_sc_{idx}]")
-            filter_complex.append(f"[{cur_v}][q_sc_{idx}]overlay=eval=frame:x='W*0.25-w/2 + {dq_x}{snap_impulse_x}':y='H*0.38-h/2 + {dq_y}{snap_impulse_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_q]")
+            filter_complex.append(f"[{cur_v}][q_sc_{idx}]overlay=eval=frame:x='W*0.25-w/2 + {dq_x}':y='H*0.38-h/2 + {dq_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_q]")
             cur_v = f"v_sc_{idx}_q"
 
             s_src = f"s_talk_{s_talk_cur}"
@@ -1348,7 +1331,7 @@ def render_orb_test_preview(
             ds_x = "-14.0*sin(2*PI*t/3.6) - 6.0*cos(2*PI*t/2.1)"
             ds_y = "-18.0*cos(2*PI*t/3.2) - 7.0*sin(2*PI*t/1.9)"
             filter_complex.append(f"[{s_src}]scale=420:420,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.98[s_sc_{idx}]")
-            filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W*0.75-w/2 - 28 + {ds_x}{snap_impulse_x}':y='H*0.39-h/2 + {ds_y}{snap_impulse_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_s]")
+            filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W*0.75-w/2 - 28 + {ds_x}':y='H*0.39-h/2 + {ds_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_s]")
             cur_v = f"v_sc_{idx}_s"
 
     # Headline Hook Badge (Top Center during first scene)
