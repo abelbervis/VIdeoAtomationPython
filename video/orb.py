@@ -801,11 +801,9 @@ def render_orb_test_preview(
 
             if ent == "both":
                 p_q = output_path.parent / f"_temp_sc_{idx}_both_q.mp3"
-                p_s = output_path.parent / f"_temp_sc_{idx}_both_s.mp3"
-                temp_audio_files_to_clean.extend([p_q, p_s])
+                temp_audio_files_to_clean.append(p_q)
                 tts_tasks.append((text, p_q, "quantum"))
-                tts_tasks.append((text, p_s, "solar"))
-                scene_audio_paths = [p_q, p_s]
+                scene_audio_paths = [p_q]
             else:
                 p_sc = output_path.parent / f"_temp_sc_{idx}_{ent}.mp3"
                 temp_audio_files_to_clean.append(p_sc)
@@ -1021,7 +1019,7 @@ def render_orb_test_preview(
     # High-Performance Futuristic ASS Karaoke Subtitles (Using ALL dynamic scenes)
     from subtitles.generator import generate_cosmic_debate_karaoke_ass
     ass_sub_path = output_path.parent / "_temp_debate_karaoke.ass"
-    generate_cosmic_debate_karaoke_ass(scene_records, ass_sub_path, width=width, height=height)
+    generate_cosmic_debate_karaoke_ass(scene_records, ass_sub_path, width=width, height=height, roles=custom_roles)
     escaped_ass_path = str(ass_sub_path.resolve()).replace("\\", "/").replace(":", "\\:").replace("'", "\\'")
 
     bg_input = f"color=c=0x08090f:s={width}x{height}:r=30:d={total_duration}"
@@ -1112,12 +1110,12 @@ def render_orb_test_preview(
             ds_y = drift_s_active_y if is_s_active else drift_s_resting_y
             s_alpha = 1.0 if is_s_active else 0.70
 
-            filter_complex.append(f"[q_in_{q_cur}]scale=355:355,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa={q_alpha}[q_sc_{idx}]")
+            filter_complex.append(f"[q_in_{q_cur}]scale=420:420,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa={q_alpha}[q_sc_{idx}]")
             filter_complex.append(f"[{cur_v}][q_sc_{idx}]overlay=eval=frame:x='W*0.25-w/2 + {dq_x}{intro_dx}':y='H*0.38-h/2 + {dq_y}{intro_dy}':enable='between(t,{st},{et})'[v_sc_{idx}_q]")
             cur_v = f"v_sc_{idx}_q"
             q_cur += 1
 
-            filter_complex.append(f"[s_in_{s_cur}]scale=310:310,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa={s_alpha}[s_sc_{idx}]")
+            filter_complex.append(f"[s_in_{s_cur}]scale=370:370,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa={s_alpha}[s_sc_{idx}]")
             filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W*0.75-w/2 - 28 + {ds_x}{intro_dx}':y='H*0.39-h/2 + {ds_y}{intro_dy}':enable='between(t,{st},{et})'[v_sc_{idx}_s]")
             cur_v = f"v_sc_{idx}_s"
             s_cur += 1
@@ -1129,7 +1127,7 @@ def render_orb_test_preview(
                 cur_v = f"v_sc_{idx}_bs"
 
         elif shot == "close_quantum":
-            filter_complex.append(f"[q_in_{q_cur}]scale=550:550,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.98[q_sc_{idx}]")
+            filter_complex.append(f"[q_in_{q_cur}]scale=650:650,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.98[q_sc_{idx}]")
             filter_complex.append(f"[{cur_v}][q_sc_{idx}]overlay=eval=frame:x='W/2-w/2 + {drift_q_active_x} + 25.0*exp(-6.5*(t-{st}))*cos(16.0*(t-{st}))':y='H*0.38-h/2 + {drift_q_active_y} + 30.0*exp(-6.5*(t-{st}))*sin(16.0*(t-{st}))':enable='between(t,{st},{et})'[v_sc_{idx}_q]")
             cur_v = f"v_sc_{idx}_q"
             q_cur += 1
@@ -1140,7 +1138,7 @@ def render_orb_test_preview(
                 cur_v = f"v_sc_{idx}_hq"
 
         elif shot == "close_solar":
-            filter_complex.append(f"[s_in_{s_cur}]scale=550:550,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.98[s_sc_{idx}]")
+            filter_complex.append(f"[s_in_{s_cur}]scale=650:650,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.98[s_sc_{idx}]")
             filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W/2-w/2 + {drift_s_active_x} + 25.0*exp(-6.5*(t-{st}))*cos(16.0*(t-{st}))':y='H*0.38-h/2 + {drift_s_active_y} + 30.0*exp(-6.5*(t-{st}))*sin(16.0*(t-{st}))':enable='between(t,{st},{et})'[v_sc_{idx}_s]")
             cur_v = f"v_sc_{idx}_s"
             s_cur += 1
@@ -1151,24 +1149,24 @@ def render_orb_test_preview(
                 cur_v = f"v_sc_{idx}_hs"
 
         elif shot == "both":
-            filter_complex.append(f"[q_in_{q_cur}]scale=355:355,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.98[q_sc_{idx}]")
+            filter_complex.append(f"[q_in_{q_cur}]scale=420:420,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.98[q_sc_{idx}]")
             filter_complex.append(f"[{cur_v}][q_sc_{idx}]overlay=eval=frame:x='W*0.25-w/2 + {drift_q_active_x} + 15.0*exp(-6.5*(t-{st}))*cos(16.0*(t-{st}))':y='H*0.38-h/2 + {drift_q_active_y} + 18.0*exp(-6.5*(t-{st}))*sin(16.0*(t-{st}))':enable='between(t,{st},{et})'[v_sc_{idx}_q]")
             cur_v = f"v_sc_{idx}_q"
             q_cur += 1
 
-            filter_complex.append(f"[s_in_{s_cur}]scale=355:355,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.98[s_sc_{idx}]")
+            filter_complex.append(f"[s_in_{s_cur}]scale=420:420,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.98[s_sc_{idx}]")
             filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W*0.75-w/2 - 28 + {drift_s_active_x} + 15.0*exp(-6.5*(t-{st}))*cos(16.0*(t-{st}))':y='H*0.39-h/2 + {drift_s_active_y} + 18.0*exp(-6.5*(t-{st}))*sin(16.0*(t-{st}))':enable='between(t,{st},{et})'[v_sc_{idx}_s]")
             cur_v = f"v_sc_{idx}_s"
             s_cur += 1
 
     # Headline Hook Badge (Top Center during first scene)
     first_sc_end = min(scene_records[0]["end"] if scene_records else 2.8, 2.8)
-    filter_complex.append(f"[{cur_v}]drawtext=text='{escaped_headline_hook}':{font_param}:fontcolor=white:fontsize=34:box=1:boxcolor=0x08101e@0.92:boxborderw=20:borderw=2:bordercolor=0x00f0ff:x=(w-text_w)/2:y=140:enable='between(t,0,{first_sc_end})'[v_hook]")
+    filter_complex.append(f"[{cur_v}]drawtext=text='{escaped_headline_hook}':{font_param}:fontcolor=white:fontsize=52:box=1:boxcolor=0x08101e@0.95:boxborderw=24:borderw=3:bordercolor=0x00f0ff:x=(w-text_w)/2:y=140:enable='between(t,0,{first_sc_end})'[v_hook]")
     cur_v = "v_hook"
 
-    # Outro Verdict Badge (during last scene)
+    # Outro Reflection Badge (during last scene)
     last_sc_st = scene_records[-1]["start"] if len(scene_records) > 1 else total_duration * 0.75
-    filter_complex.append(f"[{cur_v}]drawtext=text='⚡ VEREDICTO CÓSMICO ⚡':{font_param}:fontcolor=white:fontsize=34:box=1:boxcolor=0x08101e@0.92:boxborderw=20:borderw=2:bordercolor=0xffb300:x=(w-text_w)/2:y=140:enable='between(t,{last_sc_st},{total_duration})'[v_outro_badge]")
+    filter_complex.append(f"[{cur_v}]drawtext=text='⚡ REFLEXIÓN CÓSMICA ⚡':{font_param}:fontcolor=white:fontsize=48:box=1:boxcolor=0x08101e@0.95:boxborderw=24:borderw=3:bordercolor=0x00f0ff:x=(w-text_w)/2:y=140:enable='between(t,{last_sc_st},{total_duration})'[v_outro_badge]")
     cur_v = "v_outro_badge"
 
     # Subtitles overlay

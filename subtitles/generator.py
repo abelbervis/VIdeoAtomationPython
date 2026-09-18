@@ -614,6 +614,7 @@ def generate_cosmic_debate_karaoke_ass(
     custom_font: Optional[str] = None,
     max_words_per_cue: int = 3,
     margin_v: Optional[int] = None,
+    roles: Optional[Dict[str, str]] = None,
 ) -> Path:
     """
     Generates a futuristic, high-retention karaoke .ass subtitle track designed
@@ -677,19 +678,22 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             if not clean_text:
                 continue
 
+            role_q = roles.get("quantum", "IA Física Cuántica") if roles else "IA Física Cuántica"
+            role_s = roles.get("solar", "IA Astrofísica Solar") if roles else "IA Astrofísica Solar"
+
             # Determine speaker style palette
             if "solar" in speaker or "solar" in entity:
                 style_name = "SolarKaraoke"
                 hl_color = "&H0000C4FF&"  # Vibrant Solar Amber/Gold (ASS BGR)
-                badge_str = rf"{{\c&H0000C4FF&\b1\fs{badge_fs}}}[ SOLAR ]\N{{\r{style_name}}}"
+                badge_str = rf"{{\c&H0000C4FF&\b1\fs{badge_fs}}}[ SOLAR • {role_s} ]\N{{\r{style_name}}}"
             elif "ambos" in speaker or "both" in entity or "dual" in speaker:
                 style_name = "DualKaraoke"
                 hl_color = "&H0000E5FF&"  # Cosmic Resonance Gold-Cyan
-                badge_str = rf"{{\c&H0000E5FF&\b1\fs{badge_fs}}}[ VEREDICTO CÓSMICO ]\N{{\r{style_name}}}"
+                badge_str = rf"{{\c&H0000E5FF&\b1\fs{badge_fs}}}[ REFLEXIÓN CÓSMICA ]\N{{\r{style_name}}}"
             else:
                 style_name = "QuantumKaraoke"
                 hl_color = "&H00FFFF00&"  # Pure Electric Neon Cyan (ASS BGR)
-                badge_str = rf"{{\c&H00FFFF00&\b1\fs{badge_fs}}}[ QUANTUM ]\N{{\r{style_name}}}"
+                badge_str = rf"{{\c&H00FFFF00&\b1\fs{badge_fs}}}[ QUANTUM • {role_q} ]\N{{\r{style_name}}}"
 
             words = clean_text.split()
             if not words:
