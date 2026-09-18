@@ -249,7 +249,7 @@ ORB_PALETTES: Dict[str, Dict[str, Any]] = {
 
 def generate_animated_orb_loop(
     palette_key: str = "quantum",
-    mode: str = "talk",  # "talk" (speaking with 2 harmonic acoustic rings) or "idle" (serene living presence)
+    mode: str = "talk",  # "talk", "idle", "close_talk", "close_idle"
     canvas_size: int = 500,
     fps: int = 30,
     loop_frames: int = 45,
@@ -258,31 +258,33 @@ def generate_animated_orb_loop(
 ) -> Path:
     """
     Generates a 45-frame (1.5s @ 30FPS) seamless, lightweight transparent QuickTime MOV loop (qtrle codec)
-    containing an ultra-clean bio-reactive bioluminescent sphere matching the user's reference image.
-    Balanced sweet spot:
-      - 'talk': 2 harmonic expanding acoustic shockwave rings + vocal pulse.
-      - 'idle': Living cosmic presence with organic breathing and calm orbital ring.
+    containing a conscious bioluminescent sphere with controlled organic eye-gaze and conversational life.
+    Modes:
+      - 'talk': Side conversational angle (looking between rival and audience) with voice rings.
+      - 'idle': Listening side angle (observing interlocutor with subtle ocular breathing).
+      - 'close_talk': Direct front camera gaze addressing the audience with deep ocular focus.
+      - 'close_idle': Front camera attentive presence.
     """
     palette_key = palette_key.lower().strip()
     if palette_key not in ORB_PALETTES:
         palette_key = "quantum"
     palette = ORB_PALETTES[palette_key]
-    mode = mode.lower().strip() if mode in ["talk", "idle", "active", "speaking", "resting"] else "talk"
-    if mode in ["active", "speaking"]:
-        mode = "talk"
-    elif mode == "resting":
-        mode = "idle"
-
+    
+    clean_mode = mode.lower().strip()
+    is_close = "close" in clean_mode or "front" in clean_mode
+    is_talk = "talk" in clean_mode or "active" in clean_mode or "speaking" in clean_mode
+    
     dest_dir = target_dir or (Path(__file__).resolve().parent.parent / "assets" / "orbs")
     dest_dir.mkdir(parents=True, exist_ok=True)
-    mov_path = dest_dir / f"orb_loop_{palette_key}_{mode}.mov"
+    mode_slug = f"{'close_' if is_close else ''}{'talk' if is_talk else 'idle'}"
+    mov_path = dest_dir / f"orb_loop_{palette_key}_{mode_slug}.mov"
 
     if not force_refresh and mov_path.exists() and mov_path.stat().st_size > 10000:
         return mov_path
 
-    print(f"  🔮 Generando orbe consciente ('{palette_key}' | modo '{mode}' | mirada sutil)...")
+    print(f"  🔮 Generando orbe consciente ('{palette_key}' | modo '{mode_slug}' | mirada fluida)...")
 
-    frames_dir = dest_dir / f"_temp_frames_{palette_key}_{mode}"
+    frames_dir = dest_dir / f"_temp_frames_{palette_key}_{mode_slug}"
     frames_dir.mkdir(parents=True, exist_ok=True)
 
     c = canvas_size // 2
@@ -290,104 +292,112 @@ def generate_animated_orb_loop(
     r_aura_outer_base = int(canvas_size * 0.46)
     r_aura_inner_base = int(canvas_size * 0.36)
 
-    # Intelligent Conscious Gaze Geometry
-    # - Quantum (left host) naturally focuses gaze towards Solar (right) and audience
-    # - Solar/Cosmic (right host) naturally focuses gaze towards Quantum (left) and audience
-    if "quantum" in palette_key:
-        gaze_base_x = 0.16   # oriented right towards partner
-        gaze_base_y = -0.14  # slightly upper focus
-        opp_base_x = -0.18
-        opp_base_y = 0.20
-        body_base_cx = 54
-        body_base_cy = 46
+    # Intelligent Conversational Gaze Geometry:
+    # 1. Close-up: Direct front-facing gaze addressing the viewer.
+    # 2. Wide Quantum (Left Host): Naturally looks across to Solar (right) while glancing smoothly forward.
+    # 3. Wide Solar (Right Host): Naturally looks across to Quantum (left) while glancing smoothly forward.
+    if is_close:
+        gaze_base_x = 0.0
+        gaze_base_y = -0.06
+        opp_base_x = 0.0
+        opp_base_y = 0.18
+        body_base_cx = 50
+        body_base_cy = 48
+    elif "quantum" in palette_key:
+        gaze_base_x = 0.15   # looking towards right partner
+        gaze_base_y = -0.10  # eye level
+        opp_base_x = -0.16
+        opp_base_y = 0.18
+        body_base_cx = 53
+        body_base_cy = 47
     elif "solar" in palette_key or "cosmic" in palette_key:
-        gaze_base_x = -0.16  # oriented left towards partner
-        gaze_base_y = -0.14  # slightly upper focus
-        opp_base_x = 0.18
-        opp_base_y = 0.20
-        body_base_cx = 46
-        body_base_cy = 46
+        gaze_base_x = -0.15  # looking towards left partner
+        gaze_base_y = -0.10  # eye level
+        opp_base_x = 0.16
+        opp_base_y = 0.18
+        body_base_cx = 47
+        body_base_cy = 47
     else:
         gaze_base_x = 0.0
-        gaze_base_y = -0.16
+        gaze_base_y = -0.10
         opp_base_x = 0.0
-        opp_base_y = 0.22
+        opp_base_y = 0.18
         body_base_cx = 50
-        body_base_cy = 46
+        body_base_cy = 48
 
     try:
         for i in range(loop_frames):
             t = i / loop_frames
             tau = 2 * math.pi * t
 
-            if mode == "idle":
-                # LIVING CONSCIOUS PRESENCE (Listening / Attentive)
-                # Gentle organic breathing, subtle attentive micro-gaze tracking
-                r_sphere = int(r_sphere_base + 3.5 * math.sin(tau))
+            if not is_talk:
+                # LISTENING / ATTENTIVE LIVING PRESENCE
+                # Breathing rhythm with controlled conversational glance shifts
+                r_sphere = int(r_sphere_base + 3.0 * math.sin(tau))
                 r_aura_outer = int(r_aura_outer_base + 5.0 * math.sin(tau))
                 r_aura_inner = int(r_aura_inner_base + 4.0 * math.sin(tau))
-                r_ambient_spill = int((canvas_size * 0.44) + 6.0 * math.sin(tau))
+                r_ambient_spill = int((canvas_size * 0.44) + 5.0 * math.sin(tau))
 
-                # Subtle Ocular Micro-Saccades (attentive listening gaze without chaotic rotation)
-                micro_gaze_x = 3.5 * math.sin(tau)
-                micro_gaze_y = 2.0 * math.cos(tau)
+                # Conversational Gaze Shift:
+                # Controlled organic saccades (gaze glances between listener focus and forward camera)
+                glance_shift_x = 4.0 * math.sin(tau) + 2.5 * math.cos(2 * tau)
+                glance_shift_y = 2.0 * math.cos(tau)
 
-                spot1_x = int(c + (r_sphere * gaze_base_x) + micro_gaze_x)
-                spot1_y = int(c + (r_sphere * gaze_base_y) + micro_gaze_y)
+                spot1_x = int(c + (r_sphere * gaze_base_x) + glance_shift_x)
+                spot1_y = int(c + (r_sphere * gaze_base_y) + glance_shift_y)
                 spot1_rx = int(r_sphere * 0.48 + 2.0 * math.sin(tau))
                 spot1_ry = int(r_sphere * 0.44 + 1.5 * math.cos(tau))
 
-                spot2_x = int(c + (r_sphere * opp_base_x) - micro_gaze_x * 0.6)
-                spot2_y = int(c + (r_sphere * opp_base_y) - micro_gaze_y * 0.6)
+                spot2_x = int(c + (r_sphere * opp_base_x) - glance_shift_x * 0.5)
+                spot2_y = int(c + (r_sphere * opp_base_y) - glance_shift_y * 0.5)
                 spot2_rx = int(r_sphere * 0.40 + 1.5 * math.sin(tau))
                 spot2_ry = int(r_sphere * 0.36 + 1.5 * math.cos(tau))
 
-                body_cx_pct = int(body_base_cx + 2.0 * math.sin(tau))
+                body_cx_pct = int(body_base_cx + 2.5 * math.sin(tau))
                 body_cy_pct = int(body_base_cy + 1.5 * math.cos(tau))
 
-                # Single, living harmonic ring breathing serenely
                 calm_ring_r = int(r_sphere + 20 + 3.0 * math.sin(tau + 0.5))
                 calm_ring_glow = calm_ring_r + 4
 
                 rings_svg = f"""
-  <!-- Attentive Concentric Listening Ring (Subtle steady aura) -->
+  <!-- Listening Harmonic Ring -->
   <circle cx="{c}" cy="{c}" r="{calm_ring_glow}" fill="none" stroke="{palette['aura_inner']}" stroke-width="3.5" opacity="0.45" filter="url(#ringGlow_{i})" />
   <circle cx="{c}" cy="{c}" r="{calm_ring_r}" fill="none" stroke="{palette['ring_stroke']}" stroke-width="1.8" opacity="0.65" />
 """
             else:
-                # ACTIVE SPEAKING ORB (Speaking with Focused Intent)
-                # Clear voice pulse with firm, direct focal gaze and clean harmonic shockwave rings
-                r_sphere = int(r_sphere_base + 6.0 * math.sin(tau))
-                r_aura_outer = int(r_aura_outer_base + 10.0 * math.sin(tau))
-                r_aura_inner = int(r_aura_inner_base + 8.0 * math.sin(tau))
-                r_ambient_spill = int((canvas_size * 0.46) + 10.0 * math.sin(tau))
+                # ACTIVE SPEAKING ORB (Expressive Dialog)
+                # Voice pulses, dynamic focal gaze targeting interlocutor and camera
+                r_sphere = int(r_sphere_base + 5.5 * math.sin(tau))
+                r_aura_outer = int(r_aura_outer_base + 9.0 * math.sin(tau))
+                r_aura_inner = int(r_aura_inner_base + 7.0 * math.sin(tau))
+                r_ambient_spill = int((canvas_size * 0.46) + 9.0 * math.sin(tau))
 
-                # Direct, Focused Conversational Gaze (Steady locked gaze with gentle intensity pulsation)
-                micro_gaze_x = 2.0 * math.sin(tau)
-                micro_gaze_y = 1.5 * math.cos(tau)
+                # Conversational Speaking Gaze Modulation:
+                # Glances fluidly between delivering the point and connecting with the viewer
+                glance_shift_x = 3.0 * math.sin(tau) + 2.0 * math.sin(2 * tau)
+                glance_shift_y = 1.8 * math.cos(tau)
 
-                spot1_x = int(c + (r_sphere * (gaze_base_x * 1.05)) + micro_gaze_x)
-                spot1_y = int(c + (r_sphere * gaze_base_y) + micro_gaze_y)
+                spot1_x = int(c + (r_sphere * gaze_base_x) + glance_shift_x)
+                spot1_y = int(c + (r_sphere * gaze_base_y) + glance_shift_y)
                 spot1_rx = int(r_sphere * 0.52 + 3.0 * math.sin(tau))
-                spot1_ry = int(r_sphere * 0.48 + 2.5 * math.cos(tau))
+                spot1_ry = int(r_sphere * 0.48 + 2.0 * math.cos(tau))
 
-                spot2_x = int(c + (r_sphere * opp_base_x) - micro_gaze_x * 0.5)
-                spot2_y = int(c + (r_sphere * opp_base_y) - micro_gaze_y * 0.5)
+                spot2_x = int(c + (r_sphere * opp_base_x) - glance_shift_x * 0.5)
+                spot2_y = int(c + (r_sphere * opp_base_y) - glance_shift_y * 0.5)
                 spot2_rx = int(r_sphere * 0.44 + 2.0 * math.sin(tau))
-                spot2_ry = int(r_sphere * 0.40 + 2.0 * math.cos(tau))
+                spot2_ry = int(r_sphere * 0.40 + 1.5 * math.cos(tau))
 
                 body_cx_pct = int(body_base_cx + 3.0 * math.sin(tau))
                 body_cy_pct = int(body_base_cy + 2.0 * math.cos(tau))
 
-                # 2 Elegant, Harmonic Acoustic Rings (Smooth voice pulse without chaos)
                 ring1_r = int(r_sphere + 18 + 5.0 * math.sin(tau))
                 ring1_glow = ring1_r + 4
 
-                ring2_r = int(r_sphere + 36 + 7.0 * math.sin(tau + 0.8))
+                ring2_r = int(r_sphere + 36 + 6.0 * math.sin(tau + 0.8))
                 ring2_glow = ring2_r + 5
 
                 rings_svg = f"""
-  <!-- Ring 2: Outer Acoustic Resonance -->
+  <!-- Ring 2: Outer Resonance -->
   <circle cx="{c}" cy="{c}" r="{ring2_glow}" fill="none" stroke="{palette['aura_inner']}" stroke-width="4.0" opacity="0.45" filter="url(#ringGlow_{i})" />
   <circle cx="{c}" cy="{c}" r="{ring2_r}" fill="none" stroke="{palette['ring_stroke']}" stroke-width="1.6" opacity="0.60" />
 
@@ -776,11 +786,14 @@ def render_orb_test_preview(
     if has_holo_s:
         print(f"   • HUD Holográfico S: [{holo_s_cat}] {holo_s_title} -> {holo_s_sub}")
 
-    # Generate or retrieve cached orb visual assets (both talking and idle modes) for both hosts
+    # Generate or retrieve cached orb visual assets for all conversational perspectives
     orb_q_talk = get_or_create_orb_asset(palette=debate_show.host_a.palette_name, mode="talk", force_refresh=False)
     orb_q_idle = get_or_create_orb_asset(palette=debate_show.host_a.palette_name, mode="idle", force_refresh=False)
+    orb_q_close_talk = get_or_create_orb_asset(palette=debate_show.host_a.palette_name, mode="close_talk", force_refresh=False)
+    
     orb_s_talk = get_or_create_orb_asset(palette=debate_show.host_b.palette_name, mode="talk", force_refresh=False)
     orb_s_idle = get_or_create_orb_asset(palette=debate_show.host_b.palette_name, mode="idle", force_refresh=False)
+    orb_s_close_talk = get_or_create_orb_asset(palette=debate_show.host_b.palette_name, mode="close_talk", force_refresh=False)
 
     # Generate Holographic Floating Reference Cards (Only if required by script)
     from video.hologram import generate_hologram_card_svg
@@ -1114,15 +1127,17 @@ def render_orb_test_preview(
 
     bg_input = f"color=c=0x08090f:s={width}x{height}:r=30:d={total_duration}"
 
-    # Build FFmpeg command inputs (talk and idle for both hosts)
+    # Build FFmpeg command inputs (wide talk, wide idle, close-up frontal talk for both hosts)
     cmd_inputs = [
         "-f", "lavfi", "-i", bg_input,
         "-stream_loop", "-1", "-i", str(orb_q_talk),
         "-stream_loop", "-1", "-i", str(orb_q_idle),
+        "-stream_loop", "-1", "-i", str(orb_q_close_talk),
         "-stream_loop", "-1", "-i", str(orb_s_talk),
         "-stream_loop", "-1", "-i", str(orb_s_idle),
+        "-stream_loop", "-1", "-i", str(orb_s_close_talk),
     ]
-    curr_input_idx = 5
+    curr_input_idx = 7
 
     holo_q_idx = None
     if has_holo_q:
@@ -1158,19 +1173,23 @@ def render_orb_test_preview(
     pre_scale_lines.append(f"[{badge_q_idx}:v]scale=440:-2,format=yuva420p[badge_q]")
     pre_scale_lines.append(f"[{badge_s_idx}:v]scale=440:-2,format=yuva420p[badge_s]")
 
-    # Calculate exact number of split pads needed for Quantum and Solar (talk vs idle)
-    q_talk_uses = sum(1 for sc in scene_records if (sc["shot"] in ["wide", "both", "close_quantum"]) and (sc["entity"] in ["quantum", "both"]))
+    # Calculate exact number of split pads needed for Quantum and Solar (wide talk, idle, and close frontal talk)
+    q_talk_uses = sum(1 for sc in scene_records if (sc["shot"] in ["wide", "both"]) and (sc["entity"] in ["quantum", "both"]))
     q_idle_uses = 1 + sum(1 for sc in scene_records if (sc["shot"] in ["wide", "both"]) and (sc["entity"] not in ["quantum", "both"]))
+    q_close_uses = sum(1 for sc in scene_records if sc["shot"] == "close_quantum")
 
-    s_talk_uses = sum(1 for sc in scene_records if (sc["shot"] in ["wide", "both", "close_solar"]) and (sc["entity"] in ["solar", "both"]))
+    s_talk_uses = sum(1 for sc in scene_records if (sc["shot"] in ["wide", "both"]) and (sc["entity"] in ["solar", "both"]))
     s_idle_uses = 1 + sum(1 for sc in scene_records if (sc["shot"] in ["wide", "both"]) and (sc["entity"] not in ["solar", "both"]))
+    s_close_uses = sum(1 for sc in scene_records if sc["shot"] == "close_solar")
 
     filter_complex = [
         *pre_scale_lines,
         f"[1:v]split={max(1, q_talk_uses)}" + "".join(f"[q_talk_{k}]" for k in range(max(1, q_talk_uses))),
         f"[2:v]split={max(1, q_idle_uses)}" + "".join(f"[q_idle_{k}]" for k in range(max(1, q_idle_uses))),
-        f"[3:v]split={max(1, s_talk_uses)}" + "".join(f"[s_talk_{k}]" for k in range(max(1, s_talk_uses))),
-        f"[4:v]split={max(1, s_idle_uses)}" + "".join(f"[s_idle_{k}]" for k in range(max(1, s_idle_uses))),
+        f"[3:v]split={max(1, q_close_uses)}" + "".join(f"[q_close_{k}]" for k in range(max(1, q_close_uses))),
+        f"[4:v]split={max(1, s_talk_uses)}" + "".join(f"[s_talk_{k}]" for k in range(max(1, s_talk_uses))),
+        f"[5:v]split={max(1, s_idle_uses)}" + "".join(f"[s_idle_{k}]" for k in range(max(1, s_idle_uses))),
+        f"[6:v]split={max(1, s_close_uses)}" + "".join(f"[s_close_{k}]" for k in range(max(1, s_close_uses))),
 
         # Background Ambient Luminescence (Ultra-smooth diffuse glow via 120x120 3-pass boxblur)
         f"[q_idle_0]scale=120:120,eq={eq_q},hue={hue_q},boxblur=26:3,scale={width}:{height},format=yuva420p,colorchannelmixer=aa=0.25[bg_glow_q]",
@@ -1184,8 +1203,10 @@ def render_orb_test_preview(
     cur_v = "bg_ambient"
     q_talk_cur = 0
     q_idle_cur = 1  # 0 used for bg_glow_q
+    q_close_cur = 0
     s_talk_cur = 0
     s_idle_cur = 1  # 0 used for bg_glow_s
+    s_close_cur = 0
     holo_q_used = False
     holo_s_used = False
 
@@ -1246,8 +1267,8 @@ def render_orb_test_preview(
                 cur_v = f"v_sc_{idx}_bs"
 
         elif shot == "close_quantum":
-            q_src = f"q_talk_{q_talk_cur}"
-            q_talk_cur += 1
+            q_src = f"q_close_{q_close_cur}"
+            q_close_cur += 1
             filter_complex.append(f"[{q_src}]scale=820:820,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.98[q_sc_{idx}]")
             filter_complex.append(f"[{cur_v}][q_sc_{idx}]overlay=eval=frame:x='W/2-w/2 + {drift_q_active_x} + 25.0*exp(-6.5*(t-{st}))*cos(16.0*(t-{st}))':y='H*0.38-h/2 + {drift_q_active_y} + 30.0*exp(-6.5*(t-{st}))*sin(16.0*(t-{st}))':enable='between(t,{st},{et})'[v_sc_{idx}_q]")
             cur_v = f"v_sc_{idx}_q"
@@ -1258,8 +1279,8 @@ def render_orb_test_preview(
                 cur_v = f"v_sc_{idx}_hq"
 
         elif shot == "close_solar":
-            s_src = f"s_talk_{s_talk_cur}"
-            s_talk_cur += 1
+            s_src = f"s_close_{s_close_cur}"
+            s_close_cur += 1
             filter_complex.append(f"[{s_src}]scale=820:820,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.98[s_sc_{idx}]")
             filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W/2-w/2 + {drift_s_active_x} + 25.0*exp(-6.5*(t-{st}))*cos(16.0*(t-{st}))':y='H*0.38-h/2 + {drift_s_active_y} + 30.0*exp(-6.5*(t-{st}))*sin(16.0*(t-{st}))':enable='between(t,{st},{et})'[v_sc_{idx}_s]")
             cur_v = f"v_sc_{idx}_s"
