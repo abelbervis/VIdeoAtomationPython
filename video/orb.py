@@ -293,29 +293,36 @@ def generate_animated_orb_loop(
     r_aura_inner_base = int(canvas_size * 0.36)
 
     # Intelligent Multi-Target Conversational Gaze Geometry:
-    # Entities look at their debate partner, transition to address the audience/camera (2 shifts per cycle),
-    # and return to their partner smoothly like a real speaker in a room with multiple people.
+    # Stable, elegant ocular presence in the loop; spatial shifts occur across the scene timeline in FFmpeg
     if is_close:
-        # Frontal Camera Close-up: Center primary focus with 2 natural thought/audience glances
+        # Frontal Camera Close-up: Center primary gaze focused on viewer
         gaze_primary_x = 0.0
         gaze_primary_y = -0.06
+        opp_primary_x = 0.0
+        opp_primary_y = 0.16
         body_base_cx = 50
         body_base_cy = 48
     elif "quantum" in palette_key:
-        # Quantum (Left host): Interlocutor is at right (+0.18), camera is center (0.0), room is (+0.08)
-        gaze_primary_x = 0.18
-        gaze_primary_y = -0.10
-        body_base_cx = 54
-        body_base_cy = 47
+        # Quantum (Left host): Attentive gaze oriented towards partner and audience
+        gaze_primary_x = 0.12
+        gaze_primary_y = -0.08
+        opp_primary_x = -0.12
+        opp_primary_y = 0.16
+        body_base_cx = 52
+        body_base_cy = 48
     elif "solar" in palette_key or "cosmic" in palette_key:
-        # Solar (Right host): Interlocutor is at left (-0.18), camera is center (0.0), room is (-0.08)
-        gaze_primary_x = -0.18
-        gaze_primary_y = -0.10
-        body_base_cx = 46
-        body_base_cy = 47
+        # Solar (Right host): Attentive gaze oriented towards partner and audience
+        gaze_primary_x = -0.12
+        gaze_primary_y = -0.08
+        opp_primary_x = 0.12
+        opp_primary_y = 0.16
+        body_base_cx = 48
+        body_base_cy = 48
     else:
         gaze_primary_x = 0.0
-        gaze_primary_y = -0.10
+        gaze_primary_y = -0.08
+        opp_primary_x = 0.0
+        opp_primary_y = 0.16
         body_base_cx = 50
         body_base_cy = 48
 
@@ -324,30 +331,18 @@ def generate_animated_orb_loop(
             t = i / loop_frames
             tau = 2 * math.pi * t
 
-            # 2 Controlled Conversational Glance Transitions per cycle:
-            # Shift 1 (towards audience/camera): peaks at t ≈ 0.25
-            # Shift 2 (sweeping/thoughtful glance): peaks at t ≈ 0.75
-            # Smooth C-infinity Fourier transition ensures perfect seamless loop without snapping
-            glance_camera_weight = 0.5 - 0.35 * math.cos(2 * tau) - 0.15 * math.cos(4 * tau)
-            glance_alt_weight = 0.35 * math.sin(2 * tau)
+            # Subtle organic micro-saccades inside the loop for living biological presence
+            micro_saccade_x = 0.015 * math.sin(tau)
+            micro_saccade_y = 0.010 * math.cos(tau)
 
-            if is_close:
-                # Close-up: Glances slightly to left and right while delivering intense monologue to camera
-                curr_gaze_x = gaze_primary_x + (0.10 * math.sin(tau) + 0.05 * math.sin(2 * tau))
-                curr_gaze_y = gaze_primary_y + (0.04 * math.cos(tau) + 0.02 * math.cos(2 * tau))
-                curr_body_cx = body_base_cx + (5.0 * math.sin(tau) + 2.5 * math.sin(2 * tau))
-                curr_body_cy = body_base_cy + (2.5 * math.cos(tau))
-            else:
-                # Wide Shot: Smoothly alternates between looking at partner (0%) and turning to audience/camera (100%)
-                # When glance_camera_weight is high, gaze shifts towards center (camera / audience)
-                curr_gaze_x = gaze_primary_x * (1.0 - 0.85 * glance_camera_weight) + (0.04 * glance_alt_weight)
-                curr_gaze_y = gaze_primary_y + (0.05 * glance_camera_weight) + (0.03 * math.cos(tau))
-                curr_body_cx = 50.0 + (body_base_cx - 50.0) * (1.0 - 0.75 * glance_camera_weight)
-                curr_body_cy = body_base_cy + (2.0 * math.sin(tau))
+            curr_gaze_x = gaze_primary_x + micro_saccade_x
+            curr_gaze_y = gaze_primary_y + micro_saccade_y
+            curr_body_cx = body_base_cx + 1.5 * math.sin(tau)
+            curr_body_cy = body_base_cy + 1.0 * math.cos(tau)
 
             if not is_talk:
                 # LISTENING / ATTENTIVE LIVING PRESENCE
-                # Breathing rhythm with gentle attentive glance shifts
+                # Breathing rhythm with steady attentive focus
                 r_sphere = int(r_sphere_base + 3.0 * math.sin(tau))
                 r_aura_outer = int(r_aura_outer_base + 5.0 * math.sin(tau))
                 r_aura_inner = int(r_aura_inner_base + 4.0 * math.sin(tau))
@@ -358,8 +353,8 @@ def generate_animated_orb_loop(
                 spot1_rx = int(r_sphere * 0.48 + 2.0 * math.sin(tau))
                 spot1_ry = int(r_sphere * 0.44 + 1.5 * math.cos(tau))
 
-                spot2_x = int(c - (r_sphere * curr_gaze_x * 0.85))
-                spot2_y = int(c - (r_sphere * curr_gaze_y * 0.85) + (r_sphere * 0.08))
+                spot2_x = int(c + (r_sphere * opp_primary_x))
+                spot2_y = int(c + (r_sphere * opp_primary_y))
                 spot2_rx = int(r_sphere * 0.40 + 1.5 * math.sin(tau))
                 spot2_ry = int(r_sphere * 0.36 + 1.5 * math.cos(tau))
 
@@ -375,8 +370,7 @@ def generate_animated_orb_loop(
   <circle cx="{c}" cy="{c}" r="{calm_ring_r}" fill="none" stroke="{palette['ring_stroke']}" stroke-width="1.8" opacity="0.65" />
 """
             else:
-                # ACTIVE SPEAKING ORB (Expressive Dialog & Audience Connection)
-                # Voice pulses with clear multi-point eye gaze transitions
+                # ACTIVE SPEAKING ORB (Expressive Voice Pulses)
                 r_sphere = int(r_sphere_base + 5.5 * math.sin(tau))
                 r_aura_outer = int(r_aura_outer_base + 9.0 * math.sin(tau))
                 r_aura_inner = int(r_aura_inner_base + 7.0 * math.sin(tau))
@@ -387,8 +381,8 @@ def generate_animated_orb_loop(
                 spot1_rx = int(r_sphere * 0.52 + 3.0 * math.sin(tau))
                 spot1_ry = int(r_sphere * 0.48 + 2.0 * math.cos(tau))
 
-                spot2_x = int(c - (r_sphere * curr_gaze_x * 0.85))
-                spot2_y = int(c - (r_sphere * curr_gaze_y * 0.85) + (r_sphere * 0.08))
+                spot2_x = int(c + (r_sphere * opp_primary_x))
+                spot2_y = int(c + (r_sphere * opp_primary_y))
                 spot2_rx = int(r_sphere * 0.44 + 2.0 * math.sin(tau))
                 spot2_ry = int(r_sphere * 0.40 + 1.5 * math.cos(tau))
 
@@ -1220,6 +1214,8 @@ def render_orb_test_preview(
         et = sc["end"]
         ent = sc["entity"]
         shot = sc["shot"]
+        sc_dur = max(round(et - st, 3), 0.5)
+        u_expr = f"(t-{st})/{sc_dur}"
 
         intro_dx = f" + {drift_intro_x}" if idx == 0 else ""
         intro_dy = f" + {drift_intro_y}" if idx == 0 else ""
@@ -1229,15 +1225,19 @@ def render_orb_test_preview(
             if is_q_active:
                 q_src = f"q_talk_{q_talk_cur}"
                 q_talk_cur += 1
-                dq_x = drift_q_active_x
-                dq_y = drift_q_active_y
+                # 2 Natural Conversational Shifts per scene:
+                # 1. Glides towards audience/camera (+50px) at mid-sentence with breathing lift (-16px)
+                # 2. Refocuses back towards debate partner (+22px) for closing statement
+                dq_x = f"22.0 + 36.0*sin(PI*{u_expr}) + 14.0*sin(2*PI*{u_expr}) + 3.0*sin(2*PI*t/1.8)"
+                dq_y = f"-16.0*sin(PI*{u_expr}) + 8.0*cos(2*PI*{u_expr}) + 3.0*cos(2*PI*t/1.8)"
                 q_alpha = 1.0
                 q_filt = f"scale=420:420,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa={q_alpha}"
             else:
                 q_src = f"q_idle_{q_idle_cur}"
                 q_idle_cur += 1
-                dq_x = drift_q_resting_x
-                dq_y = drift_q_resting_y
+                # Attentive listener motion: settles back slightly and dips in acknowledgment
+                dq_x = f"-6.0 + 10.0*sin(PI*{u_expr}) + 3.0*sin(2*PI*t/2.2)"
+                dq_y = f"6.0*sin(PI*{u_expr}) - 4.0*cos(2*PI*{u_expr}) + 3.0*cos(2*PI*t/2.2)"
                 q_alpha = 0.80
                 q_filt = f"scale=410:410,format=yuva420p,colorchannelmixer=aa={q_alpha}"
 
@@ -1249,15 +1249,17 @@ def render_orb_test_preview(
             if is_s_active:
                 s_src = f"s_talk_{s_talk_cur}"
                 s_talk_cur += 1
-                ds_x = drift_s_active_x
-                ds_y = drift_s_active_y
+                # 2 Natural Conversational Shifts per scene (Solar moving leftwards towards partner & audience):
+                ds_x = f"-22.0 - 36.0*sin(PI*{u_expr}) - 14.0*sin(2*PI*{u_expr}) + 3.0*cos(2*PI*t/1.8)"
+                ds_y = f"-16.0*sin(PI*{u_expr}) + 8.0*cos(2*PI*{u_expr}) + 3.0*sin(2*PI*t/1.8)"
                 s_alpha = 1.0
                 s_filt = f"scale=370:370,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa={s_alpha}"
             else:
                 s_src = f"s_idle_{s_idle_cur}"
                 s_idle_cur += 1
-                ds_x = drift_s_resting_x
-                ds_y = drift_s_resting_y
+                # Attentive listener motion for Solar
+                ds_x = f"6.0 - 10.0*sin(PI*{u_expr}) + 3.0*cos(2*PI*t/2.2)"
+                ds_y = f"6.0*sin(PI*{u_expr}) - 4.0*cos(2*PI*{u_expr}) + 3.0*cos(2*PI*t/2.2)"
                 s_alpha = 0.80
                 s_filt = f"scale=360:360,format=yuva420p,colorchannelmixer=aa={s_alpha}"
 
@@ -1274,8 +1276,11 @@ def render_orb_test_preview(
         elif shot == "close_quantum":
             q_src = f"q_close_{q_close_cur}"
             q_close_cur += 1
+            # Close-up 2 shifts: addresses left/right of virtual audience then centers deeply on viewer
+            d_cq_x = f"-24.0*cos(PI*{u_expr}) + 18.0*sin(2*PI*{u_expr}) + 3.0*sin(2*PI*t/1.8)"
+            d_cq_y = f"-18.0*sin(PI*{u_expr}) + 6.0*cos(2*PI*{u_expr}) + 3.0*cos(2*PI*t/1.8)"
             filter_complex.append(f"[{q_src}]scale=820:820,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.98[q_sc_{idx}]")
-            filter_complex.append(f"[{cur_v}][q_sc_{idx}]overlay=eval=frame:x='W/2-w/2 + {drift_q_active_x} + 25.0*exp(-6.5*(t-{st}))*cos(16.0*(t-{st}))':y='H*0.38-h/2 + {drift_q_active_y} + 30.0*exp(-6.5*(t-{st}))*sin(16.0*(t-{st}))':enable='between(t,{st},{et})'[v_sc_{idx}_q]")
+            filter_complex.append(f"[{cur_v}][q_sc_{idx}]overlay=eval=frame:x='W/2-w/2 + {d_cq_x} + 25.0*exp(-6.5*(t-{st}))*cos(16.0*(t-{st}))':y='H*0.38-h/2 + {d_cq_y} + 30.0*exp(-6.5*(t-{st}))*sin(16.0*(t-{st}))':enable='between(t,{st},{et})'[v_sc_{idx}_q]")
             cur_v = f"v_sc_{idx}_q"
 
             if has_holo_q and not holo_q_used:
@@ -1286,8 +1291,11 @@ def render_orb_test_preview(
         elif shot == "close_solar":
             s_src = f"s_close_{s_close_cur}"
             s_close_cur += 1
+            # Close-up 2 shifts for Solar:
+            d_cs_x = f"24.0*cos(PI*{u_expr}) - 18.0*sin(2*PI*{u_expr}) + 3.0*cos(2*PI*t/1.8)"
+            d_cs_y = f"-18.0*sin(PI*{u_expr}) + 6.0*cos(2*PI*{u_expr}) + 3.0*sin(2*PI*t/1.8)"
             filter_complex.append(f"[{s_src}]scale=820:820,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.98[s_sc_{idx}]")
-            filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W/2-w/2 + {drift_s_active_x} + 25.0*exp(-6.5*(t-{st}))*cos(16.0*(t-{st}))':y='H*0.38-h/2 + {drift_s_active_y} + 30.0*exp(-6.5*(t-{st}))*sin(16.0*(t-{st}))':enable='between(t,{st},{et})'[v_sc_{idx}_s]")
+            filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W/2-w/2 + {d_cs_x} + 25.0*exp(-6.5*(t-{st}))*cos(16.0*(t-{st}))':y='H*0.38-h/2 + {d_cs_y} + 30.0*exp(-6.5*(t-{st}))*sin(16.0*(t-{st}))':enable='between(t,{st},{et})'[v_sc_{idx}_s]")
             cur_v = f"v_sc_{idx}_s"
 
             if has_holo_s and not holo_s_used:
@@ -1298,14 +1306,18 @@ def render_orb_test_preview(
         elif shot == "both":
             q_src = f"q_talk_{q_talk_cur}"
             q_talk_cur += 1
+            dq_x = f"22.0 + 36.0*sin(PI*{u_expr}) + 14.0*sin(2*PI*{u_expr})"
+            dq_y = f"-16.0*sin(PI*{u_expr}) + 8.0*cos(2*PI*{u_expr})"
             filter_complex.append(f"[{q_src}]scale=420:420,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.98[q_sc_{idx}]")
-            filter_complex.append(f"[{cur_v}][q_sc_{idx}]overlay=eval=frame:x='W*0.25-w/2 + {drift_q_active_x} + 15.0*exp(-6.5*(t-{st}))*cos(16.0*(t-{st}))':y='H*0.38-h/2 + {drift_q_active_y} + 18.0*exp(-6.5*(t-{st}))*sin(16.0*(t-{st}))':enable='between(t,{st},{et})'[v_sc_{idx}_q]")
+            filter_complex.append(f"[{cur_v}][q_sc_{idx}]overlay=eval=frame:x='W*0.25-w/2 + {dq_x} + 15.0*exp(-6.5*(t-{st}))*cos(16.0*(t-{st}))':y='H*0.38-h/2 + {dq_y} + 18.0*exp(-6.5*(t-{st}))*sin(16.0*(t-{st}))':enable='between(t,{st},{et})'[v_sc_{idx}_q]")
             cur_v = f"v_sc_{idx}_q"
 
             s_src = f"s_talk_{s_talk_cur}"
             s_talk_cur += 1
+            ds_x = f"-22.0 - 36.0*sin(PI*{u_expr}) - 14.0*sin(2*PI*{u_expr})"
+            ds_y = f"-16.0*sin(PI*{u_expr}) + 8.0*cos(2*PI*{u_expr})"
             filter_complex.append(f"[{s_src}]scale=420:420,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.98[s_sc_{idx}]")
-            filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W*0.75-w/2 - 28 + {drift_s_active_x} + 15.0*exp(-6.5*(t-{st}))*cos(16.0*(t-{st}))':y='H*0.39-h/2 + {drift_s_active_y} + 18.0*exp(-6.5*(t-{st}))*sin(16.0*(t-{st}))':enable='between(t,{st},{et})'[v_sc_{idx}_s]")
+            filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W*0.75-w/2 - 28 + {ds_x} + 15.0*exp(-6.5*(t-{st}))*cos(16.0*(t-{st}))':y='H*0.39-h/2 + {ds_y} + 18.0*exp(-6.5*(t-{st}))*sin(16.0*(t-{st}))':enable='between(t,{st},{et})'[v_sc_{idx}_s]")
             cur_v = f"v_sc_{idx}_s"
 
     # Headline Hook Badge (Top Center during first scene)
