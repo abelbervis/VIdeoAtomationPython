@@ -205,111 +205,66 @@ def get_font(size: int = 56) -> ImageFont.FreeTypeFont:
 
 
 def render_orb_asset(palette_key: str, size: int = 520) -> Image.Image:
-    """Renders the authentic bio-reactive 3D orb with full spectral aura, internal granulation flare detail, and concentric quantum rings."""
+    """Renders the authentic bio-reactive 3D orb with full spectral aura and concentric rings."""
     palette = ORB_PALETTES.get(palette_key, ORB_PALETTES["quantum"])
-    is_solar = ("solar" in palette_key)
     canvas_size = 650
     c = canvas_size // 2
     r_sphere = int(canvas_size * 0.28)
     r_aura_outer = int(canvas_size * 0.46)
     r_aura_inner = int(canvas_size * 0.36)
-    quantum_ring_r = int(r_sphere + 42)
+    ring_r = int(r_sphere + 22)
 
-    spot1_x = int(c - r_sphere * 0.28)
-    spot1_y = int(c - r_sphere * 0.24)
+    spot1_x = int(c - r_sphere * 0.30)
+    spot1_y = int(c - r_sphere * 0.26)
     spot1_rx = int(r_sphere * 0.52)
     spot1_ry = int(r_sphere * 0.48)
 
-    spot2_x = int(c + r_sphere * 0.26)
-    spot2_y = int(c + r_sphere * 0.24)
+    spot2_x = int(c + r_sphere * 0.28)
+    spot2_y = int(c + r_sphere * 0.26)
     spot2_rx = int(r_sphere * 0.44)
     spot2_ry = int(r_sphere * 0.40)
-
-    # Extra internal plasma nodes for Solar
-    swirl1_x = int(c + r_sphere * 0.14)
-    swirl1_y = int(c - r_sphere * 0.18)
-    swirl1_rx = int(r_sphere * 0.46)
-    swirl1_ry = int(r_sphere * 0.38)
-
-    swirl2_x = int(c - r_sphere * 0.18)
-    swirl2_y = int(c + r_sphere * 0.16)
-    swirl2_rx = int(r_sphere * 0.42)
-    swirl2_ry = int(r_sphere * 0.34)
-
-    arc_path = f"M {c - int(r_sphere*0.42)} {c + int(r_sphere*0.08)} Q {c + int(r_sphere*0.1)} {c - int(r_sphere*0.35)} {c + int(r_sphere*0.42)} {c + int(r_sphere*0.12)}"
-
-    solar_body_stops = """
-      <stop offset="0%" stop-color="#ffffff" />
-      <stop offset="10%" stop-color="{palette['body_c0']}" />
-      <stop offset="26%" stop-color="{palette['body_c1']}" />
-      <stop offset="48%" stop-color="{palette['body_c2']}" />
-      <stop offset="68%" stop-color="{palette['body_c3']}" />
-      <stop offset="85%" stop-color="{palette['body_c4']}" />
-      <stop offset="95%" stop-color="{palette['body_c5']}" />
-      <stop offset="100%" stop-color="#120005" />
-""".format(palette=palette) if is_solar else """
-      <stop offset="0%" stop-color="{palette['body_c0']}" />
-      <stop offset="22%" stop-color="{palette['body_c1']}" />
-      <stop offset="48%" stop-color="{palette['body_c2']}" />
-      <stop offset="72%" stop-color="{palette['body_c3']}" />
-      <stop offset="88%" stop-color="{palette['body_c4']}" />
-      <stop offset="100%" stop-color="{palette['body_c5']}" />
-""".format(palette=palette)
-
-    extra_solar_rings = f"""
-  <!-- Quantum Orbital Energy Ring for Solar -->
-  <circle cx="{c}" cy="{c}" r="{quantum_ring_r + 7}" fill="none" stroke="{palette['aura_inner']}" stroke-width="7.0" opacity="0.65" filter="url(#auraMid)" />
-  <circle cx="{c}" cy="{c}" r="{quantum_ring_r}" fill="none" stroke="{palette['ring_stroke']}" stroke-width="2.8" stroke-dasharray="28 14 56 14" opacity="0.95" />
-  <circle cx="{c}" cy="{c}" r="{quantum_ring_r - 1}" fill="none" stroke="#ffffff" stroke-width="1.2" opacity="0.80" />
-
-  <!-- Tilted Heliospheric Belts -->
-  <ellipse cx="{c}" cy="{c}" rx="{quantum_ring_r + 12}" ry="{(quantum_ring_r + 12)*0.38}" transform="rotate(-22 {c} {c})" fill="none" stroke="{palette['aura_inner']}" stroke-width="5" opacity="0.55" filter="url(#auraMid)" />
-  <ellipse cx="{c}" cy="{c}" rx="{quantum_ring_r + 12}" ry="{(quantum_ring_r + 12)*0.38}" transform="rotate(-22 {c} {c})" fill="none" stroke="{palette['ring_stroke']}" stroke-width="2.2" stroke-dasharray="32 16 48 16" opacity="0.88" />
-  <ellipse cx="{c}" cy="{c}" rx="{quantum_ring_r + 32}" ry="{(quantum_ring_r + 32)*0.32}" transform="rotate(32 {c} {c})" fill="none" stroke="{palette['aura_bright']}" stroke-width="2.0" stroke-dasharray="24 20 40 20" opacity="0.70" />
-""" if is_solar else f"""
-  <circle cx="{c}" cy="{c}" r="{quantum_ring_r + 5}" fill="none" stroke="{palette['aura_inner']}" stroke-width="7" opacity="0.8" filter="url(#auraMid)" />
-  <circle cx="{c}" cy="{c}" r="{quantum_ring_r}" fill="none" stroke="{palette['ring_stroke']}" stroke-width="3.0" opacity="0.95" />
-"""
 
     svg = f"""<svg width="{canvas_size}" height="{canvas_size}" viewBox="0 0 {canvas_size} {canvas_size}" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <filter id="spillBlur" x="-80%" y="-80%" width="260%" height="260%">
-      <feGaussianBlur stdDeviation="65" />
+      <feGaussianBlur stdDeviation="70" />
     </filter>
     <filter id="auraDeep" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="32" />
+      <feGaussianBlur stdDeviation="34" />
     </filter>
     <filter id="auraMid" x="-40%" y="-40%" width="180%" height="180%">
-      <feGaussianBlur stdDeviation="18" />
+      <feGaussianBlur stdDeviation="20" />
     </filter>
     <filter id="coreBlur" x="-25%" y="-25%" width="150%" height="150%">
-      <feGaussianBlur stdDeviation="9" />
+      <feGaussianBlur stdDeviation="11" />
     </filter>
     <clipPath id="sphereClip">
       <circle cx="{c}" cy="{c}" r="{r_sphere}" />
     </clipPath>
     <radialGradient id="ambientSpill" cx="50%" cy="50%" r="50%">
       <stop offset="0%" stop-color="{palette['spot1_glow']}" stop-opacity="0.95" />
-      <stop offset="20%" stop-color="{palette['body_c1']}" stop-opacity="0.80" />
-      <stop offset="45%" stop-color="{palette['aura_inner']}" stop-opacity="0.60" />
-      <stop offset="70%" stop-color="{palette['aura_outer']}" stop-opacity="0.30" />
+      <stop offset="30%" stop-color="{palette['aura_inner']}" stop-opacity="0.75" />
+      <stop offset="65%" stop-color="{palette['aura_outer']}" stop-opacity="0.40" />
       <stop offset="100%" stop-color="#000000" stop-opacity="0.0" />
     </radialGradient>
     <radialGradient id="outerAura" cx="50%" cy="50%" r="50%">
       <stop offset="0%" stop-color="{palette['aura_inner']}" stop-opacity="0.95" />
-      <stop offset="30%" stop-color="{palette['aura_mid']}" stop-opacity="0.70" />
-      <stop offset="65%" stop-color="{palette['aura_outer']}" stop-opacity="0.35" />
-      <stop offset="85%" stop-color="{palette['body_c5']}" stop-opacity="0.12" />
+      <stop offset="40%" stop-color="{palette['aura_mid']}" stop-opacity="0.70" />
+      <stop offset="75%" stop-color="{palette['aura_outer']}" stop-opacity="0.35" />
       <stop offset="100%" stop-color="#000000" stop-opacity="0.0" />
     </radialGradient>
     <radialGradient id="innerAura" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="{palette['aura_bright']}" stop-opacity="0.95" />
-      <stop offset="40%" stop-color="{palette['spot1_glow']}" stop-opacity="0.70" />
-      <stop offset="75%" stop-color="{palette['aura_inner']}" stop-opacity="0.45" />
+      <stop offset="0%" stop-color="{palette['aura_bright']}" stop-opacity="0.92" />
+      <stop offset="50%" stop-color="{palette['aura_inner']}" stop-opacity="0.60" />
       <stop offset="100%" stop-color="#000000" stop-opacity="0.0" />
     </radialGradient>
     <radialGradient id="sphereBody" cx="42%" cy="38%" r="62%">
-      {solar_body_stops}
+      <stop offset="0%" stop-color="{palette['body_c0']}" />
+      <stop offset="22%" stop-color="{palette['body_c1']}" />
+      <stop offset="48%" stop-color="{palette['body_c2']}" />
+      <stop offset="72%" stop-color="{palette['body_c3']}" />
+      <stop offset="88%" stop-color="{palette['body_c4']}" />
+      <stop offset="100%" stop-color="{palette['body_c5']}" />
     </radialGradient>
     <radialGradient id="primarySpot" cx="50%" cy="50%" r="50%">
       <stop offset="0%" stop-color="{palette['spot1_core']}" stop-opacity="1.0" />
@@ -327,12 +282,10 @@ def render_orb_asset(palette_key: str, size: int = 520) -> Image.Image:
   <circle cx="{c}" cy="{c}" r="{canvas_size // 2 - 12}" fill="url(#ambientSpill)" filter="url(#spillBlur)" />
   <circle cx="{c}" cy="{c}" r="{r_aura_outer}" fill="url(#outerAura)" filter="url(#auraDeep)" />
   <circle cx="{c}" cy="{c}" r="{r_aura_inner}" fill="url(#innerAura)" filter="url(#auraMid)" />
-  {extra_solar_rings}
+  <circle cx="{c}" cy="{c}" r="{ring_r + 5}" fill="none" stroke="{palette['aura_inner']}" stroke-width="7" opacity="0.8" filter="url(#auraMid)" />
+  <circle cx="{c}" cy="{c}" r="{ring_r}" fill="none" stroke="{palette['ring_stroke']}" stroke-width="3.0" opacity="0.95" />
   <circle cx="{c}" cy="{c}" r="{r_sphere}" fill="url(#sphereBody)" />
   <g clip-path="url(#sphereClip)">
-    <ellipse cx="{swirl1_x}" cy="{swirl1_y}" rx="{swirl1_rx}" ry="{swirl1_ry}" fill="url(#primarySpot)" opacity="0.85" filter="url(#coreBlur)" />
-    <ellipse cx="{swirl2_x}" cy="{swirl2_y}" rx="{swirl2_rx}" ry="{swirl2_ry}" fill="url(#secondarySpot)" opacity="0.80" filter="url(#coreBlur)" />
-    <path d="{arc_path}" fill="none" stroke="{palette['body_c0']}" stroke-width="3.5" opacity="0.60" filter="url(#coreBlur)" />
     <ellipse cx="{spot2_x}" cy="{spot2_y}" rx="{spot2_rx}" ry="{spot2_ry}" fill="url(#secondarySpot)" filter="url(#coreBlur)" />
     <ellipse cx="{spot1_x}" cy="{spot1_y}" rx="{spot1_rx}" ry="{spot1_ry}" fill="url(#primarySpot)" filter="url(#coreBlur)" />
     <circle cx="{spot1_x}" cy="{spot1_y}" r="{int(spot1_rx * 0.45)}" fill="{palette['spot1_core']}" opacity="0.98" filter="url(#coreBlur)" />
