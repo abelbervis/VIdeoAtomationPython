@@ -409,6 +409,11 @@ def generate_animated_orb_loop(
                 beam_w = int(r_sphere * 0.82)
                 beam_h = int(r_sphere * 0.24)
 
+                spot1_x = int(c + (r_sphere * curr_gaze_x))
+                spot1_y = int(c + (r_sphere * curr_gaze_y))
+                body_cx_pct = int(curr_body_cx)
+                body_cy_pct = int(curr_body_cy)
+
                 svg = f"""<svg width="{canvas_size}" height="{canvas_size}" viewBox="0 0 {canvas_size} {canvas_size}" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <filter id="ambientSpillBlur_{i}" x="-60%" y="-60%" width="220%" height="220%">
@@ -451,7 +456,7 @@ def generate_animated_orb_loop(
     </radialGradient>
 
     <!-- Concentric Star Plasma Body Gradient (Pure Solar Fusion) -->
-    <radialGradient id="solarBody_{i}" cx="50%" cy="50%" r="55%">
+    <radialGradient id="solarBody_{i}" cx="{body_cx_pct}%" cy="{body_cy_pct}%" r="55%">
       <stop offset="0%" stop-color="{palette['body_c0']}" />
       <stop offset="20%" stop-color="{palette['body_c1']}" />
       <stop offset="45%" stop-color="{palette['body_c2']}" />
@@ -485,11 +490,11 @@ def generate_animated_orb_loop(
   <!-- 4. Solar Flare "Mouth" (Incandescent Fusion Speech Core) -->
   <g clip-path="url(#sphereClip_{i})">
     <!-- Horizontal Solar Ejection Flare Beam -->
-    <ellipse cx="{c}" cy="{c}" rx="{beam_w}" ry="{beam_h}" fill="{palette['spot1_glow']}" opacity="{beam_opacity}" filter="url(#coreBlur_{i})" />
+    <ellipse cx="{spot1_x}" cy="{spot1_y}" rx="{beam_w}" ry="{beam_h}" fill="{palette['spot1_glow']}" opacity="{beam_opacity}" filter="url(#coreBlur_{i})" />
 
     <!-- Radiant Solar Mouth Core (Pulsing Acoustic Fusion Center) -->
-    <ellipse cx="{c}" cy="{c}" rx="{mouth_rx}" ry="{mouth_ry}" fill="url(#solarMouth_{i})" filter="url(#coreBlur_{i})" />
-    <circle cx="{c}" cy="{c}" r="{mouth_core_r}" fill="{palette['spot1_core']}" opacity="0.98" filter="url(#coreBlur_{i})" />
+    <ellipse cx="{spot1_x}" cy="{spot1_y}" rx="{mouth_rx}" ry="{mouth_ry}" fill="url(#solarMouth_{i})" filter="url(#coreBlur_{i})" />
+    <circle cx="{spot1_x}" cy="{spot1_y}" r="{mouth_core_r}" fill="{palette['spot1_core']}" opacity="0.98" filter="url(#coreBlur_{i})" />
 
     <!-- Thermal Subsurface Corona Rim -->
     <circle cx="{c}" cy="{c}" r="{r_sphere - 3}" fill="none" stroke="{palette['rim_stroke']}" stroke-width="3.5" opacity="0.60" filter="url(#coreBlur_{i})" />
