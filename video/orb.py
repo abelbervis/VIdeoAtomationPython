@@ -298,17 +298,65 @@ def generate_animated_orb_loop(
             r_aura_inner = int(r_aura_inner_base + 14 * math.sin(tau))
             r_ambient_spill = int((canvas_size * 0.46) + 22 * math.sin(tau))
 
-            # 4. Core light spot breathing (Primary Top-Left Spot)
-            spot1_x = int(c - r_sphere * 0.32 + 8 * math.sin(tau))
-            spot1_y = int(c - r_sphere * 0.28 + 6 * math.cos(tau))
-            spot1_rx = int(r_sphere * 0.52 + 6 * math.sin(2 * tau))
-            spot1_ry = int(r_sphere * 0.48 + 5 * math.cos(2 * tau))
+            # 4. Sentient Dynamic Eye Gaze & Micro-Saccades (Directional Attention)
+            if palette_key == "quantum":
+                # Quantum (left host) gazes toward Solar (right host) with analytical focus
+                gaze_x = int(c + r_sphere * 0.10 + 4 * math.sin(tau))
+                gaze_y = int(c - r_sphere * 0.08 + 3 * math.cos(tau))
+            elif palette_key in ["solar", "cosmic", "supernova"]:
+                # Solar (right host) gazes toward Quantum (left host) with warm presence
+                gaze_x = int(c - r_sphere * 0.10 + 4 * math.sin(tau))
+                gaze_y = int(c - r_sphere * 0.08 + 3 * math.cos(tau))
+            else:
+                gaze_x = int(c + 3 * math.sin(tau))
+                gaze_y = int(c - r_sphere * 0.06 + 3 * math.cos(tau))
 
-            # 5. Secondary Counter-Tone Light Spot (Bottom-Right Flare)
-            spot2_x = int(c + r_sphere * 0.30 - 8 * math.sin(tau))
+            # 5. Organic Ocular Refocus / Micro-Blink & Vocal Glow Modulation
+            blink_t = (t - 0.74) / 0.045
+            blink_intensity = math.exp(-(blink_t ** 2))
+            pupil_dilation = max(0.42, 1.0 - 0.52 * blink_intensity)
+            glint_alpha = min(1.0, 0.40 + 0.60 * blink_intensity)
+            glint_w = int(22 + 36 * blink_intensity)
+
+            # Core light spot breathing (Primary Flare centered around gaze)
+            spot1_x = gaze_x
+            spot1_y = gaze_y
+            spot1_rx = int(r_sphere * 0.48 + 5 * math.sin(2 * tau))
+            spot1_ry = int(r_sphere * 0.44 + 4 * math.cos(2 * tau))
+
+            # Secondary Counter-Tone Light Spot (Bottom Opposing Flare)
+            spot2_dx = -r_sphere * 0.28 if palette_key == "quantum" else r_sphere * 0.28
+            spot2_x = int(c + spot2_dx - 6 * math.sin(tau))
             spot2_y = int(c + r_sphere * 0.28 - 6 * math.cos(tau))
             spot2_rx = int(r_sphere * 0.44 + 5 * math.cos(2 * tau))
             spot2_ry = int(r_sphere * 0.40 + 4 * math.sin(2 * tau))
+
+            # 6. Differentiated Sentient Eye Nucleus Custom Markup
+            if palette_key == "quantum":
+                eye_nucleus_markup = f"""    <!-- Quantum Analytical Sentient Eye Nucleus -->
+    <circle cx="{gaze_x}" cy="{gaze_y}" r="{int(r_sphere * 0.22 * pupil_dilation)}" fill="none" stroke="{palette['spot1_glow']}" stroke-width="1.8" stroke-dasharray="4, 6" opacity="0.85" transform="rotate({int(t * 360)}, {gaze_x}, {gaze_y})" />
+    <circle cx="{gaze_x}" cy="{gaze_y}" r="{int(r_sphere * 0.15 * pupil_dilation)}" fill="none" stroke="{palette['ring_stroke']}" stroke-width="1.2" opacity="0.75" />
+    <line x1="{gaze_x - 18}" y1="{gaze_y}" x2="{gaze_x - 11}" y2="{gaze_y}" stroke="{palette['spot1_glow']}" stroke-width="1.4" opacity="0.80" />
+    <line x1="{gaze_x + 11}" y1="{gaze_y}" x2="{gaze_x + 18}" y2="{gaze_y}" stroke="{palette['spot1_glow']}" stroke-width="1.4" opacity="0.80" />
+    <line x1="{gaze_x}" y1="{gaze_y - 18}" x2="{gaze_x}" y2="{gaze_y - 11}" stroke="{palette['spot1_glow']}" stroke-width="1.4" opacity="0.80" />
+    <line x1="{gaze_x}" y1="{gaze_y + 11}" x2="{gaze_x}" y2="{gaze_y + 18}" stroke="{palette['spot1_glow']}" stroke-width="1.4" opacity="0.80" />
+    <circle cx="{gaze_x}" cy="{gaze_y}" r="{max(4, int(r_sphere * 0.09 * pupil_dilation))}" fill="#ffffff" filter="url(#coreBlur_{i})" />
+    <circle cx="{gaze_x}" cy="{gaze_y}" r="{max(2, int(r_sphere * 0.05 * pupil_dilation))}" fill="#ffffff" />
+    <line x1="{gaze_x - glint_w}" y1="{gaze_y}" x2="{gaze_x + glint_w}" y2="{gaze_y}" stroke="#ffffff" stroke-width="1.6" opacity="{glint_alpha}" filter="url(#coreBlur_{i})" />"""
+            elif palette_key in ["solar", "cosmic", "supernova"]:
+                eye_nucleus_markup = f"""    <!-- Solar Living Plasma Sentient Eye Nucleus -->
+    <circle cx="{gaze_x}" cy="{gaze_y}" r="{int(r_sphere * 0.25 * pupil_dilation + 3.5 * math.sin(3.0 * tau))}" fill="none" stroke="{palette['spot1_glow']}" stroke-width="2.4" opacity="0.80" filter="url(#ringGlow_{i})" />
+    <circle cx="{gaze_x}" cy="{gaze_y}" r="{int(r_sphere * 0.19 * pupil_dilation + 2.0 * math.cos(3.0 * tau))}" fill="none" stroke="#ffd700" stroke-width="1.5" opacity="0.90" />
+    <circle cx="{gaze_x}" cy="{gaze_y}" r="{max(6, int(r_sphere * 0.13 * pupil_dilation))}" fill="{palette['spot1_glow']}" opacity="0.75" filter="url(#coreBlur_{i})" />
+    <circle cx="{gaze_x}" cy="{gaze_y}" r="{max(4, int(r_sphere * 0.08 * pupil_dilation))}" fill="#ffffff" filter="url(#coreBlur_{i})" />
+    <circle cx="{gaze_x}" cy="{gaze_y}" r="{max(2, int(r_sphere * 0.04 * pupil_dilation))}" fill="#ffffff" />
+    <line x1="{gaze_x - int(glint_w * 0.85)}" y1="{gaze_y}" x2="{gaze_x + int(glint_w * 0.85)}" y2="{gaze_y}" stroke="#fff3b0" stroke-width="1.8" opacity="{glint_alpha}" filter="url(#coreBlur_{i})" />"""
+            else:
+                eye_nucleus_markup = f"""    <!-- Sentient Ocular Core -->
+    <circle cx="{gaze_x}" cy="{gaze_y}" r="{int(r_sphere * 0.22 * pupil_dilation)}" fill="none" stroke="{palette['spot1_glow']}" stroke-width="2.0" opacity="0.85" filter="url(#ringGlow_{i})" />
+    <circle cx="{gaze_x}" cy="{gaze_y}" r="{max(4, int(r_sphere * 0.08 * pupil_dilation))}" fill="#ffffff" filter="url(#coreBlur_{i})" />
+    <circle cx="{gaze_x}" cy="{gaze_y}" r="{max(2, int(r_sphere * 0.04 * pupil_dilation))}" fill="#ffffff" />
+    <line x1="{gaze_x - glint_w}" y1="{gaze_y}" x2="{gaze_x + glint_w}" y2="{gaze_y}" stroke="#ffffff" stroke-width="1.6" opacity="{glint_alpha}" />"""
 
             svg = f"""<svg width="{canvas_size}" height="{canvas_size}" viewBox="0 0 {canvas_size} {canvas_size}" xmlns="http://www.w3.org/2000/svg">
   <defs>
@@ -410,11 +458,14 @@ def generate_animated_orb_loop(
     <ellipse cx="{spot1_x}" cy="{spot1_y}" rx="{spot1_rx}" ry="{spot1_ry}" fill="url(#primarySpot_{i})" filter="url(#coreBlur_{i})" />
     <circle cx="{spot1_x}" cy="{spot1_y}" r="{int(spot1_rx * 0.45)}" fill="{palette['spot1_core']}" opacity="0.98" filter="url(#coreBlur_{i})" />
 
+    <!-- 5. Sentient Eye Nucleus System -->
+{eye_nucleus_markup}
+
     <!-- Subsurface Rim Accent -->
     <circle cx="{c}" cy="{c}" r="{r_sphere - 3}" fill="none" stroke="{palette['rim_stroke']}" stroke-width="4" opacity="0.55" filter="url(#coreBlur_{i})" />
   </g>
 
-  <!-- 5. Inner Concentric Rim Light -->
+  <!-- 6. Inner Concentric Rim Light -->
   <circle cx="{c}" cy="{c}" r="{r_sphere - 2}" fill="none" stroke="{palette['aura_inner']}" stroke-width="3" opacity="0.75" />
 </svg>"""
             (frames_dir / f"frame_{i:03d}.svg").write_text(svg, encoding="utf-8")
