@@ -175,8 +175,8 @@ def generate_presenter_badge_svg(
     name: str = "QUANTUM",
     role: str = "IA Física Cuántica",
     color_theme: str = "cyan",  # "cyan", "amber"
-    width: int = 380,
-    height: int = 110,
+    width: int = 460,
+    height: int = 135,
     output_path: Optional[Path] = None,
 ) -> Path:
     """
@@ -208,21 +208,21 @@ def generate_presenter_badge_svg(
   <defs>
     <!-- Soft Drop Shadow -->
     <filter id="badgeShadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.8" />
-      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="{accent_color}" flood-opacity="0.25" />
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.85" />
+      <feDropShadow dx="0" dy="2" stdDeviation="5" flood-color="{accent_color}" flood-opacity="0.30" />
     </filter>
 
     <!-- Translucent Glass Surface -->
     <linearGradient id="badgeGlass" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#141e2e" stop-opacity="0.90" />
-      <stop offset="100%" stop-color="#070b14" stop-opacity="0.95" />
+      <stop offset="0%" stop-color="#141e2e" stop-opacity="0.92" />
+      <stop offset="100%" stop-color="#070b14" stop-opacity="0.97" />
     </linearGradient>
 
     <!-- Hairline Accent Border -->
     <linearGradient id="badgeBorder" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="{border_color}" stop-opacity="0.9" />
-      <stop offset="60%" stop-color="{border_color}" stop-opacity="0.3" />
-      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.1" />
+      <stop offset="0%" stop-color="{border_color}" stop-opacity="0.95" />
+      <stop offset="60%" stop-color="{border_color}" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.15" />
     </linearGradient>
 
     <!-- Orb Avatar Gradient -->
@@ -233,7 +233,7 @@ def generate_presenter_badge_svg(
     </radialGradient>
 
     <filter id="orbNeonGlow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="5" result="blur" />
+      <feGaussianBlur stdDeviation="6" result="blur" />
       <feMerge>
         <feMergeNode in="blur" />
         <feMergeNode in="SourceGraphic" />
@@ -242,29 +242,29 @@ def generate_presenter_badge_svg(
   </defs>
 
   <!-- Main Translucent Badge Body -->
-  <rect x="10" y="10" width="{width - 20}" height="{height - 20}" rx="22" ry="22" 
+  <rect x="8" y="8" width="{width - 16}" height="{height - 16}" rx="26" ry="26" 
         fill="url(#badgeGlass)" 
         stroke="url(#badgeBorder)" 
-        stroke-width="1.2" 
+        stroke-width="1.5" 
         filter="url(#badgeShadow)" />
 
   <!-- Avatar Orb Graphic Icon -->
-  <g transform="translate(36, 55)">
+  <g transform="translate(44, 67.5)">
     <!-- Outer Ring -->
-    <circle cx="0" cy="0" r="22" fill="none" stroke="{accent_color}" stroke-opacity="0.4" stroke-width="1" />
+    <circle cx="0" cy="0" r="26" fill="none" stroke="{accent_color}" stroke-opacity="0.5" stroke-width="1.2" />
     <!-- Glowing Orb Center -->
-    <circle cx="0" cy="0" r="16" fill="url(#avatarGlow)" filter="url(#orbNeonGlow)" />
+    <circle cx="0" cy="0" r="19" fill="url(#avatarGlow)" filter="url(#orbNeonGlow)" />
   </g>
 
   <!-- Presenter Name Text -->
-  <text x="74" y="52" font-family="'Montserrat', 'Inter', 'Arial', sans-serif" 
-        font-size="20" font-weight="800" fill="#ffffff" letter-spacing="1">
+  <text x="88" y="58" font-family="'Montserrat', 'Inter', 'Arial', sans-serif" 
+        font-size="24" font-weight="800" fill="#ffffff" letter-spacing="1.2">
     {name}
   </text>
 
   <!-- Presenter Role / Subtitle -->
-  <text x="74" y="74" font-family="'Inter', 'Arial', sans-serif" 
-        font-size="12" font-weight="600" fill="{accent_color}" letter-spacing="0.5">
+  <text x="88" y="92" font-family="'Inter', 'Arial', sans-serif" 
+        font-size="15" font-weight="700" fill="{accent_color}" letter-spacing="0.8">
     {role}
   </text>
 </svg>

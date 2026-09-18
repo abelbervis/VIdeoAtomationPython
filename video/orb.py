@@ -1063,8 +1063,8 @@ def render_orb_test_preview(
         pre_scale_lines.append(f"[{holo_q_idx}:v]scale=540:-2,format=yuva420p[holo_q]")
     if has_holo_s and holo_s_idx is not None:
         pre_scale_lines.append(f"[{holo_s_idx}:v]scale=540:-2,format=yuva420p[holo_s]")
-    pre_scale_lines.append(f"[{badge_q_idx}:v]scale=340:-2,format=yuva420p[badge_q]")
-    pre_scale_lines.append(f"[{badge_s_idx}:v]scale=340:-2,format=yuva420p[badge_s]")
+    pre_scale_lines.append(f"[{badge_q_idx}:v]scale=440:-2,format=yuva420p[badge_q]")
+    pre_scale_lines.append(f"[{badge_s_idx}:v]scale=440:-2,format=yuva420p[badge_s]")
 
     # Calculate exact number of split pads needed for Quantum and Solar
     q_uses = 1 + sum(1 for sc in scene_records if sc["shot"] in ["wide", "both", "close_quantum"])
@@ -1127,7 +1127,7 @@ def render_orb_test_preview(
                 cur_v = f"v_sc_{idx}_bs"
 
         elif shot == "close_quantum":
-            filter_complex.append(f"[q_in_{q_cur}]scale=650:650,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.98[q_sc_{idx}]")
+            filter_complex.append(f"[q_in_{q_cur}]scale=820:820,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.98[q_sc_{idx}]")
             filter_complex.append(f"[{cur_v}][q_sc_{idx}]overlay=eval=frame:x='W/2-w/2 + {drift_q_active_x} + 25.0*exp(-6.5*(t-{st}))*cos(16.0*(t-{st}))':y='H*0.38-h/2 + {drift_q_active_y} + 30.0*exp(-6.5*(t-{st}))*sin(16.0*(t-{st}))':enable='between(t,{st},{et})'[v_sc_{idx}_q]")
             cur_v = f"v_sc_{idx}_q"
             q_cur += 1
@@ -1138,7 +1138,7 @@ def render_orb_test_preview(
                 cur_v = f"v_sc_{idx}_hq"
 
         elif shot == "close_solar":
-            filter_complex.append(f"[s_in_{s_cur}]scale=650:650,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.98[s_sc_{idx}]")
+            filter_complex.append(f"[s_in_{s_cur}]scale=820:820,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.98[s_sc_{idx}]")
             filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W/2-w/2 + {drift_s_active_x} + 25.0*exp(-6.5*(t-{st}))*cos(16.0*(t-{st}))':y='H*0.38-h/2 + {drift_s_active_y} + 30.0*exp(-6.5*(t-{st}))*sin(16.0*(t-{st}))':enable='between(t,{st},{et})'[v_sc_{idx}_s]")
             cur_v = f"v_sc_{idx}_s"
             s_cur += 1
@@ -1161,12 +1161,12 @@ def render_orb_test_preview(
 
     # Headline Hook Badge (Top Center during first scene)
     first_sc_end = min(scene_records[0]["end"] if scene_records else 2.8, 2.8)
-    filter_complex.append(f"[{cur_v}]drawtext=text='{escaped_headline_hook}':{font_param}:fontcolor=white:fontsize=52:box=1:boxcolor=0x08101e@0.95:boxborderw=24:borderw=3:bordercolor=0x00f0ff:x=(w-text_w)/2:y=140:enable='between(t,0,{first_sc_end})'[v_hook]")
+    filter_complex.append(f"[{cur_v}]drawtext=text='{escaped_headline_hook}':{font_param}:fontcolor=white:fontsize=40:box=1:boxcolor=0x08101e@0.95:boxborderw=20:borderw=2:bordercolor=0x00f0ff:x=(w-text_w)/2:y=140:enable='between(t,0,{first_sc_end})'[v_hook]")
     cur_v = "v_hook"
 
     # Outro Reflection Badge (during last scene)
     last_sc_st = scene_records[-1]["start"] if len(scene_records) > 1 else total_duration * 0.75
-    filter_complex.append(f"[{cur_v}]drawtext=text='⚡ REFLEXIÓN CÓSMICA ⚡':{font_param}:fontcolor=white:fontsize=48:box=1:boxcolor=0x08101e@0.95:boxborderw=24:borderw=3:bordercolor=0x00f0ff:x=(w-text_w)/2:y=140:enable='between(t,{last_sc_st},{total_duration})'[v_outro_badge]")
+    filter_complex.append(f"[{cur_v}]drawtext=text='⚡ REFLEXIÓN CÓSMICA ⚡':{font_param}:fontcolor=white:fontsize=40:box=1:boxcolor=0x08101e@0.95:boxborderw=20:borderw=2:bordercolor=0x00f0ff:x=(w-text_w)/2:y=140:enable='between(t,{last_sc_st},{total_duration})'[v_outro_badge]")
     cur_v = "v_outro_badge"
 
     # Subtitles overlay
