@@ -331,14 +331,19 @@ def generate_animated_orb_loop(
             t = i / loop_frames
             tau = 2 * math.pi * t
 
-            # Subtle organic micro-saccades inside the loop for living biological presence
-            micro_saccade_x = 0.015 * math.sin(tau)
-            micro_saccade_y = 0.010 * math.cos(tau)
+            # Conscious Conversational Gaze Dynamics:
+            # Active speaker sweeps focal ocular presence between interlocutor and audience
+            if is_talk:
+                gaze_shift_x = 0.12 * math.sin(2 * tau)
+                gaze_shift_y = 0.05 * math.cos(tau)
+            else:
+                gaze_shift_x = 0.03 * math.sin(tau)
+                gaze_shift_y = 0.02 * math.cos(tau)
 
-            curr_gaze_x = gaze_primary_x + micro_saccade_x
-            curr_gaze_y = gaze_primary_y + micro_saccade_y
-            curr_body_cx = body_base_cx + 1.5 * math.sin(tau)
-            curr_body_cy = body_base_cy + 1.0 * math.cos(tau)
+            curr_gaze_x = gaze_primary_x + gaze_shift_x
+            curr_gaze_y = gaze_primary_y + gaze_shift_y
+            curr_body_cx = body_base_cx + 2.0 * math.sin(tau)
+            curr_body_cy = body_base_cy + 1.2 * math.cos(tau)
 
             if not is_talk:
                 # LISTENING / ATTENTIVE LIVING PRESENCE
@@ -1211,64 +1216,83 @@ def render_orb_test_preview(
 
     for idx, sc in enumerate(scene_records):
         st = sc["start"]
-        et = sc["end"]
+        # Seamless scene continuity: visual shot stays active until exact start of next scene
+        sc_visual_end = scene_records[idx + 1]["start"] if idx + 1 < len(scene_records) else total_duration
         ent = sc["entity"]
         shot = sc["shot"]
-        sc_dur = max(round(et - st, 3), 0.5)
+        sc_dur = max(round(sc_visual_end - st, 3), 0.5)
         u_expr = f"(t-{st})/{sc_dur}"
 
         intro_dx = f" + {drift_intro_x}" if idx == 0 else ""
         intro_dy = f" + {drift_intro_y}" if idx == 0 else ""
+
+        # High-impact camera cut transition effects (Scenes 2, 3, 4...)
+        if idx > 0:
+            # 1. Optical Lens Transition Flash (0.12s pulse matching whoosh sound effect)
+            flash_col = "0x00e5ff@0.22" if ent == "quantum" else ("0xffaa00@0.22" if ent == "solar" else "white@0.25")
+            flash_end = round(st + 0.12, 2)
+            filter_complex.append(f"[{cur_v}]drawbox=x=0:y=0:w=iw:h=ih:color={flash_col}:t=fill:enable='between(t,{st},{flash_end})'[v_flash_{idx}]")
+            cur_v = f"v_flash_{idx}"
+
+        # Kinetic camera cut snap impulse (smoothly settles in 0.22s)
+        snap_impulse_x = f" + 32.0*exp(-11.0*(t-{st}))*cos(18.0*(t-{st}))" if idx > 0 else ""
+        snap_impulse_y = f" + 36.0*exp(-11.0*(t-{st}))*sin(18.0*(t-{st}))" if idx > 0 else ""
 
         if shot == "wide":
             is_q_active = (ent in ["quantum", "both"])
             if is_q_active:
                 q_src = f"q_talk_{q_talk_cur}"
                 q_talk_cur += 1
-                # 2 Natural Conversational Shifts per scene:
-                # 1. Glides towards audience/camera (+50px) at mid-sentence with breathing lift (-16px)
-                # 2. Refocuses back towards debate partner (+22px) for closing statement
-                dq_x = f"22.0 + 36.0*sin(PI*{u_expr}) + 14.0*sin(2*PI*{u_expr}) + 3.0*sin(2*PI*t/1.8)"
-                dq_y = f"-16.0*sin(PI*{u_expr}) + 8.0*cos(2*PI*{u_expr}) + 3.0*cos(2*PI*t/1.8)"
+                # 2 Distinct Conversational Shifts:
+                # Start (u=0): Leaning towards Solar (+45px)
+                # Shift 1 (u=0.25): Glides smoothly towards front audience/camera (-35px, lifts -34px)
+                # Shift 2 (u=0.75): Glides smoothly to outer flank/listeners (+95px)
+                # Return (u=1.0): Refocuses back towards debate partner (+45px)
+                dq_x = f"30.0 - 75.0*sin(2*PI*{u_expr}) + 15.0*cos(PI*{u_expr}) + 3.0*sin(2*PI*t/1.8)"
+                dq_y = f"-22.0*sin(PI*{u_expr}) - 12.0*cos(2*PI*{u_expr}) + 3.0*cos(2*PI*t/1.8)"
                 q_alpha = 1.0
                 q_filt = f"scale=420:420,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa={q_alpha}"
             else:
                 q_src = f"q_idle_{q_idle_cur}"
                 q_idle_cur += 1
-                # Attentive listener motion: settles back slightly and dips in acknowledgment
-                dq_x = f"-6.0 + 10.0*sin(PI*{u_expr}) + 3.0*sin(2*PI*t/2.2)"
-                dq_y = f"6.0*sin(PI*{u_expr}) - 4.0*cos(2*PI*{u_expr}) + 3.0*cos(2*PI*t/2.2)"
-                q_alpha = 0.80
+                # Attentive listener motion: nod and harmonic breathing
+                dq_x = f"-12.0 + 24.0*sin(PI*{u_expr}) + 4.0*sin(2*PI*t/2.2)"
+                dq_y = f"10.0*sin(2*PI*{u_expr}) + 4.0*cos(2*PI*t/2.2)"
+                q_alpha = 0.82
                 q_filt = f"scale=410:410,format=yuva420p,colorchannelmixer=aa={q_alpha}"
 
             filter_complex.append(f"[{q_src}]{q_filt}[q_sc_{idx}]")
-            filter_complex.append(f"[{cur_v}][q_sc_{idx}]overlay=eval=frame:x='W*0.25-w/2 + {dq_x}{intro_dx}':y='H*0.38-h/2 + {dq_y}{intro_dy}':enable='between(t,{st},{et})'[v_sc_{idx}_q]")
+            filter_complex.append(f"[{cur_v}][q_sc_{idx}]overlay=eval=frame:x='W*0.25-w/2 + {dq_x}{intro_dx}{snap_impulse_x}':y='H*0.38-h/2 + {dq_y}{intro_dy}{snap_impulse_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_q]")
             cur_v = f"v_sc_{idx}_q"
 
             is_s_active = (ent in ["solar", "both"])
             if is_s_active:
                 s_src = f"s_talk_{s_talk_cur}"
                 s_talk_cur += 1
-                # 2 Natural Conversational Shifts per scene (Solar moving leftwards towards partner & audience):
-                ds_x = f"-22.0 - 36.0*sin(PI*{u_expr}) - 14.0*sin(2*PI*{u_expr}) + 3.0*cos(2*PI*t/1.8)"
-                ds_y = f"-16.0*sin(PI*{u_expr}) + 8.0*cos(2*PI*{u_expr}) + 3.0*sin(2*PI*t/1.8)"
+                # Solar 2 Conversational Shifts (Mirror):
+                # Start (u=0): Leaning towards Quantum (-45px)
+                # Shift 1 (u=0.25): Glides towards audience/camera (+35px, lifts -34px)
+                # Shift 2 (u=0.75): Glides towards outer flank (-95px)
+                # Return (u=1.0): Refocuses back towards debate partner (-45px)
+                ds_x = f"-30.0 + 75.0*sin(2*PI*{u_expr}) - 15.0*cos(PI*{u_expr}) + 3.0*cos(2*PI*t/1.8)"
+                ds_y = f"-22.0*sin(PI*{u_expr}) - 12.0*cos(2*PI*{u_expr}) + 3.0*sin(2*PI*t/1.8)"
                 s_alpha = 1.0
                 s_filt = f"scale=370:370,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa={s_alpha}"
             else:
                 s_src = f"s_idle_{s_idle_cur}"
                 s_idle_cur += 1
                 # Attentive listener motion for Solar
-                ds_x = f"6.0 - 10.0*sin(PI*{u_expr}) + 3.0*cos(2*PI*t/2.2)"
-                ds_y = f"6.0*sin(PI*{u_expr}) - 4.0*cos(2*PI*{u_expr}) + 3.0*cos(2*PI*t/2.2)"
-                s_alpha = 0.80
+                ds_x = f"12.0 - 24.0*sin(PI*{u_expr}) + 4.0*cos(2*PI*t/2.2)"
+                ds_y = f"10.0*sin(2*PI*{u_expr}) + 4.0*sin(2*PI*t/2.2)"
+                s_alpha = 0.82
                 s_filt = f"scale=360:360,format=yuva420p,colorchannelmixer=aa={s_alpha}"
 
             filter_complex.append(f"[{s_src}]{s_filt}[s_sc_{idx}]")
-            filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W*0.75-w/2 - 28 + {ds_x}{intro_dx}':y='H*0.39-h/2 + {ds_y}{intro_dy}':enable='between(t,{st},{et})'[v_sc_{idx}_s]")
+            filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W*0.75-w/2 - 28 + {ds_x}{intro_dx}{snap_impulse_x}':y='H*0.39-h/2 + {ds_y}{intro_dy}{snap_impulse_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_s]")
             cur_v = f"v_sc_{idx}_s"
 
             if idx == 0:
-                bdg_end = min(round(et - 0.2, 2), 2.8)
+                bdg_end = min(round(sc_visual_end - 0.2, 2), 2.8)
                 filter_complex.append(f"[{cur_v}][badge_q]overlay=eval=frame:x='W*0.25-w/2 + 5.0*sin(2*PI*(t-0.4)/2.2)':y='H*0.52-h/2 + 4.0*cos(2*PI*(t-0.4)/2.2)':enable='between(t,0.3,{bdg_end})'[v_sc_{idx}_bq]")
                 filter_complex.append(f"[v_sc_{idx}_bq][badge_s]overlay=eval=frame:x='W*0.75-w/2 - 28 + 5.0*cos(2*PI*(t-0.4)/2.4)':y='H*0.52-h/2 + 4.0*sin(2*PI*(t-0.4)/2.4)':enable='between(t,0.3,{bdg_end})'[v_sc_{idx}_bs]")
                 cur_v = f"v_sc_{idx}_bs"
@@ -1276,48 +1300,48 @@ def render_orb_test_preview(
         elif shot == "close_quantum":
             q_src = f"q_close_{q_close_cur}"
             q_close_cur += 1
-            # Close-up 2 shifts: addresses left/right of virtual audience then centers deeply on viewer
-            d_cq_x = f"-24.0*cos(PI*{u_expr}) + 18.0*sin(2*PI*{u_expr}) + 3.0*sin(2*PI*t/1.8)"
-            d_cq_y = f"-18.0*sin(PI*{u_expr}) + 6.0*cos(2*PI*{u_expr}) + 3.0*cos(2*PI*t/1.8)"
+            # Close-up 2 shifts: sweeps to right audience (+65px), passes through lens center, sweeps to left (-65px), centers
+            d_cq_x = f"65.0*sin(2*PI*{u_expr}) + 3.0*sin(2*PI*t/1.8)"
+            d_cq_y = f"-22.0*sin(PI*{u_expr}) - 10.0*cos(2*PI*{u_expr}) + 3.0*cos(2*PI*t/1.8)"
             filter_complex.append(f"[{q_src}]scale=820:820,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.98[q_sc_{idx}]")
-            filter_complex.append(f"[{cur_v}][q_sc_{idx}]overlay=eval=frame:x='W/2-w/2 + {d_cq_x} + 25.0*exp(-6.5*(t-{st}))*cos(16.0*(t-{st}))':y='H*0.38-h/2 + {d_cq_y} + 30.0*exp(-6.5*(t-{st}))*sin(16.0*(t-{st}))':enable='between(t,{st},{et})'[v_sc_{idx}_q]")
+            filter_complex.append(f"[{cur_v}][q_sc_{idx}]overlay=eval=frame:x='W/2-w/2 + {d_cq_x}{snap_impulse_x}':y='H*0.38-h/2 + {d_cq_y}{snap_impulse_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_q]")
             cur_v = f"v_sc_{idx}_q"
 
             if has_holo_q and not holo_q_used:
                 holo_q_used = True
-                filter_complex.append(f"[{cur_v}][holo_q]overlay=eval=frame:x='(W-w)/2':y='H*0.12-h/2 + 6.0*sin(2*PI*(t-{round(st+0.1, 2)})/2.4)':enable='between(t,{round(st+0.1, 2)},{max(round(st+0.2, 2), round(et-0.2, 2))})'[v_sc_{idx}_hq]")
+                filter_complex.append(f"[{cur_v}][holo_q]overlay=eval=frame:x='(W-w)/2':y='H*0.12-h/2 + 6.0*sin(2*PI*(t-{round(st+0.1, 2)})/2.4)':enable='between(t,{round(st+0.1, 2)},{max(round(st+0.2, 2), round(sc_visual_end-0.2, 2))})'[v_sc_{idx}_hq]")
                 cur_v = f"v_sc_{idx}_hq"
 
         elif shot == "close_solar":
             s_src = f"s_close_{s_close_cur}"
             s_close_cur += 1
             # Close-up 2 shifts for Solar:
-            d_cs_x = f"24.0*cos(PI*{u_expr}) - 18.0*sin(2*PI*{u_expr}) + 3.0*cos(2*PI*t/1.8)"
-            d_cs_y = f"-18.0*sin(PI*{u_expr}) + 6.0*cos(2*PI*{u_expr}) + 3.0*sin(2*PI*t/1.8)"
+            d_cs_x = f"-65.0*sin(2*PI*{u_expr}) + 3.0*cos(2*PI*t/1.8)"
+            d_cs_y = f"-22.0*sin(PI*{u_expr}) - 10.0*cos(2*PI*{u_expr}) + 3.0*sin(2*PI*t/1.8)"
             filter_complex.append(f"[{s_src}]scale=820:820,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.98[s_sc_{idx}]")
-            filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W/2-w/2 + {d_cs_x} + 25.0*exp(-6.5*(t-{st}))*cos(16.0*(t-{st}))':y='H*0.38-h/2 + {d_cs_y} + 30.0*exp(-6.5*(t-{st}))*sin(16.0*(t-{st}))':enable='between(t,{st},{et})'[v_sc_{idx}_s]")
+            filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W/2-w/2 + {d_cs_x}{snap_impulse_x}':y='H*0.38-h/2 + {d_cs_y}{snap_impulse_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_s]")
             cur_v = f"v_sc_{idx}_s"
 
             if has_holo_s and not holo_s_used:
                 holo_s_used = True
-                filter_complex.append(f"[{cur_v}][holo_s]overlay=eval=frame:x='(W-w)/2':y='H*0.12-h/2 + 6.0*cos(2*PI*(t-{round(st+0.1, 2)})/2.6)':enable='between(t,{round(st+0.1, 2)},{max(round(st+0.2, 2), round(et-0.2, 2))})'[v_sc_{idx}_hs]")
+                filter_complex.append(f"[{cur_v}][holo_s]overlay=eval=frame:x='(W-w)/2':y='H*0.12-h/2 + 6.0*cos(2*PI*(t-{round(st+0.1, 2)})/2.6)':enable='between(t,{round(st+0.1, 2)},{max(round(st+0.2, 2), round(sc_visual_end-0.2, 2))})'[v_sc_{idx}_hs]")
                 cur_v = f"v_sc_{idx}_hs"
 
         elif shot == "both":
             q_src = f"q_talk_{q_talk_cur}"
             q_talk_cur += 1
-            dq_x = f"22.0 + 36.0*sin(PI*{u_expr}) + 14.0*sin(2*PI*{u_expr})"
-            dq_y = f"-16.0*sin(PI*{u_expr}) + 8.0*cos(2*PI*{u_expr})"
+            dq_x = f"25.0 - 60.0*sin(2*PI*{u_expr})"
+            dq_y = f"-20.0*sin(PI*{u_expr}) - 10.0*cos(2*PI*{u_expr})"
             filter_complex.append(f"[{q_src}]scale=420:420,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.98[q_sc_{idx}]")
-            filter_complex.append(f"[{cur_v}][q_sc_{idx}]overlay=eval=frame:x='W*0.25-w/2 + {dq_x} + 15.0*exp(-6.5*(t-{st}))*cos(16.0*(t-{st}))':y='H*0.38-h/2 + {dq_y} + 18.0*exp(-6.5*(t-{st}))*sin(16.0*(t-{st}))':enable='between(t,{st},{et})'[v_sc_{idx}_q]")
+            filter_complex.append(f"[{cur_v}][q_sc_{idx}]overlay=eval=frame:x='W*0.25-w/2 + {dq_x}{snap_impulse_x}':y='H*0.38-h/2 + {dq_y}{snap_impulse_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_q]")
             cur_v = f"v_sc_{idx}_q"
 
             s_src = f"s_talk_{s_talk_cur}"
             s_talk_cur += 1
-            ds_x = f"-22.0 - 36.0*sin(PI*{u_expr}) - 14.0*sin(2*PI*{u_expr})"
-            ds_y = f"-16.0*sin(PI*{u_expr}) + 8.0*cos(2*PI*{u_expr})"
+            ds_x = f"-25.0 + 60.0*sin(2*PI*{u_expr})"
+            ds_y = f"-20.0*sin(PI*{u_expr}) - 10.0*cos(2*PI*{u_expr})"
             filter_complex.append(f"[{s_src}]scale=420:420,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.98[s_sc_{idx}]")
-            filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W*0.75-w/2 - 28 + {ds_x} + 15.0*exp(-6.5*(t-{st}))*cos(16.0*(t-{st}))':y='H*0.39-h/2 + {ds_y} + 18.0*exp(-6.5*(t-{st}))*sin(16.0*(t-{st}))':enable='between(t,{st},{et})'[v_sc_{idx}_s]")
+            filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W*0.75-w/2 - 28 + {ds_x}{snap_impulse_x}':y='H*0.39-h/2 + {ds_y}{snap_impulse_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_s]")
             cur_v = f"v_sc_{idx}_s"
 
     # Headline Hook Badge (Top Center during first scene)
