@@ -1407,6 +1407,10 @@ def render_orb_test_preview(
         sc_visual_end = scene_records[idx + 1]["start"] if idx + 1 < len(scene_records) else total_duration
         ent = sc["entity"]
         shot = sc["shot"]
+        sc_dur = max(0.2, round(sc_visual_end - st, 2))
+
+        # Normalized progress ratio for smooth camera motion
+        prog_expr = f"(min(1.0\\,max(0.0\\,(t-{st})/{sc_dur})))"
 
         if shot == "wide":
             is_q_active = (ent in ["quantum", "both"])
@@ -1414,9 +1418,9 @@ def render_orb_test_preview(
             if is_q_active:
                 q_src = f"q_talk_{q_talk_cur}"
                 q_talk_cur += 1
-                # Pure Majestic Floating Levitation with Subtle Harmonic Resonance:
-                dq_x = "14.0*sin(2*PI*t/3.4) + 6.0*cos(2*PI*t/1.9)"
-                dq_y = "-18.0*sin(2*PI*t/3.0) - 7.0*cos(2*PI*t/1.7)"
+                # Pure Majestic Floating Levitation + Slow Forward Push:
+                dq_x = f"14.0*sin(2*PI*t/3.4) + 6.0*cos(2*PI*t/1.9) + 10.0*{prog_expr}"
+                dq_y = f"-18.0*sin(2*PI*t/3.0) - 7.0*cos(2*PI*t/1.7) - 12.0*{prog_expr}"
                 q_alpha = 1.0
                 q_filt = f"scale=420:420,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa={q_alpha}"
             else:
@@ -1436,9 +1440,9 @@ def render_orb_test_preview(
             if is_s_active:
                 s_src = f"s_talk_{s_talk_cur}"
                 s_talk_cur += 1
-                # Pure Majestic Floating Levitation for Solar:
-                ds_x = "-14.0*sin(2*PI*t/3.6) - 6.0*cos(2*PI*t/2.1)"
-                ds_y = "-18.0*cos(2*PI*t/3.2) - 7.0*sin(2*PI*t/1.9)"
+                # Pure Majestic Floating Levitation + Slow Forward Push for Solar:
+                ds_x = f"-14.0*sin(2*PI*t/3.6) - 6.0*cos(2*PI*t/2.1) - 10.0*{prog_expr}"
+                ds_y = f"-18.0*cos(2*PI*t/3.2) - 7.0*sin(2*PI*t/1.9) - 12.0*{prog_expr}"
                 s_alpha = 1.0
                 s_filt = f"scale=370:370,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa={s_alpha}"
             else:
@@ -1463,9 +1467,9 @@ def render_orb_test_preview(
         elif shot == "close_quantum":
             q_src = f"q_close_{q_close_cur}"
             q_close_cur += 1
-            # Close-up Floating Levitation for Quantum (Clean, centered, continuous):
-            d_cq_x = "10.0*sin(2*PI*t/3.4) + 5.0*cos(2*PI*t/1.9)"
-            d_cq_y = "-16.0*sin(2*PI*t/3.0) - 6.0*cos(2*PI*t/1.7)"
+            # Cinematic Slow Push-In Dolly Motion for Quantum:
+            d_cq_x = f"10.0*sin(2*PI*t/3.4) + 5.0*cos(2*PI*t/1.9)"
+            d_cq_y = f"-16.0*sin(2*PI*t/3.0) - 6.0*cos(2*PI*t/1.7) - 18.0*{prog_expr}"
             filter_complex.append(f"[{q_src}]scale=820:820,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.98[q_sc_{idx}]")
             filter_complex.append(f"[{cur_v}][q_sc_{idx}]overlay=eval=frame:x='W/2-w/2 + {d_cq_x}':y='H*0.38-h/2 + {d_cq_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_q]")
             cur_v = f"v_sc_{idx}_q"
@@ -1478,9 +1482,9 @@ def render_orb_test_preview(
         elif shot == "close_solar":
             s_src = f"s_close_{s_close_cur}"
             s_close_cur += 1
-            # Close-up Floating Levitation for Solar:
-            d_cs_x = "-10.0*sin(2*PI*t/3.6) - 5.0*cos(2*PI*t/2.1)"
-            d_cs_y = "-16.0*cos(2*PI*t/3.2) - 6.0*sin(2*PI*t/1.9)"
+            # Cinematic Slow Push-In Dolly Motion for Solar:
+            d_cs_x = f"-10.0*sin(2*PI*t/3.6) - 5.0*cos(2*PI*t/2.1)"
+            d_cs_y = f"-16.0*cos(2*PI*t/3.2) - 6.0*sin(2*PI*t/1.9) - 18.0*{prog_expr}"
             filter_complex.append(f"[{s_src}]scale=820:820,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.98[s_sc_{idx}]")
             filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W/2-w/2 + {d_cs_x}':y='H*0.38-h/2 + {d_cs_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_s]")
             cur_v = f"v_sc_{idx}_s"
@@ -1493,16 +1497,17 @@ def render_orb_test_preview(
         elif shot == "both":
             q_src = f"q_talk_{q_talk_cur}"
             q_talk_cur += 1
-            dq_x = "14.0*sin(2*PI*t/3.4) + 6.0*cos(2*PI*t/1.9)"
-            dq_y = "-18.0*sin(2*PI*t/3.0) - 7.0*cos(2*PI*t/1.7)"
+            # Cinematic Cosmic Reveal Pull-Back:
+            dq_x = f"14.0*sin(2*PI*t/3.4) + 6.0*cos(2*PI*t/1.9)"
+            dq_y = f"-18.0*sin(2*PI*t/3.0) - 7.0*cos(2*PI*t/1.7) + 14.0*{prog_expr}"
             filter_complex.append(f"[{q_src}]scale=420:420,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.98[q_sc_{idx}]")
             filter_complex.append(f"[{cur_v}][q_sc_{idx}]overlay=eval=frame:x='W*0.25-w/2 + {dq_x}':y='H*0.38-h/2 + {dq_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_q]")
             cur_v = f"v_sc_{idx}_q"
 
             s_src = f"s_talk_{s_talk_cur}"
             s_talk_cur += 1
-            ds_x = "-14.0*sin(2*PI*t/3.6) - 6.0*cos(2*PI*t/2.1)"
-            ds_y = "-18.0*cos(2*PI*t/3.2) - 7.0*sin(2*PI*t/1.9)"
+            ds_x = f"-14.0*sin(2*PI*t/3.6) - 6.0*cos(2*PI*t/2.1)"
+            ds_y = f"-18.0*cos(2*PI*t/3.2) - 7.0*sin(2*PI*t/1.9) + 14.0*{prog_expr}"
             filter_complex.append(f"[{s_src}]scale=420:420,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.98[s_sc_{idx}]")
             filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W*0.75-w/2 - 28 + {ds_x}':y='H*0.39-h/2 + {ds_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_s]")
             cur_v = f"v_sc_{idx}_s"
