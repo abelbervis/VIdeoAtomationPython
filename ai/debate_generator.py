@@ -558,62 +558,62 @@ class DebateScriptGenerator:
                 ]
             }
         else:
-            # Generic dynamic fallback - neutral and domain-agnostic
+            # Generic dynamic fallback - cosmic forces observing human reality
             clean_title = topic.upper()
             return {
                 "topic": topic,
-                "headline_hook": f"⚡ EL GRAN DILEMA: {clean_title[:28]} ⚡",
+                "headline_hook": f"⚡ NUNCA HAS ENTENDIDO: {clean_title[:20]} ⚡",
                 "roles": topic_roles,
                 "holograms": None,
                 "scenes": [
                     {
-                        "speaker": "Quantum",
-                        "entity": "quantum",
-                        "text": f"El análisis sistemático de {topic} revela un dilema profundo que desafía lo que creíamos saber.",
+                        "speaker": "Narrador",
+                        "entity": "narrator",
+                        "text": f"Crees que entiendes {topic}, pero nunca te has detenido a observar lo que realmente sucede.",
                         "shot": "wide",
-                        "duration": 3.2
-                    },
-                    {
-                        "speaker": "Solar",
-                        "entity": "solar",
-                        "text": "Ese dilema surge al confundir modelos teóricos con el comportamiento real del fenómeno en la práctica.",
-                        "shot": "close_solar",
-                        "duration": 3.4
+                        "duration": 3.5
                     },
                     {
                         "speaker": "Quantum",
                         "entity": "quantum",
-                        "text": "Sin embargo, los datos empíricos demuestran que las variables clave contradicen las explicaciones clásicas.",
+                        "text": f"A nivel subatómico, {topic} no es más que una ilusión generada por la interacción de campos electromagnéticos.",
                         "shot": "close_quantum",
                         "duration": 3.4
                     },
                     {
                         "speaker": "Solar",
                         "entity": "solar",
-                        "text": "La aparente contradicción se resuelve si observamos el sistema como un todo dinámico y no como piezas aisladas.",
+                        "text": "Los humanos confunden esa fluctuación cuántica con una realidad sólida y permanente.",
                         "shot": "close_solar",
                         "duration": 3.5
                     },
                     {
                         "speaker": "Quantum",
                         "entity": "quantum",
-                        "text": "Aun así, si esta evidencia se confirma, obligaría a replantear los fundamentos mismos de esta disciplina.",
+                        "text": "La probabilidad dicta que cada instante del proceso se reescribe antes de que puedan percibirlo.",
                         "shot": "close_quantum",
                         "duration": 3.4
                     },
                     {
                         "speaker": "Solar",
                         "entity": "solar",
-                        "text": "Esa tensión constante entre certeza y descubrimiento es exactamente lo que impulsa el avance del conocimiento.",
+                        "text": "Y la entropía se asegura de que jamás puedan volver exactamente al estado anterior.",
                         "shot": "close_solar",
                         "duration": 3.5
                     },
                     {
-                        "speaker": "Ambos",
+                        "speaker": "Quantum y Solar",
                         "entity": "both",
-                        "text": "¿Hacia qué postura te inclinas al reflexionar sobre este dilema?",
+                        "text": "QUANTUM: Construyen toda su existencia sobre destellos efímeros... SOLAR: ...y aún así lo llaman realidad.",
                         "shot": "both",
-                        "duration": 3.0
+                        "duration": 3.6
+                    },
+                    {
+                        "speaker": "Narrador",
+                        "entity": "narrator",
+                        "text": f"¿Alguna vez volverás a experimentar {topic} de la misma manera?",
+                        "shot": "both",
+                        "duration": 3.5
                     }
                 ]
             }
