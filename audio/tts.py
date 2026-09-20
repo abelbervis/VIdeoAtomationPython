@@ -195,25 +195,63 @@ class EdgeTTSProvider(BaseTTSProvider):
 
         raw_output_path = output_path.parent / f"_raw_{output_path.name}" if apply_dsp else output_path
 
+        # Clean pitch and rate formatting for Edge-TTS
+        rate = rate.strip() if rate else "+0%"
+        if not rate.startswith(("+", "-")):
+            rate = f"+{rate}"
+        if not rate.endswith("%"):
+            rate = f"{rate}%"
+
+        pitch = pitch.strip() if pitch else "+0Hz"
+        if not pitch.startswith(("+", "-")):
+            pitch = f"+{pitch}"
+        if not pitch.endswith("Hz") and not pitch.endswith("%"):
+            pitch = f"{pitch}Hz"
+
+        volume = volume.strip() if volume else "+0%"
+        if not volume.startswith(("+", "-")):
+            volume = f"+{volume}"
+        if not volume.endswith("%"):
+            volume = f"{volume}%"
+
+        # Determine gender-aware fallback neural voices if requested voice is invalid
+        voices_to_try = [selected_voice]
+        is_female = any(f in selected_voice.lower() for f in ["dalia", "elvira", "salome", "paloma", "marina", "larissa", "fem", "mujer"])
+        if is_female:
+            for fb in ["es-MX-DaliaNeural", "es-ES-ElviraNeural", "es-CO-SalomeNeural"]:
+                if fb not in voices_to_try:
+                    voices_to_try.append(fb)
+        else:
+            for fb in ["es-ES-AlvaroNeural", "es-MX-JorgeNeural", "es-CO-GonzaloNeural"]:
+                if fb not in voices_to_try:
+                    voices_to_try.append(fb)
+
         synthesized = False
 
         # 1. Try python edge-tts library if installed
         try:
             import edge_tts
 
-            async def _run():
-                communicate = edge_tts.Communicate(
-                    text,
-                    selected_voice,
-                    rate=rate,
-                    pitch=pitch,
-                    volume=volume
-                )
-                await communicate.save(str(raw_output_path))
+            for v in voices_to_try:
+                try:
+                    async def _run(v_name=v):
+                        communicate = edge_tts.Communicate(
+                            text,
+                            v_name,
+                            rate=rate,
+                            pitch=pitch,
+                            volume=volume
+                        )
+                        await communicate.save(str(raw_output_path))
 
-            asyncio.run(_run())
-            if raw_output_path.exists() and raw_output_path.stat().st_size > 0:
-                synthesized = True
+                    asyncio.run(_run())
+                    if raw_output_path.exists() and raw_output_path.stat().st_size > 0:
+                        synthesized = True
+                        break
+                except Exception as inner_e:
+                    if v == voices_to_try[0] and len(voices_to_try) > 1:
+                        print(f"  ℹ️ Edge-TTS voice '{v}' unavailable ({inner_e}). Intentando con voz neural de respaldo '{voices_to_try[1]}'...")
+                    continue
         except ImportError:
             pass
         except Exception as e:
@@ -221,25 +259,28 @@ class EdgeTTSProvider(BaseTTSProvider):
 
         # 2. Try edge-tts CLI tool if available (Fallback)
         if not synthesized:
-            try:
-                cmd = [
-                    "edge-tts",
-                    "--voice", selected_voice,
-                    "--rate", rate,
-                    "--pitch", pitch,
-                    "--volume", volume,
-                    "--text", text,
-                    "--write-media", str(raw_output_path)
-                ]
-                subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-                if raw_output_path.exists() and raw_output_path.stat().st_size > 0:
-                    synthesized = True
-            except Exception:
-                pass
+            for v in voices_to_try:
+                try:
+                    cmd = [
+                        "edge-tts",
+                        "--voice", v,
+                        "--rate", rate,
+                        "--pitch", pitch,
+                        "--volume", volume,
+                        "--text", text,
+                        "--write-media", str(raw_output_path)
+                    ]
+                    subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+                    if raw_output_path.exists() and raw_output_path.stat().st_size > 0:
+                        synthesized = True
+                        break
+                except Exception:
+                    pass
 
-        # 3. Fallback to GoogleTTS if edge-tts is not installed in local environment
+        # 3. Last-resort fallback to GoogleTTS only if edge-tts is completely unavailable
         if not synthesized:
             try:
+                print("  ⚠️ Edge-TTS no disponible en el sistema. Utilizando fallback local temporal...")
                 gtts_provider = GoogleTTSProvider(language="es")
                 synthesized = gtts_provider.synthesize_text(text, raw_output_path)
             except Exception as e:
