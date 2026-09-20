@@ -1,66 +1,53 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 2560" width="1440" height="2560">
   <defs>
+    <!-- Pitch Black OLED Void -->
     <radialGradient id="bgDeep" cx="50%" cy="38%" r="75%">
-      <stop offset="0%" stop-color="#0b1020"/>
-      <stop offset="50%" stop-color="#05070d"/>
-      <stop offset="100%" stop-color="#020306"/>
+      <stop offset="0%" stop-color="#04060c"/>
+      <stop offset="45%" stop-color="#010205"/>
+      <stop offset="100%" stop-color="#000001"/>
     </radialGradient>
-    <radialGradient id="nebulaQuantum" cx="24%" cy="38%" r="48%">
-      <stop offset="0%" stop-color="#00e5ff" stop-opacity="0.32"/>
-      <stop offset="35%" stop-color="#0055d4" stop-opacity="0.18"/>
-      <stop offset="70%" stop-color="#001844" stop-opacity="0.06"/>
+    <radialGradient id="nebulaQuantum" cx="24%" cy="38%" r="42%">
+      <stop offset="0%" stop-color="#00e5ff" stop-opacity="0.14"/>
+      <stop offset="40%" stop-color="#0055d4" stop-opacity="0.06"/>
       <stop offset="100%" stop-color="#000000" stop-opacity="0.0"/>
     </radialGradient>
-    <radialGradient id="nebulaSolar" cx="76%" cy="38%" r="48%">
-      <stop offset="0%" stop-color="#ff9100" stop-opacity="0.30"/>
-      <stop offset="35%" stop-color="#d50000" stop-opacity="0.16"/>
-      <stop offset="70%" stop-color="#4a0e00" stop-opacity="0.06"/>
+    <radialGradient id="nebulaSolar" cx="76%" cy="38%" r="42%">
+      <stop offset="0%" stop-color="#ff9100" stop-opacity="0.13"/>
+      <stop offset="40%" stop-color="#d50000" stop-opacity="0.05"/>
       <stop offset="100%" stop-color="#000000" stop-opacity="0.0"/>
     </radialGradient>
-    <radialGradient id="singularityCore" cx="50%" cy="40%" r="30%">
-      <stop offset="0%" stop-color="#2a0845" stop-opacity="0.15"/>
-      <stop offset="100%" stop-color="#000000" stop-opacity="0.0"/>
-    </radialGradient>
-    <linearGradient id="horizonVanish" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#00e5ff" stop-opacity="0.0"/>
-      <stop offset="25%" stop-color="#3d68a2" stop-opacity="0.22"/>
-      <stop offset="100%" stop-color="#0a1526" stop-opacity="0.45"/>
-    </linearGradient>
   </defs>
 
-  <!-- Deep Cosmic Canvas -->
+  <!-- Deep OLED Black Void Canvas -->
   <rect width="1440" height="2560" fill="url(#bgDeep)"/>
 
-  <!-- Left Cyan Quantum Domain Atmosphere -->
+  <!-- Left Subtle Cyan Quantum Atmosphere -->
   <rect width="1440" height="2560" fill="url(#nebulaQuantum)"/>
 
-  <!-- Right Amber Solar Domain Atmosphere -->
+  <!-- Right Subtle Amber Solar Atmosphere -->
   <rect width="1440" height="2560" fill="url(#nebulaSolar)"/>
 
-  <!-- Central Cosmic Singularity Void -->
-  <rect width="1440" height="2560" fill="url(#singularityCore)"/>
-
-  <!-- 3D Perspective Cyber Floor (Horizon at y=1720) -->
-  <g stroke="#3a6096" stroke-opacity="0.22" stroke-width="1.5">
+  <!-- 3D Perspective Cyber Floor Grid (Horizon at y=1720) -->
+  <g stroke="#24426b" stroke-opacity="0.26" stroke-width="1.6">
     <!-- Receding Vanishing Perspective Lines -->
-    <line x1="720" y1="1720" x2="-100" y2="2560" stroke-opacity="0.18"/>
-    <line x1="720" y1="1720" x2="120" y2="2560" stroke-opacity="0.22"/>
-    <line x1="720" y1="1720" x2="340" y2="2560" stroke-opacity="0.25"/>
-    <line x1="720" y1="1720" x2="540" y2="2560" stroke-opacity="0.28"/>
-    <line x1="720" y1="1720" x2="720" y2="2560" stroke-opacity="0.32"/>
-    <line x1="720" y1="1720" x2="900" y2="2560" stroke-opacity="0.28"/>
-    <line x1="720" y1="1720" x2="1100" y2="2560" stroke-opacity="0.25"/>
-    <line x1="720" y1="1720" x2="1320" y2="2560" stroke-opacity="0.22"/>
-    <line x1="720" y1="1720" x2="1540" y2="2560" stroke-opacity="0.18"/>
+    <line x1="720" y1="1720" x2="-100" y2="2560" stroke="#00d4ff" stroke-opacity="0.18"/>
+    <line x1="720" y1="1720" x2="120" y2="2560" stroke="#00d4ff" stroke-opacity="0.22"/>
+    <line x1="720" y1="1720" x2="340" y2="2560" stroke="#00d4ff" stroke-opacity="0.26"/>
+    <line x1="720" y1="1720" x2="540" y2="2560" stroke="#00d4ff" stroke-opacity="0.30"/>
+    <line x1="720" y1="1720" x2="720" y2="2560" stroke="#ffffff" stroke-opacity="0.35"/>
+    <line x1="720" y1="1720" x2="900" y2="2560" stroke="#ffaa00" stroke-opacity="0.30"/>
+    <line x1="720" y1="1720" x2="1100" y2="2560" stroke="#ffaa00" stroke-opacity="0.26"/>
+    <line x1="720" y1="1720" x2="1320" y2="2560" stroke="#ffaa00" stroke-opacity="0.22"/>
+    <line x1="720" y1="1720" x2="1540" y2="2560" stroke="#ffaa00" stroke-opacity="0.18"/>
     
     <!-- Perspective Depth Rings (Exponential Distance Compression) -->
-    <line x1="0" y1="1760" x2="1440" y2="1760" stroke-opacity="0.08"/>
-    <line x1="0" y1="1815" x2="1440" y2="1815" stroke-opacity="0.12"/>
-    <line x1="0" y1="1890" x2="1440" y2="1890" stroke-opacity="0.16"/>
-    <line x1="0" y1="1995" x2="1440" y2="1995" stroke-opacity="0.20"/>
-    <line x1="0" y1="2140" x2="1440" y2="2140" stroke-opacity="0.26"/>
-    <line x1="0" y1="2330" x2="1440" y2="2330" stroke-opacity="0.32"/>
-    <line x1="0" y1="2550" x2="1440" y2="2550" stroke-opacity="0.38"/>
+    <line x1="0" y1="1760" x2="1440" y2="1760" stroke-opacity="0.10"/>
+    <line x1="0" y1="1815" x2="1440" y2="1815" stroke-opacity="0.14"/>
+    <line x1="0" y1="1890" x2="1440" y2="1890" stroke-opacity="0.18"/>
+    <line x1="0" y1="1995" x2="1440" y2="1995" stroke-opacity="0.22"/>
+    <line x1="0" y1="2140" x2="1440" y2="2140" stroke-opacity="0.28"/>
+    <line x1="0" y1="2330" x2="1440" y2="2330" stroke-opacity="0.34"/>
+    <line x1="0" y1="2550" x2="1440" y2="2550" stroke-opacity="0.40"/>
   </g>
 
   <!-- Ambient Stars and Constellation Anchors -->
