@@ -156,9 +156,9 @@ DEFAULT_NARRATOR_HOST = OrbHost(
     primary_color="#ffd700",
     glow_color="#ffab00",
     border_color="#ffe082",
-    voice_name="es-CO-GonzaloNeural",
-    voice_rate="-3%",
-    voice_pitch="-3Hz",
+    voice_name="es-MX-JorgeNeural",
+    voice_rate="-4%",
+    voice_pitch="-7Hz",
     drone_freq=46,
     double_tracking={
         "delay_ms": 10,

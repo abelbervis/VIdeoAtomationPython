@@ -361,12 +361,25 @@ class EdgeTTSProvider(BaseTTSProvider):
 
         # 3. Apply Audio DSP Filtergraph
         if entity_key in ["narrator", "presentador", "host", "narrador"]:
-            # Documentary Broadcast Studio Master EQ (High definition warm compression, crisp broadcast presence)
+            # Cinematic Deep Trailer & Documentary Broadcast Master DSP:
+            # - rubberband pitch downscale (0.875) for deep resonant gravity (unrecognizable, thick & authoritative)
+            # - bass boost & chest resonance EQ (110Hz & 170Hz)
+            # - articulation clarity boost (3200Hz)
+            # - warm broadcast studio compression with loudness matching
             try:
+                dsp_narrator = (
+                    "rubberband=pitch=0.875:tempo=1.0,"
+                    "highpass=f=60,"
+                    "bass=g=4.5:f=110:w=0.6,"
+                    "equalizer=f=170:width_type=h:width=70:g=2.8,"
+                    "equalizer=f=3200:width_type=h:width=1200:g=2.2,"
+                    "compand=attacks=0.02:decays=0.1:points=-80/-80|-24/-18|-12/-8|0/-2:gain=2.0,"
+                    "volume=1.5"
+                )
                 cmd = [
                     "ffmpeg", "-y",
                     "-i", str(raw_tmp_path),
-                    "-af", "highpass=f=75,equalizer=f=130:width_type=h:width=60:g=2.2,equalizer=f=3400:width_type=h:width=1200:g=2.0,compand=attacks=0.02:decays=0.1:points=-80/-80|-24/-20|-12/-10|0/-3:gain=1.5,volume=1.4",
+                    "-af", dsp_narrator,
                     "-acodec", "libmp3lame",
                     "-b:a", "192k",
                     str(output_path)
