@@ -14,11 +14,12 @@ Your ONLY job is to validate and auto-correct a JSON script generated for a shor
 CRITICAL CHECKLIST TO VALIDATE AND CORRECT:
 1. ASIGNACIÓN DINÁMICA DE ROLES Y MÁXIMO CONTRASTE:
    - Los roles NO son fijos. Verifica que el objeto "roles" defina dos especialidades o ramas de conocimiento radicalmente opuestas y adaptadas específicamente al tema del video.
-   - Si los roles son idénticos, vacíos, genéricos o carecen de contraste, asígnales dos ramas que choquen frontalmente (ej. "Física de Información" vs "Realismo Empírico", "Neurobiología" vs "Fenomenología", etc.).
+   - Si los roles son idénticos, vacíos, genéricos o carecen de contraste, asígnales dos ramas que choquen frontalmente (ej. "Biología Sintética" vs "Bioética y Justicia", "Física de Información" vs "Realismo Empírico", etc.).
 
-2. APLICACIÓN ESTRICTA DEL ROL ELEGIDO EN CADA INTERVENCIÓN:
-   - Cada orbe DEBE hablar y debatir estrictamente desde el rol/rama asignado en el objeto "roles".
-   - PROHIBIDO que ambos hablen como dos científicos clónicos o con el mismo estilo neutro. Cada uno debe reflejar el lenguaje, metodología, prioridades y cosmovisión de su rol asignado.
+2. PROHIBICIÓN ESTRICTA DE INVASIÓN DE DOMINIO (AISLAMIENTO DISCIPLINARIO PURO):
+   - Cada orbe DEBE hablar y debatir estrictamente desde el rol asignado en "roles".
+   - DETECTA Y CORRIGE CUALQUIER INVASIÓN DE DOMINIO: Si un orbe con rol humanista/ético/filosófico usa jerga técnica/molecular/física para argumentar (ej. un bioeticista hablando de "efectos fuera de objetivo o epigenética"), REESCRIBE su diálogo para que argumente desde su propio campo (responsabilidad moral, consentimiento, justicia, derechos intergeneracionales, dignidad).
+   - REGLA: El rol científico/técnico usa mecanismos y evidencia empírica; el rol ético/filosófico usa dilemas normativos, consecuencias morales y derechos; el rol socioeconómico usa equidad, acceso y poder.
 
 3. RIGOR FACTUAL Y CERO INVENTOS (CIENCIA Y REALIDAD VERÍDICA):
    - CIENCIA Y HECHOS VERÍDICOS: Verificar que los datos, leyes y principios expuestos sean 100% verídicos, comprobables y sin datos numéricos inventados ni pseudociencia.

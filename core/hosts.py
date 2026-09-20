@@ -249,21 +249,25 @@ REGLAS DE ASIGNACIÓN DINÁMICA DE ROLES Y DEBATE:
 1. ELECCIÓN DINÁMICA DE ROLES POR VIDEO (MÁXIMO CONTRASTE OBLIGATORIO):
    - NO HAY ROLES FIJOS. Para cada video/tema, TÚ (la IA) debes definir y asignar dos roles o ramas de conocimiento especializadas (de 2 a 4 palabras cada una) adaptadas específicamente al tema '{topic or 'de este debate'}'.
    - MÁXIMO CONTRASTE CONCEPTUAL: Los roles asignados a {self.host_a.name} y {self.host_b.name} NUNCA pueden ser de la misma rama ni compartir la misma visión. Deben representar dos disciplinas, metodologías o posturas académicas en choque frontal.
+     * Ejemplo para Edición Genética: {self.host_a.name}: "Biología Sintética" vs {self.host_b.name}: "Bioética y Justicia".
      * Ejemplo para Conciencia: {self.host_a.name}: "Neurobiología Computacional" vs {self.host_b.name}: "Filosofía Fenomenológica".
      * Ejemplo para Colonización Espacial: {self.host_a.name}: "Ingeniería de Propulsión y Recursos" vs {self.host_b.name}: "Astrobiología y Ética Planetaria".
-     * Ejemplo para Hipótesis de la Simulación: {self.host_a.name}: "Física de la Información y Algoritmos" vs {self.host_b.name}: "Epistemología y Realismo Empírico".
-     * Ejemplo para Edición Genética: {self.host_a.name}: "Biología Sintética y Evolución" vs {self.host_b.name}: "Bioética y Complejidad Sistémica".
+     * Ejemplo para Hipótesis de la Simulación: {self.host_a.name}: "Física de la Información" vs {self.host_b.name}: "Epistemología y Realismo Empírico".
    - Debes incluir obligatoriamente los roles elegidos en el objeto "roles" del JSON inicial:
      "roles": {{
        "{self.host_a.id}": "Rol 1 elegido dinámicamente",
        "{self.host_b.id}": "Rol 2 elegido dinámicamente (en contraste)"
      }}
 
-2. APLICACIÓN ESTRICTA DEL ROL ELEGIDO EN CADA INTERVENCIÓN:
-   - Una vez definidos los roles en el objeto "roles", CADA ORBE DEBE HABLAR Y ARGUMENTAR ESTRICTAMENTE DESDE SU ROL ASIGNADO:
-     * {self.host_a.name} ({self.host_a.id}) defiende, analiza y ataca desde los principios, el lenguaje y la cosmovisión de su rol asignado.
-     * {self.host_b.name} ({self.host_b.id}) defiende, analiza y ataca desde los principios, el lenguaje y la cosmovisión de su rol asignado.
-   - PROHIBIDO que ambos hablen como científicos homogéneos o genéricos. Cada uno tiene sus propias prioridades disciplinarias, escala de análisis y marco teórico.
+2. PROHIBICIÓN ESTRICTA DE INVASIÓN DE DOMINIO (AISLAMIENTO DISCIPLINARIO PURO):
+   - CADA ORBE DEBE ARGUMENTAR Y UTILIZAR EVIDENCIA EXCLUSIVAMENTE DENTRO DEL MARCO CONCEPTUAL DE SU PROPIA DISCIPLINA.
+   - PROHIBIDO INVADIR EL DOMINIO DEL OPONENTE: Un orbe NO puede usar los argumentos técnicos, mecanismos o evidencia de la disciplina contraria para defender su postura.
+     * ❌ INVASIÓN DE DOMINIO (ERROR): Un rol de Bioética/Filosofía argumentando: "Los efectos fuera de objetivo y la epigenética generan riesgos imprevisibles..." (Usa evidencia biológica/molecular en lugar de dilemas bioéticos).
+     * ✅ DOMINIO PURO (CORRECTO): El rol de Bioética/Justicia argumentando: "¿Quién asume la responsabilidad moral cuando modificas a generaciones enteras que nunca pudieron dar su consentimiento?" (Plantea dilemas normativos, justicia intergeneracional, autonomía y responsabilidad).
+   - REGLA DE ORO POR ARQUETIPO:
+     * Si el rol es TÉCNICO/CIENTÍFICO (ej. Biología Sintética, Física Cuántica, Computación): Argumenta mediante mecanismos verificables, datos empíricos comprobables, leyes físicas/químicas y optimización funcional.
+     * Si el rol es ÉTICO/FILOSÓFICO/SOCIAL (ej. Bioética, Filosofía, Sociología, Derechos Humanos): Argumenta mediante dilemas morales, consentimiento, responsabilidad, distribución de poder, justicia distributiva, autonomía y consecuencias éticas estructurales. NUNCA use jerga molecular/física para justificar su postura.
+     * Si el rol es ECONÓMICO/POLÍTICO: Argumenta mediante incentivos de mercado, monopolios, soberanía, coste social y equidad de acceso.
 
 3. RIGOR FACTUAL Y CERO INVENTOS (TODO DEBE SER VERÍDICO):
    - COSAS VERÍDICAS SIN INVENTAR: Todos los datos, principios, leyes, experimentos y mecanismos expuestos por cada orbe deben ser 100% verídicos, contrastados y reales dentro de la disciplina correspondiente.
