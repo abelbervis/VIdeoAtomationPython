@@ -1323,10 +1323,22 @@ def render_orb_test_preview(
     generate_cosmic_debate_karaoke_ass(scene_records, ass_sub_path, width=width, height=height, roles=custom_roles)
     escaped_ass_path = str(ass_sub_path.resolve()).replace("\\", "/").replace(":", "\\:").replace("'", "\\'")
 
-    # Dynamic Sci-Fi Cosmic Particle Background Video Loop
+    # Dynamic Sci-Fi Cosmic Particle Background Video Loop (Dynamic Palette Inheritance)
     from video.cosmic_bg import get_cosmic_particle_background_video
     try:
-        cosmic_bg_video = get_cosmic_particle_background_video(width=width, height=height)
+        color_a = getattr(debate_show.host_a, "primary_color", "#00f0ff")
+        color_a_glow = getattr(debate_show.host_a, "glow_color", "#0284c7")
+        color_b = getattr(debate_show.host_b, "primary_color", "#ffea00")
+        color_b_glow = getattr(debate_show.host_b, "glow_color", "#ff5500")
+
+        cosmic_bg_video = get_cosmic_particle_background_video(
+            width=width,
+            height=height,
+            color_a=color_a,
+            color_a_glow=color_a_glow,
+            color_b=color_b,
+            color_b_glow=color_b_glow,
+        )
         if cosmic_bg_video.exists() and cosmic_bg_video.stat().st_size > 1000:
             bg_cmd_args = ["-stream_loop", "-1", "-i", str(cosmic_bg_video)]
         else:

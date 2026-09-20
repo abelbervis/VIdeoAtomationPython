@@ -1,16 +1,40 @@
 """
 Procedural Cosmic Particle Background Video Generator.
 Renders a seamless, high-performance looping MP4 video of deep space with:
-- Dual gravitational mass interaction (Quantum Cyan & Solar Gold)
-- Dynamic orbiting particle trails and accretion dust
-- Ambient chromatic nebulae and orbital harmonic rings
-- Cached to assets/backgrounds/ for instant reuse in video rendering
+- Dynamic Color Palette inheritance from any cosmic character or custom hex colors
+- Real-time color interpolation (lerp) across gravitational fields
+- 3D depth layers with foreground bokeh sparks crossing in front of entities
+- Ambient fluid nebulae and orbital harmonic resonance lines
 """
 
 import math
 import subprocess
 from pathlib import Path
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Tuple
+
+
+def _hex_to_rgb(hex_str: str) -> Tuple[int, int, int]:
+    clean = hex_str.strip().lstrip("#")
+    if len(clean) == 3:
+        clean = "".join(c + c for c in clean)
+    try:
+        val = int(clean, 16)
+        return ((val >> 16) & 255, (val >> 8) & 255, val & 255)
+    except Exception:
+        return (0, 240, 255)
+
+
+def _lerp_rgb(c1: Tuple[int, int, int], c2: Tuple[int, int, int], t: float) -> Tuple[int, int, int]:
+    clamped = max(0.0, min(1.0, t))
+    return (
+        int(c1[0] + (c2[0] - c1[0]) * clamped),
+        int(c1[1] + (c2[1] - c1[1]) * clamped),
+        int(c1[2] + (c2[2] - c1[2]) * clamped),
+    )
+
+
+def _rgb_to_hex(rgb: Tuple[int, int, int]) -> str:
+    return f"#{rgb[0]:02x}{rgb[1]:02x}{rgb[2]:02x}"
 
 
 def generate_cosmic_particle_bg_video(
@@ -18,57 +42,72 @@ def generate_cosmic_particle_bg_video(
     height: int = 1920,
     fps: int = 30,
     loop_frames: int = 60,
+    color_a: str = "#00f0ff",
+    color_a_glow: str = "#0284c7",
+    color_b: str = "#ffea00",
+    color_b_glow: str = "#ff5500",
     target_dir: Optional[Path] = None,
     force_refresh: bool = False,
 ) -> Path:
     """
     Generates a seamless 2-second (60 frames @ 30fps) high-definition looping MP4
-    background with dual cosmic entities and moving gravitational particle fields.
+    background with dual cosmic entities, dynamic palette inheritance, and 3D depth.
     """
     dest_dir = target_dir or (Path(__file__).resolve().parent.parent / "assets" / "backgrounds")
     dest_dir.mkdir(parents=True, exist_ok=True)
-    mp4_path = dest_dir / f"cosmic_dual_particles_{width}x{height}.mp4"
+    
+    slug_a = color_a.replace("#", "").lower()[:6]
+    slug_b = color_b.replace("#", "").lower()[:6]
+    mp4_path = dest_dir / f"cosmic_bg_{width}x{height}_{slug_a}_{slug_b}.mp4"
 
     if not force_refresh and mp4_path.exists() and mp4_path.stat().st_size > 50000:
         return mp4_path
 
-    print(f"  ✨ Generando fondo cósmico cinemático de partículas ({width}x{height} @ {fps}fps)...")
+    print(f"  ✨ Generando fondo cósmico dinámico ({color_a} & {color_b} | {width}x{height} @ {fps}fps)...")
 
     # Render at a crisp resolution optimized for speed and fidelity
     render_w = min(width, 720)
     render_h = min(height, 1280)
-    frames_dir = dest_dir / f"_temp_bg_frames_{render_w}x{render_h}"
+    frames_dir = dest_dir / f"_temp_bg_{render_w}x{render_h}_{slug_a}_{slug_b}"
     frames_dir.mkdir(parents=True, exist_ok=True)
 
-    # Simulation parameters
-    num_particles = 180
-    center_ax = render_w * 0.32
-    center_ay = render_h * 0.40
-    center_bx = render_w * 0.68
-    center_by = render_h * 0.44
+    rgb_a = _hex_to_rgb(color_a)
+    rgb_a_glow = _hex_to_rgb(color_a_glow)
+    rgb_b = _hex_to_rgb(color_b)
+    rgb_b_glow = _hex_to_rgb(color_b_glow)
 
-    # Deterministic particle seed distribution
+    # Simulation parameters
+    num_particles = 190
+    center_ax = render_w * 0.33
+    center_ay = render_h * 0.42
+    center_bx = render_w * 0.67
+    center_by = render_h * 0.46
+
+    # Deterministic particle seed distribution with 3D Z-depth
     particles = []
     for idx in range(num_particles):
-        is_q = (idx % 2 == 0)
+        is_a = (idx % 2 == 0)
         seed = (idx * 1.6180339887) % 1.0
-        orbit_rad_x = 70 + seed * (render_w * 0.38)
-        orbit_rad_y = 50 + ((idx * 2.718) % 1.0) * (render_h * 0.28)
+        orbit_rad_x = 60 + seed * (render_w * 0.40)
+        orbit_rad_y = 45 + ((idx * 2.718) % 1.0) * (render_h * 0.30)
         phase_offset = idx * (2 * math.pi / num_particles)
-        speed_mult = 1.0 + ((idx * 0.37) % 1.0) * 1.5
-        size = 1.2 if idx % 7 != 0 else (2.4 if idx % 19 != 0 else 3.8)
-        color = "#00f0ff" if is_q else ("#ffea00" if idx % 4 != 0 else "#a855f7")
+        speed_mult = 0.55 + ((idx * 0.37) % 1.0) * 0.75  # Calibrated slow graceful drift
+        z_depth = ((idx * 3.1415) % 2.0) - 1.0 # -1.0 to 1.0
+        
+        base_size = 1.3 + (z_depth + 1.0) * 0.8
+        if z_depth > 0.5 and idx % 9 == 0:
+            base_size = 4.0 + ((idx * 0.5) % 2.5) # Foreground bokeh spark
+
         opacity = 0.35 + ((idx * 0.73) % 0.55)
         particles.append({
-            "is_q": is_q,
+            "is_a": is_a,
             "rx": orbit_rad_x,
             "ry": orbit_rad_y,
             "phase": phase_offset,
             "speed": speed_mult,
-            "size": size,
-            "color": color,
+            "size": base_size,
+            "z": z_depth,
             "opacity": opacity,
-            "z_order": idx % 3,
         })
 
     try:
@@ -76,90 +115,113 @@ def generate_cosmic_particle_bg_video(
             progress = f / loop_frames
             tau = 2 * math.pi * progress
 
-            # Orbiting Entity Centers
-            ent_a_x = center_ax + 28 * math.cos(tau)
-            ent_a_y = center_ay + 18 * math.sin(tau * 1.2)
+            # Orbiting Entity Centers (gentle drift)
+            ent_a_x = center_ax + 24 * math.cos(tau)
+            ent_a_y = center_ay + 16 * math.sin(tau * 1.2)
 
-            ent_b_x = center_bx + 32 * math.cos(tau + math.pi)
-            ent_b_y = center_by + 20 * math.sin((tau + math.pi) * 1.1)
+            ent_b_x = center_bx + 26 * math.cos(tau + math.pi)
+            ent_b_y = center_by + 18 * math.sin((tau + math.pi) * 1.1)
 
             # Midpoint Bridge
             mid_x = (ent_a_x + ent_b_x) / 2
             mid_y = (ent_a_y + ent_b_y) / 2
             bridge_pulse = 0.5 + 0.5 * math.sin(tau * 2)
 
+            mid_color_rgb = _lerp_rgb(rgb_a, rgb_b, 0.5)
+            mid_hex = _rgb_to_hex(mid_color_rgb)
+
             svg_parts = [
                 f'<svg width="{render_w}" height="{render_h}" viewBox="0 0 {render_w} {render_h}" xmlns="http://www.w3.org/2000/svg">',
                 '  <defs>',
-                '    <filter id="bgBlurDeep" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="70" /></filter>',
-                '    <filter id="coreBlur" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="24" /></filter>',
-                '    <filter id="glowBlur" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="8" /></filter>',
+                '    <filter id="bgBlurDeep" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="65" /></filter>',
+                '    <filter id="coreBlur" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="22" /></filter>',
+                '    <filter id="glowBlur" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="7" /></filter>',
                 '    <linearGradient id="deepVoidGrad" x1="0%" y1="0%" x2="100%" y2="100%">',
                 '      <stop offset="0%" stop-color="#040508" />',
-                '      <stop offset="50%" stop-color="#070912" />',
-                '      <stop offset="100%" stop-color="#0a0710" />',
+                '      <stop offset="50%" stop-color="#070810" />',
+                '      <stop offset="100%" stop-color="#09060d" />',
                 '    </linearGradient>',
-                '    <radialGradient id="nebulaQ" cx="50%" cy="50%" r="50%">',
-                '      <stop offset="0%" stop-color="#00f0ff" stop-opacity="0.32" />',
-                '      <stop offset="40%" stop-color="#4f46e5" stop-opacity="0.18" />',
-                '      <stop offset="80%" stop-color="#1e1b4b" stop-opacity="0.06" />',
-                '      <stop offset="100%" stop-color="#000000" stop-opacity="0.0" />',
+                '    <radialGradient id="nebulaA" cx="50%" cy="50%" r="50%">',
+                f'      <stop offset="0%" stop-color="{color_a}" stop-opacity="0.30" />',
+                f'      <stop offset="45%" stop-color="{color_a_glow}" stop-opacity="0.16" />',
+                '      <stop offset="85%" stop-color="#000000" stop-opacity="0.0" />',
                 '    </radialGradient>',
-                '    <radialGradient id="nebulaS" cx="50%" cy="50%" r="50%">',
-                '      <stop offset="0%" stop-color="#ff9100" stop-opacity="0.36" />',
-                '      <stop offset="45%" stop-color="#e11d48" stop-opacity="0.20" />',
-                '      <stop offset="85%" stop-color="#4c0519" stop-opacity="0.06" />',
-                '      <stop offset="100%" stop-color="#000000" stop-opacity="0.0" />',
+                '    <radialGradient id="nebulaB" cx="50%" cy="50%" r="50%">',
+                f'      <stop offset="0%" stop-color="{color_b}" stop-opacity="0.32" />',
+                f'      <stop offset="45%" stop-color="{color_b_glow}" stop-opacity="0.18" />',
+                '      <stop offset="85%" stop-color="#000000" stop-opacity="0.0" />',
                 '    </radialGradient>',
                 '    <radialGradient id="bridgePulseGrad" cx="50%" cy="50%" r="50%">',
-                f'      <stop offset="0%" stop-color="#c084fc" stop-opacity="{0.18 * bridge_pulse + 0.08:.2f}" />',
-                '      <stop offset="60%" stop-color="#3b82f6" stop-opacity="0.04" />',
-                '      <stop offset="100%" stop-color="#000000" stop-opacity="0.0" />',
+                f'      <stop offset="0%" stop-color="{mid_hex}" stop-opacity="{0.16 * bridge_pulse + 0.06:.2f}" />',
+                '      <stop offset="70%" stop-color="#000000" stop-opacity="0.0" />',
                 '    </radialGradient>',
                 '  </defs>',
                 '  <!-- 1. Deep Space Base -->',
                 f'  <rect width="{render_w}" height="{render_h}" fill="url(#deepVoidGrad)" />',
                 '  <!-- 2. Dual Atmospheric Nebulae -->',
-                f'  <circle cx="{ent_a_x:.1f}" cy="{ent_a_y:.1f}" r="260" fill="url(#nebulaQ)" filter="url(#bgBlurDeep)" />',
-                f'  <circle cx="{ent_b_x:.1f}" cy="{ent_b_y:.1f}" r="280" fill="url(#nebulaS)" filter="url(#bgBlurDeep)" />',
-                f'  <circle cx="{mid_x:.1f}" cy="{mid_y:.1f}" r="180" fill="url(#bridgePulseGrad)" filter="url(#coreBlur)" />',
+                f'  <circle cx="{ent_a_x:.1f}" cy="{ent_a_y:.1f}" r="270" fill="url(#nebulaA)" filter="url(#bgBlurDeep)" />',
+                f'  <circle cx="{ent_b_x:.1f}" cy="{ent_b_y:.1f}" r="290" fill="url(#nebulaB)" filter="url(#bgBlurDeep)" />',
+                f'  <circle cx="{mid_x:.1f}" cy="{mid_y:.1f}" r="170" fill="url(#bridgePulseGrad)" filter="url(#coreBlur)" />',
                 '  <!-- 3. Astrometric Resonance Bridge Lines -->',
-                f'  <line x1="{ent_a_x:.1f}" y1="{ent_a_y:.1f}" x2="{ent_b_x:.1f}" y2="{ent_b_y:.1f}" stroke="rgba(192, 132, 252, 0.22)" stroke-width="1.2" stroke-dasharray="3 9" />',
-                '  <!-- 4. Dynamic Particle Swarm and Trails -->',
+                f'  <line x1="{ent_a_x:.1f}" y1="{ent_a_y:.1f}" x2="{ent_b_x:.1f}" y2="{ent_b_y:.1f}" stroke="{mid_hex}" stroke-opacity="0.20" stroke-width="1.2" stroke-dasharray="3 9" />',
             ]
 
-            # Render particles with dual attraction positions
+            # Separate into Background (Z < 0) and Foreground (Z >= 0)
+            bg_p = []
+            fg_p = []
+
             for p in particles:
-                host_x = ent_a_x if p["is_q"] else ent_b_x
-                host_y = ent_a_y if p["is_q"] else ent_b_y
-                direction = 1 if p["is_q"] else -1
+                host_x = ent_a_x if p["is_a"] else ent_b_x
+                host_y = ent_a_y if p["is_a"] else ent_b_y
+                direction = 1 if p["is_a"] else -1
 
                 ang = p["phase"] + (tau * p["speed"] * direction)
                 px = host_x + p["rx"] * math.cos(ang)
                 py = host_y + p["ry"] * math.sin(ang)
 
-                # Tail behind particle
-                tail_ang = ang - (0.16 * direction)
+                # Relative proximity for color lerping
+                dA = math.hypot(px - ent_a_x, py - ent_a_y)
+                dB = math.hypot(px - ent_b_x, py - ent_b_y)
+                ratio = max(0.0, min(1.0, dA / (dA + dB + 0.001)))
+                p_color_rgb = _lerp_rgb(rgb_a, rgb_b, ratio)
+                p_hex = _rgb_to_hex(p_color_rgb)
+
+                # Tail
+                tail_ang = ang - (0.14 * direction)
                 tx = host_x + p["rx"] * math.cos(tail_ang)
                 ty = host_y + p["ry"] * math.sin(tail_ang)
 
-                # Draw tail
+                item = (px, py, tx, ty, p["size"], p_hex, p["opacity"], p["z"])
+                if p["z"] < 0:
+                    bg_p.append(item)
+                else:
+                    fg_p.append(item)
+
+            # Draw background particles
+            for px, py, tx, ty, sz, col, op, z in bg_p:
                 svg_parts.append(
-                    f'  <line x1="{tx:.1f}" y1="{ty:.1f}" x2="{px:.1f}" y2="{py:.1f}" stroke="{p["color"]}" stroke-width="{p["size"]*0.7:.1f}" opacity="{p["opacity"]*0.4:.2f}" />'
+                    f'  <line x1="{tx:.1f}" y1="{ty:.1f}" x2="{px:.1f}" y2="{py:.1f}" stroke="{col}" stroke-width="{sz*0.65:.1f}" opacity="{op*0.35:.2f}" />'
                 )
-                # Draw particle point
                 svg_parts.append(
-                    f'  <circle cx="{px:.1f}" cy="{py:.1f}" r="{p["size"]:.1f}" fill="{p["color"]}" opacity="{p["opacity"]:.2f}" />'
+                    f'  <circle cx="{px:.1f}" cy="{py:.1f}" r="{sz:.1f}" fill="{col}" opacity="{op:.2f}" />'
                 )
-                # Extra glow on larger sparks
-                if p["size"] > 2.0:
+
+            # Draw foreground particles (crossing in front with extra optical glow)
+            for px, py, tx, ty, sz, col, op, z in fg_p:
+                svg_parts.append(
+                    f'  <line x1="{tx:.1f}" y1="{ty:.1f}" x2="{px:.1f}" y2="{py:.1f}" stroke="{col}" stroke-width="{sz*0.85:.1f}" opacity="{op*0.48:.2f}" />'
+                )
+                svg_parts.append(
+                    f'  <circle cx="{px:.1f}" cy="{py:.1f}" r="{sz:.1f}" fill="{col}" opacity="{min(1.0, op*1.15):.2f}" />'
+                )
+                if sz > 2.5:
                     svg_parts.append(
-                        f'  <circle cx="{px:.1f}" cy="{py:.1f}" r="{p["size"]*2.2:.1f}" fill="{p["color"]}" opacity="{p["opacity"]*0.25:.2f}" filter="url(#glowBlur)" />'
+                        f'  <circle cx="{px:.1f}" cy="{py:.1f}" r="{sz*2.4:.1f}" fill="{col}" opacity="{op*0.35:.2f}" filter="url(#glowBlur)" />'
                     )
 
             # Deep Vignette border overlay
             svg_parts.append(
-                f'  <rect width="{render_w}" height="{render_h}" fill="none" stroke="#040508" stroke-width="24" opacity="0.6" />'
+                f'  <rect width="{render_w}" height="{render_h}" fill="none" stroke="#040508" stroke-width="20" opacity="0.65" />'
             )
             svg_parts.append('</svg>')
 
@@ -167,7 +229,6 @@ def generate_cosmic_particle_bg_video(
             frame_path = frames_dir / f"frame_{f:04d}.svg"
             frame_path.write_text(frame_svg, encoding="utf-8")
 
-        # Encode frames into seamless looping MP4 using FFmpeg
         ffmpeg_cmd = [
             "ffmpeg", "-y",
             "-framerate", str(fps),
@@ -180,19 +241,32 @@ def generate_cosmic_particle_bg_video(
             str(mp4_path)
         ]
         subprocess.run(ffmpeg_cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        print(f"  ✅ Fondo cósmico generado exitosamente: {mp4_path.name}")
+        print(f"  ✅ Fondo cósmico adaptado generado: {mp4_path.name}")
         return mp4_path
 
     except Exception as e:
         print(f"  ⚠️ Error generando video de fondo cósmico: {e}")
         return mp4_path
     finally:
-        # Clean up temporary SVG frames
         if frames_dir.exists():
             import shutil
             shutil.rmtree(frames_dir, ignore_errors=True)
 
 
-def get_cosmic_particle_background_video(width: int = 1080, height: int = 1920) -> Path:
-    """Helper to retrieve or generate the cached cosmic particle background video."""
-    return generate_cosmic_particle_bg_video(width=width, height=height)
+def get_cosmic_particle_background_video(
+    width: int = 1080,
+    height: int = 1920,
+    color_a: str = "#00f0ff",
+    color_a_glow: str = "#0284c7",
+    color_b: str = "#ffea00",
+    color_b_glow: str = "#ff5500",
+) -> Path:
+    """Helper to retrieve or generate the cached cosmic particle background video with dynamic colors."""
+    return generate_cosmic_particle_bg_video(
+        width=width,
+        height=height,
+        color_a=color_a,
+        color_a_glow=color_a_glow,
+        color_b=color_b,
+        color_b_glow=color_b_glow,
+    )
