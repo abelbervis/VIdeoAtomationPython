@@ -71,26 +71,6 @@ def main():
         )
         return
 
-    # If --test-orb mode is selected, render instant orb preview video and exit
-    if getattr(args, "test_orb", False):
-        from video.orb import render_orb_test_preview
-        fmt_cfg = resolve_video_format(args.format)
-        sample_audio_arg = getattr(args, "test_orb_audio", None)
-        sample_audio_path = Path(sample_audio_arg) if sample_audio_arg else None
-        render_orb_test_preview(
-            palette=getattr(args, "orb_palette", "cosmic"),
-            position=getattr(args, "orb_position", "center"),
-            size=getattr(args, "orb_size", "medium"),
-            animation=getattr(args, "orb_animation", "speaking"),
-            opacity=getattr(args, "orb_opacity", 0.90),
-            duration=getattr(args, "test_orb_duration", 4.0),
-            width=fmt_cfg["width"],
-            height=fmt_cfg["height"],
-            sample_audio=sample_audio_path,
-            bg_style=getattr(args, "test_orb_bg", "bright"),
-        )
-        return
-
     # 1. Resolve Topic (Summary Mode, Content Ideas Discovery, NASA Trend Hunter, or User-Supplied Topic)
     if getattr(args, "summary", None) is not None or getattr(args, "summary_file", None):
         from ai.summary_processor import process_summary_mode
@@ -451,17 +431,6 @@ def main():
 
     enable_ducking = args.auto_ducking and not args.no_auto_ducking
 
-    orb_config = {
-        "enabled": getattr(args, "orb", False),
-        "palette": getattr(args, "orb_palette", "cosmic"),
-        "position": getattr(args, "orb_position", "center"),
-        "size": getattr(args, "orb_size", "medium"),
-        "opacity": getattr(args, "orb_opacity", 0.90),
-        "animation": getattr(args, "orb_animation", "pulse"),
-    }
-    if orb_config["enabled"]:
-        print(f"  🔮 Gradient Orb visual overlay active: Palette='{orb_config['palette']}', Position='{orb_config['position']}', Style='{orb_config['animation']}'")
-
     final_video = renderer.assemble_final_video(
         scene_clips=scene_clips,
         narration_audio=narration_audio,
@@ -476,7 +445,6 @@ def main():
         transition=trans_type,
         transition_duration=trans_duration,
         auto_ducking=enable_ducking,
-        orb_config=orb_config,
     )
 
     # 12. Package Deliverables inside Video Folder

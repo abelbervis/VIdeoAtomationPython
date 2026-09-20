@@ -33,12 +33,6 @@ from config import (
     VIDEO_PRESET,
     ENABLE_BROLL_SPLIT,
     ENABLE_PUNCH_IN,
-    ENABLE_ORB,
-    ORB_PALETTE,
-    ORB_POSITION,
-    ORB_SIZE,
-    ORB_OPACITY,
-    ORB_ANIMATION,
     get_language_voice,
     sanitize_env_value,
 )
@@ -479,80 +473,6 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         default=not ENABLE_HOOK_TITLE,
         help="Disable the viral Hook Title overlay on the first scene"
-    )
-
-    # Gradient Orb Overlay (Animated pulsing aesthetic orb)
-    parser.add_argument(
-        "--orb", "--gradient-orb",
-        dest="orb",
-        action="store_true",
-        default=ENABLE_ORB,
-        help="Enable dynamic animated Gradient Orb overlay (pulsing glowing 3D sphere) for modern viral aesthetics"
-    )
-    parser.add_argument(
-        "--no-orb",
-        dest="no_orb",
-        action="store_true",
-        help="Disable the Gradient Orb overlay"
-    )
-    parser.add_argument(
-        "--orb-palette",
-        type=str,
-        default=ORB_PALETTE,
-        choices=["cosmic", "cyberpunk", "solar", "aurora", "nebula", "monochrome"],
-        help=f"Color palette for the Gradient Orb (default: '{ORB_PALETTE}')"
-    )
-    parser.add_argument(
-        "--orb-position",
-        type=str,
-        default=ORB_POSITION,
-        choices=["presenter", "host", "center", "floating", "ambient", "bottom", "top-right", "bottom-right"],
-        help=f"Screen position for the Gradient Orb (default: '{ORB_POSITION}'). 'presenter' activates 3-phase dynamic choreography (Intro Center -> Body Corner -> Outro Center)."
-    )
-    parser.add_argument(
-        "--orb-size",
-        type=str,
-        default=ORB_SIZE,
-        choices=["small", "medium", "large", "ambient"],
-        help=f"Size of the Gradient Orb (default: '{ORB_SIZE}')"
-    )
-    parser.add_argument(
-        "--orb-opacity",
-        type=float,
-        default=ORB_OPACITY,
-        help=f"Opacity factor for the Gradient Orb (0.1 - 1.0, default: {ORB_OPACITY})"
-    )
-    parser.add_argument(
-        "--orb-animation",
-        type=str,
-        default=ORB_ANIMATION,
-        choices=["speaking", "presenter", "reactive", "pulse", "float", "breathing", "none"],
-        help=f"Animation style for the Gradient Orb. Use 'speaking' or 'reactive' for audio-reactive speech pulsation and dynamic color shifts (default: '{ORB_ANIMATION}')"
-    )
-    parser.add_argument(
-        "--test-orb", "--orb-tester", "--preview-orb",
-        dest="test_orb",
-        action="store_true",
-        help="Orb Tester Mode: Renders an immediate preview video of the Gradient Orb without running AI or downloading stock visuals."
-    )
-    parser.add_argument(
-        "--test-orb-duration",
-        type=float,
-        default=4.0,
-        help="Duration in seconds for the Orb Tester preview video (default: 4.0)"
-    )
-    parser.add_argument(
-        "--test-orb-audio",
-        type=str,
-        default=None,
-        help="Path to an optional custom voice audio file to test the audio-reactive speaking orb"
-    )
-    parser.add_argument(
-        "--test-orb-bg",
-        type=str,
-        default="bright",
-        choices=["bright", "cosmic", "nature", "city", "dark"],
-        help="Background style to preview the Orb against: 'bright' (simulates bright/daylight stock footage), 'cosmic' (deep space), 'nature' (green scenery), or 'dark' (default: 'bright')"
     )
 
     # Custom Script Option (Pre-edited scenes JSON)

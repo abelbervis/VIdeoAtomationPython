@@ -42,15 +42,8 @@ from config import (
     ENABLE_BROLL_SPLIT,
     BROLL_SPLIT_THRESHOLD,
     ENABLE_PUNCH_IN,
-    ENABLE_ORB,
-    ORB_PALETTE,
-    ORB_POSITION,
-    ORB_SIZE,
-    ORB_OPACITY,
-    ORB_ANIMATION,
 )
 from utils.files import save_json, check_ffmpeg
-from video.orb import generate_gradient_orb_svg, get_or_create_orb_asset, GradientOrbManager
 
 
 class VideoRenderer:
@@ -452,12 +445,10 @@ class VideoRenderer:
         transition: str = DEFAULT_TRANSITION,
         transition_duration: float = TRANSITION_DURATION,
         auto_ducking: bool = ENABLE_AUTO_DUCKING,
-        orb_config: Optional[Dict[str, Any]] = None,
     ) -> Path:
         """
         Concatenate visual scene clips with transitions, mix audio tracks (voice, music, SFX),
-        apply dynamic sidechain auto-ducking, burn styled subtitles, optionally composite
-        an animated gradient orb overlay, and render final production-ready MP4.
+        apply dynamic sidechain auto-ducking, burn styled subtitles, and render final production-ready MP4.
         """
         if not check_ffmpeg():
             raise RuntimeError("FFmpeg is not installed or not found in system PATH.")
@@ -533,65 +524,8 @@ class VideoRenderer:
             # Voice only
             filter_complex.append("[1:a]aformat=channel_layouts=stereo,volume=1.0[aout]")
 
-        # 3. Gradient Orb Overlay & Subtitles burning
-        orb_active = False
-        if orb_config and orb_config.get("enabled", False):
-            orb_active = True
-        elif orb_config is None and ENABLE_ORB:
-            orb_active = True
-            orb_config = {
-                "enabled": True,
-                "palette": ORB_PALETTE,
-                "position": ORB_POSITION,
-                "size": ORB_SIZE,
-                "opacity": ORB_OPACITY,
-                "animation": ORB_ANIMATION,
-            }
-
+        # 3. Subtitles burning
         video_source = "[0:v]"
-        if orb_active and orb_config:
-            palette = orb_config.get("palette", ORB_PALETTE)
-            position = orb_config.get("position", ORB_POSITION)
-            size = orb_config.get("size", ORB_SIZE)
-            opacity = orb_config.get("opacity", ORB_OPACITY)
-            animation = orb_config.get("animation", ORB_ANIMATION)
-
-            orb_asset_path = get_or_create_orb_asset(palette=palette, target_dir=ASSETS_DIR / "orbs")
-
-            cmd.extend(["-loop", "1", "-i", str(orb_asset_path)])
-            orb_input_idx = curr_idx
-            curr_idx += 1
-
-            total_video_dur = sum(scene_durations) if scene_durations else 35.0
-            intro_scene_dur = scene_durations[0] if scene_durations and len(scene_durations) > 1 else 3.8
-
-            orb_mgr = GradientOrbManager(
-                palette=palette,
-                position=position,
-                size=size,
-                opacity=opacity,
-                animation=animation,
-                audio_path=narration_audio,
-                total_duration=total_video_dur,
-                intro_duration=intro_scene_dur,
-            )
-            orb_filter_chain = orb_mgr.build_filter_chain(
-                input_idx=orb_input_idx,
-                output_label="orb_layer",
-                video_width=self.width,
-                video_height=self.height,
-                fps=self.fps
-            )
-            x_coord, y_coord = orb_mgr.get_overlay_coordinates(self.width, self.height)
-            filter_complex.append(
-                f"{orb_filter_chain};"
-                f"[0:v]eq=brightness=-0.03:contrast=1.06:saturation=1.04[bg_graded];"
-                f"[bg_graded][orb_layer]overlay=eval=frame:x='{x_coord}':y='{y_coord}':format=auto:shortest=1[v_orb]"
-            )
-            video_source = "[v_orb]"
-            print(f"  🔮 Animated Gradient Orb active (Palette: '{palette}', Position: '{position}', Style: '{animation}', Size: '{size}')")
-
-        # Subtitles burning
         subtitle_filter = ""
         if subtitles_file and subtitles_file.exists():
             sub_path_escaped = str(subtitles_file.resolve()).replace(":", "\\:")
@@ -652,7 +586,7 @@ class VideoRenderer:
             relevant_err = " | ".join(err_lines[-3:]) if err_lines else "Unknown FFmpeg error"
             print(f"  ⚠️ Video composition notice ({relevant_err[:160]}). Retrying with resilient filter composition...")
 
-            # Resilient Fallback 1: Keep Orb + Audio/Music/SFX/Ducking mixing, just omit subtitle filter
+            # Resilient Fallback 1: Omit subtitle filter
             try:
                 resilient_filter_complex = []
                 # Keep audio chain
@@ -663,13 +597,8 @@ class VideoRenderer:
                 else:
                     resilient_filter_complex.append("[1:a]aformat=channel_layouts=stereo,volume=1.0[aout]")
 
-                # Keep Orb visual layer
-                if orb_active and orb_config:
-                    resilient_filter_complex.append(
-                        f"{orb_filter_chain};[0:v][orb_layer]overlay=eval=frame:x='{x_coord}':y='{y_coord}':format=auto:shortest=1[vout]"
-                    )
-                else:
-                    resilient_filter_complex.append("[0:v]copy[vout]")
+                # Keep video source
+                resilient_filter_complex.append("[0:v]copy[vout]")
 
                 resilient_cmd = [
                     "ffmpeg", "-y",
@@ -688,7 +617,7 @@ class VideoRenderer:
                     str(final_output_path)
                 ]
                 subprocess.run(resilient_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-                print("  ✅ Video successfully rendered with animated Gradient Orb and full audio mix.")
+                print("  ✅ Video successfully rendered with full audio mix.")
             except subprocess.CalledProcessError as fallback_err:
                 fallback_msg = fallback_err.stderr.decode("utf-8", errors="replace") if fallback_err.stderr else str(fallback_err)
                 print(f"  ⚠️ Resilient composition failed ({fallback_msg[-120:]}), applying direct stream multiplex...")
