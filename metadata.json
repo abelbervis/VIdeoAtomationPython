@@ -1,6 +1,6 @@
 {
   "name": "NASA Shorts Generator",
-  "description": "CLI tool to automatically generate science and documentary videos in vertical (Shorts/TikTok), horizontal (YouTube), or square formats using NASA & Pexels media, AI scripts, TTS, and FFmpeg.",
+  "description": "Interactive cosmic observatory featuring a dual-gravity particle simulation and sci-fi astrometric visuals.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

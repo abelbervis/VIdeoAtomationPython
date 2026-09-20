@@ -728,191 +728,6 @@ def get_or_create_orb_asset(
     )
 
 
-def get_or_create_dark_void_particles(
-    target_dir: Optional[Path] = None,
-    force_refresh: bool = False
-) -> Path:
-    """
-    Generates or retrieves a transparent looping (30 fps) QuickTime MOV containing
-    drifting luminous cosmic dust motes, stellar embers, and subtle starfield twinkling.
-    """
-    dest_dir = target_dir or (Path(__file__).resolve().parent.parent / "assets" / "backgrounds")
-    dest_dir.mkdir(parents=True, exist_ok=True)
-    out_mov = dest_dir / "dark_void_particles.mov"
-
-    if not force_refresh and out_mov.exists() and out_mov.stat().st_size > 50000:
-        return out_mov
-
-    import random
-    width, height = 720, 1280
-    fps = 30
-    total_frames = 90
-    temp_dir = dest_dir / "_temp_particles_gen"
-    temp_dir.mkdir(parents=True, exist_ok=True)
-
-    random.seed(42)
-    particles = []
-    for _ in range(50):
-        particles.append({
-            "x": random.uniform(20, width - 20),
-            "y": random.uniform(0, height),
-            "r": random.uniform(1.2, 3.5),
-            "speed": random.uniform(40, 120),
-            "drift_x": random.uniform(-25, 25),
-            "base_alpha": random.uniform(0.35, 0.95),
-            "color": random.choice(["#00f0ff", "#00d4ff", "#ffffff", "#ffaa00", "#ff6600", "#e0f7fa"]),
-            "twinkle_freq": random.uniform(1.5, 4.0),
-            "twinkle_phase": random.uniform(0, math.pi * 2)
-        })
-
-    try:
-        for f in range(total_frames):
-            t_ratio = f / total_frames
-            svg_elements = []
-            
-            for p in particles:
-                cur_y = (p["y"] - p["speed"] * t_ratio) % height
-                cur_x = (p["x"] + p["drift_x"] * math.sin(2 * math.pi * t_ratio)) % width
-                twinkle = 0.65 + 0.35 * math.sin(2 * math.pi * p["twinkle_freq"] * t_ratio + p["twinkle_phase"])
-                alpha = p["base_alpha"] * twinkle
-                r = p["r"]
-                svg_elements.append(f"""<circle cx="{cur_x:.1f}" cy="{cur_y:.1f}" r="{r*2.2:.1f}" fill="{p["color"]}" fill-opacity="{alpha*0.35:.2f}"/>""")
-                svg_elements.append(f"""<circle cx="{cur_x:.1f}" cy="{cur_y:.1f}" r="{r:.1f}" fill="{p["color"]}" fill-opacity="{alpha:.2f}"/>""")
-                svg_elements.append(f"""<circle cx="{cur_x:.1f}" cy="{cur_y:.1f}" r="{r*0.4:.1f}" fill="#ffffff" fill-opacity="{alpha*0.9:.2f}"/>""")
-
-            svg_content = f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" width="{width}" height="{height}">
-              <rect width="{width}" height="{height}" fill="#000000" fill-opacity="0.0"/>
-              {"".join(svg_elements)}
-            </svg>"""
-            (temp_dir / f"frame_{f:04d}.svg").write_text(svg_content, encoding="utf-8")
-
-        cmd = [
-            "ffmpeg", "-y",
-            "-framerate", str(fps),
-            "-i", str(temp_dir / "frame_%04d.svg"),
-            "-c:v", "qtrle",
-            "-pix_fmt", "argb",
-            str(out_mov)
-        ]
-        subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    except Exception as e:
-        print(f"  ⚠️ Warning: Failed to generate animated particles loop ({e})")
-    finally:
-        shutil.rmtree(temp_dir, ignore_errors=True)
-
-    return out_mov
-
-
-def get_or_create_cosmic_stage_background(
-    target_dir: Optional[Path] = None,
-    force_refresh: bool = False
-) -> Path:
-    """
-    Generates or retrieves a high-resolution (1440x2560) master Deep OLED Cosmic Void Stage asset.
-    Features:
-      - Pitch-black OLED deep space canvas for maximum bioluminescent orb contrast.
-      - Discrete cosmic cyber horizon floor grid for optical 3D depth.
-      - Subtle directional starfield anchors.
-    """
-    dest_dir = target_dir or (Path(__file__).resolve().parent.parent / "assets" / "backgrounds")
-    dest_dir.mkdir(parents=True, exist_ok=True)
-    png_path = dest_dir / "cosmic_parallax_stage.png"
-    svg_path = dest_dir / "cosmic_parallax_stage.svg"
-
-    if not force_refresh and png_path.exists() and png_path.stat().st_size > 50000:
-        return png_path
-
-    svg_content = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 2560" width="1440" height="2560">
-  <defs>
-    <!-- Pitch Black OLED Void -->
-    <radialGradient id="bgDeep" cx="50%" cy="38%" r="75%">
-      <stop offset="0%" stop-color="#04060c"/>
-      <stop offset="45%" stop-color="#010205"/>
-      <stop offset="100%" stop-color="#000001"/>
-    </radialGradient>
-    <radialGradient id="nebulaQuantum" cx="24%" cy="38%" r="42%">
-      <stop offset="0%" stop-color="#00e5ff" stop-opacity="0.14"/>
-      <stop offset="40%" stop-color="#0055d4" stop-opacity="0.06"/>
-      <stop offset="100%" stop-color="#000000" stop-opacity="0.0"/>
-    </radialGradient>
-    <radialGradient id="nebulaSolar" cx="76%" cy="38%" r="42%">
-      <stop offset="0%" stop-color="#ff9100" stop-opacity="0.13"/>
-      <stop offset="40%" stop-color="#d50000" stop-opacity="0.05"/>
-      <stop offset="100%" stop-color="#000000" stop-opacity="0.0"/>
-    </radialGradient>
-  </defs>
-
-  <!-- Deep OLED Black Void Canvas -->
-  <rect width="1440" height="2560" fill="url(#bgDeep)"/>
-
-  <!-- Left Subtle Cyan Quantum Atmosphere -->
-  <rect width="1440" height="2560" fill="url(#nebulaQuantum)"/>
-
-  <!-- Right Subtle Amber Solar Atmosphere -->
-  <rect width="1440" height="2560" fill="url(#nebulaSolar)"/>
-
-  <!-- 3D Perspective Cyber Floor Grid (Horizon at y=1720) -->
-  <g stroke="#24426b" stroke-opacity="0.26" stroke-width="1.6">
-    <!-- Receding Vanishing Perspective Lines -->
-    <line x1="720" y1="1720" x2="-100" y2="2560" stroke="#00d4ff" stroke-opacity="0.18"/>
-    <line x1="720" y1="1720" x2="120" y2="2560" stroke="#00d4ff" stroke-opacity="0.22"/>
-    <line x1="720" y1="1720" x2="340" y2="2560" stroke="#00d4ff" stroke-opacity="0.26"/>
-    <line x1="720" y1="1720" x2="540" y2="2560" stroke="#00d4ff" stroke-opacity="0.30"/>
-    <line x1="720" y1="1720" x2="720" y2="2560" stroke="#ffffff" stroke-opacity="0.35"/>
-    <line x1="720" y1="1720" x2="900" y2="2560" stroke="#ffaa00" stroke-opacity="0.30"/>
-    <line x1="720" y1="1720" x2="1100" y2="2560" stroke="#ffaa00" stroke-opacity="0.26"/>
-    <line x1="720" y1="1720" x2="1320" y2="2560" stroke="#ffaa00" stroke-opacity="0.22"/>
-    <line x1="720" y1="1720" x2="1540" y2="2560" stroke="#ffaa00" stroke-opacity="0.18"/>
-    
-    <!-- Perspective Depth Rings (Exponential Distance Compression) -->
-    <line x1="0" y1="1760" x2="1440" y2="1760" stroke-opacity="0.10"/>
-    <line x1="0" y1="1815" x2="1440" y2="1815" stroke-opacity="0.14"/>
-    <line x1="0" y1="1890" x2="1440" y2="1890" stroke-opacity="0.18"/>
-    <line x1="0" y1="1995" x2="1440" y2="1995" stroke-opacity="0.22"/>
-    <line x1="0" y1="2140" x2="1440" y2="2140" stroke-opacity="0.28"/>
-    <line x1="0" y1="2330" x2="1440" y2="2330" stroke-opacity="0.34"/>
-    <line x1="0" y1="2550" x2="1440" y2="2550" stroke-opacity="0.40"/>
-  </g>
-
-  <!-- Ambient Stars and Constellation Anchors -->
-  <g fill="#ffffff">
-    <circle cx="280" cy="420" r="2.8" fill="#e0f7fa" fill-opacity="0.95"/>
-    <line x1="268" y1="420" x2="292" y2="420" stroke="#00e5ff" stroke-opacity="0.7" stroke-width="1.2"/>
-    <line x1="280" y1="408" x2="280" y2="432" stroke="#00e5ff" stroke-opacity="0.7" stroke-width="1.2"/>
-
-    <circle cx="1160" cy="390" r="2.8" fill="#fff8e1" fill-opacity="0.95"/>
-    <line x1="1148" y1="390" x2="1172" y2="390" stroke="#ffab00" stroke-opacity="0.7" stroke-width="1.2"/>
-    <line x1="1160" y1="378" x2="1160" y2="402" stroke="#ffab00" stroke-opacity="0.7" stroke-width="1.2"/>
-
-    <circle cx="720" cy="240" r="2.2" fill-opacity="0.85"/>
-    <line x1="712" y1="240" x2="728" y2="240" stroke="#ffffff" stroke-opacity="0.5" stroke-width="1"/>
-    <line x1="720" y1="232" x2="720" y2="248" stroke="#ffffff" stroke-opacity="0.5" stroke-width="1"/>
-
-    <!-- Micro Stars Clusters -->
-    <circle cx="150" cy="220" r="1.2" fill-opacity="0.6"/>
-    <circle cx="420" cy="180" r="1.5" fill-opacity="0.7"/>
-    <circle cx="580" cy="320" r="1.0" fill-opacity="0.5"/>
-    <circle cx="890" cy="190" r="1.4" fill-opacity="0.7"/>
-    <circle cx="1020" cy="280" r="1.2" fill-opacity="0.6"/>
-    <circle cx="1300" cy="240" r="1.5" fill-opacity="0.65"/>
-    <circle cx="210" cy="650" r="1.3" fill-opacity="0.55"/>
-    <circle cx="360" cy="580" r="1.0" fill-opacity="0.45"/>
-    <circle cx="1080" cy="620" r="1.2" fill-opacity="0.5"/>
-    <circle cx="1250" cy="690" r="1.4" fill-opacity="0.6"/>
-    <circle cx="180" cy="1100" r="1.1" fill-opacity="0.4"/>
-    <circle cx="1280" cy="1150" r="1.1" fill-opacity="0.4"/>
-  </g>
-</svg>"""
-
-    try:
-        svg_path.write_text(svg_content, encoding="utf-8")
-        cmd = ["ffmpeg", "-y", "-i", str(svg_path), "-vf", "scale=1440:2560", str(png_path)]
-        subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    except Exception as e:
-        print(f"  ⚠️ Warning: Failed to render cosmic background SVG via ffmpeg ({e}), falling back.")
-    return png_path
-
-
 # Alias for backward compatibility
 generate_gradient_orb_svg = generate_animated_orb_loop
 
@@ -1508,14 +1323,21 @@ def render_orb_test_preview(
     generate_cosmic_debate_karaoke_ass(scene_records, ass_sub_path, width=width, height=height, roles=custom_roles)
     escaped_ass_path = str(ass_sub_path.resolve()).replace("\\", "/").replace(":", "\\:").replace("'", "\\'")
 
-    # Procedural Camera-Synced Master Cosmic Parallax Stage (1440x2560)
-    cosmic_stage_path = get_or_create_cosmic_stage_background(force_refresh=True)
-    particles_path = get_or_create_dark_void_particles()
+    # Dynamic Sci-Fi Cosmic Particle Background Video Loop
+    from video.cosmic_bg import get_cosmic_particle_background_video
+    try:
+        cosmic_bg_video = get_cosmic_particle_background_video(width=width, height=height)
+        if cosmic_bg_video.exists() and cosmic_bg_video.stat().st_size > 1000:
+            bg_cmd_args = ["-stream_loop", "-1", "-i", str(cosmic_bg_video)]
+        else:
+            bg_cmd_args = ["-f", "lavfi", "-i", f"color=c=0x08090f:s={width}x{height}:r=30:d={total_duration}"]
+    except Exception as bg_err:
+        print(f"  ⚠️ Usando fallback de color para fondo: {bg_err}")
+        bg_cmd_args = ["-f", "lavfi", "-i", f"color=c=0x08090f:s={width}x{height}:r=30:d={total_duration}"]
 
-    # Build FFmpeg command inputs (cosmic stage, particles loop, wide talk, wide idle, close-up frontal talk for both hosts)
+    # Build FFmpeg command inputs (wide talk, wide idle, close-up frontal talk for both hosts)
     cmd_inputs = [
-        "-stream_loop", "-1", "-i", str(cosmic_stage_path),
-        "-stream_loop", "-1", "-i", str(particles_path),
+        *bg_cmd_args,
         "-stream_loop", "-1", "-i", str(orb_q_talk),
         "-stream_loop", "-1", "-i", str(orb_q_idle),
         "-stream_loop", "-1", "-i", str(orb_q_close_talk),
@@ -1523,7 +1345,7 @@ def render_orb_test_preview(
         "-stream_loop", "-1", "-i", str(orb_s_idle),
         "-stream_loop", "-1", "-i", str(orb_s_close_talk),
     ]
-    curr_input_idx = 8
+    curr_input_idx = 7
 
     holo_q_idx = None
     if has_holo_q:
@@ -1551,9 +1373,7 @@ def render_orb_test_preview(
     else:
         cmd_inputs.extend(["-f", "lavfi", "-i", "anullsrc=r=44100:cl=stereo"])
 
-    pre_scale_lines = [
-        f"[1:v]scale={width}:{height},format=yuva420p[particles_stream]"
-    ]
+    pre_scale_lines = []
     if has_holo_q and holo_q_idx is not None:
         pre_scale_lines.append(f"[{holo_q_idx}:v]scale=540:-2,format=yuva420p[holo_q]")
     if has_holo_s and holo_s_idx is not None:
@@ -1570,64 +1390,25 @@ def render_orb_test_preview(
     s_idle_uses = 1 + sum(1 for sc in scene_records if sc["shot"] == "wide" and sc["entity"] not in ["solar", "both"])
     s_close_uses = sum(1 for sc in scene_records if sc["shot"] == "close_solar")
 
-    num_scenes = max(1, len(scene_records))
-    bg_splits = num_scenes + 1
-
-    # Camera-Synced Cosmic Parallax Transform lines per scene
-    bg_parallax_lines = [
-        f"[0:v]split={bg_splits}" + "".join(f"[bg_raw_{k}]" for k in range(bg_splits)),
-        f"[bg_raw_{num_scenes}]crop=w={width}:h={height}:x='(in_w-out_w)/2':y='(in_h-out_h)/2',format=yuva420p[bg_base_raw]",
-        f"[bg_base_raw][particles_stream]overlay=format=auto[bg_base]"
-    ]
-
-    for idx, sc in enumerate(scene_records):
-        st = sc["start"]
-        sc_visual_end = scene_records[idx + 1]["start"] if idx + 1 < len(scene_records) else total_duration
-        shot = sc["shot"]
-        sc_dur = max(0.2, round(sc_visual_end - st, 2))
-        prog_expr = f"(min(1.0\\,max(0.0\\,(t-{st})/{sc_dur})))"
-
-        if shot == "wide":
-            # Panoramic 1.0x wide perspective with delicate harmonic drift
-            bg_parallax_lines.append(
-                f"[bg_raw_{idx}]crop=w={width}:h={height}:x='(in_w-out_w)/2 + 6.0*sin(2*PI*t/6.2)':y='(in_h-out_h)/2 + 4.0*cos(2*PI*t/5.4)',format=yuva420p[bg_sc_{idx}]"
-            )
-        elif shot == "close_quantum":
-            # Optical 1.18x Zoom + Dolly into Left Cyan Sector + Depth-of-Field atmospheric blur
-            crop_w = int(width / 1.18)
-            crop_h = int(height / 1.18)
-            bg_parallax_lines.append(
-                f"[bg_raw_{idx}]crop=w={crop_w}:h={crop_h}:x='(in_w-out_w)*0.22 + 4.0*sin(2*PI*t/5.0)':y='(in_h-out_h)*0.36 - 12.0*{prog_expr}',scale={width}:{height}:flags=bicubic,boxblur=2:1,eq=brightness=0.02:saturation=1.12,format=yuva420p[bg_sc_{idx}]"
-            )
-        elif shot == "close_solar":
-            # Optical 1.18x Zoom + Dolly into Right Amber Sector + Depth-of-Field atmospheric blur
-            crop_w = int(width / 1.18)
-            crop_h = int(height / 1.18)
-            bg_parallax_lines.append(
-                f"[bg_raw_{idx}]crop=w={crop_w}:h={crop_h}:x='(in_w-out_w)*0.78 - 4.0*sin(2*PI*t/5.0)':y='(in_h-out_h)*0.36 - 12.0*{prog_expr}',scale={width}:{height}:flags=bicubic,boxblur=2:1,eq=brightness=0.02:saturation=1.12,format=yuva420p[bg_sc_{idx}]"
-            )
-        elif shot == "both":
-            # Pull-Back Panoramic Cosmic Reveal + Central Tension
-            bg_parallax_lines.append(
-                f"[bg_raw_{idx}]crop=w={width}:h={height}:x='(in_w-out_w)/2':y='(in_h-out_h)/2 + 8.0*{prog_expr}',scale={width}:{height},format=yuva420p[bg_sc_{idx}]"
-            )
-
     filter_complex = [
         *pre_scale_lines,
-        *bg_parallax_lines,
-        f"[2:v]split={max(1, q_talk_uses)}" + "".join(f"[q_talk_{k}]" for k in range(max(1, q_talk_uses))),
-        f"[3:v]split={max(1, q_idle_uses)}" + "".join(f"[q_idle_{k}]" for k in range(max(1, q_idle_uses))),
-        f"[4:v]split={max(1, q_close_uses)}" + "".join(f"[q_close_{k}]" for k in range(max(1, q_close_uses))),
-        f"[5:v]split={max(1, s_talk_uses)}" + "".join(f"[s_talk_{k}]" for k in range(max(1, s_talk_uses))),
-        f"[6:v]split={max(1, s_idle_uses)}" + "".join(f"[s_idle_{k}]" for k in range(max(1, s_idle_uses))),
-        f"[7:v]split={max(1, s_close_uses)}" + "".join(f"[s_close_{k}]" for k in range(max(1, s_close_uses))),
+        f"[1:v]split={max(1, q_talk_uses)}" + "".join(f"[q_talk_{k}]" for k in range(max(1, q_talk_uses))),
+        f"[2:v]split={max(1, q_idle_uses)}" + "".join(f"[q_idle_{k}]" for k in range(max(1, q_idle_uses))),
+        f"[3:v]split={max(1, q_close_uses)}" + "".join(f"[q_close_{k}]" for k in range(max(1, q_close_uses))),
+        f"[4:v]split={max(1, s_talk_uses)}" + "".join(f"[s_talk_{k}]" for k in range(max(1, s_talk_uses))),
+        f"[5:v]split={max(1, s_idle_uses)}" + "".join(f"[s_idle_{k}]" for k in range(max(1, s_idle_uses))),
+        f"[6:v]split={max(1, s_close_uses)}" + "".join(f"[s_close_{k}]" for k in range(max(1, s_close_uses))),
 
         # Background Ambient Luminescence (Ultra-smooth diffuse glow via 120x120 3-pass boxblur)
-        f"[q_idle_0]scale=120:120,eq={eq_q},hue={hue_q},boxblur=26:3,scale={width}:{height},format=yuva420p,colorchannelmixer=aa=0.22[bg_glow_q]",
-        f"[s_idle_0]scale=120:120,eq={eq_s},hue={hue_s},boxblur=26:3,scale={width}:{height},format=yuva420p,colorchannelmixer=aa=0.22[bg_glow_s]",
+        f"[q_idle_0]scale=120:120,eq={eq_q},hue={hue_q},boxblur=26:3,scale={width}:{height},format=yuva420p,colorchannelmixer=aa=0.25[bg_glow_q]",
+        f"[s_idle_0]scale=120:120,eq={eq_s},hue={hue_s},boxblur=26:3,scale={width}:{height},format=yuva420p,colorchannelmixer=aa=0.25[bg_glow_s]",
+
+        f"[0:v]eq=brightness=-0.01:contrast=1.05[bg_graded]",
+        f"[bg_graded][bg_glow_q]overlay=eval=frame:enable='{speech_mask_q}'[bg_glowed_1]",
+        f"[bg_glowed_1][bg_glow_s]overlay=eval=frame:enable='{speech_mask_s}'[bg_ambient]"
     ]
 
-    cur_v = "bg_base"
+    cur_v = "bg_ambient"
     q_talk_cur = 0
     q_idle_cur = 1  # 0 used for bg_glow_q
     q_close_cur = 0
@@ -1647,10 +1428,6 @@ def render_orb_test_preview(
 
         # Normalized progress ratio for smooth camera motion
         prog_expr = f"(min(1.0\\,max(0.0\\,(t-{st})/{sc_dur})))"
-
-        # 1. Overlay Camera-Synced Parallax Background for current scene
-        filter_complex.append(f"[{cur_v}][bg_sc_{idx}]overlay=enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_bg]")
-        cur_v = f"v_sc_{idx}_bg"
 
         if shot == "wide":
             is_q_active = (ent in ["quantum", "both"])
@@ -1752,12 +1529,6 @@ def render_orb_test_preview(
             filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W*0.75-w/2 - 28 + {ds_x}':y='H*0.39-h/2 + {ds_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_s]")
             cur_v = f"v_sc_{idx}_s"
 
-    # Ambient luminescent speaker bloom across stage
-    filter_complex.append(f"[{cur_v}][bg_glow_q]overlay=eval=frame:enable='{speech_mask_q}'[v_ambient_q]")
-    cur_v = "v_ambient_q"
-    filter_complex.append(f"[{cur_v}][bg_glow_s]overlay=eval=frame:enable='{speech_mask_s}'[v_ambient_s]")
-    cur_v = "v_ambient_s"
-
     # Headline Hook Badge (Top Center during first scene)
     first_sc_end = min(scene_records[0]["end"] if scene_records else 2.8, 2.8)
     filter_complex.append(f"[{cur_v}]drawtext=text='{escaped_headline_hook}':{font_param}:fontcolor=white:fontsize=40:box=1:boxcolor=0x08101e@0.95:boxborderw=20:borderw=2:bordercolor=0x00f0ff:x=(w-text_w)/2:y=140:enable='between(t,0,{first_sc_end})'[v_hook]")
@@ -1781,7 +1552,6 @@ def render_orb_test_preview(
         "-map", f"{audio_idx}:a",
         "-c:v", "libx264",
         "-preset", "ultrafast",
-        "-threads", "4",
         "-pix_fmt", "yuv420p",
         "-c:a", "aac",
         "-shortest",
