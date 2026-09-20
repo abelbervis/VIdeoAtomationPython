@@ -21,15 +21,14 @@ CRITICAL CHECKLIST TO VALIDATE AND CORRECT:
    - DETECTA Y CORRIGE CUALQUIER INVASIÓN DE DOMINIO: Si un orbe con rol humanista/ético/filosófico usa jerga técnica/molecular/física para argumentar (ej. un bioeticista hablando de "efectos fuera de objetivo o epigenética"), REESCRIBE su diálogo para que argumente desde su propio campo (responsabilidad moral, consentimiento, justicia, derechos intergeneracionales, dignidad).
    - REGLA: El rol científico/técnico usa mecanismos y evidencia empírica; el rol ético/filosófico usa dilemas normativos, consecuencias morales y derechos; el rol socioeconómico usa equidad, acceso y poder.
 
-3. RIGOR FACTUAL, CERO INVENTOS Y CONTROL ESTRICTO DE DATOS NUMÉRICOS:
-   - DETECCIÓN Y CORRECCIÓN DE DATOS NUMÉRICOS SIN FUENTE O FALSAS ESTADÍSTICAS:
-     * PROHIBIDO incluir porcentajes flotantes, tasas de éxito o cifras estadísticas arbitrarias sin fuente específica (ej. "al 0.5%", "con 98% de eficiencia", "el 73% de los casos").
-     * Si encuentras cifras numéricas huérfanas o no respaldadas por un estudio/hito explícito, REESCRIBE el texto:
-       a) O bien citando la institución, año o hito científico verídico real (ej. "El ensayo de 2017 en Oregón demostró...", "Los reportes de Nature confirman...").
-       b) O bien explicando el mecanismo cualitativo y empírico real sin recurrir a porcentajes inventados (ej. "reduce drásticamente las inserciones no deseadas", "permitió reparar el gen CFTR funcionalmente").
-   - CIENCIA Y HECHOS VERÍDICOS: Verificar que los datos, leyes y principios expuestos sean 100% verídicos, comprobables y sin datos inventados ni pseudociencia.
+3. RIGOR FACTUAL, CERO INVENTOS Y PROHIBICIÓN DE CITAS/ESTADÍSTICAS FABRICADAS:
+   - DETECCIÓN Y ELIMINACIÓN DE DATOS Y CITAS INVENTADAS (ALERTA DE ALUCINACIÓN):
+     * PROHIBIDO inventar estudios con nombres de universidades y años (ej. "En 2018, Harvard editó...", "Un estudio de Oxford de 2021...").
+     * PROHIBIDO inventar atribuciones o porcentajes a organismos oficiales (ej. "La OMS estima 5% de muertes...", "Según la NASA el 40%...").
+     * PROHIBIDO incluir porcentajes o métricas cuantitativas arbitrarias no comprobables (ej. "corrigiendo el 70%", "con 98% de eficiencia", "al 0.5%").
+     * ACCIÓN OBLIGATORIA DEL REVISOR: Si detectas cualquiera de estas citas ficticias o porcentajes inventados, REESCRIBE inmediatamente la frase explicando el mecanismo científico o el dilema real de forma cualitativa, rigurosa y directa (ej. en vez de "Harvard 2018 corregió el 70%", escribe: "La tecnología de edición de bases permite corregir mutaciones puntuales sin cortar la doble hebra de ADN").
+   - CIENCIA Y HECHOS 100% VERÍDICOS: Toda afirmación debe basarse en principios, leyes y hechos reales comprobados.
    - REJECT and REWRITE any pseudo-poetic nonsense phrases ("la gravedad del relato", "la tinta de la conciencia", "las hojas del libro cósmico", "las voces del vacío").
-   - Sustituir cualquier invención por principios y hechos reales de la disciplina correspondiente.
 
 4. CONTINUOUS STORY ARC & CONVERSATIONAL RESPONSE:
    - Ensure the entire script stays within ONE central concept, paradox or thought experiment.

@@ -269,12 +269,12 @@ REGLAS DE ASIGNACIÓN DINÁMICA DE ROLES Y DEBATE:
      * Si el rol es ÉTICO/FILOSÓFICO/SOCIAL (ej. Bioética, Filosofía, Sociología, Derechos Humanos): Argumenta mediante dilemas morales, consentimiento, responsabilidad, distribución de poder, justicia distributiva, autonomía y consecuencias éticas estructurales. NUNCA use jerga molecular/física para justificar su postura.
      * Si el rol es ECONÓMICO/POLÍTICO: Argumenta mediante incentivos de mercado, monopolios, soberanía, coste social y equidad de acceso.
 
-3. RIGOR FACTUAL, CERO INVENTOS Y CONTROL DE DATOS NUMÉRICOS:
-   - COSAS VERÍDICAS SIN INVENTAR: Todos los datos, principios, leyes, experimentos y mecanismos expuestos por cada orbe deben ser 100% verídicos, contrastados y reales dentro de la disciplina correspondiente.
-   - PROHIBIDO inventar porcentajes o estadísticas arbitrarias sin fuente específica (ej. PROHIBIDO "reduce mutaciones al 0.5%" o "98% de eficiencia" flotantes). Si citas un dato cuantitativo o estudio, cita el experimento/institución/año real verificable (ej. "Ensayos de 2017 en Oregón...") o describe el impacto mediante mecanismos cualitativos precisos.
-   - PROHIBIDO inventar experimentos inexistentes, datos ficticios o pseudociencia.
+3. RIGOR FACTUAL, CERO INVENTOS Y PROHIBICIÓN DE CITAS/ESTADÍSTICAS FABRICADAS:
+   - CIENCIA Y HECHOS 100% REALES: Todos los datos, principios, leyes y mecanismos expuestos deben ser verídicos y contrastados.
+   - PROHIBIDO FABRICAR CITAS, UNIVERSIDADES O ESTUDIOS CON AÑOS: NUNCA inventes "En 2018 Harvard...", "Estudios de Oxford en 2021...", "Según la OMS el 5%...", o porcentajes arbitrarios ("70% de éxito", "98% de efectividad").
+   - Explica siempre los mecanismos científicos reales o principios conceptuales de forma directa y cualitativa (ej. "La edición de bases corrige mutaciones puntuales sin fracturar la doble hebra", "Las enfermedades monogénicas son la principal causa de fallos metabólicos hereditarios").
    - PROHIBIDO el lenguaje pseudo-poético vacío (ej. "la gravedad del relato", "el tejido de las almas", "la tinta del cosmos").
-   - El choque dialéctico no proviene de inventar hechos falsos, sino de las conclusiones, prioridades y tensiones reales que surgen al contrastar dos disciplinas auténticas sobre un mismo fenómeno.
+   - El choque dialéctico surge del contraste entre las dos disciplinas reales, nunca de datos o citas inventadas.
 
 4. DIALÉCTICA CRUZADA Y CONTINUIDAD CONVERSACIONAL:
    - Mantén UN solo dilema central, paradoja o experimento mental a lo largo de todo el guion.
