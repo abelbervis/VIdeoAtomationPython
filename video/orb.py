@@ -1379,6 +1379,41 @@ def render_orb_test_preview(
     badge_s_idx = curr_input_idx
     curr_input_idx += 1
 
+    # Generate Gravitational Lens overlays for key scenes
+    from video.lens import generate_gravitational_lens_svg
+    lens_inputs_map = {}  # idx -> pad_name
+
+    for idx, sc in enumerate(scene_records):
+        key_term = sc.get("key_term") or sc.get("visual_focus")
+        if not key_term and sc.get("text"):
+            # Extract first 2-3 prominent key words if not explicitly set
+            words = [w for w in sc["text"].replace(".", "").replace(",", "").split() if len(w) > 4]
+            key_term = " ".join(words[:2]).upper() if words else "CONCEPTO CÓSMICO"
+
+        badge_text = sc.get("concept_badge") or (sc["speaker"] if sc["entity"] != "narrator" else topic)
+        if sc["entity"] == "quantum":
+            theme = debate_show.host_a.color_theme or "cyan"
+        elif sc["entity"] == "solar":
+            theme = debate_show.host_b.color_theme or "amber"
+        else:
+            theme = "purple"
+
+        lens_svg_path = output_path.parent / f"_temp_lens_sc_{idx}.svg"
+        generate_gravitational_lens_svg(
+            concept_badge=badge_text,
+            key_term=key_term or "EVIDENCIA CIENTÍFICA",
+            color_theme=theme,
+            width=540,
+            height=380,
+            output_path=lens_svg_path
+        )
+
+        cmd_inputs.extend(["-stream_loop", "-1", "-i", str(lens_svg_path)])
+        lens_idx = curr_input_idx
+        curr_input_idx += 1
+        pad_name = f"lens_sc_{idx}"
+        lens_inputs_map[idx] = pad_name
+
     audio_idx = curr_input_idx
     if resolved_audio and resolved_audio.exists():
         cmd_inputs.extend(["-i", str(resolved_audio)])
@@ -1392,6 +1427,12 @@ def render_orb_test_preview(
         pre_scale_lines.append(f"[{holo_s_idx}:v]scale=540:-2,format=yuva420p[holo_s]")
     pre_scale_lines.append(f"[{badge_q_idx}:v]scale=440:-2,format=yuva420p[badge_q]")
     pre_scale_lines.append(f"[{badge_s_idx}:v]scale=440:-2,format=yuva420p[badge_s]")
+
+    # Pre-scale lens pads
+    for idx, pad_name in lens_inputs_map.items():
+        # Lens input index is 7 + (1 if holo_q else 0) + (1 if holo_s else 0) + 2 (badges) + idx
+        input_offset = 7 + (1 if has_holo_q else 0) + (1 if has_holo_s else 0) + 2 + idx
+        pre_scale_lines.append(f"[{input_offset}:v]scale=500:-2,format=yuva420p[{pad_name}]")
 
     # Calculate exact number of split pads needed for Quantum and Solar (wide talk, idle, and close frontal talk)
     q_talk_uses = sum(1 for sc in scene_records if (sc["shot"] == "both") or (sc["shot"] == "wide" and sc["entity"] in ["quantum", "both"]))
@@ -1540,6 +1581,16 @@ def render_orb_test_preview(
             filter_complex.append(f"[{s_src}]scale=420:420,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.98[s_sc_{idx}]")
             filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W*0.75-w/2 - 28 + {ds_x}':y='H*0.39-h/2 + {ds_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_s]")
             cur_v = f"v_sc_{idx}_s"
+
+        # Overlay Gravitational Lens support for this scene
+        if idx in lens_inputs_map:
+            pad_name = lens_inputs_map[idx]
+            lens_start = round(st + 0.1, 2)
+            lens_end = max(round(st + 0.3, 2), round(sc_visual_end - 0.1, 2))
+            filter_complex.append(
+                f"[{cur_v}][{pad_name}]overlay=eval=frame:x='(W-w)/2':y='H*0.13-h/2 + 6.0*sin(2*PI*(t-{lens_start})/2.5)':enable='between(t,{lens_start},{lens_end})'[v_sc_{idx}_lens]"
+            )
+            cur_v = f"v_sc_{idx}_lens"
 
     # Headline Hook Badge (Top Center during first scene)
     first_sc_end = min(scene_records[0]["end"] if scene_records else 2.8, 2.8)
