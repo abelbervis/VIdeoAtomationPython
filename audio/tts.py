@@ -318,7 +318,28 @@ class EdgeTTSProvider(BaseTTSProvider):
         if not synthesized or not apply_dsp:
             return synthesized
 
-        # 3. Apply Adaptive Cell Double Tracking + Haas 3D Stereo DSP Filtergraph
+        # 3. Apply Audio DSP Filtergraph
+        if entity_key in ["narrator", "presentador", "host", "narrador"]:
+            # Documentary Broadcast Studio Master EQ (High definition warm compression, crisp broadcast presence)
+            try:
+                cmd = [
+                    "ffmpeg", "-y",
+                    "-i", str(raw_tmp_path),
+                    "-af", "highpass=f=75,equalizer=f=130:width_type=h:width=60:g=2.2,equalizer=f=3400:width_type=h:width=1200:g=2.0,compand=attacks=0.02:decays=0.1:points=-80/-80|-24/-20|-12/-10|0/-3:gain=1.5,volume=1.4",
+                    "-acodec", "libmp3lame",
+                    "-b:a", "192k",
+                    str(output_path)
+                ]
+                subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+                raw_tmp_path.unlink(missing_ok=True)
+                return output_path.exists() and output_path.stat().st_size > 0
+            except Exception as e:
+                print(f"  ⚠️ Narrator Studio Master EQ Error: {e}, falling back to raw synthesis.")
+                if raw_tmp_path.exists():
+                    raw_tmp_path.rename(output_path)
+                return output_path.exists()
+
+        # 3b. Apply Adaptive Cell Double Tracking + Haas 3D Stereo DSP Filtergraph for Orbs
         try:
             filter_graph = build_cell_double_tracking_filter(
                 entity=entity_key,

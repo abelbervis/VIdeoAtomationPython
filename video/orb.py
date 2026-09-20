@@ -944,20 +944,21 @@ def render_orb_test_preview(
         scenes = debate_script.get("scenes", [])
         if not scenes:
             scenes = [
-                {"speaker": "Quantum", "entity": "quantum", "text": "Bienvenido al canal cósmico.", "shot": "wide"},
-                {"speaker": "Solar", "entity": "solar", "text": "Explorando los misterios del cosmos.", "shot": "close_solar"},
-                {"speaker": "Quantum", "entity": "quantum", "text": "Cada átomo cuenta una historia infinita.", "shot": "close_quantum"},
-                {"speaker": "Ambos", "entity": "both", "text": "El universo continúa expandiéndose.", "shot": "both"}
+                {"speaker": "Narrador", "entity": "narrator", "text": "¿Y si el tiempo no existe y todo ocurre al mismo tiempo?", "shot": "wide"},
+                {"speaker": "Quantum", "entity": "quantum", "text": "A escala subatómica el tiempo es solo una ilusión probabilística.", "shot": "close_quantum"},
+                {"speaker": "Solar", "entity": "solar", "text": "¡Imposible! La entropía y la fusión estelar demuestran que el tiempo fluye.", "shot": "close_solar"},
+                {"speaker": "Narrador", "entity": "narrator", "text": "¿Física cuántica o termodinámica estelar? ¡Elige tu bando en los comentarios!", "shot": "both"}
             ]
 
         script_json_path = output_path.parent / "script.json"
         script_json_path.write_text(json.dumps(debate_script, ensure_ascii=False, indent=2), encoding="utf-8")
     else:
         scenes = [
-            {"speaker": "Quantum", "entity": "quantum", "text": q_part1, "shot": "wide"},
+            {"speaker": "Narrador", "entity": "narrator", "text": "¿Y si el tiempo no existe y todo ocurre al mismo tiempo?", "shot": "wide"},
+            {"speaker": "Quantum", "entity": "quantum", "text": q_part1, "shot": "close_quantum"},
             {"speaker": "Quantum", "entity": "quantum", "text": q_part2, "shot": "close_quantum"},
             {"speaker": "Solar", "entity": "solar", "text": s_part3, "shot": "close_solar"},
-            {"speaker": "Ambos", "entity": "both", "text": both_part4, "shot": "both"}
+            {"speaker": "Narrador", "entity": "narrator", "text": both_part4, "shot": "both"}
         ]
 
     print(f"\n🔮 [AI Co-Host Debate Express] Renderizando video dinámico ({len(scenes)} escenas) con Doble Orbe y Multi-Cámara...")
@@ -1060,7 +1061,10 @@ def render_orb_test_preview(
             text = str(sc.get("text", "")).strip()
             shot = str(sc.get("shot", "wide")).strip().lower()
 
-            if "solar" in ent_raw or "solar" in spk_raw.lower():
+            if "narrator" in ent_raw or "narrador" in ent_raw or "narrador" in spk_raw.lower() or "presentador" in spk_raw.lower() or "voz en off" in spk_raw.lower():
+                ent = "narrator"
+                spk = "Narrador"
+            elif "solar" in ent_raw or "solar" in spk_raw.lower():
                 ent = "solar"
                 spk = "Solar"
             elif "ambos" in ent_raw or "both" in ent_raw or "ambos" in spk_raw.lower() or "dual" in spk_raw.lower():
@@ -1071,7 +1075,10 @@ def render_orb_test_preview(
                 spk = "Quantum"
 
             # Strict speaker-shot alignment: A close-up MUST show the speaker who is actually talking!
-            if ent == "solar" and shot == "close_quantum":
+            if ent == "narrator":
+                if shot not in ["wide", "both"]:
+                    shot = "wide" if idx == 0 else "both"
+            elif ent == "solar" and shot == "close_quantum":
                 shot = "close_solar"
             elif ent == "quantum" and shot == "close_solar":
                 shot = "close_quantum"
@@ -1365,12 +1372,12 @@ def render_orb_test_preview(
     pre_scale_lines.append(f"[{badge_s_idx}:v]scale=440:-2,format=yuva420p[badge_s]")
 
     # Calculate exact number of split pads needed for Quantum and Solar (wide talk, idle, and close frontal talk)
-    q_talk_uses = sum(1 for sc in scene_records if (sc["shot"] in ["wide", "both"]) and (sc["entity"] in ["quantum", "both"]))
-    q_idle_uses = 1 + sum(1 for sc in scene_records if (sc["shot"] in ["wide", "both"]) and (sc["entity"] not in ["quantum", "both"]))
+    q_talk_uses = sum(1 for sc in scene_records if (sc["shot"] == "both") or (sc["shot"] == "wide" and sc["entity"] in ["quantum", "both"]))
+    q_idle_uses = 1 + sum(1 for sc in scene_records if sc["shot"] == "wide" and sc["entity"] not in ["quantum", "both"])
     q_close_uses = sum(1 for sc in scene_records if sc["shot"] == "close_quantum")
 
-    s_talk_uses = sum(1 for sc in scene_records if (sc["shot"] in ["wide", "both"]) and (sc["entity"] in ["solar", "both"]))
-    s_idle_uses = 1 + sum(1 for sc in scene_records if (sc["shot"] in ["wide", "both"]) and (sc["entity"] not in ["solar", "both"]))
+    s_talk_uses = sum(1 for sc in scene_records if (sc["shot"] == "both") or (sc["shot"] == "wide" and sc["entity"] in ["solar", "both"]))
+    s_idle_uses = 1 + sum(1 for sc in scene_records if sc["shot"] == "wide" and sc["entity"] not in ["solar", "both"])
     s_close_uses = sum(1 for sc in scene_records if sc["shot"] == "close_solar")
 
     filter_complex = [

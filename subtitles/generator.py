@@ -652,6 +652,7 @@ ScaledBorderAndShadow: yes
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
 Style: QuantumKaraoke,{font_family},{font_size},&H00F8FFFF,&H000000FF,&H00241400,&HA0000000,-1,0,0,0,100,100,1.2,0,1,{outline_val},2.6,2,{margin_side},{margin_side},{margin_v},1
 Style: SolarKaraoke,{font_family},{font_size},&H00F5FFFF,&H000000FF,&H00001026,&HA0000000,-1,0,0,0,100,100,1.2,0,1,{outline_val},2.6,2,{margin_side},{margin_side},{margin_v},1
+Style: NarratorKaraoke,{font_family},{font_size},&H00F0FFFF,&H000000FF,&H00081C30,&HA0000000,-1,0,0,0,100,100,1.2,0,1,{outline_val + 0.4},2.8,2,{margin_side},{margin_side},{margin_v},1
 Style: DualKaraoke,{font_family},{font_size},&H00FFFFFF,&H000000FF,&H00201004,&HA0000000,-1,0,0,0,100,100,1.2,0,1,{outline_val + 0.4},2.8,2,{margin_side},{margin_side},{margin_v},1
 
 [Events]
@@ -682,7 +683,11 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             role_s = roles.get("solar", "IA Astrofísica Solar") if roles else "IA Astrofísica Solar"
 
             # Determine speaker style palette
-            if "solar" in speaker or "solar" in entity:
+            if "narrator" in speaker or "narrator" in entity or "narrador" in speaker or "narrador" in entity or "presentador" in speaker:
+                style_name = "NarratorKaraoke"
+                hl_color = "&H0038E0FF&"  # Elegant Amber/Gold Glow
+                badge_str = rf"{{\c&H0038E0FF&\b1\fs{badge_fs}}}[ NARRADOR • VOZ EN OFF ]\N{{\r{style_name}}}"
+            elif "solar" in speaker or "solar" in entity:
                 style_name = "SolarKaraoke"
                 hl_color = "&H0000C4FF&"  # Vibrant Solar Amber/Gold (ASS BGR)
                 badge_str = rf"{{\c&H0000C4FF&\b1\fs{badge_fs}}}[ SOLAR • {role_s} ]\N{{\r{style_name}}}"

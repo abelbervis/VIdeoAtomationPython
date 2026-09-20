@@ -118,5 +118,29 @@
     "shot_name": "close_solar",
     "ass_primary_color": "&H005252FF",
     "ass_highlight_color": "&H001744FF&"
+  },
+  "narrator": {
+    "id": "narrator",
+    "name": "NARRADOR",
+    "role": "Presentador y Guía Cósmico Omnisciente",
+    "perspective": "Voz documental, profunda, enigmática y cautivadora. Introduce la paradoja inicial, expone el dilema con máxima intriga y cierra con una reflexión provocadora para la audiencia.",
+    "color_theme": "gold",
+    "palette_name": "solar",
+    "primary_color": "#ffd700",
+    "glow_color": "#ffab00",
+    "border_color": "#ffe082",
+    "voice_name": "es-MX-PelayoNeural",
+    "voice_rate": "-3%",
+    "voice_pitch": "-3Hz",
+    "voice_volume": "+0%",
+    "drone_freq": 46,
+    "double_tracking": {
+      "delay_ms": 10,
+      "double_vol_db": -16.0,
+      "detune_semitones": -0.1
+    },
+    "shot_name": "wide",
+    "ass_primary_color": "&H0000FFFF",
+    "ass_highlight_color": "&H00FFFFFF&"
   }
 }

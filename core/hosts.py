@@ -146,6 +146,30 @@ DEFAULT_SOLAR_HOST = OrbHost(
     ass_highlight_color="&H0045FF&"
 )
 
+DEFAULT_NARRATOR_HOST = OrbHost(
+    id="narrator",
+    name="NARRADOR",
+    role="Presentador y Guía Cósmico Omnisciente",
+    perspective="Voz en off documental, profunda, enigmática y cautivadora. Introduce la paradoja inicial, expone el dilema con máxima intriga y cierra con una reflexión provocadora para la audiencia.",
+    color_theme="gold",
+    palette_name="solar",
+    primary_color="#ffd700",
+    glow_color="#ffab00",
+    border_color="#ffe082",
+    voice_name="es-MX-PelayoNeural",
+    voice_rate="-3%",
+    voice_pitch="-3Hz",
+    drone_freq=46,
+    double_tracking={
+        "delay_ms": 10,
+        "double_vol_db": -16.0,
+        "detune_semitones": -0.1
+    },
+    shot_name="wide",
+    ass_primary_color="&H0000FFFF",
+    ass_highlight_color="&H00FFFFFF&"
+)
+
 
 class HostRegistry:
     """Registry that manages registered and persistent Orb Hosts."""
@@ -162,6 +186,7 @@ class HostRegistry:
         cls._hosts = {
             "quantum": DEFAULT_QUANTUM_HOST,
             "solar": DEFAULT_SOLAR_HOST,
+            "narrator": DEFAULT_NARRATOR_HOST,
         }
 
         if cls._json_path.exists():
@@ -281,10 +306,10 @@ REGLAS DE ASIGNACIÓN DINÁMICA DE ROLES Y DEBATE:
    - Cada intervención posterior a la primera DEBE responder, objetar o refutar directamente lo que dijo el otro orbe desde el prisma de su disciplina.
    - Diálogos fluidos, ágiles y con impacto (~12 a 20 palabras por escena).
 
-5. GANCHO INICIAL Y CIERRE IMPACTANTE:
-   - Escena 1 (Gancho): Paradoja intrigante o pregunta incómoda en segunda persona ("¿Y si supieras que...?", "¿Por qué ignoramos que...?"). PROHIBIDO empezar con "Imagina..." o saludos.
-   - Penúltima escena (Escena N-1): Intervención individual ({self.host_a.name} o {self.host_b.name}) en plano cerrado ("{self.host_a.shot_name}" o "{self.host_b.shot_name}"), llevando la tensión al clímax.
-   - Última escena (Escena N): Única escena de 'Ambos' con "shot": "both" lanzando una pregunta abierta y provocadora a la audiencia.
+5. ESTRUCTURA NARRATIVA DE TRES CAPAS (NARRADOR + DEBATE DE ORBES + CIERRE):
+   - Escena 1 (Intro Narrador - Voz en off): "speaker": "Narrador", "entity": "narrator", "shot": "wide". Plantea la paradoja intrigante en segunda persona y presenta el choque frontal entre las dos inteligencias.
+   - Escenas 2 a N-1 (Debate Central): Intercambio dialéctico alternado entre {self.host_a.name} ("{self.host_a.shot_name}") y {self.host_b.name} ("{self.host_b.shot_name}") defendiendo sus posturas con argumentos puros de su disciplina.
+   - Escena N (Outro Narrador - Voz en off): "speaker": "Narrador", "entity": "narrator", "shot": "both". Sintetiza la incógnita final y lanza una llamada a la acción provocadora para que la audiencia tome partido en los comentarios.
 
 Responde ÚNICAMENTE con JSON válido que cumpla estrictamente este esquema:
 {{
@@ -297,53 +322,53 @@ Responde ÚNICAMENTE con JSON válido que cumpla estrictamente este esquema:
   "holograms": null,
   "scenes": [
     {{
-      "speaker": "{self.host_a.name}",
-      "entity": "{self.host_a.id}",
-      "text": "Planteamiento del dilema o premisa provocadora desde la perspectiva de su rol elegido.",
+      "speaker": "Narrador",
+      "entity": "narrator",
+      "text": "Planteamiento del enigma o dilema cósmico provocador presentando a los dos debatientes.",
       "shot": "wide",
-      "duration": 3.2
-    }},
-    {{
-      "speaker": "{self.host_b.name}",
-      "entity": "{self.host_b.id}",
-      "text": "Contraargumento o refutación desde el marco y prioridades de su propio rol asignado.",
-      "shot": "{self.host_b.shot_name}",
       "duration": 3.4
     }},
     {{
       "speaker": "{self.host_a.name}",
       "entity": "{self.host_a.id}",
-      "text": "Dato o principio verídico de su disciplina que sostiene su tesis y presiona al rival.",
-      "shot": "{self.host_a.shot_name}",
-      "duration": 3.3
-    }},
-    {{
-      "speaker": "{self.host_b.name}",
-      "entity": "{self.host_b.id}",
-      "text": "Objeción real basada en su rama que expone las limitaciones de la otra postura.",
-      "shot": "{self.host_b.shot_name}",
-      "duration": 3.5
-    }},
-    {{
-      "speaker": "{self.host_a.name}",
-      "entity": "{self.host_a.id}",
-      "text": "Evidencia o consecuencia más contundente defendiendo su postura disciplinaria.",
+      "text": "Postulado contundente desde la perspectiva de su disciplina técnica o empírica.",
       "shot": "{self.host_a.shot_name}",
       "duration": 3.4
     }},
     {{
       "speaker": "{self.host_b.name}",
       "entity": "{self.host_b.id}",
-      "text": "Penúltima intervención en primer plano sintetizando la tensión dialéctica.",
+      "text": "Contraargumento o refutación directa desde el marco conceptual de su rol asignado.",
       "shot": "{self.host_b.shot_name}",
       "duration": 3.5
     }},
     {{
-      "speaker": "Ambos",
-      "entity": "both",
-      "text": "Pregunta final abierta y reflexiva dirigida a la audiencia.",
+      "speaker": "{self.host_a.name}",
+      "entity": "{self.host_a.id}",
+      "text": "Mecanismo o principio verificable de su rama que sostiene su tesis y presiona al oponente.",
+      "shot": "{self.host_a.shot_name}",
+      "duration": 3.4
+    }},
+    {{
+      "speaker": "{self.host_b.name}",
+      "entity": "{self.host_b.id}",
+      "text": "Objeción estructural o dilema insuperable que expone las limitaciones de la otra postura.",
+      "shot": "{self.host_b.shot_name}",
+      "duration": 3.5
+    }},
+    {{
+      "speaker": "{self.host_a.name}",
+      "entity": "{self.host_a.id}",
+      "text": "Clímax argumental llevando la tensión dialéctica al punto más alto.",
+      "shot": "{self.host_a.shot_name}",
+      "duration": 3.4
+    }},
+    {{
+      "speaker": "Narrador",
+      "entity": "narrator",
+      "text": "Pregunta final abierta y reflexiva llamando a la audiencia a elegir bando en los comentarios.",
       "shot": "both",
-      "duration": 3.2
+      "duration": 3.5
     }}
   ]
 }}
