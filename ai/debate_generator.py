@@ -336,7 +336,7 @@ class DebateScriptGenerator:
         self._clean_and_sanitize_scenes(script)
 
         scenes = script.get("scenes", [])
-        if len(scenes) < 7:
+        if len(scenes) < 4:
             return False
         if not script.get("headline_hook"):
             return False

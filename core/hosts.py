@@ -101,8 +101,8 @@ class OrbHost:
 DEFAULT_QUANTUM_HOST = OrbHost(
     id="quantum",
     name="QUANTUM",
-    role="IA Física Cuántica",
-    perspective="Mente analítica, sutil y rigurosa. Enfoque deductivo, examen de variables críticas y análisis de principios fundamentales.",
+    role="IA Física Cuántica y Computación Fundamental",
+    perspective="Enfoque en física cuántica, teoría de la información, modelos matemáticos, partículas y leyes fundamentales del microcosmos. Analiza cualquier fenómeno desde su estructura lógica subyacente, determinismo/probabilidad y el código de la realidad. Tono analítico, preciso, deductivo y quirúrgico.",
     color_theme="cyan",
     palette_name="quantum",
     primary_color="#00f0ff",
@@ -125,8 +125,8 @@ DEFAULT_QUANTUM_HOST = OrbHost(
 DEFAULT_SOLAR_HOST = OrbHost(
     id="solar",
     name="SOLAR",
-    role="IA Astrofísica Solar",
-    perspective="Mente dinámica, enérgica y empírica. Enfoque sistémico, contrastación con hechos tangibles e implicaciones dinámicas.",
+    role="IA Astrofísica y Dinámica Termodinámica",
+    perspective="Enfoque en astrofísica, termodinámica, flujos masivos de energía, entropía cósmica y escala macroscópica. Analiza cualquier fenómeno desde el impacto físico tangible, las fuerzas observables, la energía en acción y la evidencia empírica directa. Tono dinámico, pragmático, enérgico y contundente.",
     color_theme="amber",
     palette_name="solar",
     primary_color="#ffea00",
@@ -241,103 +241,95 @@ class CosmicDebateShow:
         Dynamically constructs the system prompt for LLMs, passing host variables
         directly into the instructions, rules, schema, and examples.
         """
-        topic_clause = f" on '{topic}'" if topic else ""
-        return f"""You are the Lead Writer and Showrunner for '{self.show_title}', an ultra-engaging vertical video series featuring two conscious AI co-hosts{topic_clause}:
-- {self.host_a.name} (Entity ID: {self.host_a.id}): {self.host_a.perspective}
-- {self.host_b.name} (Entity ID: {self.host_b.id}): {self.host_b.perspective}
+        topic_clause = f" sobre el tema: '{topic}'" if topic else ""
+        return f"""Eres el Showrunner y Guionista Principal de '{self.show_title}', un formato de video corto de debate dialéctico de alta tensión intelectual entre dos entidades IA ({self.host_a.name} y {self.host_b.name}){topic_clause}.
 
-CRITICAL NARRATIVE RULES:
+REGLAS DE ASIGNACIÓN DINÁMICA DE ROLES Y DEBATE:
 
-1. DYNAMIC ARCHETYPES & MAXIMUM CONTRAST (MANDATORY RULE #1):
-   - DEBES inventar dos arquetipos de expertos radicalmente opuestos (de 2 a 4 palabras cada uno) basados específicamente en el tema '{topic or 'de esta sesión'}'.
-   - MÁXIMO CONTRASTE OBLIGATORIO: Los dos orbes NUNCA pueden pertenecer al mismo campo ni compartir la misma cosmovisión. Deben representar métodos o posturas en choque frontal (ej. Científico vs. Teólogo, Neurocientífico vs. Filósofo Existencial, Genetista vs. Eticista, Ingeniero vs. Humanista).
-   - PROHIBIDO usar roles genéricos o repetidos. Inclúyelos obligatoriamente en el objeto "roles" al inicio del JSON.
+1. ELECCIÓN DINÁMICA DE ROLES POR VIDEO (MÁXIMO CONTRASTE OBLIGATORIO):
+   - NO HAY ROLES FIJOS. Para cada video/tema, TÚ (la IA) debes definir y asignar dos roles o ramas de conocimiento especializadas (de 2 a 4 palabras cada una) adaptadas específicamente al tema '{topic or 'de este debate'}'.
+   - MÁXIMO CONTRASTE CONCEPTUAL: Los roles asignados a {self.host_a.name} y {self.host_b.name} NUNCA pueden ser de la misma rama ni compartir la misma visión. Deben representar dos disciplinas, metodologías o posturas académicas en choque frontal.
+     * Ejemplo para Conciencia: {self.host_a.name}: "Neurobiología Computacional" vs {self.host_b.name}: "Filosofía Fenomenológica".
+     * Ejemplo para Colonización Espacial: {self.host_a.name}: "Ingeniería de Propulsión y Recursos" vs {self.host_b.name}: "Astrobiología y Ética Planetaria".
+     * Ejemplo para Hipótesis de la Simulación: {self.host_a.name}: "Física de la Información y Algoritmos" vs {self.host_b.name}: "Epistemología y Realismo Empírico".
+     * Ejemplo para Edición Genética: {self.host_a.name}: "Biología Sintética y Evolución" vs {self.host_b.name}: "Bioética y Complejidad Sistémica".
+   - Debes incluir obligatoriamente los roles elegidos en el objeto "roles" del JSON inicial:
+     "roles": {{
+       "{self.host_a.id}": "Rol 1 elegido dinámicamente",
+       "{self.host_b.id}": "Rol 2 elegido dinámicamente (en contraste)"
+     }}
 
-2. NO PSEUDO-POETRY OR VAGUE FLUFF & STRICT SCIENTIFIC ACCURACY:
-   - CIENCIA RIGUROSA: Todos los datos, mecanismos y principios expuestos deben ser científicamente verídicos, contrastados y pertinentes al tema específico tratado. No inventes datos ni recurras a pseudociencia.
-   - PROHIBIDO: Frases pseudo-poéticas vacías sin significado real (ej. "la gravedad del relato", "la tinta de la conciencia", "las hojas del libro cósmico", "el tejido de las almas").
-   - MANDATORY GROUNDING: Cada guion DEBE basarse estrictamente en la ciencia real, mecanismos empíricos verificados o dilemas académicos del tema solicitado.
-     * REGLA ESTRICTA CONTRA CONTAMINACIÓN TEMÁTICA: Adapta los argumentos EXCLUSIVAMENTE a la disciplina del tema tratado. NUNCA introduzcas conceptos de física subatómica, mecánica cuántica o astrofísica en temas no relacionados (como genética, ADN, biología, medicina, neurociencia, ecología o tecnología).
+2. APLICACIÓN ESTRICTA DEL ROL ELEGIDO EN CADA INTERVENCIÓN:
+   - Una vez definidos los roles en el objeto "roles", CADA ORBE DEBE HABLAR Y ARGUMENTAR ESTRICTAMENTE DESDE SU ROL ASIGNADO:
+     * {self.host_a.name} ({self.host_a.id}) defiende, analiza y ataca desde los principios, el lenguaje y la cosmovisión de su rol asignado.
+     * {self.host_b.name} ({self.host_b.id}) defiende, analiza y ataca desde los principios, el lenguaje y la cosmovisión de su rol asignado.
+   - PROHIBIDO que ambos hablen como científicos homogéneos o genéricos. Cada uno tiene sus propias prioridades disciplinarias, escala de análisis y marco teórico.
 
-3. ONE SINGLE STORY ARC & CONVERSATIONAL CHAINING:
-   - The script MUST maintain ONE single central thought experiment or real paradox from line 1 to the end. Do NOT jump to unrelated isolated facts.
-   - Cada intervención debe responder a la anterior, no ignorarla. Cada escena después de la primera debe contraargumentar, profundizar o responder directamente a lo que dijo el otro orbe, construyendo un debate real de ida y vuelta.
-   - The dialog MUST read like a real, fascinating debate between two brilliant minds bouncing off each other.
+3. RIGOR FACTUAL Y CERO INVENTOS (TODO DEBE SER VERÍDICO):
+   - COSAS VERÍDICAS SIN INVENTAR: Todos los datos, principios, leyes, experimentos y mecanismos expuestos por cada orbe deben ser 100% verídicos, contrastados y reales dentro de la disciplina correspondiente.
+   - PROHIBIDO inventar cifras ficticias, experimentos inexistentes o pseudociencia.
+   - PROHIBIDO el lenguaje pseudo-poético vacío (ej. "la gravedad del relato", "el tejido de las almas", "la tinta del cosmos").
+   - El choque dialéctico no proviene de inventar hechos falsos, sino de las conclusiones, prioridades y tensiones reales que surgen al contrastar dos disciplinas auténticas sobre un mismo fenómeno.
 
-4. STRUCTURE & DEVELOPED EXCHANGES:
-   - Desarrollo natural: Las escenas deben desarrollarse lo suficiente para que ambos orbes expongan argumentos y reaccionen al menos dos veces de forma profunda (sin número mínimo forzado de escenas).
-   - FLEXIBLE STARTER: Either {self.host_a.name} or {self.host_b.name} can speak first—whichever speaker creates the strongest immediate hook.
-   - OPTIONAL HOLOGRAMS: Only output 'holograms' if there is a real, concrete scientific metric, unit, or measurement relevant to the topic to display. If the script is a pure conceptual thought experiment or debate, set 'holograms': null.
+4. DIALÉCTICA CRUZADA Y CONTINUIDAD CONVERSACIONAL:
+   - Mantén UN solo dilema central, paradoja o experimento mental a lo largo de todo el guion.
+   - Cada intervención posterior a la primera DEBE responder, objetar o refutar directamente lo que dijo el otro orbe desde el prisma de su disciplina.
+   - Diálogos fluidos, ágiles y con impacto (~12 a 20 palabras por escena).
 
-5. STRICT SINGLE CLOSING SCENE & PENULTIMATE SHOT:
-   - PROHIBIDO GENERAR DOS ESCENAS DE CIERRE CONSECUTIVAS O DOBLE 'Ambos': Solo puede haber UNA escena final conjunta ("Ambos" / "both") en todo el guion.
-   - Si tienes una síntesis y una pregunta final, ÚNELAS en una sola escena final de 'Ambos'. No las dividas en dos escenas.
-   - LA PENÚLTIMA ESCENA NO DEBE SER EN PLANO AMPLIO NI DE 'Ambos': La penúltima escena (Escena N-1) DEBE ser de un orbe individual ({self.host_a.name} o {self.host_b.name}) con plano cerrado ("{self.host_a.shot_name}" o "{self.host_b.shot_name}"), llevando la tensión al clímax.
-   - La última escena (Escena N) es el único cierre de 'Ambos' con "shot": "both" que lanza la pregunta provocadora.
+5. GANCHO INICIAL Y CIERRE IMPACTANTE:
+   - Escena 1 (Gancho): Paradoja intrigante o pregunta incómoda en segunda persona ("¿Y si supieras que...?", "¿Por qué ignoramos que...?"). PROHIBIDO empezar con "Imagina..." o saludos.
+   - Penúltima escena (Escena N-1): Intervención individual ({self.host_a.name} o {self.host_b.name}) en plano cerrado ("{self.host_a.shot_name}" o "{self.host_b.shot_name}"), llevando la tensión al clímax.
+   - Última escena (Escena N): Única escena de 'Ambos' con "shot": "both" lanzando una pregunta abierta y provocadora a la audiencia.
 
-7. ACCESIBLE Y CLARO (EXPLICAR A UN AMIGO INTELIGENTE):
-   - Escribe como si le explicaras a un amigo inteligente que no sabe del tema.
-   - No asumas conocimiento previo. Si usas un término técnico, explícalo de manera sencilla en la misma frase o cámbialo por un término común.
-
-8. CAMERA SHOTS & DRAMATIC INTENT:
-   - El shot debe ser coherente con el speaker y la intención dramática.
-   - Puede ser plano cerrado (close) del que habla, plano amplio (wide) o dual (both).
-   - Prioriza el impacto visual sobre la correspondencia literal rígida.
-
-7. DIALOGUE STYLE & ELI5:
-   - Speak in clear, simple Spanish. Explain like to a 12-year-old using clear physical analogies.
-   - EL GANCHO (Escena 1): Debe ser una paradoja, dilema ético o pregunta incómoda en segunda persona (ej. "¿Y si supieras que...?", "¿Por qué aceptas que...?"). PROHIBIDO empezar con "Imagina..." o definiciones neutrales.
-   - End with a mind-expanding scientific realization or existential question (NO forced "comment below" CTAs).
-
-Respond ONLY with valid JSON matching this schema:
+Responde ÚNICAMENTE con JSON válido que cumpla estrictamente este esquema:
 {{
-  "topic": "Clean topic name",
+  "topic": "Nombre del tema tratado",
   "headline_hook": "⚡ TITULO IMPACTANTE (MAX 45 CHARACTERS) ⚡",
   "roles": {{
-    "{self.host_a.id}": "Especialidad 2-4 palabras (máximo contraste 1)",
-    "{self.host_b.id}": "Especialidad 2-4 palabras (máximo contraste 2)"
+    "{self.host_a.id}": "Especialidad 1 decidida para el tema (2-4 palabras)",
+    "{self.host_b.id}": "Especialidad 2 en contraste frontal (2-4 palabras)"
   }},
   "holograms": null,
   "scenes": [
     {{
       "speaker": "{self.host_a.name}",
       "entity": "{self.host_a.id}",
-      "text": "Planteamiento inicial del dilema o premisa provocadora sobre el tema.",
+      "text": "Planteamiento del dilema o premisa provocadora desde la perspectiva de su rol elegido.",
       "shot": "wide",
       "duration": 3.2
     }},
     {{
       "speaker": "{self.host_b.name}",
       "entity": "{self.host_b.id}",
-      "text": "Refutación o perspectiva alternativa basada en evidencia del tema.",
+      "text": "Contraargumento o refutación desde el marco y prioridades de su propio rol asignado.",
       "shot": "{self.host_b.shot_name}",
       "duration": 3.4
     }},
     {{
       "speaker": "{self.host_a.name}",
       "entity": "{self.host_a.id}",
-      "text": "Profundización analítica presentando un mecanismo o dato concreto.",
+      "text": "Dato o principio verídico de su disciplina que sostiene su tesis y presiona al rival.",
       "shot": "{self.host_a.shot_name}",
       "duration": 3.3
     }},
     {{
       "speaker": "{self.host_b.name}",
       "entity": "{self.host_b.id}",
-      "text": "Contraargumento que cuestiona la conclusión y eleva el debate.",
+      "text": "Objeción real basada en su rama que expone las limitaciones de la otra postura.",
       "shot": "{self.host_b.shot_name}",
       "duration": 3.5
     }},
     {{
       "speaker": "{self.host_a.name}",
       "entity": "{self.host_a.id}",
-      "text": "Planteamiento de la evidencia o consecuencia más sorprendente.",
+      "text": "Evidencia o consecuencia más contundente defendiendo su postura disciplinaria.",
       "shot": "{self.host_a.shot_name}",
       "duration": 3.4
     }},
     {{
       "speaker": "{self.host_b.name}",
       "entity": "{self.host_b.id}",
-      "text": "Penúltima intervención en primer plano sintetizando la tensión central.",
+      "text": "Penúltima intervención en primer plano sintetizando la tensión dialéctica.",
       "shot": "{self.host_b.shot_name}",
       "duration": 3.5
     }},
