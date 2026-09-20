@@ -157,6 +157,12 @@ def generate_cosmic_particle_bg_video(
             rad_neb_a = 360 if focus_mode == "host_a" else (180 if focus_mode == "host_b" else 270)
             rad_neb_b = 360 if focus_mode == "host_b" else (180 if focus_mode == "host_a" else 290)
 
+            # Pre-calculate nebula opacities for clean f-strings
+            op_a_0 = "0.38" if focus_mode == "host_a" else "0.28"
+            op_a_45 = "0.22" if focus_mode == "host_a" else "0.15"
+            op_b_0 = "0.38" if focus_mode == "host_b" else "0.28"
+            op_b_45 = "0.22" if focus_mode == "host_b" else "0.15"
+
             svg_parts = [
                 f'<svg width="{render_w}" height="{render_h}" viewBox="0 0 {render_w} {render_h}" xmlns="http://www.w3.org/2000/svg">',
                 '  <defs>',
@@ -169,13 +175,13 @@ def generate_cosmic_particle_bg_video(
                 '      <stop offset="100%" stop-color="#09060d" />',
                 '    </linearGradient>',
                 '    <radialGradient id="nebulaA" cx="50%" cy="50%" r="50%">',
-                f'      <stop offset="0%" stop-color="{color_a}" stop-opacity="{0.38 if focus_mode==\'host_a\' else 0.28}" />',
-                f'      <stop offset="45%" stop-color="{color_a_glow}" stop-opacity="{0.22 if focus_mode==\'host_a\' else 0.15}" />',
+                f'      <stop offset="0%" stop-color="{color_a}" stop-opacity="{op_a_0}" />',
+                f'      <stop offset="45%" stop-color="{color_a_glow}" stop-opacity="{op_a_45}" />',
                 '      <stop offset="85%" stop-color="#000000" stop-opacity="0.0" />',
                 '    </radialGradient>',
                 '    <radialGradient id="nebulaB" cx="50%" cy="50%" r="50%">',
-                f'      <stop offset="0%" stop-color="{color_b}" stop-opacity="{0.38 if focus_mode==\'host_b\' else 0.28}" />',
-                f'      <stop offset="45%" stop-color="{color_b_glow}" stop-opacity="{0.22 if focus_mode==\'host_b\' else 0.15}" />',
+                f'      <stop offset="0%" stop-color="{color_b}" stop-opacity="{op_b_0}" />',
+                f'      <stop offset="45%" stop-color="{color_b_glow}" stop-opacity="{op_b_45}" />',
                 '      <stop offset="85%" stop-color="#000000" stop-opacity="0.0" />',
                 '    </radialGradient>',
                 '    <radialGradient id="bridgePulseGrad" cx="50%" cy="50%" r="50%">',
