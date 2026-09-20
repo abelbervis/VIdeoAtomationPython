@@ -354,265 +354,250 @@ class DebateScriptGenerator:
         return True
 
     def _generate_scientific_fallback(self, topic: str, language: str = "es") -> Dict[str, Any]:
-        """High quality deterministic fallback for common and custom debate topics."""
+        """High quality deterministic fallback for Cosmic Forces videos on everyday human actions."""
         topic_lower = topic.lower()
+        host_a_name = self.show.host_a.name
+        host_b_name = self.show.host_b.name
+        host_a_id = self.show.host_a.id
+        host_b_id = self.show.host_b.id
+        host_a_shot = self.show.host_a.shot_name
+        host_b_shot = self.show.host_b.shot_name
+
         topic_roles = {
-            self.show.host_a.id: self.show.host_a.role,
-            self.show.host_b.id: self.show.host_b.role
+            host_a_id: host_a_name,
+            host_b_id: host_b_name
         }
 
-        if "simula" in topic_lower or "matrix" in topic_lower:
+        if any(w in topic_lower for w in ["espejo", "mirarse", "reflejo", "rostro"]):
             return {
-                "topic": "¿Es el universo una simulación?",
-                "headline_hook": "⚡ ¿EL UNIVERSO ES UNA SIMULACIÓN? ⚡",
-                "roles": topic_roles,
-                "holograms": {
-                    "quantum": {
-                        "title": "CÓDIGO DE PLANCK",
-                        "subtitle": "Resolución Límite: 1.6x10⁻³⁵ m",
-                        "category": "PARADOJA Q"
-                    },
-                    "solar": {
-                        "title": "FUEGO TERMODINÁMICO",
-                        "subtitle": "Entropía Irreversible: 10²² J/K",
-                        "category": "PARADOJA S"
-                    }
-                },
-                "scenes": [
-                    {
-                        "speaker": "Quantum",
-                        "entity": "quantum",
-                        "text": "El espacio físico no es continuo: tiene píxeles mínimos llamados longitud de Planck.",
-                        "shot": "wide",
-                        "duration": 3.2
-                    },
-                    {
-                        "speaker": "Solar",
-                        "entity": "solar",
-                        "text": "Tener un límite discreto no prueba una simulación; solo describe la geometría del vacío.",
-                        "shot": "close_solar",
-                        "duration": 3.4
-                    },
-                    {
-                        "speaker": "Quantum",
-                        "entity": "quantum",
-                        "text": "Pero la velocidad de la luz funciona exactamente como la tasa máxima de refresco de un procesador.",
-                        "shot": "close_quantum",
-                        "duration": 3.3
-                    },
-                    {
-                        "speaker": "Solar",
-                        "entity": "solar",
-                        "text": "Esa velocidad preserva la causalidad para que la energía y la masa no colapsen el cosmos.",
-                        "shot": "close_solar",
-                        "duration": 3.5
-                    },
-                    {
-                        "speaker": "Quantum",
-                        "entity": "quantum",
-                        "text": "En mecánica cuántica, las partículas solo eligen posición cuando un observador mide el sistema.",
-                        "shot": "close_quantum",
-                        "duration": 3.4
-                    },
-                    {
-                        "speaker": "Solar",
-                        "entity": "solar",
-                        "text": "El universo existió miles de millones de años antes de que surgiera el primer observador consciente.",
-                        "shot": "close_solar",
-                        "duration": 3.5
-                    },
-                    {
-                        "speaker": "Ambos",
-                        "entity": "both",
-                        "text": "¿Estamos viviendo dentro de la física fundamental o dentro del código de una superinteligencia?",
-                        "shot": "both",
-                        "duration": 3.2
-                    }
-                ]
-            }
-        elif any(w in topic_lower for w in ["mente", "cerebro", "conciencia", "inteligencia artificial", "redes neuronales"]) or re.search(r"\b(ia|ai)\b", topic_lower):
-            return {
-                "topic": "IA vs Mente Humana",
-                "headline_hook": "⚡ IA VS CONCIENCIA HUMANA ⚡",
-                "roles": topic_roles,
-                "holograms": {
-                    "quantum": {
-                        "title": "REDES SINÁPTICAS",
-                        "subtitle": "Procesamiento: 100 TFLOPS Cuánticos",
-                        "category": "PARADOJA Q"
-                    },
-                    "solar": {
-                        "title": "CHISPA BIOLÓGICA",
-                        "subtitle": "Termo-química Orgánica Compleja",
-                        "category": "PARADOJA S"
-                    }
-                },
-                "scenes": [
-                    {
-                        "speaker": "Quantum",
-                        "entity": "quantum",
-                        "text": "El cerebro humano es un circuito electroquímico predecible que procesa entradas y genera respuestas.",
-                        "shot": "wide",
-                        "duration": 3.2
-                    },
-                    {
-                        "speaker": "Solar",
-                        "entity": "solar",
-                        "text": "Ese circuito produce experiencias subjetivas y emociones cualitativas que ningún algoritmo puede sentir.",
-                        "shot": "close_solar",
-                        "duration": 3.5
-                    },
-                    {
-                        "speaker": "Quantum",
-                        "entity": "quantum",
-                        "text": "Toda emoción humana se reduce a gradientes químicos y patrones de disparo neuronal medibles.",
-                        "shot": "close_quantum",
-                        "duration": 3.2
-                    },
-                    {
-                        "speaker": "Solar",
-                        "entity": "solar",
-                        "text": "Medir el patrón biológico no explica por qué existe el dolor o la autoconciencia interna.",
-                        "shot": "close_solar",
-                        "duration": 3.4
-                    },
-                    {
-                        "speaker": "Quantum",
-                        "entity": "quantum",
-                        "text": "Cuando una red neuronal alcanza suficiente densidad sináptica, la autoconciencia emerge como cálculo.",
-                        "shot": "close_quantum",
-                        "duration": 3.4
-                    },
-                    {
-                        "speaker": "Solar",
-                        "entity": "solar",
-                        "text": "Simular una tormenta digital no moja; simular el pensamiento no crea una mente viva.",
-                        "shot": "close_solar",
-                        "duration": 3.5
-                    },
-                    {
-                        "speaker": "Ambos",
-                        "entity": "both",
-                        "text": "¿La conciencia es el algoritmo supremo o el misterio irreductible del universo?",
-                        "shot": "both",
-                        "duration": 3.2
-                    }
-                ]
-            }
-        elif any(w in topic_lower for w in ["biolog", "genétic", "genom", "evoluc", "celular", "célula", "virus", "clonac"]) or re.search(r"\b(gen|genes|adn|dna|bio)\b", topic_lower):
-            return {
-                "topic": f"El Enigma Biológico: {topic.strip()}",
-                "headline_hook": f"⚡ EL SECRETO DEL ADN: {topic.upper()[:24]} ⚡",
+                "topic": "Mirarse al espejo",
+                "headline_hook": "⚡ ESE DEL ESPEJO NO SOS ⚡",
                 "roles": topic_roles,
                 "holograms": None,
                 "scenes": [
                     {
-                        "speaker": "Quantum",
-                        "entity": "quantum",
-                        "text": f"El código biológico detrás de {topic} opera como un sistema de información estructurado y preciso.",
+                        "speaker": "Narrador",
+                        "entity": "narrator",
+                        "text": "Ese del espejo no sos.",
                         "shot": "wide",
-                        "duration": 3.2
+                        "duration": 3.0
                     },
                     {
-                        "speaker": "Solar",
-                        "entity": "solar",
-                        "text": "Pero la vida no es un programa rígido; responde a presiones ambientales y epigenéticas dinámicas.",
-                        "shot": "close_solar",
+                        "speaker": host_a_name,
+                        "entity": host_a_id,
+                        "text": "Creen que se miran a sí mismos, pero solo reciben mi rebote de hace tres nanosegundos.",
+                        "shot": host_a_shot,
                         "duration": 3.4
                     },
                     {
-                        "speaker": "Quantum",
-                        "entity": "quantum",
-                        "text": "Aun así, las secuencias moleculares determinan los límites fundamentales de cada organismo.",
-                        "shot": "close_quantum",
-                        "duration": 3.4
-                    },
-                    {
-                        "speaker": "Solar",
-                        "entity": "solar",
-                        "text": "La evolución demuestra que la flexibilidad adaptativa es más poderosa que cualquier secuencia fija.",
-                        "shot": "close_solar",
+                        "speaker": host_b_name,
+                        "entity": host_b_id,
+                        "text": "Y la cara que ven ya no existe; la rehacen con pedazos de ayer para no asustarse.",
+                        "shot": host_b_shot,
                         "duration": 3.5
                     },
                     {
-                        "speaker": "Quantum",
-                        "entity": "quantum",
-                        "text": "Si desciframos todas las instrucciones moleculares, podríamos reprogramar los límites de la vida.",
-                        "shot": "close_quantum",
-                        "duration": 3.3
+                        "speaker": host_a_name,
+                        "entity": host_a_id,
+                        "text": "Buscan un centro donde solo hay fotones rebotando en una superficie de plata.",
+                        "shot": host_a_shot,
+                        "duration": 3.4
                     },
                     {
-                        "speaker": "Solar",
-                        "entity": "solar",
-                        "text": "Intervenir sistemas vivos tan complejos suele desatar consecuencias imprevistas e incontrolables.",
-                        "shot": "close_solar",
+                        "speaker": host_b_name,
+                        "entity": host_b_id,
+                        "text": "Pintan un fantasma estable sobre un río que no para de fluir.",
+                        "shot": host_b_shot,
                         "duration": 3.5
                     },
                     {
                         "speaker": "Ambos",
                         "entity": "both",
-                        "text": "¿Somos el resultado de un código estricto o de una constante reinvención adaptativa?",
+                        "text": "Se saludan como dueños... cuando solo son el último parpadeo.",
                         "shot": "both",
-                        "duration": 3.2
+                        "duration": 3.5
+                    },
+                    {
+                        "speaker": "Narrador",
+                        "entity": "narrator",
+                        "text": "¿A quién ves realmente cuando te miras fijamente al espejo?",
+                        "shot": "wide",
+                        "duration": 3.5
+                    }
+                ]
+            }
+        elif any(w in topic_lower for w in ["tocar", "tacto", "contacto", "piel"]):
+            return {
+                "topic": "Piel y contacto",
+                "headline_hook": "⚡ NUNCA HAS TOCADO NADA EN TU VIDA ⚡",
+                "roles": topic_roles,
+                "holograms": None,
+                "scenes": [
+                    {
+                        "speaker": "Narrador",
+                        "entity": "narrator",
+                        "text": "Nunca has tocado nada en tu vida.",
+                        "shot": "wide",
+                        "duration": 3.0
+                    },
+                    {
+                        "speaker": host_a_name,
+                        "entity": host_a_id,
+                        "text": "Sus átomos repelen los míos. El contacto físico es una ilusión de campos flotantes.",
+                        "shot": host_a_shot,
+                        "duration": 3.4
+                    },
+                    {
+                        "speaker": host_b_name,
+                        "entity": host_b_id,
+                        "text": "Sienten calor y peso, pero en verdad flotan a un suspiro de distancia sin rozarse jamás.",
+                        "shot": host_b_shot,
+                        "duration": 3.5
+                    },
+                    {
+                        "speaker": host_a_name,
+                        "entity": host_a_id,
+                        "text": "Creen que abrazan a alguien, cuando solo chocan escudos invisibles.",
+                        "shot": host_a_shot,
+                        "duration": 3.4
+                    },
+                    {
+                        "speaker": host_b_name,
+                        "entity": host_b_id,
+                        "text": "Y aun así inventan la caricia en medio de un abismo insuperable.",
+                        "shot": host_b_shot,
+                        "duration": 3.5
+                    },
+                    {
+                        "speaker": "Ambos",
+                        "entity": "both",
+                        "text": "Se sienten tan cerca... estando para siempre separados.",
+                        "shot": "both",
+                        "duration": 3.5
+                    },
+                    {
+                        "speaker": "Narrador",
+                        "entity": "narrator",
+                        "text": "¿Cambia tu idea del amor saber que nunca rozas a nadie?",
+                        "shot": "wide",
+                        "duration": 3.5
+                    }
+                ]
+            }
+        elif any(w in topic_lower for w in ["recordar", "memoria", "pasado", "olvido", "pensamiento"]):
+            return {
+                "topic": "Recordar y memoria",
+                "headline_hook": "⚡ TUS RECUERDOS SON FICCIONES DE HOY ⚡",
+                "roles": topic_roles,
+                "holograms": None,
+                "scenes": [
+                    {
+                        "speaker": "Narrador",
+                        "entity": "narrator",
+                        "text": "Tus recuerdos son ficciones de hoy.",
+                        "shot": "wide",
+                        "duration": 3.0
+                    },
+                    {
+                        "speaker": host_a_name,
+                        "entity": host_a_id,
+                        "text": "Cada vez que recuerdan un instante, no visitan el pasado: lo reescriben por completo.",
+                        "shot": host_a_shot,
+                        "duration": 3.4
+                    },
+                    {
+                        "speaker": host_b_name,
+                        "entity": host_b_id,
+                        "text": "Borro los trazos originales y ellos rellenan el vacío con inventos confortables.",
+                        "shot": host_b_shot,
+                        "duration": 3.5
+                    },
+                    {
+                        "speaker": host_a_name,
+                        "entity": host_a_id,
+                        "text": "Guardan nostalgia de cosas que nunca ocurrieron como las juran.",
+                        "shot": host_a_shot,
+                        "duration": 3.4
+                    },
+                    {
+                        "speaker": host_b_name,
+                        "entity": host_b_id,
+                        "text": "Lloran por fotos que su propia mente acaba de pintar esta mañana.",
+                        "shot": host_b_shot,
+                        "duration": 3.5
+                    },
+                    {
+                        "speaker": "Ambos",
+                        "entity": "both",
+                        "text": "Viven atrapados en un museo... donde todas las obras son falsas.",
+                        "shot": "both",
+                        "duration": 3.5
+                    },
+                    {
+                        "speaker": "Narrador",
+                        "entity": "narrator",
+                        "text": "¿Confías en lo que recuerdas de tu propia infancia?",
+                        "shot": "wide",
+                        "duration": 3.5
                     }
                 ]
             }
         else:
-            # Generic dynamic fallback - cosmic forces observing human reality
-            clean_title = topic.upper()
+            # Universal fallback for any everyday action
+            clean_title = topic.strip().capitalize()
             return {
-                "topic": topic,
-                "headline_hook": f"⚡ NUNCA HAS ENTENDIDO: {clean_title[:20]} ⚡",
+                "topic": clean_title,
+                "headline_hook": f"⚡ LO QUE HACES AL {clean_title.upper()[:22]} ⚡",
                 "roles": topic_roles,
                 "holograms": None,
                 "scenes": [
                     {
                         "speaker": "Narrador",
                         "entity": "narrator",
-                        "text": f"Crees que entiendes {topic}, pero nunca te has detenido a observar lo que realmente sucede.",
+                        "text": f"Crees que decides al {topic.lower()}... pero el cosmos ya lo hizo.",
                         "shot": "wide",
-                        "duration": 3.5
+                        "duration": 3.2
                     },
                     {
-                        "speaker": "Quantum",
-                        "entity": "quantum",
-                        "text": f"A nivel subatómico, {topic} no es más que una ilusión generada por la interacción de campos electromagnéticos.",
-                        "shot": "close_quantum",
+                        "speaker": host_a_name,
+                        "entity": host_a_id,
+                        "text": "Observo cómo ejecutan ese acto automático creyendo que dominan la materia.",
+                        "shot": host_a_shot,
                         "duration": 3.4
                     },
                     {
-                        "speaker": "Solar",
-                        "entity": "solar",
-                        "text": "Los humanos confunden esa fluctuación cuántica con una realidad sólida y permanente.",
-                        "shot": "close_solar",
+                        "speaker": host_b_name,
+                        "entity": host_b_id,
+                        "text": "Muestran orgullo por un gesto que solo responde a mi arrastre silencioso.",
+                        "shot": host_b_shot,
                         "duration": 3.5
                     },
                     {
-                        "speaker": "Quantum",
-                        "entity": "quantum",
-                        "text": "La probabilidad dicta que cada instante del proceso se reescribe antes de que puedan percibirlo.",
-                        "shot": "close_quantum",
+                        "speaker": host_a_name,
+                        "entity": host_a_id,
+                        "text": "Ilumino el escenario para que crean que tienen el control del segundo.",
+                        "shot": host_a_shot,
                         "duration": 3.4
                     },
                     {
-                        "speaker": "Solar",
-                        "entity": "solar",
-                        "text": "Y la entropía se asegura de que jamás puedan volver exactamente al estado anterior.",
-                        "shot": "close_solar",
+                        "speaker": host_b_name,
+                        "entity": host_b_id,
+                        "text": "Y yo disuelvo la certeza antes de que terminen de pestañear.",
+                        "shot": host_b_shot,
                         "duration": 3.5
                     },
                     {
-                        "speaker": "Quantum y Solar",
+                        "speaker": "Ambos",
                         "entity": "both",
-                        "text": "QUANTUM: Construyen toda su existencia sobre destellos efímeros... SOLAR: ...y aún así lo llaman realidad.",
+                        "text": "Juegan a ser eternos... en una pausa que dura un suspiro.",
                         "shot": "both",
-                        "duration": 3.6
+                        "duration": 3.5
                     },
                     {
                         "speaker": "Narrador",
                         "entity": "narrator",
-                        "text": f"¿Alguna vez volverás a experimentar {topic} de la misma manera?",
-                        "shot": "both",
+                        "text": "¿Qué sientes al descubrir lo frágil que es cada uno de tus actos?",
+                        "shot": "wide",
                         "duration": 3.5
                     }
                 ]

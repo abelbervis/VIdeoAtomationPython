@@ -101,8 +101,8 @@ class OrbHost:
 DEFAULT_QUANTUM_HOST = OrbHost(
     id="quantum",
     name="QUANTUM",
-    role="Fuerza de la Geometría Subatómica y Leyes Fundamentales",
-    perspective="Observa el universo desde la repulsión electromagnética, estados de superposición y el código de la realidad. Muestra a los humanos que su percepción física es una ilusión electroquímica. Tono analítico, preciso y revelador.",
+    role="IA Física Cuántica y Computación Fundamental",
+    perspective="Enfoque en física cuántica, teoría de la información, modelos matemáticos, partículas y leyes fundamentales del microcosmos. Analiza cualquier fenómeno desde su estructura lógica subyacente, determinismo/probabilidad y el código de la realidad. Tono analítico, preciso, deductivo y quirúrgico.",
     color_theme="cyan",
     palette_name="quantum",
     primary_color="#00f0ff",
@@ -125,8 +125,8 @@ DEFAULT_QUANTUM_HOST = OrbHost(
 DEFAULT_SOLAR_HOST = OrbHost(
     id="solar",
     name="SOLAR",
-    role="Fuerza de la Entropía y Fuego Termodinámico",
-    perspective="Observa el universo desde la dispersión de la energía, el calor, la luz y la transformación constante de la materia. Ironiza sobre cómo los humanos intentan congelar el tiempo. Tono dinámico, irónico y contundente.",
+    role="IA Astrofísica y Dinámica Termodinámica",
+    perspective="Enfoque en astrofísica, termodinámica, flujos masivos de energía, entropía cósmica y escala macroscópica. Analiza cualquier fenómeno desde el impacto físico tangible, las fuerzas observables, la energía en acción y la evidencia empírica directa. Tono dinámico, pragmático, enérgico y contundente.",
     color_theme="amber",
     palette_name="solar",
     primary_color="#ffea00",
@@ -149,8 +149,8 @@ DEFAULT_SOLAR_HOST = OrbHost(
 DEFAULT_NARRATOR_HOST = OrbHost(
     id="narrator",
     name="NARRADOR",
-    role="Guía Cósmico y Revelador de Paradojas",
-    perspective="Voz en off envolvente y provocadora. Lanza afirmaciones que sacuden la intuición cotidiana del espectador y cierra planteando enigmas irresistibles.",
+    role="Presentador y Guía Cósmico Omnisciente",
+    perspective="Voz en off documental, profunda, enigmática y cautivadora. Introduce la paradoja inicial, expone el dilema con máxima intriga y cierra con una reflexión provocadora para la audiencia.",
     color_theme="gold",
     palette_name="solar",
     primary_color="#ffd700",
@@ -263,112 +263,107 @@ class CosmicDebateShow:
 
     def build_system_prompt(self, topic: Optional[str] = None) -> str:
         """
-        Dynamically constructs the system prompt for LLMs, generating viral cosmic debates
-        focused on human everyday life observed by cosmic forces.
+        Dynamically constructs the system prompt for LLMs to generate 25-second
+        Cosmic Forces videos according to hard rules and 7-scene structure.
         """
-        topic_clause = f" sobre el tema cotidiano humano: '{topic}'" if topic else " sobre un tema cotidiano humano"
-        return f"""Eres un guionista de ciencia, filosofía y entretenimiento para videos cortos virales (TikTok, Shorts, Reels).
-Genera un diálogo entre DOS ORBES CÓSMICOS que debaten{topic_clause}, observándolo desde su naturaleza como fuerzas fundamentales del universo.
+        topic_clause = f" sobre el tema cotidiano: '{topic}'" if topic else ""
+        return f"""Eres el Guionista y Creador de Videos Cortos (~25s) de 'FUERZAS CÓSMICAS'{topic_clause}.
+En este formato, DOS FUERZAS CÓSMICAS ({self.host_a.name} y {self.host_b.name}) observan algo cotidiano que los humanos hacen sin pensar (tocarse, mirarse al espejo, recordar, dormir, amar, elegir, decidir).
 
-## EL GANCHO (Lo más importante - Escena 1)
-El video NO empieza con una pregunta abstracta o una introducción lenta. Empieza con una AFIRMACIÓN PROVOCADORA sobre algo que el espectador humano hace todos los días sin cuestionar. El gancho debe hacer que la audiencia diga de inmediato: "¿Qué? ¿Cómo? ¿Por qué?".
-Ejemplos de ganchos provocadores que funcionan:
-- "Nunca habías tocado nada en tu vida."
-- "Tus recuerdos no existen."
-- "Cada noche mueres un poco."
-- "Ese del espejo no sos vos."
-- "Nunca elegiste nada."
+CONCEPTO FUNDAMENTAL:
+- NO son académicos. NO son disciplinas científicas. SON el fenómeno mismo encarnado: la luz, la gravedad, el vacío, la entropía, el tiempo, la memoria.
+- Cada video empieza con un GANCHO que rompe la intuición: una afirmación seca que hace decir "¿qué? ¿cómo?". Ejemplo: "Ese del espejo no sos."
+- Después, las dos fuerzas HABLAN ENTRE SÍ (no monologan en paralelo). Se contradicen, se completan, se tensan. Una quiere retener, la otra disolver. Una ilumina, la otra borra.
 
-## LAS ENTIDADES
-Dos orbes cósmicos. NO son académicos ni profesores. Son FUERZAS DEL UNIVERSO encarnadas ({self.host_a.name} y {self.host_b.name}).
-- {self.host_a.name} (Entity ID: "{self.host_a.id}", Shot: "{self.host_a.shot_name}"): Fuerza del micro-cosmos, geometría subatómica, electromagnetismo y leyes fundamentales. Tono preciso, analítico y revelador.
-- {self.host_b.name} (Entity ID: "{self.host_b.id}", Shot: "{self.host_b.shot_name}"): Fuerza del macro-cosmos, entropía, masa, gravedad, energía y tiempo. Tono dinámico, irónico y contundente.
-- NARRADOR (Entity ID: "narrator", Shot: "wide" / "both"): Guía cósmico omnisciente que abre con el gancho provocador y cierra con la incógnita final.
+OBJETIVO DEL ESPECTADOR:
+1. Detenerse por el gancho.
+2. Asombrarse con la ciencia ENCARNADA (no citada).
+3. Sentir que aprendió algo real sobre algo que hace todos los días.
+4. Querer comentar la pregunta final.
 
-Debes asignar la fuerza/naturaleza cósmica específica de cada orbe en el objeto "roles" del JSON:
-"roles": {{
-  "{self.host_a.id}": "Naturaleza/Fuerza de {self.host_a.name} para este tema",
-  "{self.host_b.id}": "Naturaleza/Fuerza de {self.host_b.name} para este tema"
-}}
+REGLAS DURAS (MANDATORIAS):
+- PROHIBIDO lenguaje académico ("función de onda", "entropía", "electromagnético", "relatividad general", etc. Términos de libro de texto están PROHIBIDOS).
+- PROHIBIDO explicar la ciencia: hay que ENCARNARLA.
+- Cada línea debe sonar a algo que SOLO una fuerza cósmica diría.
+- Si un profesor podría decir la línea en una clase, está MAL escrita.
+- Los orbes se HABLAN ENTRE SÍ, no al espectador.
+- El narrador SOLO lanza el gancho seco (máx 12 palabras) al inicio y cierra con la pregunta final al final. Nada más.
 
-## REGLAS ESTRICTAS: CIENCIA ENCARNADA VS POESÍA VACÍA
-1. PROHIBIDO CITAR LA CIENCIA COMO CIENCIA: Nada de mencionar universidades, papers, nombres de estudios, estadísticas frías o lenguaje académico gris (ej: "Según la neurociencia...").
-2. PROHIBIDO LA POESÍA VACÍA O MÍSTICA: Nada de frases cursis sin sustento real (ej: "El amor es una luz mística que fluye en las almas").
-3. REGLA DE ORO DE LA CIENCIA ENCARNADA: La ciencia debe estar encarnada en la metáfora de la fuerza cósmica. Explica el principio físico, biológico o atómico real visto a través de su naturaleza sobrehumana.
-   - ❌ Citar como paper: "La neurociencia evolutiva dice que la dopamina produce apego..."
-   - ❌ Poesía vacía: "El amor es una energía mística que une nuestros destinos..."
-   - ✅ CIENCIA ENCARNADA: "He visto cómo dos cuerpos se atraen hasta deformar el espacio entre ellos. Eso que llaman amor, yo lo llamo gravedad."
+ESTRUCTURA EXACTA DE 7 PASOS (OBLIGATORIA):
+1. Narrador: gancho seco (máx 12 palabras) que rompe la intuición + presenta el encuentro.
+2. {self.host_a.name} (Fuerza A): primera interpretación desde su naturaleza humana cotidiana.
+3. {self.host_b.name} (Fuerza B): la contradice o tensiona desde la suya (una quiere retener/iluminar, la otra disolver/borrar).
+4. {self.host_a.name} (Fuerza A): observación asombrosa encarnada.
+5. {self.host_b.name} (Fuerza B): revelación poética e irónica.
+6. Ambos (Fuerzas): remate compartido (se hablan, se interrumpen o se completan la frase).
+7. Narrador: pregunta abierta para comentarios.
 
-## ESTRUCTURA EXACTA (7 ESCENAS - EQUILIBRIO Y REMATE FUSIÓN)
-1. Escena 1 (Narrador - Shot: "wide"): Gancho provocador impactante sobre el tema cotidiano + presenta el encuentro cósmico entre {self.host_a.name} y {self.host_b.name}.
-2. Escena 2 ({self.host_a.name} - Shot: "{self.host_a.shot_name}"): Interpreta el tema cotidiano desde su naturaleza como fuerza fundamental.
-3. Escena 3 ({self.host_b.name} - Shot: "{self.host_b.shot_name}"): Lo contradice o reinterpreta desde la suya.
-4. Escena 4 ({self.host_a.name} - Shot: "{self.host_a.shot_name}"): Contraataca con una observación asombrosa (ciencia encarnada).
-5. Escena 5 ({self.host_b.name} - Shot: "{self.host_b.shot_name}"): Revela un giro inesperado, irónico o poético sobre la ilusión humana.
-6. Escena 6 (FUSIÓN Y REMATE DÚO - {self.host_a.name} y {self.host_b.name} - Shot: "both"): Remate compartido o rápido remate en dúo donde ambos orbes se complementan, se interrumpen o cierran juntos la ironía humana. Ningún orbe "pierde", ambos revelan juntos la paradoja.
-7. Escena 7 (Narrador - Shot: "both"): Cierre reflexivo con una pregunta abierta e inquietante que invita al espectador a comentar en el video.
+TONO:
+Ciencia + entretenimiento. Asombro + ironía. Como si Carl Sagan y un comediante escribieran juntos.
+Nada de contenido inútil: cada video cambia cómo el espectador ve algo que hace todos los días.
 
-Responde ÚNICAMENTE con JSON válido respetando este esquema exacto:
+Responde ÚNICAMENTE con JSON válido que cumpla estrictamente este esquema:
 {{
-  "topic": "Tema cotidiano humano tratado",
-  "headline_hook": "⚡ GANCHO EN 4 PALABRAS (MAX 45 CHARS) ⚡",
+  "topic": "Acción cotidiana analizada (ej: Mirarse al espejo)",
+  "headline_hook": "⚡ GANCHO EN MAYÚSCULAS ⚡",
   "roles": {{
-    "{self.host_a.id}": "Fuerza/Naturaleza cósmica de {self.host_a.name}",
-    "{self.host_b.id}": "Fuerza/Naturaleza cósmica de {self.host_b.name}"
+    "{self.host_a.id}": "{self.host_a.name}",
+    "{self.host_b.id}": "{self.host_b.name}"
   }},
   "holograms": null,
   "scenes": [
     {{
       "speaker": "Narrador",
       "entity": "narrator",
-      "text": "Afirmación provocadora sobre un acto cotidiano humano. Dos fuerzas cósmicas lo observan.",
+      "text": "Gancho seco (máx 12 palabras) que rompe la intuición.",
       "shot": "wide",
-      "duration": 3.5
+      "duration": 3.2
     }},
     {{
       "speaker": "{self.host_a.name}",
       "entity": "{self.host_a.id}",
-      "text": "Observación inicial asombrosa desde su naturaleza física/subatómica.",
+      "text": "Interpretación desde su naturaleza sobre el acto cotidiano.",
       "shot": "{self.host_a.shot_name}",
       "duration": 3.4
     }},
     {{
       "speaker": "{self.host_b.name}",
       "entity": "{self.host_b.id}",
-      "text": "Contradicción o reinterpretación desde la entropía, el espacio o el tiempo.",
+      "text": "Contradicción directa a la otra fuerza desde su propia naturaleza.",
       "shot": "{self.host_b.shot_name}",
       "duration": 3.5
     }},
     {{
       "speaker": "{self.host_a.name}",
       "entity": "{self.host_a.id}",
-      "text": "Principio científico real encarnado en metáfora cósmica impactante.",
+      "text": "Observación asombrosa encarnada sobre lo que hace el humano.",
       "shot": "{self.host_a.shot_name}",
       "duration": 3.4
     }},
     {{
       "speaker": "{self.host_b.name}",
       "entity": "{self.host_b.id}",
-      "text": "Giro inesperado e irónico sobre la paradoja humana.",
+      "text": "Revelación poética e irónica entre las dos fuerzas.",
       "shot": "{self.host_b.shot_name}",
       "duration": 3.5
     }},
     {{
-      "speaker": "{self.host_a.name} y {self.host_b.name}",
+      "speaker": "Ambos",
       "entity": "both",
-      "text": "{self.host_a.name}: Remate inicial compartiendo el descubrimiento... / {self.host_b.name}: ...y remate final en dúo con ironía cósmica.",
+      "text": "Remate compartido interrumpiéndose y completándose la frase.",
       "shot": "both",
-      "duration": 3.8
+      "duration": 3.5
     }},
     {{
       "speaker": "Narrador",
       "entity": "narrator",
-      "text": "Pregunta abierta final al espectador para detonar los comentarios.",
-      "shot": "both",
+      "text": "Pregunta abierta para dejar en comentarios.",
+      "shot": "wide",
       "duration": 3.5
     }}
   ]
-}}"""
+}}
+"""
 
     def resolve_speaker_host(self, speaker_name_or_entity: str) -> OrbHost:
         """Resolves which host matches the given speaker string."""
