@@ -176,7 +176,7 @@ class EdgeTTSProvider(BaseTTSProvider):
     """Microsoft Edge Neural TTS with SSML Prosody (Rate/Pitch) & Acoustic DSP Enhancement."""
 
     def __init__(self, default_voice: str = DEFAULT_TTS_VOICE):
-        self.default_voice = (default_voice or "es-ES-AlvaroNeural").strip().strip("'\"").strip()
+        self.default_voice = (default_voice or "es-MX-JorgeNeural").strip().strip("'\"").strip()
 
     def synthesize_text(
         self,
@@ -189,7 +189,7 @@ class EdgeTTSProvider(BaseTTSProvider):
         apply_dsp: bool = False,
         dsp_filter: Optional[str] = None
     ) -> bool:
-        selected_voice = (voice or self.default_voice or "es-ES-AlvaroNeural").strip().strip("'\"").strip()
+        selected_voice = (voice or self.default_voice or "es-MX-JorgeNeural").strip().strip("'\"").strip()
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
 

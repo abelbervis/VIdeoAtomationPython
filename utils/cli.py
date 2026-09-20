@@ -289,7 +289,7 @@ def parse_args() -> argparse.Namespace:
         "--voice",
         type=str,
         default=None,
-        help="TTS voice model (default: auto-selected by language: es-ES-AlvaroNeural, en-US-ChristopherNeural, zh-CN-YunxiNeural)"
+        help="TTS voice model (default: auto-selected by language: es-MX-JorgeNeural, en-US-ChristopherNeural, zh-CN-YunxiNeural)"
     )
     parser.add_argument(
         "--font",

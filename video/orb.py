@@ -1408,8 +1408,22 @@ def render_orb_test_preview(
         ent = sc["entity"]
         shot = sc["shot"]
 
+        sc_dur = max(0.2, sc_visual_end - st)
+        # Smooth organic camera motion per scene (Eased push-in on closeups, subtle drift on wide, cosmic reveal on both)
+        # Normalized time progress inside this scene: ((t - st) / sc_dur)
+        norm_t = f"(max(0\\,min(1\\,(t-{st})/{sc_dur})))"
+        # Cubic smoothstep easing (Smooth acceleration and gentle deceleration): S(x) = 3x^2 - 2x^3
+        ease_io = f"({norm_t}*{norm_t}*(3-2*{norm_t}))"
+
         if shot == "wide":
             is_q_active = (ent in ["quantum", "both"])
+            # Subtle cinematic wide camera push-in (scale factor 1.00 -> 1.045 during wide exchange)
+            cam_scale_w = f"(1.0 + 0.045*{ease_io})"
+            w_size_q = f"round(420*{cam_scale_w})"
+            w_size_s = f"round(370*{cam_scale_w})"
+            w_size_s_idle = f"round(360*{cam_scale_w})"
+            w_size_q_idle = f"round(410*{cam_scale_w})"
+
             if is_q_active:
                 q_src = f"q_talk_{q_talk_cur}"
                 q_talk_cur += 1
@@ -1417,7 +1431,7 @@ def render_orb_test_preview(
                 dq_x = "14.0*sin(2*PI*t/3.4) + 6.0*cos(2*PI*t/1.9)"
                 dq_y = "-18.0*sin(2*PI*t/3.0) - 7.0*cos(2*PI*t/1.7)"
                 q_alpha = 1.0
-                q_filt = f"scale=420:420,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa={q_alpha}"
+                q_filt = f"scale='{w_size_q}':'{w_size_q}':eval=frame,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa={q_alpha}"
             else:
                 q_src = f"q_idle_{q_idle_cur}"
                 q_idle_cur += 1
@@ -1425,7 +1439,7 @@ def render_orb_test_preview(
                 dq_x = "14.0*sin(2*PI*t/3.4) + 6.0*cos(2*PI*t/1.9)"
                 dq_y = "-18.0*sin(2*PI*t/3.0) - 7.0*cos(2*PI*t/1.7)"
                 q_alpha = 0.85
-                q_filt = f"scale=410:410,format=yuva420p,colorchannelmixer=aa={q_alpha}"
+                q_filt = f"scale='{w_size_q_idle}':'{w_size_q_idle}':eval=frame,format=yuva420p,colorchannelmixer=aa={q_alpha}"
 
             filter_complex.append(f"[{q_src}]{q_filt}[q_sc_{idx}]")
             filter_complex.append(f"[{cur_v}][q_sc_{idx}]overlay=eval=frame:x='W*0.25-w/2 + {dq_x}':y='H*0.38-h/2 + {dq_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_q]")
@@ -1439,7 +1453,7 @@ def render_orb_test_preview(
                 ds_x = "-14.0*sin(2*PI*t/3.6) - 6.0*cos(2*PI*t/2.1)"
                 ds_y = "-18.0*cos(2*PI*t/3.2) - 7.0*sin(2*PI*t/1.9)"
                 s_alpha = 1.0
-                s_filt = f"scale=370:370,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa={s_alpha}"
+                s_filt = f"scale='{w_size_s}':'{w_size_s}':eval=frame,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa={s_alpha}"
             else:
                 s_src = f"s_idle_{s_idle_cur}"
                 s_idle_cur += 1
@@ -1447,7 +1461,7 @@ def render_orb_test_preview(
                 ds_x = "-14.0*sin(2*PI*t/3.6) - 6.0*cos(2*PI*t/2.1)"
                 ds_y = "-18.0*cos(2*PI*t/3.2) - 7.0*sin(2*PI*t/1.9)"
                 s_alpha = 0.85
-                s_filt = f"scale=360:360,format=yuva420p,colorchannelmixer=aa={s_alpha}"
+                s_filt = f"scale='{w_size_s_idle}':'{w_size_s_idle}':eval=frame,format=yuva420p,colorchannelmixer=aa={s_alpha}"
 
             filter_complex.append(f"[{s_src}]{s_filt}[s_sc_{idx}]")
             filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W*0.75-w/2 - 28 + {ds_x}':y='H*0.39-h/2 + {ds_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_s]")
@@ -1462,10 +1476,13 @@ def render_orb_test_preview(
         elif shot == "close_quantum":
             q_src = f"q_close_{q_close_cur}"
             q_close_cur += 1
+            # Dramatic Slow Push-In Zoom for Close-Up Quantum (scale factor 1.00 -> 1.075 with Ease-In-Out curve)
+            cam_scale_cq = f"(1.0 + 0.075*{ease_io})"
+            cq_size = f"round(820*{cam_scale_cq})"
             # Close-up Floating Levitation for Quantum (Clean, centered, continuous):
             d_cq_x = "10.0*sin(2*PI*t/3.4) + 5.0*cos(2*PI*t/1.9)"
             d_cq_y = "-16.0*sin(2*PI*t/3.0) - 6.0*cos(2*PI*t/1.7)"
-            filter_complex.append(f"[{q_src}]scale=820:820,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.98[q_sc_{idx}]")
+            filter_complex.append(f"[{q_src}]scale='{cq_size}':'{cq_size}':eval=frame,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.98[q_sc_{idx}]")
             filter_complex.append(f"[{cur_v}][q_sc_{idx}]overlay=eval=frame:x='W/2-w/2 + {d_cq_x}':y='H*0.38-h/2 + {d_cq_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_q]")
             cur_v = f"v_sc_{idx}_q"
 
@@ -1477,10 +1494,13 @@ def render_orb_test_preview(
         elif shot == "close_solar":
             s_src = f"s_close_{s_close_cur}"
             s_close_cur += 1
+            # Dramatic Slow Push-In Zoom for Close-Up Solar (scale factor 1.00 -> 1.075 with Ease-In-Out curve)
+            cam_scale_cs = f"(1.0 + 0.075*{ease_io})"
+            cs_size = f"round(820*{cam_scale_cs})"
             # Close-up Floating Levitation for Solar:
             d_cs_x = "-10.0*sin(2*PI*t/3.6) - 5.0*cos(2*PI*t/2.1)"
             d_cs_y = "-16.0*cos(2*PI*t/3.2) - 6.0*sin(2*PI*t/1.9)"
-            filter_complex.append(f"[{s_src}]scale=820:820,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.98[s_sc_{idx}]")
+            filter_complex.append(f"[{s_src}]scale='{cs_size}':'{cs_size}':eval=frame,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.98[s_sc_{idx}]")
             filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W/2-w/2 + {d_cs_x}':y='H*0.38-h/2 + {d_cs_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_s]")
             cur_v = f"v_sc_{idx}_s"
 
@@ -1492,9 +1512,12 @@ def render_orb_test_preview(
         elif shot == "both":
             q_src = f"q_talk_{q_talk_cur}"
             q_talk_cur += 1
+            # Cosmic Reveal Slow Zoom-Out (scale factor 1.06 -> 1.00 as both orbs ask the final question)
+            cam_scale_both = f"(1.06 - 0.06*{ease_io})"
+            both_size = f"round(420*{cam_scale_both})"
             dq_x = "14.0*sin(2*PI*t/3.4) + 6.0*cos(2*PI*t/1.9)"
             dq_y = "-18.0*sin(2*PI*t/3.0) - 7.0*cos(2*PI*t/1.7)"
-            filter_complex.append(f"[{q_src}]scale=420:420,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.98[q_sc_{idx}]")
+            filter_complex.append(f"[{q_src}]scale='{both_size}':'{both_size}':eval=frame,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.98[q_sc_{idx}]")
             filter_complex.append(f"[{cur_v}][q_sc_{idx}]overlay=eval=frame:x='W*0.25-w/2 + {dq_x}':y='H*0.38-h/2 + {dq_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_q]")
             cur_v = f"v_sc_{idx}_q"
 
@@ -1502,7 +1525,7 @@ def render_orb_test_preview(
             s_talk_cur += 1
             ds_x = "-14.0*sin(2*PI*t/3.6) - 6.0*cos(2*PI*t/2.1)"
             ds_y = "-18.0*cos(2*PI*t/3.2) - 7.0*sin(2*PI*t/1.9)"
-            filter_complex.append(f"[{s_src}]scale=420:420,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.98[s_sc_{idx}]")
+            filter_complex.append(f"[{s_src}]scale='{both_size}':'{both_size}':eval=frame,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.98[s_sc_{idx}]")
             filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W*0.75-w/2 - 28 + {ds_x}':y='H*0.39-h/2 + {ds_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_s]")
             cur_v = f"v_sc_{idx}_s"
 

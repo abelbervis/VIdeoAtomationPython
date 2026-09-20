@@ -111,14 +111,14 @@ SYSTEM_PROMPT_PATH = BASE_DIR / SYSTEM_PROMPT_FILE
 # TTS Settings
 TTS_PROVIDER = clean_env("TTS_PROVIDER", "edge").lower()
 TTS_API_KEY = clean_env("TTS_API_KEY", "")
-DEFAULT_TTS_VOICE = clean_env("TTS_VOICE", "es-ES-AlvaroNeural")
+DEFAULT_TTS_VOICE = clean_env("TTS_VOICE", "es-MX-JorgeNeural")
 
 # Language and Voice Mappings
 DEFAULT_LANGUAGE = clean_env("DEFAULT_LANGUAGE", "es").lower()
 SUPPORTED_LANGUAGES = {
     "es": {
         "name": "Spanish",
-        "default_voice": "es-ES-AlvaroNeural",
+        "default_voice": "es-MX-JorgeNeural",
         "subtitle_font": "Arial",
     },
     "en": {
@@ -151,14 +151,14 @@ def get_language_voice(lang: str, custom_voice: str = "") -> str:
         # 2. Voice without language prefix (e.g. OpenAI "alloy", "nova") or when target matches default language
         other_lang_prefixes = [f"{c}-" for c in SUPPORTED_LANGUAGES if c != code]
         has_other_lang = any(voice_lower.startswith(prefix) for prefix in other_lang_prefixes)
-        if not has_other_lang and (code == DEFAULT_LANGUAGE or env_voice != "es-ES-AlvaroNeural"):
+        if not has_other_lang and (code == DEFAULT_LANGUAGE or env_voice != "es-MX-JorgeNeural"):
             return env_voice
 
     # Fallback to language-specific standard voice from SUPPORTED_LANGUAGES
     if code in SUPPORTED_LANGUAGES:
         return SUPPORTED_LANGUAGES[code]["default_voice"]
 
-    return env_voice or "es-ES-AlvaroNeural"
+    return env_voice or "es-MX-JorgeNeural"
 
 # Video Formats & Aspect Ratio Presets
 VIDEO_FORMATS = {
