@@ -1323,8 +1323,8 @@ def render_orb_test_preview(
     generate_cosmic_debate_karaoke_ass(scene_records, ass_sub_path, width=width, height=height, roles=custom_roles)
     escaped_ass_path = str(ass_sub_path.resolve()).replace("\\", "/").replace(":", "\\:").replace("'", "\\'")
 
-    # Dynamic Sci-Fi Cosmic Particle Background Video Loop (Dynamic Palette Inheritance)
-    from video.cosmic_bg import get_cosmic_particle_background_video
+    # Dynamic Sci-Fi Cosmic Particle Background & Foreground Overlay (Dynamic Palette Inheritance)
+    from video.cosmic_bg import get_cosmic_particle_background_video, get_cosmic_foreground_overlay
     try:
         color_a = getattr(debate_show.host_a, "primary_color", "#00f0ff")
         color_a_glow = getattr(debate_show.host_a, "glow_color", "#0284c7")
@@ -1339,6 +1339,13 @@ def render_orb_test_preview(
             color_b=color_b,
             color_b_glow=color_b_glow,
         )
+        cosmic_fg_overlay = get_cosmic_foreground_overlay(
+            width=width,
+            height=height,
+            color_a=color_a,
+            color_b=color_b,
+        )
+
         if cosmic_bg_video.exists() and cosmic_bg_video.stat().st_size > 1000:
             bg_cmd_args = ["-stream_loop", "-1", "-i", str(cosmic_bg_video)]
         else:
@@ -1346,6 +1353,7 @@ def render_orb_test_preview(
     except Exception as bg_err:
         print(f"  ⚠️ Usando fallback de color para fondo: {bg_err}")
         bg_cmd_args = ["-f", "lavfi", "-i", f"color=c=0x08090f:s={width}x{height}:r=30:d={total_duration}"]
+        cosmic_fg_overlay = None
 
     # Build FFmpeg command inputs (wide talk, wide idle, close-up frontal talk for both hosts)
     cmd_inputs = [
@@ -1358,6 +1366,12 @@ def render_orb_test_preview(
         "-stream_loop", "-1", "-i", str(orb_s_close_talk),
     ]
     curr_input_idx = 7
+
+    fg_particles_idx = None
+    if cosmic_fg_overlay and cosmic_fg_overlay.exists():
+        cmd_inputs.extend(["-stream_loop", "-1", "-i", str(cosmic_fg_overlay)])
+        fg_particles_idx = curr_input_idx
+        curr_input_idx += 1
 
     holo_q_idx = None
     if has_holo_q:
@@ -1540,6 +1554,11 @@ def render_orb_test_preview(
             filter_complex.append(f"[{s_src}]scale=420:420,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.98[s_sc_{idx}]")
             filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W*0.75-w/2 - 28 + {ds_x}':y='H*0.39-h/2 + {ds_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_s]")
             cur_v = f"v_sc_{idx}_s"
+
+    # Prominent Foreground Cosmic Particles & Bokeh Overlay (Passing in front of the orbs)
+    if fg_particles_idx is not None:
+        filter_complex.append(f"[{cur_v}][{fg_particles_idx}:v]overlay=eval=frame:format=auto[v_with_fg_particles]")
+        cur_v = "v_with_fg_particles"
 
     # Headline Hook Badge (Top Center during first scene)
     first_sc_end = min(scene_records[0]["end"] if scene_records else 2.8, 2.8)
