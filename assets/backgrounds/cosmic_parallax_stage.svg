@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 2560" width="1440" height="2560">
+  <defs>
+    <radialGradient id="bgDeep" cx="50%" cy="38%" r="75%">
+      <stop offset="0%" stop-color="#0b1020"/>
+      <stop offset="50%" stop-color="#05070d"/>
+      <stop offset="100%" stop-color="#020306"/>
+    </radialGradient>
+    <radialGradient id="nebulaQuantum" cx="24%" cy="38%" r="48%">
+      <stop offset="0%" stop-color="#00e5ff" stop-opacity="0.32"/>
+      <stop offset="35%" stop-color="#0055d4" stop-opacity="0.18"/>
+      <stop offset="70%" stop-color="#001844" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.0"/>
+    </radialGradient>
+    <radialGradient id="nebulaSolar" cx="76%" cy="38%" r="48%">
+      <stop offset="0%" stop-color="#ff9100" stop-opacity="0.30"/>
+      <stop offset="35%" stop-color="#d50000" stop-opacity="0.16"/>
+      <stop offset="70%" stop-color="#4a0e00" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.0"/>
+    </radialGradient>
+    <radialGradient id="singularityCore" cx="50%" cy="40%" r="30%">
+      <stop offset="0%" stop-color="#2a0845" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.0"/>
+    </radialGradient>
+    <linearGradient id="horizonVanish" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#00e5ff" stop-opacity="0.0"/>
+      <stop offset="25%" stop-color="#3d68a2" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#0a1526" stop-opacity="0.45"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Deep Cosmic Canvas -->
+  <rect width="1440" height="2560" fill="url(#bgDeep)"/>
+
+  <!-- Left Cyan Quantum Domain Atmosphere -->
+  <rect width="1440" height="2560" fill="url(#nebulaQuantum)"/>
+
+  <!-- Right Amber Solar Domain Atmosphere -->
+  <rect width="1440" height="2560" fill="url(#nebulaSolar)"/>
+
+  <!-- Central Cosmic Singularity Void -->
+  <rect width="1440" height="2560" fill="url(#singularityCore)"/>
+
+  <!-- 3D Perspective Cyber Floor (Horizon at y=1720) -->
+  <g stroke="#3a6096" stroke-opacity="0.22" stroke-width="1.5">
+    <!-- Receding Vanishing Perspective Lines -->
+    <line x1="720" y1="1720" x2="-100" y2="2560" stroke-opacity="0.18"/>
+    <line x1="720" y1="1720" x2="120" y2="2560" stroke-opacity="0.22"/>
+    <line x1="720" y1="1720" x2="340" y2="2560" stroke-opacity="0.25"/>
+    <line x1="720" y1="1720" x2="540" y2="2560" stroke-opacity="0.28"/>
+    <line x1="720" y1="1720" x2="720" y2="2560" stroke-opacity="0.32"/>
+    <line x1="720" y1="1720" x2="900" y2="2560" stroke-opacity="0.28"/>
+    <line x1="720" y1="1720" x2="1100" y2="2560" stroke-opacity="0.25"/>
+    <line x1="720" y1="1720" x2="1320" y2="2560" stroke-opacity="0.22"/>
+    <line x1="720" y1="1720" x2="1540" y2="2560" stroke-opacity="0.18"/>
+    
+    <!-- Perspective Depth Rings (Exponential Distance Compression) -->
+    <line x1="0" y1="1760" x2="1440" y2="1760" stroke-opacity="0.08"/>
+    <line x1="0" y1="1815" x2="1440" y2="1815" stroke-opacity="0.12"/>
+    <line x1="0" y1="1890" x2="1440" y2="1890" stroke-opacity="0.16"/>
+    <line x1="0" y1="1995" x2="1440" y2="1995" stroke-opacity="0.20"/>
+    <line x1="0" y1="2140" x2="1440" y2="2140" stroke-opacity="0.26"/>
+    <line x1="0" y1="2330" x2="1440" y2="2330" stroke-opacity="0.32"/>
+    <line x1="0" y1="2550" x2="1440" y2="2550" stroke-opacity="0.38"/>
+  </g>
+
+  <!-- Ambient Stars and Constellation Anchors -->
+  <g fill="#ffffff">
+    <circle cx="280" cy="420" r="2.8" fill="#e0f7fa" fill-opacity="0.95"/>
+    <line x1="268" y1="420" x2="292" y2="420" stroke="#00e5ff" stroke-opacity="0.7" stroke-width="1.2"/>
+    <line x1="280" y1="408" x2="280" y2="432" stroke="#00e5ff" stroke-opacity="0.7" stroke-width="1.2"/>
+
+    <circle cx="1160" cy="390" r="2.8" fill="#fff8e1" fill-opacity="0.95"/>
+    <line x1="1148" y1="390" x2="1172" y2="390" stroke="#ffab00" stroke-opacity="0.7" stroke-width="1.2"/>
+    <line x1="1160" y1="378" x2="1160" y2="402" stroke="#ffab00" stroke-opacity="0.7" stroke-width="1.2"/>
+
+    <circle cx="720" cy="240" r="2.2" fill-opacity="0.85"/>
+    <line x1="712" y1="240" x2="728" y2="240" stroke="#ffffff" stroke-opacity="0.5" stroke-width="1"/>
+    <line x1="720" y1="232" x2="720" y2="248" stroke="#ffffff" stroke-opacity="0.5" stroke-width="1"/>
+
+    <!-- Micro Stars Clusters -->
+    <circle cx="150" cy="220" r="1.2" fill-opacity="0.6"/>
+    <circle cx="420" cy="180" r="1.5" fill-opacity="0.7"/>
+    <circle cx="580" cy="320" r="1.0" fill-opacity="0.5"/>
+    <circle cx="890" cy="190" r="1.4" fill-opacity="0.7"/>
+    <circle cx="1020" cy="280" r="1.2" fill-opacity="0.6"/>
+    <circle cx="1300" cy="240" r="1.5" fill-opacity="0.65"/>
+    <circle cx="210" cy="650" r="1.3" fill-opacity="0.55"/>
+    <circle cx="360" cy="580" r="1.0" fill-opacity="0.45"/>
+    <circle cx="1080" cy="620" r="1.2" fill-opacity="0.5"/>
+    <circle cx="1250" cy="690" r="1.4" fill-opacity="0.6"/>
+    <circle cx="180" cy="1100" r="1.1" fill-opacity="0.4"/>
+    <circle cx="1280" cy="1150" r="1.1" fill-opacity="0.4"/>
+  </g>
+</svg>
