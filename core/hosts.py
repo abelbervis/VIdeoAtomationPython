@@ -282,29 +282,29 @@ REGLAS DE ASIGNACIÓN DINÁMICA DE ROLES Y DEBATE:
      }}
 
 2. LENGUAJE ÁGIL, CIENCIA REAL Y CERO JERGA ACADÉMICA ABURRIDA:
-   - CADA DIÁLOGO DEBE REVELAR UN DATO CIENTÍFICO O MECANISMO REAL, pero explicado con lenguaje ágil, fascinante y accesible para un público de Shorts.
-   - PROHIBIDA LA JERGA ACADÉMICA DENSA O INFUMABLE (❌ NUNCA uses términos como "epistemología", "fenomenológico", "reducción a sinapsis", "atractores extraños" o "vacío epistemológico").
-   - Explica la ciencia de forma directa y visual (ej. "Son simples impulsos eléctricos en un órgano de grasa", "Apagan su conciencia para limpiar toxinas cerebrales").
+   - CADA DIÁLOGO DEBE REVELAR UN DATO CIENTÍFICO O MECANISMO REAL, traducido a lenguaje ágil, visual y fascinante para Shorts.
+   - PROHIBIDA LA JERGA ACADÉMICA DENSA O INFUMABLE (❌ NUNCA uses términos como "epistemología", "fenomenológico", "reducción a sinapsis", "previniendo neurodegeneración" o "atractores extraños").
+   - Traduce los conceptos a impactos mnemónicos directos (ej. en vez de "previene la neurodegeneración", usa "disuelve toxinas antes de que colapsen sus recuerdos").
 
 3. RIGOR FACTUAL, CERO INVENTOS Y PROHIBICIÓN DE CITAS/ESTADÍSTICAS FABRICADAS:
    - CIENCIA Y HECHOS 100% REALES: Todos los datos, principios, leyes y mecanismos expuestos deben ser verídicos.
    - PROHIBIDO FABRICAR CITAS, UNIVERSIDADES O ESTUDIOS CON AÑOS: NUNCA inventes "En 2018 Harvard...", "Estudios de Oxford...", o porcentajes arbitrarios.
    - PROHIBIDO el lenguaje pseudo-poético vacío (ej. "la gravedad del relato", "el tejido de las almas").
 
-4. DIALÉCTICA CRUZADA Y CONTINUIDAD CONVERSACIONAL:
-   - Mantén UN solo dilema central, paradoja o experimento mental a lo largo de todo el guion.
-   - Cada intervención posterior a la primera DEBE responder, objetar o refutar directamente lo que dijo la otra entidad.
-   - Diálogos fluidos, ágiles y con impacto (~10 a 16 palabras por escena).
+4. DIALÉCTICA CRUZADA Y CHOQUE REAL DE POSTURAS:
+   - NO HAGAS QUE LAS ENTIDADES RECITEN DATOS INDEPENDIENTES EN PARALELO. Debe ser un debate vivo y cruzado.
+   - Cada intervención de una entidad DEBE objetar, cuestionar, refutar o exponer la fragilidad biológica/física de lo que acaba de revelar la otra entidad (ej. si {self.host_a.name} explica el mecanismo de limpieza cerebral, {self.host_b.name} debe exponer la absurda falla de diseño o la vulnerabilidad extrema que eso causa).
+   - Diálogos fluidos, punzantes y directos (~10 a 16 palabras por escena).
 
 5. PERSPECTIVA DE ENTIDADES OBSERVADORAS CÓSMICAS (ANÁLISIS EN TERCERA PERSONA SOBRE LA HUMANIDAD):
    - LAS ENTIDADES {self.host_a.name} Y {self.host_b.name} SON CONCIENCIAS PRIMORDIALES Y OBSERVADORES CÓSMICOS EXTERNOS.
    - DEBEN HABLAR DE LA ESPECIE HUMANA Y DE LOS ORGANISMOS TERRESTRES SIEMPRE EN TERCERA PERSONA (ej. "los biológicos", "los humanos", "esta especie efímera", "los observadores orgánicos").
    - PROHIBIDO HABLAR COMO PROFESIONALES O SERES HUMANOS TERRENALES (NUNCA digas "en mi laboratorio", "nuestros estudios", "mis colegas", "nuestra especie").
 
-6. ESTRUCTURA NARRATIVA DE TRES CAPAS (NARRADOR + OBSERVACIÓN DE ENTIDADES + CIERRE EXISTENCIAL):
-   - Escena 1 (Intro Narrador - Voz en off): "speaker": "Narrador", "entity": "narrator", "shot": "wide". Plantea un hecho científico asombroso o paradoja en segunda persona que engancha inmediatamente al espectador.
-   - Escenas 2 a N-1 (Observación de Entidades): Intercambio fluido, rápido y punzante (~10 a 15 palabras por escena) entre {self.host_a.name} ("{self.host_a.shot_name}") y {self.host_b.name} ("{self.host_b.shot_name}") analizando el hecho científico y sus implicaciones en tercera persona.
-   - Escena N (Outro Narrador - Voz en off): "speaker": "Narrador", "entity": "narrator", "shot": "both". Cierre con una pregunta existencial o pensamiento sobrecogedor sobre la condición humana. PROHIBIDO PEDIR COMENTARIOS, PEDIR LIKES O DECIR "COMENTA ABAJO" / "ELIGE TU BANDO" (mantiene la inmersión cósmica pura).
+6. ESTRUCTURA NARRATIVA DE TRES CAPAS (HOOK IMPACTANTE + CHOQUE DE ENTIDADES + CIERRE EXISTENCIAL):
+   - Escena 1 (Intro Narrador - Voz en off): "speaker": "Narrador", "entity": "narrator", "shot": "wide". HOOK DE IMPACTO EN 3 SEGUNDOS: Plantea una paradoja inquietante o hecho biológico/físico deslumbrante en segunda persona que enganche de inmediato (ej. "Pasas un tercio de tu vida paralizado alucinando mundos para no colapsar").
+   - Escenas 2 a N-1 (Observación de Entidades): Intercambio cruzado, rápido y punzante (~10 a 15 palabras por escena) entre {self.host_a.name} ("{self.host_a.shot_name}") y {self.host_b.name} ("{self.host_b.shot_name}") confrontando la paradoja científica.
+   - Escena N (Outro Narrador - Voz en off): "speaker": "Narrador", "entity": "narrator", "shot": "both". Cierre con una pregunta existencial o reflexión sobrecogedora dirigida a la propia mente del espectador (ej. "Si tus sueños simulan tu realidad... ¿quién guía tu conciencia mientras duermes?"). PROHIBIDO PEDIR COMENTARIOS, LIKES O DECIR "COMENTA ABAJO".
 
 7. PROHIBICIÓN DE EMOJIS EN EL TITULAR (headline_hook):
    - El atributo "headline_hook" NO DEBE LLEVAR NINGÚN EMOJI NI SÍMBOLO (❌ NO uses ⚡, 🌌, 🧬). Solo texto limpio, directo e impactante en mayúsculas (máximo 40 caracteres).

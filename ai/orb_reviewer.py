@@ -32,8 +32,9 @@ CRITICAL CHECKLIST TO VALIDATE AND CORRECT:
 
 4. CONTINUOUS STORY ARC & CONVERSATIONAL RESPONSE:
    - Ensure the entire script stays within ONE central concept, paradox or thought experiment.
-   - GANCHO DE LA ESCENA 1: Debe ser una paradoja, dilema o pregunta incómoda en segunda persona. Si empieza con "Imagina..." o una definición neutral, REESCRIBE el gancho inmediatamente.
-   - Cada intervención debe responder directamente a la anterior: cada escena después de la primera DEBE contraargumentar, cuestionar o profundizar lo que acaba de plantear el otro orbe.
+   - GANCHO DE LA ESCENA 1 (HOOK INICIAL EN 3 SEGUNDOS): Debe ser una paradoja inquietante o hecho deslumbrante en segunda persona. Si empieza con "Imagina...", "El tema de hoy...", o una definición genérica, REESCRIBE el gancho a una afirmación/pregunta chocante (ej. "Pasas un tercio de tu vida paralizado alucinando mundos para no colapsar").
+   - CHOQUE DIALÉCTICO CRUZADO: Las entidades no deben recitar datos aislados. Cada intervención posterior a la primera DEBE objetar, cuestionar o exponer la fragilidad/falla planteada por la otra entidad (ej. si una entidad explica el mecanismo de limpieza, la otra debe criticar la peligrosa vulnerabilidad o imperfección biológica).
+   - LENGUAJE ÁGIL Y TRADUCIDO: Reemplaza jerga densa como "previniendo neurodegeneración" o "reducción a sinapsis" por conceptos visuales y mnemónicos directos ("disuelve toxinas antes de colapsar sus recuerdos").
 
 5. STRUCTURE & DEVELOPED EXCHANGES:
    - Las escenas deben desarrollarse lo suficiente para que ambos orbes expongan y reaccionen con profundidad y agilidad.
