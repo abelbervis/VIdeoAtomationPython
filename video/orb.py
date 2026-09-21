@@ -1417,20 +1417,19 @@ def render_orb_test_preview(
     eq_glow_q = f"eval=frame:brightness='(0.08 + 0.28*{voice_pulse_q})*({speech_mask_q})':contrast='1.0 + 0.35*({speech_mask_q})'"
     eq_glow_s = f"eval=frame:brightness='(0.08 + 0.28*{voice_pulse_s})*({speech_mask_s})':contrast='1.0 + 0.35*({speech_mask_s})'"
 
-    # Smooth Celestial Orbit & Natural Conversational Leaning
-    # Slow 5.0 - 7.5 second harmonic period, smooth and elegant without jitter
-    drift_q_active_x = "(10.0 + 5.0*sin(2*PI*t/6.0))"
-    drift_q_active_y = "(7.0*sin(2*PI*t/4.8))"
-    drift_q_resting_x = "(-4.0 + 5.0*sin(2*PI*t/7.0))"
-    drift_q_resting_y = "(6.0*cos(2*PI*t/5.4))"
+    # Organic Celestial Motion Physics:
+    # 1. Non-repetitive Lissajous 8-figure orbital float (harmonics with golden ratio periods 5.8s & 8.6s)
+    # 2. Conversational Intentionality: Active speaker leans smoothly forward toward interlocutor with acoustic micro-vibration
+    # 3. Attentive Listener: Resting entity maintains a smooth, cushioned floating stance
+    orbit_lx_q = "(9.0*sin(2*PI*t/5.8) + 3.5*cos(2*PI*t/8.6))"
+    orbit_ly_q = "(-11.0*cos(2*PI*t/4.4) - 3.0*sin(2*PI*t/7.2))"
 
-    drift_s_active_x = "(-10.0 - 5.0*sin(2*PI*t/5.8))"
-    drift_s_active_y = "(7.0*sin(2*PI*t/4.6))"
-    drift_s_resting_x = "(4.0 + 5.0*sin(2*PI*t/6.8))"
-    drift_s_resting_y = "(6.0*cos(2*PI*t/5.2))"
+    orbit_lx_s = "(-9.0*sin(2*PI*t/5.6) - 3.5*cos(2*PI*t/8.2))"
+    orbit_ly_s = "(-11.0*cos(2*PI*t/4.6) - 3.0*sin(2*PI*t/7.4))"
 
-    drift_intro_x = "20.0*exp(-6.0*t)*cos(12.0*t)"
-    drift_intro_y = "24.0*exp(-6.0*t)*sin(12.0*t)"
+    # Acoustic micro-resonance (voice vibration on powerful syllables)
+    voice_jitter_q = f"(1.8*sin(2*PI*t/0.11)*{voice_pulse_q})"
+    voice_jitter_s = f"(-1.8*sin(2*PI*t/0.11)*{voice_pulse_s})"
 
     from utils.fonts import resolve_best_font_path
     font_param, _ = resolve_best_font_path()
@@ -1551,8 +1550,8 @@ def render_orb_test_preview(
         shot = sc["shot"]
         sc_dur = max(0.2, round(sc_visual_end - st, 2))
 
-        # Normalized progress ratio for smooth camera motion
-        prog_expr = f"(min(1.0\\,max(0.0\\,(t-{st})/{sc_dur})))"
+        # Smooth cinematic ease-in-out dolly progression (Smoothstep S-curve)
+        prog_expr = f"(0.5 - 0.5*cos(PI*min(1.0\\,max(0.0\\,(t-{st})/{sc_dur}))))"
 
         if shot == "wide":
             is_q_active = (ent in ["quantum", "both"])
@@ -1560,18 +1559,18 @@ def render_orb_test_preview(
             if is_q_active:
                 q_src = f"q_talk_{q_talk_cur}"
                 q_talk_cur += 1
-                # Pure Majestic Floating Levitation + Slow Forward Push + Speech Volume Scale:
-                dq_x = f"14.0*sin(2*PI*t/3.4) + 6.0*cos(2*PI*t/1.9) + 10.0*{prog_expr}"
-                dq_y = f"-18.0*sin(2*PI*t/3.0) - 7.0*cos(2*PI*t/1.7) - 12.0*{prog_expr}"
+                # Conversational Step-Forward: Active Quantum leans +18px toward center + subtle speech vibration
+                dq_x = f"{orbit_lx_q} + 18.0*{prog_expr} + {voice_jitter_q}"
+                dq_y = f"{orbit_ly_q} - 10.0*{prog_expr}"
                 q_alpha = 1.0
                 q_filt = f"scale={scale_expr_q_wide},eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa={q_alpha}"
             else:
                 q_src = f"q_idle_{q_idle_cur}"
                 q_idle_cur += 1
-                # Gentle Listening Floating Motion:
-                dq_x = "14.0*sin(2*PI*t/3.4) + 6.0*cos(2*PI*t/1.9)"
-                dq_y = "-18.0*sin(2*PI*t/3.0) - 7.0*cos(2*PI*t/1.7)"
-                q_alpha = 0.85
+                # Attentive Listening stance: Cushioned celestial orbit with subtle listening tilt
+                dq_x = f"{orbit_lx_q} - 6.0"
+                dq_y = f"{orbit_ly_q}"
+                q_alpha = 0.88
                 q_filt = f"scale=410:410,format=yuva420p,colorchannelmixer=aa={q_alpha}"
 
             filter_complex.append(f"[{q_src}]{q_filt}[q_sc_{idx}]")
@@ -1582,18 +1581,18 @@ def render_orb_test_preview(
             if is_s_active:
                 s_src = f"s_talk_{s_talk_cur}"
                 s_talk_cur += 1
-                # Pure Majestic Floating Levitation + Slow Forward Push + Speech Volume Scale:
-                ds_x = f"-14.0*sin(2*PI*t/3.6) - 6.0*cos(2*PI*t/2.1) - 10.0*{prog_expr}"
-                ds_y = f"-18.0*cos(2*PI*t/3.2) - 7.0*sin(2*PI*t/1.9) - 12.0*{prog_expr}"
+                # Conversational Step-Forward: Active Solar leans -18px toward center + subtle speech vibration
+                ds_x = f"{orbit_lx_s} - 18.0*{prog_expr} + {voice_jitter_s}"
+                ds_y = f"{orbit_ly_s} - 10.0*{prog_expr}"
                 s_alpha = 1.0
                 s_filt = f"scale={scale_expr_s_wide},eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa={s_alpha}"
             else:
                 s_src = f"s_idle_{s_idle_cur}"
                 s_idle_cur += 1
-                # Gentle Listening Floating Motion for Solar:
-                ds_x = "-14.0*sin(2*PI*t/3.6) - 6.0*cos(2*PI*t/2.1)"
-                ds_y = "-18.0*cos(2*PI*t/3.2) - 7.0*sin(2*PI*t/1.9)"
-                s_alpha = 0.85
+                # Attentive Listening stance: Cushioned celestial orbit with subtle listening tilt
+                ds_x = f"{orbit_lx_s} + 6.0"
+                ds_y = f"{orbit_ly_s}"
+                s_alpha = 0.88
                 s_filt = f"scale=360:360,format=yuva420p,colorchannelmixer=aa={s_alpha}"
 
             filter_complex.append(f"[{s_src}]{s_filt}[s_sc_{idx}]")
@@ -1603,9 +1602,9 @@ def render_orb_test_preview(
         elif shot == "close_quantum":
             q_src = f"q_close_{q_close_cur}"
             q_close_cur += 1
-            # Cinematic Slow Push-In Dolly Motion for Quantum + Respiratory Scale:
-            d_cq_x = f"10.0*sin(2*PI*t/3.4) + 5.0*cos(2*PI*t/1.9)"
-            d_cq_y = f"-16.0*sin(2*PI*t/3.0) - 6.0*cos(2*PI*t/1.7) - 18.0*{prog_expr}"
+            # Cinematic Push-In Dolly with Ease-in-Out progression + Lissajous orbital levitation:
+            d_cq_x = f"{orbit_lx_q} + {voice_jitter_q}"
+            d_cq_y = f"{orbit_ly_q} - 14.0*{prog_expr}"
             filter_complex.append(f"[{q_src}]scale={scale_expr_q_close},eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.98[q_sc_{idx}]")
             filter_complex.append(f"[{cur_v}][q_sc_{idx}]overlay=eval=frame:x='W/2-w/2 + {d_cq_x}':y='H*0.38-h/2 + {d_cq_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_q]")
             cur_v = f"v_sc_{idx}_q"
@@ -1618,9 +1617,9 @@ def render_orb_test_preview(
         elif shot == "close_solar":
             s_src = f"s_close_{s_close_cur}"
             s_close_cur += 1
-            # Cinematic Slow Push-In Dolly Motion for Solar + Respiratory Scale:
-            d_cs_x = f"-10.0*sin(2*PI*t/3.6) - 5.0*cos(2*PI*t/2.1)"
-            d_cs_y = f"-16.0*cos(2*PI*t/3.2) - 6.0*sin(2*PI*t/1.9) - 18.0*{prog_expr}"
+            # Cinematic Push-In Dolly with Ease-in-Out progression + Lissajous orbital levitation:
+            d_cs_x = f"{orbit_lx_s} + {voice_jitter_s}"
+            d_cs_y = f"{orbit_ly_s} - 14.0*{prog_expr}"
             filter_complex.append(f"[{s_src}]scale={scale_expr_s_close},eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.98[s_sc_{idx}]")
             filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W/2-w/2 + {d_cs_x}':y='H*0.38-h/2 + {d_cs_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_s]")
             cur_v = f"v_sc_{idx}_s"
@@ -1633,17 +1632,17 @@ def render_orb_test_preview(
         elif shot == "both":
             q_src = f"q_talk_{q_talk_cur}"
             q_talk_cur += 1
-            # Cinematic Cosmic Reveal Pull-Back + Dual Respiratory Scale:
-            dq_x = f"14.0*sin(2*PI*t/3.4) + 6.0*cos(2*PI*t/1.9)"
-            dq_y = f"-18.0*sin(2*PI*t/3.0) - 7.0*cos(2*PI*t/1.7) + 14.0*{prog_expr}"
+            # Cinematic Cosmic Reveal Pull-Back with Smooth Ease-in-out:
+            dq_x = f"{orbit_lx_q} + 12.0*(1.0 - {prog_expr}) + {voice_jitter_q}"
+            dq_y = f"{orbit_ly_q} + 10.0*{prog_expr}"
             filter_complex.append(f"[{q_src}]scale={scale_expr_q_wide},eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.98[q_sc_{idx}]")
             filter_complex.append(f"[{cur_v}][q_sc_{idx}]overlay=eval=frame:x='W*0.25-w/2 + {dq_x}':y='H*0.38-h/2 + {dq_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_q]")
             cur_v = f"v_sc_{idx}_q"
 
             s_src = f"s_talk_{s_talk_cur}"
             s_talk_cur += 1
-            ds_x = f"-14.0*sin(2*PI*t/3.6) - 6.0*cos(2*PI*t/2.1)"
-            ds_y = f"-18.0*cos(2*PI*t/3.2) - 7.0*sin(2*PI*t/1.9) + 14.0*{prog_expr}"
+            ds_x = f"{orbit_lx_s} - 12.0*(1.0 - {prog_expr}) + {voice_jitter_s}"
+            ds_y = f"{orbit_ly_s} + 10.0*{prog_expr}"
             filter_complex.append(f"[{s_src}]scale={scale_expr_s_wide},eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.98[s_sc_{idx}]")
             filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W*0.75-w/2 - 28 + {ds_x}':y='H*0.39-h/2 + {ds_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_s]")
             cur_v = f"v_sc_{idx}_s"
