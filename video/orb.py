@@ -1401,11 +1401,21 @@ def render_orb_test_preview(
     voice_pulse_q = extract_real_audio_rms_profile(resolved_audio, intervals_q) if (resolved_audio and resolved_audio.exists()) else "(0.5 + 0.30*sin(2*PI*t/0.24))"
     voice_pulse_s = extract_real_audio_rms_profile(resolved_audio, intervals_s) if (resolved_audio and resolved_audio.exists()) else "(0.5 + 0.30*sin(2*PI*t/0.24))"
 
+    # Acoustic Respiratory Volume (Physical breathing scale surges +4.5% on active voice syllables)
+    scale_expr_q_wide = f"eval=frame:w='trunc(420*(1.0 + 0.045*({voice_pulse_q})*({speech_mask_q}))/2)*2':h='trunc(420*(1.0 + 0.045*({voice_pulse_q})*({speech_mask_q}))/2)*2'"
+    scale_expr_s_wide = f"eval=frame:w='trunc(370*(1.0 + 0.045*({voice_pulse_s})*({speech_mask_s}))/2)*2':h='trunc(370*(1.0 + 0.045*({voice_pulse_s})*({speech_mask_s}))/2)*2'"
+    scale_expr_q_close = f"eval=frame:w='trunc(820*(1.0 + 0.045*({voice_pulse_q})*({speech_mask_q}))/2)*2':h='trunc(820*(1.0 + 0.045*({voice_pulse_q})*({speech_mask_q}))/2)*2'"
+    scale_expr_s_close = f"eval=frame:w='trunc(820*(1.0 + 0.045*({voice_pulse_s})*({speech_mask_s}))/2)*2':h='trunc(820*(1.0 + 0.045*({voice_pulse_s})*({speech_mask_s}))/2)*2'"
+
     eq_q = f"eval=frame:brightness='-0.03 + (0.18 + 0.22*{voice_pulse_q})*({speech_mask_q})':contrast='1.0 + (0.24 + 0.20*{voice_pulse_q})*({speech_mask_q})':saturation='1.0 + (0.26 + 0.18*{voice_pulse_q})*({speech_mask_q})'"
     hue_q = f"h='(10 + 6*{voice_pulse_q})*({speech_mask_q}) + 4*sin(2*PI*t/3.6)':s='1.0 + (0.22 + 0.15*{voice_pulse_q})*({speech_mask_q})'"
 
     eq_s = f"eval=frame:brightness='-0.03 + (0.18 + 0.22*{voice_pulse_s})*({speech_mask_s})':contrast='1.0 + (0.24 + 0.20*{voice_pulse_s})*({speech_mask_s})':saturation='1.0 + (0.26 + 0.18*{voice_pulse_s})*({speech_mask_s})'"
     hue_s = f"h='(10 + 6*{voice_pulse_s})*({speech_mask_s}) + 4*sin(2*PI*t/3.6)':s='1.0 + (0.22 + 0.15*{voice_pulse_s})*({speech_mask_s})'"
+
+    # Dynamic Cosmic Vacuum Illumination: Ambient nebula radiance breathes with acoustic intensity
+    eq_glow_q = f"eval=frame:brightness='(0.08 + 0.28*{voice_pulse_q})*({speech_mask_q})':contrast='1.0 + 0.35*({speech_mask_q})'"
+    eq_glow_s = f"eval=frame:brightness='(0.08 + 0.28*{voice_pulse_s})*({speech_mask_s})':contrast='1.0 + 0.35*({speech_mask_s})'"
 
     # Smooth Celestial Orbit & Natural Conversational Leaning
     # Slow 5.0 - 7.5 second harmonic period, smooth and elegant without jitter
@@ -1514,8 +1524,9 @@ def render_orb_test_preview(
         f"[6:v]split={max(1, s_close_uses)}" + "".join(f"[s_close_{k}]" for k in range(max(1, s_close_uses))),
 
         # Background Ambient Luminescence (Ultra-smooth diffuse glow via 120x120 3-pass boxblur)
-        f"[q_idle_0]scale=120:120,eq={eq_q},hue={hue_q},boxblur=26:3,scale={width}:{height},format=yuva420p,colorchannelmixer=aa=0.25[bg_glow_q]",
-        f"[s_idle_0]scale=120:120,eq={eq_s},hue={hue_s},boxblur=26:3,scale={width}:{height},format=yuva420p,colorchannelmixer=aa=0.25[bg_glow_s]",
+        # Deep cosmic illumination breathes in direct sync with speech RMS energy
+        f"[q_idle_0]scale=120:120,eq={eq_glow_q},hue={hue_q},boxblur=26:3,scale={width}:{height},format=yuva420p,colorchannelmixer=aa=0.30[bg_glow_q]",
+        f"[s_idle_0]scale=120:120,eq={eq_glow_s},hue={hue_s},boxblur=26:3,scale={width}:{height},format=yuva420p,colorchannelmixer=aa=0.30[bg_glow_s]",
 
         f"[0:v]eq=brightness=-0.01:contrast=1.05[bg_graded]",
         f"[bg_graded][bg_glow_q]overlay=eval=frame:enable='{speech_mask_q}'[bg_glowed_1]",
@@ -1549,11 +1560,11 @@ def render_orb_test_preview(
             if is_q_active:
                 q_src = f"q_talk_{q_talk_cur}"
                 q_talk_cur += 1
-                # Pure Majestic Floating Levitation + Slow Forward Push:
+                # Pure Majestic Floating Levitation + Slow Forward Push + Speech Volume Scale:
                 dq_x = f"14.0*sin(2*PI*t/3.4) + 6.0*cos(2*PI*t/1.9) + 10.0*{prog_expr}"
                 dq_y = f"-18.0*sin(2*PI*t/3.0) - 7.0*cos(2*PI*t/1.7) - 12.0*{prog_expr}"
                 q_alpha = 1.0
-                q_filt = f"scale=420:420,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa={q_alpha}"
+                q_filt = f"scale={scale_expr_q_wide},eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa={q_alpha}"
             else:
                 q_src = f"q_idle_{q_idle_cur}"
                 q_idle_cur += 1
@@ -1571,11 +1582,11 @@ def render_orb_test_preview(
             if is_s_active:
                 s_src = f"s_talk_{s_talk_cur}"
                 s_talk_cur += 1
-                # Pure Majestic Floating Levitation + Slow Forward Push for Solar:
+                # Pure Majestic Floating Levitation + Slow Forward Push + Speech Volume Scale:
                 ds_x = f"-14.0*sin(2*PI*t/3.6) - 6.0*cos(2*PI*t/2.1) - 10.0*{prog_expr}"
                 ds_y = f"-18.0*cos(2*PI*t/3.2) - 7.0*sin(2*PI*t/1.9) - 12.0*{prog_expr}"
                 s_alpha = 1.0
-                s_filt = f"scale=370:370,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa={s_alpha}"
+                s_filt = f"scale={scale_expr_s_wide},eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa={s_alpha}"
             else:
                 s_src = f"s_idle_{s_idle_cur}"
                 s_idle_cur += 1
@@ -1592,10 +1603,10 @@ def render_orb_test_preview(
         elif shot == "close_quantum":
             q_src = f"q_close_{q_close_cur}"
             q_close_cur += 1
-            # Cinematic Slow Push-In Dolly Motion for Quantum:
+            # Cinematic Slow Push-In Dolly Motion for Quantum + Respiratory Scale:
             d_cq_x = f"10.0*sin(2*PI*t/3.4) + 5.0*cos(2*PI*t/1.9)"
             d_cq_y = f"-16.0*sin(2*PI*t/3.0) - 6.0*cos(2*PI*t/1.7) - 18.0*{prog_expr}"
-            filter_complex.append(f"[{q_src}]scale=820:820,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.98[q_sc_{idx}]")
+            filter_complex.append(f"[{q_src}]scale={scale_expr_q_close},eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.98[q_sc_{idx}]")
             filter_complex.append(f"[{cur_v}][q_sc_{idx}]overlay=eval=frame:x='W/2-w/2 + {d_cq_x}':y='H*0.38-h/2 + {d_cq_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_q]")
             cur_v = f"v_sc_{idx}_q"
 
@@ -1607,10 +1618,10 @@ def render_orb_test_preview(
         elif shot == "close_solar":
             s_src = f"s_close_{s_close_cur}"
             s_close_cur += 1
-            # Cinematic Slow Push-In Dolly Motion for Solar:
+            # Cinematic Slow Push-In Dolly Motion for Solar + Respiratory Scale:
             d_cs_x = f"-10.0*sin(2*PI*t/3.6) - 5.0*cos(2*PI*t/2.1)"
             d_cs_y = f"-16.0*cos(2*PI*t/3.2) - 6.0*sin(2*PI*t/1.9) - 18.0*{prog_expr}"
-            filter_complex.append(f"[{s_src}]scale=820:820,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.98[s_sc_{idx}]")
+            filter_complex.append(f"[{s_src}]scale={scale_expr_s_close},eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.98[s_sc_{idx}]")
             filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W/2-w/2 + {d_cs_x}':y='H*0.38-h/2 + {d_cs_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_s]")
             cur_v = f"v_sc_{idx}_s"
 
@@ -1622,10 +1633,10 @@ def render_orb_test_preview(
         elif shot == "both":
             q_src = f"q_talk_{q_talk_cur}"
             q_talk_cur += 1
-            # Cinematic Cosmic Reveal Pull-Back:
+            # Cinematic Cosmic Reveal Pull-Back + Dual Respiratory Scale:
             dq_x = f"14.0*sin(2*PI*t/3.4) + 6.0*cos(2*PI*t/1.9)"
             dq_y = f"-18.0*sin(2*PI*t/3.0) - 7.0*cos(2*PI*t/1.7) + 14.0*{prog_expr}"
-            filter_complex.append(f"[{q_src}]scale=420:420,eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.98[q_sc_{idx}]")
+            filter_complex.append(f"[{q_src}]scale={scale_expr_q_wide},eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.98[q_sc_{idx}]")
             filter_complex.append(f"[{cur_v}][q_sc_{idx}]overlay=eval=frame:x='W*0.25-w/2 + {dq_x}':y='H*0.38-h/2 + {dq_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_q]")
             cur_v = f"v_sc_{idx}_q"
 
@@ -1633,7 +1644,7 @@ def render_orb_test_preview(
             s_talk_cur += 1
             ds_x = f"-14.0*sin(2*PI*t/3.6) - 6.0*cos(2*PI*t/2.1)"
             ds_y = f"-18.0*cos(2*PI*t/3.2) - 7.0*sin(2*PI*t/1.9) + 14.0*{prog_expr}"
-            filter_complex.append(f"[{s_src}]scale=420:420,eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.98[s_sc_{idx}]")
+            filter_complex.append(f"[{s_src}]scale={scale_expr_s_wide},eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.98[s_sc_{idx}]")
             filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W*0.75-w/2 - 28 + {ds_x}':y='H*0.39-h/2 + {ds_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_s]")
             cur_v = f"v_sc_{idx}_s"
 
