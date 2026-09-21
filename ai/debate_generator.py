@@ -364,7 +364,7 @@ class DebateScriptGenerator:
         if "simula" in topic_lower or "matrix" in topic_lower:
             return {
                 "topic": "¿Es el universo una simulación?",
-                "headline_hook": "⚡ ¿EL UNIVERSO ES UNA SIMULACIÓN? ⚡",
+                "headline_hook": "¿EL UNIVERSO ES UNA SIMULACIÓN?",
                 "roles": topic_roles,
                 "holograms": {
                     "quantum": {
@@ -433,7 +433,7 @@ class DebateScriptGenerator:
         elif any(w in topic_lower for w in ["mente", "cerebro", "conciencia", "inteligencia artificial", "redes neuronales"]) or re.search(r"\b(ia|ai)\b", topic_lower):
             return {
                 "topic": "IA vs Mente Humana",
-                "headline_hook": "⚡ IA VS CONCIENCIA HUMANA ⚡",
+                "headline_hook": "IA VS CONCIENCIA HUMANA",
                 "roles": topic_roles,
                 "holograms": {
                     "quantum": {
@@ -502,7 +502,7 @@ class DebateScriptGenerator:
         elif any(w in topic_lower for w in ["biolog", "genétic", "genom", "evoluc", "celular", "célula", "virus", "clonac"]) or re.search(r"\b(gen|genes|adn|dna|bio)\b", topic_lower):
             return {
                 "topic": f"El Enigma Biológico: {topic.strip()}",
-                "headline_hook": f"⚡ EL SECRETO DEL ADN: {topic.upper()[:24]} ⚡",
+                "headline_hook": f"EL SECRETO DEL ADN: {topic.upper()[:24]}",
                 "roles": topic_roles,
                 "holograms": None,
                 "scenes": [
@@ -558,62 +558,55 @@ class DebateScriptGenerator:
                 ]
             }
         else:
-            # Generic dynamic fallback - neutral and domain-agnostic
-            clean_title = topic.upper()
+            # High-impact dynamic fallback with Narrator 3-layer structure
+            clean_title = topic.strip().upper()
             return {
                 "topic": topic,
-                "headline_hook": f"⚡ EL GRAN DILEMA: {clean_title[:28]} ⚡",
+                "headline_hook": f"EL ENIGMA DE {clean_title[:28]}",
                 "roles": topic_roles,
                 "holograms": None,
                 "scenes": [
                     {
-                        "speaker": "Quantum",
-                        "entity": "quantum",
-                        "text": f"El análisis sistemático de {topic} revela un dilema profundo que desafía lo que creíamos saber.",
+                        "speaker": "Narrador",
+                        "entity": "narrator",
+                        "text": f"Observas el fenómeno de {topic} como algo cotidiano, sin notar la grieta en tu percepción.",
                         "shot": "wide",
-                        "duration": 3.2
-                    },
-                    {
-                        "speaker": "Solar",
-                        "entity": "solar",
-                        "text": "Ese dilema surge al confundir modelos teóricos con el comportamiento real del fenómeno en la práctica.",
-                        "shot": "close_solar",
                         "duration": 3.4
                     },
                     {
-                        "speaker": "Quantum",
-                        "entity": "quantum",
-                        "text": "Sin embargo, los datos empíricos demuestran que las variables clave contradicen las explicaciones clásicas.",
-                        "shot": "close_quantum",
+                        "speaker": self.show.host_a.name,
+                        "entity": self.show.host_a.id,
+                        "text": f"En la escala fundamental, los datos de {topic} rompen las leyes de la física clásica.",
+                        "shot": self.show.host_a.shot_name,
                         "duration": 3.4
                     },
                     {
-                        "speaker": "Solar",
-                        "entity": "solar",
-                        "text": "La aparente contradicción se resuelve si observamos el sistema como un todo dinámico y no como piezas aisladas.",
-                        "shot": "close_solar",
+                        "speaker": self.show.host_b.name,
+                        "entity": self.show.host_b.id,
+                        "text": "¡Esa hipótesis olvida que la energía y la entropía imponen límites insuperables!",
+                        "shot": self.show.host_b.shot_name,
                         "duration": 3.5
                     },
                     {
-                        "speaker": "Quantum",
-                        "entity": "quantum",
-                        "text": "Aun así, si esta evidencia se confirma, obligaría a replantear los fundamentos mismos de esta disciplina.",
-                        "shot": "close_quantum",
+                        "speaker": self.show.host_a.name,
+                        "entity": self.show.host_a.id,
+                        "text": "Aun así, la información subyacente demuestra que el sistema reorganiza su propia estructura.",
+                        "shot": self.show.host_a.shot_name,
                         "duration": 3.4
                     },
                     {
-                        "speaker": "Solar",
-                        "entity": "solar",
-                        "text": "Esa tensión constante entre certeza y descubrimiento es exactamente lo que impulsa el avance del conocimiento.",
-                        "shot": "close_solar",
+                        "speaker": self.show.host_b.name,
+                        "entity": self.show.host_b.id,
+                        "text": "Una frágil ilusión que colapsa cuando la realidad impone su temperatura irreversible.",
+                        "shot": self.show.host_b.shot_name,
                         "duration": 3.5
                     },
                     {
-                        "speaker": "Ambos",
-                        "entity": "both",
-                        "text": "¿Hacia qué postura te inclinas al reflexionar sobre este dilema?",
+                        "speaker": "Narrador",
+                        "entity": "narrator",
+                        "text": f"Frente a la inmensidad de {topic}... ¿quién decide lo que es real en tu mente?",
                         "shot": "both",
-                        "duration": 3.0
+                        "duration": 3.5
                     }
                 ]
             }

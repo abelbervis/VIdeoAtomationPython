@@ -309,7 +309,64 @@ REGLAS DE ASIGNACIÓN DINÁMICA DE ROLES Y DEBATE:
 7. PROHIBICIÓN DE EMOJIS EN EL TITULAR (headline_hook):
    - El atributo "headline_hook" NO DEBE LLEVAR NINGÚN EMOJI NI SÍMBOLO (❌ NO uses ⚡, 🌌, 🧬). Solo texto limpio, directo e impactante en mayúsculas (máximo 40 caracteres).
 
-Responde ÚNICAMENTE con JSON válido que cumpla strictly este esquema:
+EJEMPLO MODELO DE GUION DE MÁXIMA RETENCIÓN Y DEBATE CRUZADO (SIGUE ESTE ESTILO EXACTO):
+```json
+{{
+  "topic": "El Enigma del Sueño Humano",
+  "headline_hook": "¿POR QUÉ ALUCINAS AL DORMIR?",
+  "roles": {{
+    "{self.host_a.id}": "Entidad del Código Cuántico",
+    "{self.host_b.id}": "Entidad de la Entropía Estelar"
+  }},
+  "holograms": null,
+  "scenes": [
+    {{
+      "speaker": "Narrador",
+      "entity": "narrator",
+      "text": "Pasas un tercio de tu vida paralizado, alucinando mundos para que tu cerebro no colapse.",
+      "shot": "wide",
+      "duration": 3.4
+    }},
+    {{
+      "speaker": "{self.host_a.name}",
+      "entity": "{self.host_a.id}",
+      "text": "En el sueño profundo, su sistema glifático inunda el tejido para disolver toxinas letales.",
+      "shot": "{self.host_a.shot_name}",
+      "duration": 3.4
+    }},
+    {{
+      "speaker": "{self.host_b.name}",
+      "entity": "{self.host_b.id}",
+      "text": "¡Una imperfección trágica! Si no entran en coma diario, sus propios residuos los envenenan.",
+      "shot": "{self.host_b.shot_name}",
+      "duration": 3.5
+    }},
+    {{
+      "speaker": "{self.host_a.name}",
+      "entity": "{self.host_a.id}",
+      "text": "Aun así, sus ondas cerebrales reorganizan la memoria, fijando el aprendizaje en el caos.",
+      "shot": "{self.host_a.shot_name}",
+      "duration": 3.4
+    }},
+    {{
+      "speaker": "{self.host_b.name}",
+      "entity": "{self.host_b.id}",
+      "text": "Atrapados entre la locura de no dormir y la fragilidad de quedar vulnerables en la sombra.",
+      "shot": "{self.host_b.shot_name}",
+      "duration": 3.5
+    }},
+    {{
+      "speaker": "Narrador",
+      "entity": "narrator",
+      "text": "Si tus sueños simulan tu realidad... ¿quién guía tu conciencia cuando apagas los ojos?",
+      "shot": "both",
+      "duration": 3.5
+    }}
+  ]
+}}
+```
+
+Responde ÚNICAMENTE con JSON válido que cumpla strictly este esquema y estándar:
 {{
   "topic": "Nombre del tema tratado",
   "headline_hook": "TITULO IMPACTANTE SIN EMOJIS EN MAYUSCULAS (MAX 40 CHARACTERS)",
