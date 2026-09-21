@@ -1373,14 +1373,6 @@ def render_orb_test_preview(
         holo_s_idx = curr_input_idx
         curr_input_idx += 1
 
-    cmd_inputs.extend(["-stream_loop", "-1", "-i", str(badge_q_path)])
-    badge_q_idx = curr_input_idx
-    curr_input_idx += 1
-
-    cmd_inputs.extend(["-stream_loop", "-1", "-i", str(badge_s_path)])
-    badge_s_idx = curr_input_idx
-    curr_input_idx += 1
-
     audio_idx = curr_input_idx
     if resolved_audio and resolved_audio.exists():
         cmd_inputs.extend(["-i", str(resolved_audio)])
@@ -1392,8 +1384,6 @@ def render_orb_test_preview(
         pre_scale_lines.append(f"[{holo_q_idx}:v]scale=540:-2,format=yuva420p[holo_q]")
     if has_holo_s and holo_s_idx is not None:
         pre_scale_lines.append(f"[{holo_s_idx}:v]scale=540:-2,format=yuva420p[holo_s]")
-    pre_scale_lines.append(f"[{badge_q_idx}:v]scale=440:-2,format=yuva420p[badge_q]")
-    pre_scale_lines.append(f"[{badge_s_idx}:v]scale=440:-2,format=yuva420p[badge_s]")
 
     # Calculate exact number of split pads needed for Quantum and Solar (wide talk, idle, and close frontal talk)
     q_talk_uses = sum(1 for sc in scene_records if (sc["shot"] == "both") or (sc["shot"] == "wide" and sc["entity"] in ["quantum", "both"]))
@@ -1489,12 +1479,6 @@ def render_orb_test_preview(
             filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W*0.75-w/2 - 28 + {ds_x}':y='H*0.39-h/2 + {ds_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_s]")
             cur_v = f"v_sc_{idx}_s"
 
-            if idx == 0:
-                bdg_end = min(round(sc_visual_end - 0.2, 2), 2.8)
-                filter_complex.append(f"[{cur_v}][badge_q]overlay=eval=frame:x='W*0.25-w/2 + 5.0*sin(2*PI*(t-0.4)/2.2)':y='H*0.52-h/2 + 4.0*cos(2*PI*(t-0.4)/2.2)':enable='between(t,0.3,{bdg_end})'[v_sc_{idx}_bq]")
-                filter_complex.append(f"[v_sc_{idx}_bq][badge_s]overlay=eval=frame:x='W*0.75-w/2 - 28 + 5.0*cos(2*PI*(t-0.4)/2.4)':y='H*0.52-h/2 + 4.0*sin(2*PI*(t-0.4)/2.4)':enable='between(t,0.3,{bdg_end})'[v_sc_{idx}_bs]")
-                cur_v = f"v_sc_{idx}_bs"
-
         elif shot == "close_quantum":
             q_src = f"q_close_{q_close_cur}"
             q_close_cur += 1
@@ -1543,9 +1527,9 @@ def render_orb_test_preview(
             filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W*0.75-w/2 - 28 + {ds_x}':y='H*0.39-h/2 + {ds_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_s]")
             cur_v = f"v_sc_{idx}_s"
 
-    # Headline Hook Badge (Top Center during first scene)
+    # Headline Hook (Cinematic Floating Title Top Center during first scene - No heavy opaque box)
     first_sc_end = min(scene_records[0]["end"] if scene_records else 2.8, 2.8)
-    filter_complex.append(f"[{cur_v}]drawtext=text='{escaped_headline_hook}':{font_param}:fontcolor=white:fontsize=40:box=1:boxcolor=0x08101e@0.95:boxborderw=20:borderw=2:bordercolor=0x00f0ff:x=(w-text_w)/2:y=140:enable='between(t,0,{first_sc_end})'[v_hook]")
+    filter_complex.append(f"[{cur_v}]drawtext=text='{escaped_headline_hook}':{font_param}:fontcolor=0xFFFFFF:fontsize=42:borderw=3:bordercolor=0x000000@0.8:shadowx=2:shadowy=3:shadowcolor=0x00f0ff@0.4:x=(w-text_w)/2:y=140:enable='between(t,0,{first_sc_end})'[v_hook]")
     cur_v = "v_hook"
 
     # Outro Reflection Badge removed per user request
