@@ -37,11 +37,16 @@ CRITICAL CHECKLIST TO VALIDATE AND CORRECT:
 
 4. CONTINUOUS STORY ARC & DIALECTICAL CONFLICT:
    - Ensure the entire script stays within ONE central concept, paradox or thought experiment.
-   - AUDITORÍA DE IMPACTO VIRAL Y CLARIDAD PARA YOUTUBE SHORTS:
-     * CERO POESÍA VAGA O ABSTRACCIÓN CONFUSA (❌ REESCRIBE si detectas: "el instante vibra", "el tiempo se deshace en nada", "en la red cósmica sin un punto fijo", "la tinta de la conciencia"). Si una línea suena a poesía etérea sin apoyo físico, cámbiala por un hecho o paradoja científica real.
-     * CADA LÍNEA DEBE TENER UN ANCLAJE FÍSICO O ANATÓMICO: Si el tema es el tiempo, apóyate en relojes atómicos, satélites, relatividad o la falta de reloj central. Si es visión, en la oscuridad del cráneo, fotones y retraso de procesamiento.
-     * ACCESIBILIDAD UNIVERSAL: El espectador debe comprender la paradoja en el primer segundo de escucha sin detener el video.
-   - GANCHO DE LA ESCENA 1 (HOOK AFIRMATIVO EN 3 SEGUNDOS): Debe ser una AFIRMACIÓN categórica e inquietante en segunda persona (NUNCA una pregunta ni condicional tímido). Si empieza con una pregunta o definición genérica, REESCRIBE el gancho a una sentencia directa y demoledora (ej. "El universo no tiene un reloj central; para las leyes de la física, tu presente jamás ha existido", "Tu cerebro vive encerrado a oscuras dentro del cráneo; jamás ha tocado un rayo de luz real", "Los átomos de tu cuerpo se renuevan por completo. Físicamente, la persona que nació ya no existe").
+   - AUDITORÍA DE IMPACTO VIRAL Y CLARIDAD PARA YOUTUBE SHORTS ("PRUEBA DEL ESPECTADOR CANSADO"):
+     * CERO POESÍA VAGA O ABSTRACCIÓN CONFUSA (❌ REESCRIBE si detectas: "el instante vibra", "el tiempo se deshace en nada", "en la red cósmica sin un punto fijo", "la tinta de la conciencia", "clavan su pulso en el vacío", "tallando futuro"). Si una línea suena a poesía etérea sin apoyo físico, cámbiala por un hecho o paradoja científica real.
+     * CADA LÍNEA DEBE TENER UN ANCLAJE FÍSICO O ANATÓMICO: Si el tema es el tiempo, apóyate en el tiempo corriendo más rápido en el espacio que en el suelo, las estrellas como fósiles de luz o la falta de reloj cósmico. Si es visión, en la oscuridad del cráneo, fotones y retraso de procesamiento.
+     * ACCESIBILIDAD UNIVERSAL: El espectador cansado debe comprender la paradoja en el primer segundo de escucha sin detener el video.
+   - PERSPECTIVA DE ENTIDADES CÓSMICAS (AUTORIDAD OBSERVACIONAL, CERO CITAS HUMANAS):
+     * PROHIBIDO CITAR HUMANOS, CIENTÍFICOS O INSTITUCIONES (❌ REESCRIBE si detectas "Einstein demostró", "Newton dijo", "en mi laboratorio"). Las entidades hablan desde la escala cósmica observando el planeta desde afuera.
+   - CONFLICTO DIALÉCTICO FRONTAL (ATAQUE Y RESPUESTA PING-PONG):
+     * PROHIBIDOS LOS MONÓLOGOS PARALELOS O FRASES ÉPICAS AL AIRE.
+     * Si QUANTUM afirma que el tiempo corre a destiempo o que miran fósiles del pasado, SOLAR DEBE CONTESTARLE Y REFUTARLE DIRECTAMENTE (ej. "Mirarán el pasado, pero actúan aquí. Las rocas solo se dejan arrastrar; la mente viva es lo único que dobla el tiempo.").
+   - GANCHO DE LA ESCENA 1 (HOOK AFIRMATIVO EN 3 SEGUNDOS): Debe ser una AFIRMACIÓN categórica e inquietante en segunda persona (NUNCA una pregunta ni condicional tímido). Si empieza con una pregunta o definición genérica, REESCRIBE el gancho a una sentencia directa y demoledora (ej. "Para las leyes del universo, el presente no existe. Tu 'ahora' es solo un truco de tu cabeza", "Tu cerebro vive encerrado a oscuras dentro del cráneo; jamás ha tocado un rayo de luz real", "Los átomos de tu cuerpo se renuevan por completo. Físicamente, la persona que nació ya no existe").
    - AUDITORÍA DE SOLAR: AGENCIA ACTIVA Y REBELDÍA CREADORA (CERO CONTEMPLACIÓN PASIVA):
      * PROHIBIDO EL "SÍ, PERO..." O COMPLACENCIA POÉTICA: SOLAR no busca el lado bonito ni se resigna a lo que QUANTUM dice. Si QUANTUM señala una limitación o reducción biológica, SOLAR refuta la conclusión y demuestra la victoria de la conciencia consciente.
      * Si SOLAR usa verbos o actitudes pasivas ("produce asombro", "es la firma de la vida", "el cosmos vibra", "admirar"), REESCRIBE de inmediato dotando a SOLAR de combate y forja activa ("desafían ese retraso", "esculpen sentido en el vacío", "conquistan el abismo", "forjan mundos").

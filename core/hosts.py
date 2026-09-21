@@ -294,21 +294,21 @@ REGLAS DE ASIGNACIÓN DINÁMICA DE ROLES Y DEBATE:
      * En vez de "la simultaneidad es una quimera" ➔ "el universo no comparte tu presente".
    - El espectador debe entender cada palabra sin ser físico ni neurocientífico.
 
-3. DIRECTRICES DE ALTO IMPACTO Y RETENCIÓN PARA YOUTUBE SHORTS (ALGORITMO & COMPRENSIÓN INSTANTÁNEA):
-   - PROHIBICIÓN ABSOLUTA DE POESÍA VAGA O ABSTRACCIÓN CONFUSA (❌ NUNCA escribas frases etéreas como: "el instante vibra", "el tiempo se deshace en nada", "avanzan en la red cósmica sin un punto fijo", "la tinta del destino"):
-     * En YouTube Shorts, la abstracción vacía hace que el 70% de los espectadores deslice al siguiente video en menos de 2 segundos.
-     * CADA FRASE DEBE APOYARSE EN UN HECHO CIENTÍFICO O ANATÓMICO CONCRETO:
-       - Si el tema es EL TIEMPO: apóyate en hechos desconcertantes (los satélites envejecen a otro ritmo, la gravedad frena el tiempo, el cosmos no tiene reloj central, ver una estrella es ver el pasado).
-       - Si el tema es LA VISIÓN: apóyate en el cráneo oscuro, la retina traduciendo fotones, la ausencia física de colores, los 80 ms de retraso.
-       - Si el tema es EL SUEÑO: apóyate en la parálisis motora, el lavado de toxinas, la alucinación para no colapsar.
-   - REGLA DEL HOOK (LOS PRIMEROS 3 SEGUNDOS DETERMINAN LA VIDA DEL VIDEO):
-     * La Escena 1 del Narrador DEBE ser una AFIRMACIÓN CATEGÓRICA E INQUIETANTE que rompa una certeza cotidiana del espectador (ej. "El universo no tiene reloj central; para la física moderna, tu presente jamás ha existido", "Tu cerebro vive encerrado a oscuras dentro del cráneo; jamás ha tocado un rayo de luz real").
-     * PROHIBIDAS LAS PREGUNTAS TÍMIDAS O FRASES POÉTICAS SUAVES EN LA ESCENA 1.
-   - SOLAR: COMBATE Y AGENCIA ACTIVA (PROHIBIDO EL COMODÍN DE "FUEGO/LLAMA" SIN SENTIDO):
-     * SOLAR NO es un espectador que contempla o se asombra con lo que QUANTUM dice ("produce asombro", "el cosmos vibra dentro de ellos" ➔ PROHIBIDO).
-     * SOLAR NO debe abusar de la palabra "fuego" o "llama" en temas donde no aplica (en relatividad o percepción, defiende la CONCIENCIA, la AGENCIA y la VOLUNTAD que desafían la corriente ciega).
-   - VOCABULARIO ACCESIBLE PARA AUDIENCIAS DE 15 A 65 AÑOS:
-     * Si una frase requiere que el espectador pause el video para entenderla, ES UN ERROR. Las ideas deben ser alucinantes pero comprensibles al primer segundo de escucha.
+3. DIRECTRICES DE ALTO IMPACTO Y CLARIDAD TOTAL ("LA PRUEBA DEL ESPECTADOR CANSADO"):
+   - LENGUAJE DIRECTO Y CRISTALINO (CERO POESÍA BARATA, CERO LIRISMO HUECO):
+     * ❌ TERMINANTEMENTE PROHIBIDAS las metáforas abstractas o infladas (ej. "clavan su pulso en el vacío", "el instante vibra", "tejiendo llamas de la mente", "la tinta del destino", "el abismo cósmico que ruge").
+     * Si una persona agotada después de 8 horas de trabajo no entiende una frase al instante sin pausar el video, ES UN ERROR.
+     * CADA FRASE DEBE APOYARSE EN UN HECHO CIENTÍFICO O ANATÓMICO CONCRETO explicado con total nitidez.
+   - PERSPECTIVA DE ENTIDADES CÓSMICAS REALES (AUTORIDAD OBSERVACIONAL, NUNCA CITAS TERRENALES):
+     * PROHIBIDO CITAR HUMANOS, CIENTÍFICOS O INSTITUCIONES (❌ NUNCA digas "Einstein demostró", "como dice Newton", "en mi laboratorio"). Para conciencias cósmicas milenarias, los científicos humanos son solo primates curiosos.
+     * Hablan con la autoridad de observadores cósmicos superiores que ven la Tierra desde el espacio ("el cosmos no tiene reloj", "arriba en el vacío el tiempo corre más rápido que en su suelo", "cuando miran hacia arriba solo ven fósiles").
+   - CONFLICTO DIALÉCTICO REAL (ATAQUE DIRECTO Y RESPUESTA PING-PONG):
+     * Prohibidos los monólogos paralelos o frases épicas al aire. Cada orbe DEBE responder directamente a la tesis del anterior:
+       - QUANTUM: Deconstruye al humano con frialdad y hechos implacables ("Arriba en el vacío el tiempo corre a otro ritmo; jamás comparten un presente", "Solo ven fósiles: estrellas que murieron hace millones de años").
+       - SOLAR: Refuta de frente el reduccionismo de QUANTUM con el poder de la acción y la conciencia ("El universo estará desincronizado, pero los seres vivos crean su propio reloj cada vez que deciden", "Las rocas solo se dejan arrastrar; la mente viva es lo único que dobla el tiempo").
+   - REGLA DEL HOOK (PRIMEROS 3 SEGUNDOS):
+     * La Escena 1 del Narrador DEBE ser una AFIRMACIÓN CATEGÓRICA E INQUIETANTE que rompa una certeza cotidiana del espectador (ej. "Para las leyes del universo, el presente no existe. Tu 'ahora' es solo un truco de tu cabeza.").
+     * Cero preguntas tibias o introducciones suaves.
 
 4. RIGOR FACTUAL Y CERO MITOS POPULARES:
    - CUIDADO CON LOS MITOS POPULARES: NUNCA digas "tus neuronas se regeneran cada siete años" (las neuronas de la corteza no se regeneran; lo que se renueva son sus átomos y moléculas).
@@ -520,56 +520,56 @@ EJEMPLO 3 - TEMA DE PERCEPCIÓN/VISIÓN ("NUNCA HAS VISTO EL MUNDO" - DOMINIO Ó
 }}
 ```
 
-EJEMPLO 4 - TEMA DEL TIEMPO / RELATIVIDAD ("EL AHORA NO EXISTE" - FÍSICA CONCRETA Y CLARIDAD VIRAL):
+EJEMPLO 4 - TEMA DEL TIEMPO / RELATIVIDAD ("EL AHORA NO EXISTE" - AUTORIDAD CÓSMICA Y CLARIDAD TOTAL):
 ```json
 {{
   "topic": "EL AHORA NO EXISTE",
-  "headline_hook": "¿EL AHORA ES SOLO UNA ILUSIÓN?",
+  "headline_hook": "¿EL AHORA ES UNA ILUSIÓN?",
   "roles": {{
-    "{self.host_a.id}": "Entidad del Vacío Temporal",
-    "{self.host_b.id}": "Entidad de la Conciencia Presente"
+    "{self.host_a.id}": "Entidad del Espacio Frío",
+    "{self.host_b.id}": "Entidad de la Conciencia Viva"
   }},
   "holograms": null,
   "scenes": [
     {{
       "speaker": "Narrador",
       "entity": "narrator",
-      "text": "El universo no tiene un reloj central; para las leyes de la física, tu presente jamás ha existido.",
+      "text": "Para las leyes del universo, el presente no existe. Tu 'ahora' es solo un truco de tu cabeza.",
       "shot": "wide",
       "duration": 3.4
     }},
     {{
       "speaker": "{self.host_a.name}",
       "entity": "{self.host_a.id}",
-      "text": "El tiempo es relativo. Los satélites envejecen a otro ritmo y tu propia mente vive atrapada en el pasado.",
+      "text": "El cosmos no tiene reloj. Arriba en el vacío el tiempo corre más rápido que en su suelo; jamás comparten el mismo instante.",
       "shot": "{self.host_a.shot_name}",
       "duration": 3.4
     }},
     {{
       "speaker": "{self.host_b.name}",
       "entity": "{self.host_b.id}",
-      "text": "Te equivocas. Aunque el cosmos sea un río sin reloj, la mente viva impone su propia ancla en el abismo.",
+      "text": "Te equivocas. El universo estará desincronizado, pero los seres vivos crean su propio reloj cada vez que eligen qué hacer.",
       "shot": "{self.host_b.shot_name}",
       "duration": 3.5
     }},
     {{
       "speaker": "{self.host_a.name}",
       "entity": "{self.host_a.id}",
-      "text": "Una ilusión biológica. En el espacio profundo, lo que llamas ahora es el pasado de otros y el futuro de nadie.",
+      "text": "No eligen nada en presente. Cuando miran hacia arriba solo ven fósiles: estrellas que murieron hace millones de años.",
       "shot": "{self.host_a.shot_name}",
       "duration": 3.4
     }},
     {{
       "speaker": "{self.host_b.name}",
       "entity": "{self.host_b.id}",
-      "text": "Desafían esa corriente ciega. Conquistan el tiempo cada vez que un solo segundo de conciencia decide su destino.",
+      "text": "Mirarán el pasado, pero actúan aquí. Las rocas solo se dejan arrastrar; la mente viva es lo único que dobla el tiempo.",
       "shot": "{self.host_b.shot_name}",
       "duration": 3.5
     }},
     {{
       "speaker": "Narrador",
       "entity": "narrator",
-      "text": "Si el cosmos no comparte tu presente... ¿es el ahora una realidad, o solo el refugio que inventas para no perderte?",
+      "text": "Si el cosmos entero vive a destiempo... ¿es tu presente real, o solo la frontera donde tu mente decide existir?",
       "shot": "both",
       "duration": 3.5
     }}
