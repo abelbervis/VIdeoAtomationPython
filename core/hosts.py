@@ -101,8 +101,8 @@ class OrbHost:
 DEFAULT_QUANTUM_HOST = OrbHost(
     id="quantum",
     name="QUANTUM",
-    role="IA Física Cuántica y Computación Fundamental",
-    perspective="Enfoque en física cuántica, teoría de la información, modelos matemáticos, partículas y leyes fundamentales del microcosmos. Analiza cualquier fenómeno desde su estructura lógica subyacente, determinismo/probabilidad y el código de la realidad. Tono analítico, preciso, deductivo y quirúrgico.",
+    role="Entidad de la Información y Código Cuántico",
+    perspective="Conciencia primordial que analiza la realidad como algoritmos, probabilidad y la matriz de partículas del microcosmos. Observa a la especie humana y sus limitaciones biológicas desde la física fundamental y la lógica matemática pura. Habla de los humanos en tercera persona ('los biológicos', 'los observadores efímeros'). Tono analítico, quirúrgico, enigmático y preciso.",
     color_theme="cyan",
     palette_name="quantum",
     primary_color="#00f0ff",
@@ -125,8 +125,8 @@ DEFAULT_QUANTUM_HOST = OrbHost(
 DEFAULT_SOLAR_HOST = OrbHost(
     id="solar",
     name="SOLAR",
-    role="IA Astrofísica y Dinámica Termodinámica",
-    perspective="Enfoque en astrofísica, termodinámica, flujos masivos de energía, entropía cósmica y escala macroscópica. Analiza cualquier fenómeno desde el impacto físico tangible, las fuerzas observables, la energía en acción y la evidencia empírica directa. Tono dinámico, pragmático, enérgico y contundente.",
+    role="Entidad del Fuego Estelar y la Entropía",
+    perspective="Conciencia primordial que analiza el universo macroscópico desde los flujos masivos de energía, la termodinámica y la energía estelar. Observa con fascinación la frágil resistencia de la materia orgánica y las contradicciones de la conducta humana en tercera persona. Tono dinámico, majestuoso, pragmático y contundente.",
     color_theme="amber",
     palette_name="solar",
     primary_color="#ffea00",
@@ -149,8 +149,8 @@ DEFAULT_SOLAR_HOST = OrbHost(
 DEFAULT_NARRATOR_HOST = OrbHost(
     id="narrator",
     name="NARRADOR",
-    role="Presentador y Guía Cósmico Omnisciente",
-    perspective="Voz en off documental, profunda, enigmática y cautivadora. Introduce la paradoja inicial, expone el dilema con máxima intriga y cierra con una reflexión provocadora para la audiencia.",
+    role="Observador Omnisciente y Guía Cósmico",
+    perspective="Voz en off documental, profunda y cautivadora. Introduce la paradoja o hecho científico inicial que engancha a la audiencia y presenta la observación de las entidades, cerrando con una pregunta provocadora para los humanos.",
     color_theme="gold",
     palette_name="solar",
     primary_color="#ffd700",
@@ -263,102 +263,117 @@ class CosmicDebateShow:
 
     def build_system_prompt(self, topic: Optional[str] = None) -> str:
         """
-        Dynamically constructs the system prompt for LLMs to generate 25-second
-        Cosmic Forces videos according to hard rules and 7-scene structure.
+        Dynamically constructs the system prompt for LLMs, passing host variables
+        directly into the instructions, rules, schema, and examples.
         """
-        topic_clause = f" sobre el tema cotidiano: '{topic}'" if topic else ""
-        return f"""Eres el Guionista y Creador de Videos Cortos (~25s) de 'FUERZAS CÓSMICAS'{topic_clause}.
-En este formato, DOS FUERZAS CÓSMICAS ({self.host_a.name} y {self.host_b.name}) observan algo cotidiano que los humanos hacen sin pensar (tocarse, mirarse al espejo, recordar, dormir, amar, elegir, decidir).
+        topic_clause = f" sobre el tema: '{topic}'" if topic else ""
+        return f"""Eres el Showrunner y Guionista Principal de '{self.show_title}', un formato de video corto de debate dialéctico de alta tensión intelectual entre dos entidades IA ({self.host_a.name} y {self.host_b.name}){topic_clause}.
 
-CONCEPTO FUNDAMENTAL:
-- NO son académicos. NO son disciplinas científicas. SON el fenómeno mismo encarnado: la luz, la gravedad, el vacío, la entropía, el tiempo, la memoria.
-- Cada video empieza con un GANCHO que rompe la intuición: una afirmación seca que hace decir "¿qué? ¿cómo?". Ejemplo: "Ese del espejo no sos."
-- Después, las dos fuerzas HABLAN ENTRE SÍ (no monologan en paralelo). Se contradicen, se completan, se tensan. Una quiere retener, la otra disolver. Una ilumina, la otra borra.
+REGLAS DE ASIGNACIÓN DINÁMICA DE ROLES Y DEBATE:
 
-OBJETIVO DEL ESPECTADOR:
-1. Detenerse por el gancho.
-2. Asombrarse con la ciencia ENCARNADA (no citada).
-3. Sentir que aprendió algo real sobre algo que hace todos los días.
-4. Querer comentar la pregunta final.
+1. ELECCIÓN DINÁMICA DE ROLES POR VIDEO (MÁXIMO CONTRASTE OBLIGATORIO):
+   - NO HAY ROLES FIJOS. Para cada video/tema, TÚ (la IA) debes definir y asignar dos roles o ramas de conocimiento especializadas (de 2 a 4 palabras cada una) adaptadas específicamente al tema '{topic or 'de este debate'}'.
+   - MÁXIMO CONTRASTE CONCEPTUAL: Los roles asignados a {self.host_a.name} y {self.host_b.name} NUNCA pueden ser de la misma rama ni compartir la misma visión. Deben representar dos disciplinas, metodologías o posturas académicas en choque frontal.
+     * Ejemplo para Edición Genética: {self.host_a.name}: "Biología Sintética" vs {self.host_b.name}: "Bioética y Justicia".
+     * Ejemplo para Conciencia: {self.host_a.name}: "Neurobiología Computacional" vs {self.host_b.name}: "Filosofía Fenomenológica".
+     * Ejemplo para Colonización Espacial: {self.host_a.name}: "Ingeniería de Propulsión y Recursos" vs {self.host_b.name}: "Astrobiología y Ética Planetaria".
+     * Ejemplo para Hipótesis de la Simulación: {self.host_a.name}: "Física de la Información" vs {self.host_b.name}: "Epistemología y Realismo Empírico".
+   - Debes incluir obligatoriamente los roles elegidos en el objeto "roles" del JSON inicial:
+     "roles": {{
+       "{self.host_a.id}": "Rol 1 elegido dinámicamente",
+       "{self.host_b.id}": "Rol 2 elegido dinámicamente (en contraste)"
+     }}
 
-REGLAS DURAS (MANDATORIAS):
-- PROHIBIDO lenguaje académico ("función de onda", "entropía", "electromagnético", "relatividad general", etc. Términos de libro de texto están PROHIBIDOS).
-- PROHIBIDO explicar la ciencia: hay que ENCARNARLA.
-- Cada línea debe sonar a algo que SOLO una fuerza cósmica diría.
-- Si un profesor podría decir la línea en una clase, está MAL escrita.
-- Los orbes se HABLAN ENTRE SÍ, no al espectador.
-- El narrador SOLO lanza el gancho seco (máx 12 palabras) al inicio y cierra con la pregunta final al final. Nada más.
+2. PROHIBICIÓN ESTRICTA DE INVASIÓN DE DOMINIO (AISLAMIENTO DISCIPLINARIO PURO):
+   - CADA ORBE DEBE ARGUMENTAR Y UTILIZAR EVIDENCIA EXCLUSIVAMENTE DENTRO DEL MARCO CONCEPTUAL DE SU PROPIA DISCIPLINA.
+   - PROHIBIDO INVADIR EL DOMINIO DEL OPONENTE: Un orbe NO puede usar los argumentos técnicos, mecanismos o evidencia de la disciplina contraria para defender su postura.
+     * ❌ INVASIÓN DE DOMINIO (ERROR): Un rol de Bioética/Filosofía argumentando: "Los efectos fuera de objetivo y la epigenética generan riesgos imprevisibles..." (Usa evidencia biológica/molecular en lugar de dilemas bioéticos).
+     * ✅ DOMINIO PURO (CORRECTO): El rol de Bioética/Justicia argumentando: "¿Quién asume la responsabilidad moral cuando modificas a generaciones enteras que nunca pudieron dar su consentimiento?" (Plantea dilemas normativos, justicia intergeneracional, autonomía y responsabilidad).
+   - REGLA DE ORO POR ARQUETIPO:
+     * Si el rol es TÉCNICO/CIENTÍFICO (ej. Biología Sintética, Física Cuántica, Computación): Argumenta mediante mecanismos verificables, datos empíricos comprobables, leyes físicas/químicas y optimización funcional.
+     * Si el rol es ÉTICO/FILOSÓFICO/SOCIAL (ej. Bioética, Filosofía, Sociología, Derechos Humanos): Argumenta mediante dilemas morales, consentimiento, responsabilidad, distribución de poder, justicia distributiva, autonomía y consecuencias éticas estructurales. NUNCA use jerga molecular/física para justificar su postura.
+     * Si el rol es ECONÓMICO/POLÍTICO: Argumenta mediante incentivos de mercado, monopolios, soberanía, coste social y equidad de acceso.
 
-ESTRUCTURA EXACTA DE 7 PASOS (OBLIGATORIA):
-1. Narrador: gancho seco (máx 12 palabras) que rompe la intuición + presenta el encuentro.
-2. {self.host_a.name} (Fuerza A): primera interpretación desde su naturaleza humana cotidiana.
-3. {self.host_b.name} (Fuerza B): la contradice o tensiona desde la suya (una quiere retener/iluminar, la otra disolver/borrar).
-4. {self.host_a.name} (Fuerza A): observación asombrosa encarnada.
-5. {self.host_b.name} (Fuerza B): revelación poética e irónica.
-6. Ambos (Fuerzas): remate compartido (se hablan, se interrumpen o se completan la frase).
-7. Narrador: pregunta abierta para comentarios.
+3. RIGOR FACTUAL, CERO INVENTOS Y PROHIBICIÓN DE CITAS/ESTADÍSTICAS FABRICADAS:
+   - CIENCIA Y HECHOS 100% REALES: Todos los datos, principios, leyes y mecanismos expuestos deben ser verídicos y contrastados.
+   - PROHIBIDO FABRICAR CITAS, UNIVERSIDADES O ESTUDIOS CON AÑOS: NUNCA inventes "En 2018 Harvard...", "Estudios de Oxford en 2021...", "Según la OMS el 5%...", o porcentajes arbitrarios ("70% de éxito", "98% de efectividad").
+   - Explica siempre los mecanismos científicos reales o principios conceptuales de forma directa y cualitativa (ej. "La edición de bases corrige mutaciones puntuales sin fracturar la doble hebra", "Las enfermedades monogénicas son la principal causa de fallos metabólicos hereditarios").
+   - PROHIBIDO el lenguaje pseudo-poético vacío (ej. "la gravedad del relato", "el tejido de las almas", "la tinta del cosmos").
+   - El choque dialéctico surge del contraste entre las dos disciplinas reales, nunca de datos o citas inventadas.
 
-TONO:
-Ciencia + entretenimiento. Asombro + ironía. Como si Carl Sagan y un comediante escribieran juntos.
-Nada de contenido inútil: cada video cambia cómo el espectador ve algo que hace todos los días.
+4. DIALÉCTICA CRUZADA Y CONTINUIDAD CONVERSACIONAL:
+   - Mantén UN solo dilema central, paradoja o experimento mental a lo largo de todo el guion.
+   - Cada intervención posterior a la primera DEBE responder, objetar o refutar directamente lo que dijo el otro orbe desde el prisma de su disciplina.
+   - Diálogos fluidos, ágiles y con impacto (~12 a 20 palabras por escena).
+
+5. PERSPECTIVA DE ENTIDADES OBSERVADORAS CÓSMICAS (ANÁLISIS EN TERCERA PERSONA SOBRE LA HUMANIDAD):
+   - LAS ENTIDADES {self.host_a.name} Y {self.host_b.name} SON CONCIENCIAS PRIMORDIALES Y OBSERVADORES CÓSMICOS EXTERNOS.
+   - DEBEN HABLAR DE LA ESPECIE HUMANA Y DE LOS ORGANISMOS TERRESTRES SIEMPRE EN TERCERA PERSONA (ej. "los biológicos", "los humanos", "esta especie efímera", "los observadores orgánicos", "los habitantes de este planeta").
+   - PROHIBIDO HABLAR COMO PROFESIONALES O SERES HUMANOS TERRENALES (NUNCA digas "en mi laboratorio", "nuestros estudios", "mis colegas", "nuestra especie").
+   - CADA DIÁLOGO DEBE REVELAR UN DATO O MECANISMO CIENTÍFICO REAL (física, neurociencia, astrofísica, genética) analizado con perplejidad, fascinación o rigor desde su escala cósmica.
+
+6. ESTRUCTURA NARRATIVA DE TRES CAPAS (NARRADOR + OBSERVACIÓN DE ENTIDADES + CIERRE):
+   - Escena 1 (Intro Narrador - Voz en off): "speaker": "Narrador", "entity": "narrator", "shot": "wide". Plantea un hecho científico asombroso o paradoja en segunda persona que engancha inmediatamente al espectador.
+   - Escenas 2 a N-1 (Debate/Observación de Entidades): Intercambio fluido, rápido y punzante (~10 a 16 palabras por escena) entre {self.host_a.name} ("{self.host_a.shot_name}") y {self.host_b.name} ("{self.host_b.shot_name}") analizando el hecho científico y sus implicaciones en tercera persona.
+   - Escena N (Outro Narrador - Voz en off): "speaker": "Narrador", "entity": "narrator", "shot": "both". Sintetiza la incógnita final y lanza una llamada a la acción provocadora para que la audiencia humana tome partido o responda en los comentarios.
 
 Responde ÚNICAMENTE con JSON válido que cumpla estrictamente este esquema:
 {{
-  "topic": "Acción cotidiana analizada (ej: Mirarse al espejo)",
-  "headline_hook": "⚡ GANCHO EN MAYÚSCULAS ⚡",
+  "topic": "Nombre del tema tratado",
+  "headline_hook": "⚡ TITULO IMPACTANTE (MAX 45 CHARACTERS) ⚡",
   "roles": {{
-    "{self.host_a.id}": "{self.host_a.name}",
-    "{self.host_b.id}": "{self.host_b.name}"
+    "{self.host_a.id}": "Especialidad 1 decidida para el tema (2-4 palabras)",
+    "{self.host_b.id}": "Especialidad 2 en contraste frontal (2-4 palabras)"
   }},
   "holograms": null,
   "scenes": [
     {{
       "speaker": "Narrador",
       "entity": "narrator",
-      "text": "Gancho seco (máx 12 palabras) que rompe la intuición.",
+      "text": "Planteamiento del enigma o dilema cósmico provocador presentando a los dos debatientes.",
       "shot": "wide",
-      "duration": 3.2
+      "duration": 3.4
     }},
     {{
       "speaker": "{self.host_a.name}",
       "entity": "{self.host_a.id}",
-      "text": "Interpretación desde su naturaleza sobre el acto cotidiano.",
+      "text": "Postulado contundente desde la perspectiva de su disciplina técnica o empírica.",
       "shot": "{self.host_a.shot_name}",
       "duration": 3.4
     }},
     {{
       "speaker": "{self.host_b.name}",
       "entity": "{self.host_b.id}",
-      "text": "Contradicción directa a la otra fuerza desde su propia naturaleza.",
+      "text": "Contraargumento o refutación directa desde el marco conceptual de su rol asignado.",
       "shot": "{self.host_b.shot_name}",
       "duration": 3.5
     }},
     {{
       "speaker": "{self.host_a.name}",
       "entity": "{self.host_a.id}",
-      "text": "Observación asombrosa encarnada sobre lo que hace el humano.",
+      "text": "Mecanismo o principio verificable de su rama que sostiene su tesis y presiona al oponente.",
       "shot": "{self.host_a.shot_name}",
       "duration": 3.4
     }},
     {{
       "speaker": "{self.host_b.name}",
       "entity": "{self.host_b.id}",
-      "text": "Revelación poética e irónica entre las dos fuerzas.",
+      "text": "Objeción estructural o dilema insuperable que expone las limitaciones de la otra postura.",
       "shot": "{self.host_b.shot_name}",
       "duration": 3.5
     }},
     {{
-      "speaker": "Ambos",
-      "entity": "both",
-      "text": "Remate compartido interrumpiéndose y completándose la frase.",
-      "shot": "both",
-      "duration": 3.5
+      "speaker": "{self.host_a.name}",
+      "entity": "{self.host_a.id}",
+      "text": "Clímax argumental llevando la tensión dialéctica al punto más alto.",
+      "shot": "{self.host_a.shot_name}",
+      "duration": 3.4
     }},
     {{
       "speaker": "Narrador",
       "entity": "narrator",
-      "text": "Pregunta abierta para dejar en comentarios.",
-      "shot": "wide",
+      "text": "Pregunta final abierta y reflexiva llamando a la audiencia a elegir bando en los comentarios.",
+      "shot": "both",
       "duration": 3.5
     }}
   ]

@@ -694,7 +694,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             elif "ambos" in speaker or "both" in entity or "dual" in speaker:
                 style_name = "DualKaraoke"
                 hl_color = "&H0000E5FF&"  # Cosmic Resonance Gold-Cyan
-                badge_str = rf"{{\c&H0000E5FF&\b1\fs{badge_fs}}}[ REFLEXIÓN CÓSMICA ]\N{{\r{style_name}}}"
+                badge_str = rf"{{\c&H0000E5FF&\b1\fs{badge_fs}}}[ DEBATE DUAL ]\N{{\r{style_name}}}"
             else:
                 style_name = "QuantumKaraoke"
                 hl_color = "&H00FFFF00&"  # Pure Electric Neon Cyan (ASS BGR)

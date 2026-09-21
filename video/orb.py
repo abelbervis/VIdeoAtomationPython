@@ -1546,11 +1546,7 @@ def render_orb_test_preview(
     filter_complex.append(f"[{cur_v}]drawtext=text='{escaped_headline_hook}':{font_param}:fontcolor=white:fontsize=40:box=1:boxcolor=0x08101e@0.95:boxborderw=20:borderw=2:bordercolor=0x00f0ff:x=(w-text_w)/2:y=140:enable='between(t,0,{first_sc_end})'[v_hook]")
     cur_v = "v_hook"
 
-    # Outro Reflection Badge (during last scene)
-    last_sc_st = scene_records[-1]["start"] if len(scene_records) > 1 else total_duration * 0.75
-    filter_complex.append(f"[{cur_v}]drawtext=text='⚡ REFLEXIÓN CÓSMICA ⚡':{font_param}:fontcolor=white:fontsize=40:box=1:boxcolor=0x08101e@0.95:boxborderw=20:borderw=2:bordercolor=0x00f0ff:x=(w-text_w)/2:y=140:enable='between(t,{last_sc_st},{total_duration})'[v_outro_badge]")
-    cur_v = "v_outro_badge"
-
+    # Outro Reflection Badge removed per user request
     # Subtitles overlay
     filter_complex.append(f"[{cur_v}]ass='{escaped_ass_path}'[vout]")
 
