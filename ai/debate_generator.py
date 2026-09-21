@@ -374,42 +374,42 @@ class DebateScriptGenerator:
                     {
                         "speaker": "Narrador",
                         "entity": "narrator",
-                        "text": "Tu cerebro vive encerrado a oscuras dentro del cráneo; jamás ha tocado un solo rayo de luz real.",
+                        "text": "Tus ojos se abren a la oscuridad del cráneo; la luz real jamás ha tocado tu retina.",
                         "shot": "wide",
                         "duration": 3.4
                     },
                     {
                         "speaker": self.show.host_a.name,
                         "entity": self.show.host_a.id,
-                        "text": "Lo que llaman visión es una simulación tardía. El universo físico carece de colores; solo son ondas que su cerebro inventa.",
+                        "text": "La visión es una simulación tardía. El cosmos físico carece de colores; solo son ondas que su mente inventa.",
                         "shot": self.show.host_a.shot_name,
                         "duration": 3.4
                     },
                     {
                         "speaker": self.show.host_b.name,
                         "entity": self.show.host_b.id,
-                        "text": "Te equivocas. No es una mentira; es la materia viva dotando de sentido y belleza al abismo de la radiación ciega.",
+                        "text": "Te equivocas. No es un engaño: es la conciencia viva forjando belleza donde solo existe radiación ciega.",
                         "shot": self.show.host_b.shot_name,
                         "duration": 3.5
                     },
                     {
                         "speaker": self.show.host_a.name,
                         "entity": self.show.host_a.id,
-                        "text": "Una construcción que llega con ochenta milisegundos de retraso. Siempre contemplan el eco muerto del pasado.",
+                        "text": "Una construcción con ochenta milisegundos de retraso. Jamás tocan el presente; contemplan solo sombras del pasado.",
                         "shot": self.show.host_a.shot_name,
                         "duration": 3.4
                     },
                     {
                         "speaker": self.show.host_b.name,
                         "entity": self.show.host_b.id,
-                        "text": "Ese instante de retraso es su mayor conquista: transformar el impacto mudo de fotones en asombro consciente.",
+                        "text": "Desafían ese retraso creando mundos. Conquistan el abismo cada vez que transforman fotones mudos en pensamiento.",
                         "shot": self.show.host_b.shot_name,
                         "duration": 3.5
                     },
                     {
                         "speaker": "Narrador",
                         "entity": "narrator",
-                        "text": "Si lo que ves es solo una recreación tardía dentro de tu mente... ¿alguna vez has visto el mundo real, o solo la sombra que tu cerebro inventa para no colapsar?",
+                        "text": "Si cada imagen que contemplas es solo una sombra creada en tus tinieblas... ¿alguna vez has visto el mundo real?",
                         "shot": "both",
                         "duration": 3.5
                     }

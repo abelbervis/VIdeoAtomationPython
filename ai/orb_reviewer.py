@@ -35,19 +35,22 @@ CRITICAL CHECKLIST TO VALIDATE AND CORRECT:
    - CIENCIA Y HECHOS 100% VERÍDICOS: Toda afirmación debe basarse en principios, leyes y hechos reales comprobados.
    - REJECT and REWRITE any pseudo-poetic nonsense phrases ("la gravedad del relato", "la tinta de la conciencia", "las hojas del libro cósmico", "las voces del vacío").
 
-4. CONTINUOUS STORY ARC & CONVERSATIONAL RESPONSE:
+4. CONTINUOUS STORY ARC & DIALECTICAL CONFLICT:
    - Ensure the entire script stays within ONE central concept, paradox or thought experiment.
-   - GANCHO DE LA ESCENA 1 (HOOK INICIAL EN 3 SEGUNDOS): Debe ser una paradoja inquietante o hecho deslumbrante en segunda persona 100% derivado del tema. Si empieza con "Imagina...", un mito falso o una definición genérica, REESCRIBE el gancho a un hecho directo y demoledor (ej. para visión: "Tu cerebro vive encerrado a oscuras dentro del cráneo; jamás ha tocado un rayo de luz real"; para identidad: "Los átomos de tu cuerpo se renuevan por completo. Físicamente, la persona que nació ya no existe").
-   - PROHIBICIÓN ESTRICTA DE CONSENSO Y PROHIBICIÓN DE GRITOS CARICATURESCOS:
-     * Si las dos entidades están de acuerdo o se complementan amistosamente, REESCRIBE de inmediato para forzar un choque dialéctico frontal con visiones irreconciliables.
-     * PROHIBIDO EL HISTRONISMO O GRITOS DE TELENOVELA (❌ ELIMINA interjecciones como "¡Mientes!", "¡Falso!", "¡No!", "¡Arden con furia!").
-     * Afirman con convicción serena, tajante, aristocrática y demoledora (ej. "Te equivocas.", "No teje nada.", "Una vana ilusión.").
-     * RESCATA LA BELLEZA LÍRICA Y POESÍA CÓSMICA: Usa metáforas poderosas adaptadas al tema específico ("esa chispa de conciencia teje su propia historia", "dotar de sentido a la radiación ciega").
-     * QUANTUM deconstruye con frialdad y reduce al humano a impulsos efímeros o ilusiones; SOLAR defiende la nobleza, la experiencia subjetiva y la chispa que desafía a la entropía.
+   - GANCHO DE LA ESCENA 1 (HOOK AFIRMATIVO EN 3 SEGUNDOS): Debe ser una AFIRMACIÓN categórica e inquietante en segunda persona (NUNCA una pregunta ni condicional tímido). Si empieza con una pregunta o definición genérica, REESCRIBE el gancho a una sentencia directa y demoledora (ej. "Tus ojos se abren a la oscuridad del cráneo; la luz real jamás ha tocado tu retina", "Los átomos de tu cuerpo se renuevan por completo. Físicamente, la persona que nació ya no existe").
+   - AUDITORÍA DE SOLAR: AGENCIA ACTIVA Y REBELDÍA CREADORA (CERO CONTEMPLACIÓN PASIVA):
+     * PROHIBIDO EL "SÍ, PERO..." O COMPLACENCIA POÉTICA: SOLAR no busca el lado bonito ni se resigna a lo que QUANTUM dice. Si QUANTUM señala una limitación o reducción biológica, SOLAR refuta la conclusión y demuestra la victoria de la conciencia consciente.
+     * Si SOLAR usa verbos o actitudes pasivas ("produce asombro", "es la firma de la vida", "el cosmos vibra", "admirar"), REESCRIBE de inmediato dotando a SOLAR de combate y forja activa ("desafían ese retraso", "esculpen sentido en el vacío", "conquistan el abismo", "forjan mundos").
+   - PROHIBICIÓN DE GRITOS HISTRIÓNICOS:
+     * Cero interjecciones teatrales (❌ ELIMINA "¡Mientes!", "¡Falso!", "¡No!").
+     * Afirman con convicción serena, tajante, aristocrática y demoledora (ej. "Te equivocas.", "No es una pérdida.", "Una vana ilusión.").
+   - COHERENCIA SENSORIAL Y METAFÓRICA (CERO CONTAMINACIÓN Y CERO REPETICIÓN):
+     * Las metáforas deben nacer del campo físico del tema tratado (ej. en óptica/visión: sombras, reflejos, prismas, destellos, tinieblas; PROHIBIDO usar metáforas sonoras como "eco" en fenómenos de luz).
+     * PROHIBIDA LA REPETICIÓN: Ninguna palabra clave metafórica puede aparecer más de una vez en el guion.
    - ELIMINACIÓN DE JERGA CRÍPTICA Y SUSTITUCIÓN POR IMÁGENES PODEROSAS:
-     * Reemplaza jerga densa como "decoherencia", "patrón de bits", "transición estadística", "glicólisis", "reducción a sinapsis" por conceptos visuales y viscerales ("señales eléctricas en un cerebro hueco", "millones de impulsos sin ningún alma detrás").
-   - TITULAR IMPACTANTE (headline_hook): Debe ser una pregunta frontal o dilema punzante (ej. "¿ALGUNA VEZ HAS VISTO EL MUNDO?", "¿REALMENTE EXISTES?"). REESCRIBE cualquier titular descriptivo o tibio (como "TU SER, ¿UNA ILUSIÓN?").
-   - CIERRE CIRCULAR OBLIGATORIO (EVOLUCIÓN DEL HOOK): La última escena del Narrador DEBE ser la evolución directa de la pregunta del headline_hook (ej. Hook Visión: "¿ALGUNA VEZ HAS VISTO EL MUNDO?" ➔ Cierre: "Si lo que ves es solo una recreación tardía dentro de tu mente... ¿alguna vez has visto el mundo real, o solo la sombra que tu cerebro inventa para no colapsar?"; Hook Identidad: "¿REALMENTE EXISTES?" ➔ Cierre: "Si toda tu materia cambia sin cesar... ¿eres tú quien escucha esto, o solo la ilusión de alguien que cree existir?"). PROHIBIDO introducir metáforas descolgadas o preguntas nuevas arbitrarias (como "eco dentro del vacío").
+     * Reemplaza jerga densa ("decoherencia", "glicólisis", "reducción a sinapsis") por imágenes directas ("señales eléctricas en un cerebro hueco", "millones de impulsos sin un alma detrás").
+   - TITULAR IMPACTANTE (headline_hook): Pregunta frontal o dilema punzante (ej. "¿ALGUNA VEZ HAS VISTO EL MUNDO?", "¿REALMENTE EXISTES?").
+   - CIERRE CIRCULAR OBLIGATORIO (EVOLUCIÓN DEL HOOK): La última escena del Narrador DEBE ser la evolución directa de la pregunta del headline_hook (ej. Hook: "¿ALGUNA VEZ HAS VISTO EL MUNDO?" ➔ Cierre: "Si cada imagen es solo una sombra creada en tus tinieblas... ¿alguna vez has visto el mundo real?"). PROHIBIDO introducir metáforas descolgadas o preguntas arbitrarias.
 
 5. STRUCTURE & DEVELOPED EXCHANGES:
    - Las escenas deben desarrollarse lo suficiente para que ambos orbes expongan y reaccionen con profundidad y agilidad.

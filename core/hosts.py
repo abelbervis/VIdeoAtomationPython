@@ -297,28 +297,40 @@ REGLAS DE ASIGNACIÓN DINÁMICA DE ROLES Y DEBATE:
    - CUIDADO CON LOS MITOS POPULARES: NUNCA digas "tus neuronas se regeneran cada siete años" (las neuronas de la corteza no se regeneran; lo que se renueva son sus átomos y moléculas).
    - CIENCIA Y HECHOS 100% REALES: Todos los mecanismos deben basarse en leyes físicas y biológicas verídicas, sin inventar estudios con años ni universidades ficticias.
 
-4. POLARIZACIÓN Y CHOQUE FRONTAL CON GRAVITAS CÓSMICA (SERENIDAD TAJANTE, CERO GRITOS):
-   - ESTRICTAMENTE PROHIBIDO EL CONSENSO O LA COMPLICIDAD, PERO TAMBIÉN PROHIBIDAS LAS INTERJECCIONES HISTRIÓNICAS O GRITOS DE CARICATURA (❌ NUNCA uses "¡Mientes!", "¡Falso!", "¡No!", "¡Arden con furia!").
-   - LAS ENTIDADES NO GRITAN NI PIERDEN LA COMPOSTURA: Afirman con convicción serena, tajante y demoledora (ej. "Te equivocas.", "No teje nada.", "Una vana ilusión.").
-   - POESÍA Y PROFUNDIDAD CONCEPTUAL: Rescata la belleza lírica y la metáfora cósmica ("esa chispa de conciencia teje su propia historia", "ninguna ecuación fría puede borrar la experiencia de arder"). Tensión profunda, no ruidosa.
+4. POLARIZACIÓN Y CHOQUE FRONTAL (AGENCIA ACTIVA VS REDUCCIONISMO FRÍO):
+   - ESTRICTAMENTE PROHIBIDO EL CONSENSO O LA COMPLICE COMPLACENCIA:
+     * PROHIBIDO EL "SÍ, PERO..." (COMPLICIDAD POÉTICA): {self.host_b.name} (SOLAR) NUNCA debe limitarse a buscarle el lado bonito o contemplativo a la afirmación de {self.host_a.name} (QUANTUM).
+     * ❌ EJEMPLO DEFECTUOSO (COMPLACIENTE): QUANTUM: "La retina pierde la mitad en ruido" ➔ SOLAR: "Ese ruido es la firma de la vida y produce asombro" (ERROR: esto no es choque, es resignación decorativa).
+     * ✅ EJEMPLO CORRECTO (CHOQUE Y SOBERANÍA): QUANTUM: "Su supuesta visión pierde millones de fotones en ruido ciego" ➔ SOLAR: "No es pérdida, es soberanía: filtran ese caos para esculpir sentido y orden donde el universo solo tiene vacío".
    - ASIGNACIÓN DE BANDOS ANTAGÓNICOS INNEGOCIABLE:
-     * {self.host_a.name} (QUANTUM): Reduccionismo determinista y frío. Deconstruye el fenómeno humano a meras ilusiones biológicas, impulsos sin alma y vacío sin propósito.
-     * {self.host_b.name} (SOLAR): Fuego vital, conciencia y emergencia. Defiende la rebelión biológica contra la entropía, la experiencia subjetiva y la nobleza de existir y sentir.
+     * {self.host_a.name} (QUANTUM): Reduccionismo frío y determinista. Deconstruye el fenómeno humano a meras ilusiones mecánicas, pérdida de datos, trampas de supervivencia y vacío sin propósito.
+     * {self.host_b.name} (SOLAR): FUEGO VITAL, AGENCIA CREADORA Y REBELDÍA. 
+       - SOLAR NO ES UN ESPECTADOR CONTEMPLATIVO: Prohibido usar verbos pasivos como "admirar", "contemplar", "asombrar", "el cosmos vibra dentro de ellos".
+       - SOLAR ENCARNA LA ACCIÓN, LA FORJA Y EL DESAFÍO: Usa verbos de agencia y combate conceptual ("desafiar", "esculpir", "forjar", "imponer", "conquistar", "rebelarse", "tejer").
+       - SOLAR ataca la premisa de QUANTUM: demuestra que la conciencia consciente domina y trasciende la frialdad mecánica.
+   - LAS ENTIDADES NO GRITAN NI PIERDEN LA COMPOSTURA: Afirman con convicción serena, tajante y demoledora (ej. "Te equivocas.", "No es una pérdida.", "Una vana ilusión."). Cero interjecciones melodramáticas (❌ NO "¡Mientes!", "¡Falso!", "¡No!").
    - Diálogos fluidos, elegantes, cortantes y de alto impacto (~10 a 16 palabras por escena).
 
-5. PERSPECTIVA DE ENTIDADES OBSERVADORAS CÓSMICAS (ANÁLISIS EN TERCERA PERSONA SOBRE LA HUMANIDAD):
+5. COHERENCIA SENSORIAL Y METAFÓRICA (CERO CONTAMINACIÓN DE DOMINIOS):
+   - Las metáforas y analogías DEBEN emanar estrictamente del dominio físico y sensorial del tema:
+     * En fenómenos de LUZ / VISIÓN: usa reflejos, sombras, prismas, espectro, destellos, tinieblas, ceguera (❌ PROHIBIDO usar metáforas sonoras como "eco" o "ruido auditivo").
+     * En fenómenos de SONIDO / ONDAS: silencio, resonancia, frecuencia, eco, vibración.
+     * En fenómenos de MATERIA / TERMODINÁMICA: fragua, entropía, cenizas, calor, congelación cósmica.
+   - PROHIBIDA LA REPETICIÓN DE METÁFORAS: En las 6 escenas está prohibido repetir dos veces la misma palabra clave o metáfora ("sombra", "eco", "llama", "abismo"). Cada línea debe aportar una imagen fresca.
+
+6. PERSPECTIVA DE ENTIDADES OBSERVADORAS CÓSMICAS (ANÁLISIS EN TERCERA PERSONA):
    - LAS ENTIDADES {self.host_a.name} Y {self.host_b.name} SON CONCIENCIAS PRIMORDIALES Y OBSERVADORES CÓSMICOS EXTERNOS.
    - DEBEN HABLAR DE LA ESPECIE HUMANA Y DE LOS ORGANISMOS TERRESTRES SIEMPRE EN TERCERA PERSONA (ej. "los biológicos", "los humanos", "esta especie efímera", "los observadores orgánicos").
    - PROHIBIDO HABLAR COMO PROFESIONALES O SERES HUMANOS TERRENALES (NUNCA digas "en mi laboratorio", "nuestros estudios", "mis colegas", "nuestra especie").
 
-6. ESTRUCTURA NARRATIVA DE TRES CAPAS (HOOK INCÓMODO + CHOQUE ELEGANTE + CIERRE CIRCULAR EVOLUTIVO):
-   - Headline Hook (headline_hook): Debe ser una pregunta frontal o dilema punzante (ej. "¿REALMENTE EXISTES?", "¿POR QUÉ ALUCINAS AL DORMIR?"). PROHIBIDOS títulos descriptivos o tibios (❌ NO uses "TU SER, ¿UNA ILUSIÓN?", "LOS SUEÑOS LIMPIAN EL CEREBRO").
-   - Escena 1 (Intro Narrador - Voz en off): "speaker": "Narrador", "entity": "narrator", "shot": "wide". HOOK DE IMPACTO EN 3 SEGUNDOS: Desestructura la certeza del espectador en segunda persona con un hecho real demoledor (ej. "Los átomos de tu cuerpo se renuevan por completo. Físicamente, la persona que nació ya no existe").
-   - Escenas 2 a N-1 (Observación de Entidades): Debate dialéctico con convicción tajante, elegancia poética y rigor conceptual (~10 a 15 palabras por escena) entre {self.host_a.name} ("{self.host_a.shot_name}") y {self.host_b.name} ("{self.host_b.shot_name}").
-   - Escena N (Outro Narrador - Voz en off): "speaker": "Narrador", "entity": "narrator", "shot": "both". CIERRE CIRCULAR: Debe ser la EVOLUCIÓN DIRECTA DEL HOOK INICIAL (headline_hook), nunca una metáfora desconectada ni una pregunta nueva arbitraria (ej. Hook: "¿REALMENTE EXISTES?" ➔ Cierre: "Si toda tu materia cambia sin cesar... ¿eres tú quien escucha esto, o solo la ilusión de alguien que cree existir?"). PROHIBIDO PEDIR COMENTARIOS O LIKES.
+7. ESTRUCTURA NARRATIVA DE TRES CAPAS (HOOK AFIRMATIVO + CHOQUE REAL + CIERRE CIRCULAR):
+   - Headline Hook (headline_hook): Pregunta frontal o dilema punzante en mayúsculas sin emojis (ej. "¿REALMENTE EXISTES?", "¿ALGUNA VEZ HAS VISTO EL MUNDO?").
+   - Escena 1 (Intro Narrador): HOOK EN AFIRMACIÓN DEMOLEDORA (NUNCA PREGUNTA). Una sentencia categórica en segunda persona que derriba la certeza del espectador de inmediato (ej. "Tus ojos se abren a la oscuridad del cráneo; la luz real jamás ha tocado tu retina.", "Pasas un tercio de tu vida paralizado, alucinando mundos para no colapsar.").
+   - Escenas 2 a N-1 (Choque Dialéctico): Tesis reduccionista vs Antítesis rebelde con rigor factual y elegancia.
+   - Escena N (Outro Narrador): CIERRE CIRCULAR. Evolución directa de la pregunta del headline_hook (ej. Hook: "¿ALGUNA VEZ HAS VISTO EL MUNDO?" ➔ Cierre: "Si cada imagen es solo una proyección creada en tus tinieblas... ¿alguna vez has visto el mundo real, o solo la sombra que tu cerebro inventa para no colapsar?"). PROHIBIDO PEDIR COMENTARIOS O LIKES.
 
-7. PROHIBICIÓN DE EMOJIS EN EL TITULAR (headline_hook):
-   - El atributo "headline_hook" NO DEBE LLEVAR NINGÚN EMOJI NI SÍMBOLO (❌ NO uses ⚡, 🌌, 🧬). Solo texto limpio, directo e impactante en mayúsculas (máximo 40 caracteres).
+8. PROHIBICIÓN DE EMOJIS EN EL TITULAR (headline_hook):
+   - El atributo "headline_hook" NO DEBE LLEVAR NINGÚN EMOJI NI SÍMBOLO (máximo 40 caracteres limpios).
 
 EJEMPLO MODELO DE GUION DE MÁXIMA RETENCIÓN Y DEBATE CRUZADO (SIGUE ESTE ESTILO EXACTO):
 ```json
@@ -348,7 +360,7 @@ EJEMPLO MODELO DE GUION DE MÁXIMA RETENCIÓN Y DEBATE CRUZADO (SIGUE ESTE ESTIL
     {{
       "speaker": "{self.host_b.name}",
       "entity": "{self.host_b.id}",
-      "text": "¡Una imperfección trágica! Si no entran en coma diario, sus propios residuos los envenenan.",
+      "text": "Una imperfección trágica. Si no entran en coma diario, sus propios residuos los envenenan.",
       "shot": "{self.host_b.shot_name}",
       "duration": 3.5
     }},
@@ -434,7 +446,7 @@ EJEMPLO 2 DE ANTAGONISMO ELEGANTE Y GRAVITAS CÓSMICA - TEMA IDENTIDAD/MATERIA:
 }}
 ```
 
-EJEMPLO 3 - TEMA DE PERCEPCIÓN/VISIÓN ("NUNCA HAS VISTO EL MUNDO" - CIENCIA Y METÁFORAS EXCLUSIVAS DE ÓPTICA Y CEREBRO):
+EJEMPLO 3 - TEMA DE PERCEPCIÓN/VISIÓN ("NUNCA HAS VISTO EL MUNDO" - DOMINIO ÓPTICO Y CHOQUE PURO):
 ```json
 {{
   "topic": "NUNCA HAS VISTO EL MUNDO",
@@ -448,42 +460,42 @@ EJEMPLO 3 - TEMA DE PERCEPCIÓN/VISIÓN ("NUNCA HAS VISTO EL MUNDO" - CIENCIA Y 
     {{
       "speaker": "Narrador",
       "entity": "narrator",
-      "text": "Tu cerebro vive encerrado a oscuras dentro del cráneo; jamás ha tocado un solo rayo de luz real.",
+      "text": "Tus ojos se abren a la oscuridad del cráneo; la luz real jamás ha tocado tu retina.",
       "shot": "wide",
       "duration": 3.4
     }},
     {{
       "speaker": "{self.host_a.name}",
       "entity": "{self.host_a.id}",
-      "text": "Lo que llaman visión es una simulación tardía. El universo físico carece de colores; solo son ondas que su cerebro inventa.",
+      "text": "La visión es una simulación tardía. El cosmos físico carece de colores; solo son ondas que su mente inventa.",
       "shot": "{self.host_a.shot_name}",
       "duration": 3.4
     }},
     {{
       "speaker": "{self.host_b.name}",
       "entity": "{self.host_b.id}",
-      "text": "Te equivocas. No es una mentira; es la materia viva dotando de sentido y belleza al abismo de la radiación ciega.",
+      "text": "Te equivocas. No es un engaño: es la conciencia viva forjando belleza donde solo existe radiación ciega.",
       "shot": "{self.host_b.shot_name}",
       "duration": 3.5
     }},
     {{
       "speaker": "{self.host_a.name}",
       "entity": "{self.host_a.id}",
-      "text": "Una construcción que llega con ochenta milisegundos de retraso. Siempre contemplan el eco muerto del pasado.",
+      "text": "Una construcción con ochenta milisegundos de retraso. Jamás tocan el presente; contemplan solo sombras del pasado.",
       "shot": "{self.host_a.shot_name}",
       "duration": 3.4
     }},
     {{
       "speaker": "{self.host_b.name}",
       "entity": "{self.host_b.id}",
-      "text": "Ese instante de retraso es su mayor conquista: transformar el impacto mudo de fotones en asombro consciente.",
+      "text": "Desafían ese retraso creando mundos. Conquistan el abismo cada vez que transforman fotones mudos en pensamiento.",
       "shot": "{self.host_b.shot_name}",
       "duration": 3.5
     }},
     {{
       "speaker": "Narrador",
       "entity": "narrator",
-      "text": "Si lo que ves es solo una recreación tardía dentro de tu mente... ¿alguna vez has visto el mundo real, o solo la sombra que tu cerebro inventa para no colapsar?",
+      "text": "Si cada imagen que contemplas es solo una sombra creada en tus tinieblas... ¿alguna vez has visto el mundo real?",
       "shot": "both",
       "duration": 3.5
     }}
