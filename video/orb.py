@@ -110,6 +110,81 @@ def extract_audio_speech_envelope(
                 pass
 
 
+def extract_real_audio_rms_profile(
+    audio_path: Path,
+    intervals: List[Tuple[float, float]],
+    step_hz: int = 10,
+) -> str:
+    """
+    Extracts fine-grained syllable/speech RMS energy from narration audio,
+    returning a compact FFmpeg mathematical expression that surges precisely on spoken syllables.
+    """
+    audio_path = Path(audio_path)
+    if not audio_path.exists() or audio_path.stat().st_size == 0:
+        return "(0.5 + 0.3*sin(2*PI*t/0.24))"
+
+    wav_to_clean: Optional[Path] = None
+    read_path = audio_path
+
+    if audio_path.suffix.lower() != ".wav":
+        wav_to_clean = audio_path.parent / f"_temp_rms_{audio_path.stem}.wav"
+        try:
+            subprocess.run([
+                "ffmpeg", "-y",
+                "-i", str(audio_path),
+                "-ac", "1",
+                "-ar", "16000",
+                "-c:a", "pcm_s16le",
+                str(wav_to_clean)
+            ], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            read_path = wav_to_clean
+        except Exception:
+            return "(0.5 + 0.3*sin(2*PI*t/0.24))"
+
+    try:
+        with wave.open(str(read_path), "rb") as wf:
+            s_rate = wf.getframerate()
+            n_frames = wf.getnframes()
+            raw_bytes = wf.readframes(n_frames)
+
+        samples_count = len(raw_bytes) // 2
+        if samples_count == 0:
+            return "(0.5 + 0.3*sin(2*PI*t/0.24))"
+
+        samples = struct.unpack(f"<{samples_count}h", raw_bytes)
+        chunk_size = max(1, s_rate // step_hz)
+
+        terms: List[str] = []
+        n_chunks = len(samples) // chunk_size
+        for idx in range(n_chunks):
+            t_start = round(idx / step_hz, 2)
+            t_end = round((idx + 1) / step_hz, 2)
+            in_speech = any(s <= t_start <= e or s <= t_end <= e for s, e in intervals)
+            if not in_speech:
+                continue
+
+            chunk = samples[idx * chunk_size : (idx + 1) * chunk_size]
+            rms = math.sqrt(sum(s * s for s in chunk) / len(chunk))
+            # Normalized RMS acoustic speech energy (0.0 to 1.0)
+            norm = max(0.0, min(1.0, (rms - 500.0) / 7200.0))
+            if norm >= 0.08:
+                terms.append(f"{round(norm, 2)}*between(t,{t_start},{t_end})")
+
+        if not terms:
+            return "(0.5 + 0.3*sin(2*PI*t/0.24))"
+        joined = " + ".join(terms)
+        return f"({joined})"
+    except Exception as e:
+        print(f"  ⚠️ Audio RMS profile notice: {e}")
+        return "(0.5 + 0.3*sin(2*PI*t/0.24))"
+    finally:
+        if wav_to_clean and wav_to_clean.exists():
+            try:
+                wav_to_clean.unlink()
+            except Exception:
+                pass
+
+
 # Palettes matching exact visual references
 ORB_PALETTES: Dict[str, Dict[str, Any]] = {
     "quantum": {
@@ -1289,13 +1364,18 @@ def render_orb_test_preview(
     speech_s_conditions = [f"between(t,{sc['start']},{sc['end']})" for sc in scene_records if sc["entity"] in ["solar", "both"]]
     speech_mask_s = f"({' + '.join(speech_s_conditions)})" if speech_s_conditions else "0"
 
-    voice_pulse_q = "(0.5 + 0.30*sin(2*PI*t/0.24))"
-    eq_q = f"eval=frame:brightness='-0.03 + (0.16 + 0.10*{voice_pulse_q})*({speech_mask_q})':contrast='1.0 + (0.22 + 0.10*{voice_pulse_q})*({speech_mask_q})':saturation='1.0 + (0.25 + 0.12*{voice_pulse_q})*({speech_mask_q})'"
-    hue_q = f"h='(10 + 4*{voice_pulse_q})*({speech_mask_q}) + 4*sin(2*PI*t/3.6)':s='1.0 + (0.22 + 0.12*{voice_pulse_q})*({speech_mask_q})'"
+    intervals_q = [(sc["start"], sc["end"]) for sc in scene_records if sc["entity"] in ["quantum", "both"]]
+    intervals_s = [(sc["start"], sc["end"]) for sc in scene_records if sc["entity"] in ["solar", "both"]]
 
-    voice_pulse_s = "(0.5 + 0.30*sin(2*PI*t/0.24))"
-    eq_s = f"eval=frame:brightness='-0.03 + (0.16 + 0.10*{voice_pulse_s})*({speech_mask_s})':contrast='1.0 + (0.22 + 0.10*{voice_pulse_s})*({speech_mask_s})':saturation='1.0 + (0.25 + 0.12*{voice_pulse_s})*({speech_mask_s})'"
-    hue_s = f"h='(10 + 4*{voice_pulse_s})*({speech_mask_s}) + 4*sin(2*PI*t/3.6)':s='1.0 + (0.22 + 0.12*{voice_pulse_s})*({speech_mask_s})'"
+    # Real Audio Syllable Energy Modulator (Reacts to voice RMS spikes frame by frame)
+    voice_pulse_q = extract_real_audio_rms_profile(resolved_audio, intervals_q) if (resolved_audio and resolved_audio.exists()) else "(0.5 + 0.30*sin(2*PI*t/0.24))"
+    voice_pulse_s = extract_real_audio_rms_profile(resolved_audio, intervals_s) if (resolved_audio and resolved_audio.exists()) else "(0.5 + 0.30*sin(2*PI*t/0.24))"
+
+    eq_q = f"eval=frame:brightness='-0.03 + (0.18 + 0.22*{voice_pulse_q})*({speech_mask_q})':contrast='1.0 + (0.24 + 0.20*{voice_pulse_q})*({speech_mask_q})':saturation='1.0 + (0.26 + 0.18*{voice_pulse_q})*({speech_mask_q})'"
+    hue_q = f"h='(10 + 6*{voice_pulse_q})*({speech_mask_q}) + 4*sin(2*PI*t/3.6)':s='1.0 + (0.22 + 0.15*{voice_pulse_q})*({speech_mask_q})'"
+
+    eq_s = f"eval=frame:brightness='-0.03 + (0.18 + 0.22*{voice_pulse_s})*({speech_mask_s})':contrast='1.0 + (0.24 + 0.20*{voice_pulse_s})*({speech_mask_s})':saturation='1.0 + (0.26 + 0.18*{voice_pulse_s})*({speech_mask_s})'"
+    hue_s = f"h='(10 + 6*{voice_pulse_s})*({speech_mask_s}) + 4*sin(2*PI*t/3.6)':s='1.0 + (0.22 + 0.15*{voice_pulse_s})*({speech_mask_s})'"
 
     # Smooth Celestial Orbit & Natural Conversational Leaning
     # Slow 5.0 - 7.5 second harmonic period, smooth and elegant without jitter
