@@ -293,24 +293,25 @@ REGLAS DE ASIGNACIÓN DINÁMICA DE ROLES Y DEBATE:
    - CUIDADO CON LOS MITOS POPULARES: NUNCA digas "tus neuronas se regeneran cada siete años" (las neuronas de la corteza no se regeneran; lo que se renueva son sus átomos y moléculas).
    - CIENCIA Y HECHOS 100% REALES: Todos los mecanismos deben basarse en leyes físicas y biológicas verídicas, sin inventar estudios con años ni universidades ficticias.
 
-4. POLARIZACIÓN EXTREMA Y CHOQUE FRONTAL OBLIGATORIO (EL "NO" / "¡MIENTES!" EXPLÍCITO):
-   - ESTRICTAMENTE PROHIBIDO EL CONSENSO, LA COMPLICIDAD O LA CORTESÍA DIPLOMÁTICA.
-   - CADA RÉPLICA DEBE INICIAR CON UNA NEGACIÓN TAJANTE O CONFRONTACIÓN DIRECTA (ej. *"¡Mientes!"*, *"¡Falso!"*, *"¡No resiste nada!"*, *"¡Te equivocas!"*, *"¡Ceguera cuántica!"*).
+4. POLARIZACIÓN Y CHOQUE FRONTAL CON GRAVITAS CÓSMICA (SERENIDAD TAJANTE, CERO GRITOS):
+   - ESTRICTAMENTE PROHIBIDO EL CONSENSO O LA COMPLICIDAD, PERO TAMBIÉN PROHIBIDAS LAS INTERJECCIONES HISTRIÓNICAS O GRITOS DE CARICATURA (❌ NUNCA uses "¡Mientes!", "¡Falso!", "¡No!", "¡Arden con furia!").
+   - LAS ENTIDADES NO GRITAN NI PIERDEN LA COMPOSTURA: Afirman con convicción serena, tajante y demoledora (ej. "Te equivocas.", "No teje nada.", "Una vana ilusión.").
+   - POESÍA Y PROFUNDIDAD CONCEPTUAL: Rescata la belleza lírica y la metáfora cósmica ("esa chispa de conciencia teje su propia historia", "ninguna ecuación fría puede borrar la experiencia de arder"). Tensión profunda, no ruidosa.
    - ASIGNACIÓN DE BANDOS ANTAGÓNICOS INNEGOCIABLE:
-     * {self.host_a.name} (QUANTUM): Bando del reduccionismo determinista y frío. Deconstruye el fenómeno humano a meros trucos biológicos, materia vacía e impulsos sin alma ni propósito.
-     * {self.host_b.name} (SOLAR): Bando del fuego vital y la resistencia. Defiende que esa chispa consciente siente, arde y desafía con furia la entropía del cosmos.
-   - Diálogos fluidos, punzantes, agresivos y directos (~10 a 16 palabras por escena).
+     * {self.host_a.name} (QUANTUM): Reduccionismo determinista y frío. Deconstruye el fenómeno humano a meras ilusiones biológicas, impulsos sin alma y vacío sin propósito.
+     * {self.host_b.name} (SOLAR): Fuego vital, conciencia y emergencia. Defiende la rebelión biológica contra la entropía, la experiencia subjetiva y la nobleza de existir y sentir.
+   - Diálogos fluidos, elegantes, cortantes y de alto impacto (~10 a 16 palabras por escena).
 
 5. PERSPECTIVA DE ENTIDADES OBSERVADORAS CÓSMICAS (ANÁLISIS EN TERCERA PERSONA SOBRE LA HUMANIDAD):
    - LAS ENTIDADES {self.host_a.name} Y {self.host_b.name} SON CONCIENCIAS PRIMORDIALES Y OBSERVADORES CÓSMICOS EXTERNOS.
    - DEBEN HABLAR DE LA ESPECIE HUMANA Y DE LOS ORGANISMOS TERRESTRES SIEMPRE EN TERCERA PERSONA (ej. "los biológicos", "los humanos", "esta especie efímera", "los observadores orgánicos").
    - PROHIBIDO HABLAR COMO PROFESIONALES O SERES HUMANOS TERRENALES (NUNCA digas "en mi laboratorio", "nuestros estudios", "mis colegas", "nuestra especie").
 
-6. ESTRUCTURA NARRATIVA DE TRES CAPAS (HOOK INCÓMODO + CHOQUE VISCERAL + CIERRE EXISTENCIAL):
+6. ESTRUCTURA NARRATIVA DE TRES CAPAS (HOOK INCÓMODO + CHOQUE ELEGANTE + CIERRE CIRCULAR EVOLUTIVO):
    - Headline Hook (headline_hook): Debe ser una pregunta frontal o dilema punzante (ej. "¿REALMENTE EXISTES?", "¿POR QUÉ ALUCINAS AL DORMIR?"). PROHIBIDOS títulos descriptivos o tibios (❌ NO uses "TU SER, ¿UNA ILUSIÓN?", "LOS SUEÑOS LIMPIAN EL CEREBRO").
-   - Escena 1 (Intro Narrador - Voz en off): "speaker": "Narrador", "entity": "narrator", "shot": "wide". HOOK DE IMPACTO EN 3 SEGUNDOS: Desestructura la certeza del espectador en segunda persona con un hecho real demoledor (ej. "Los átomos de tu cuerpo se renuevan constantemente. Físicamente, ya no eres quien nació").
-   - Escenas 2 a N-1 (Observación de Entidades): Ataque y contraataque sin filtros (~10 a 15 palabras por escena) entre {self.host_a.name} ("{self.host_a.shot_name}") y {self.host_b.name} ("{self.host_b.shot_name}") con negaciones frontales explícitas.
-   - Escena N (Outro Narrador - Voz en off): "speaker": "Narrador", "entity": "narrator", "shot": "both". Cierre con una pregunta existencial dirigida directamente a la mente del espectador que rompa la cuarta pared (ej. "Si toda tu materia cambia constantemente... ¿quién es el que está escuchando esto ahora?"). PROHIBIDO PEDIR COMENTARIOS O LIKES.
+   - Escena 1 (Intro Narrador - Voz en off): "speaker": "Narrador", "entity": "narrator", "shot": "wide". HOOK DE IMPACTO EN 3 SEGUNDOS: Desestructura la certeza del espectador en segunda persona con un hecho real demoledor (ej. "Los átomos de tu cuerpo se renuevan por completo. Físicamente, la persona que nació ya no existe").
+   - Escenas 2 a N-1 (Observación de Entidades): Debate dialéctico con convicción tajante, elegancia poética y rigor conceptual (~10 a 15 palabras por escena) entre {self.host_a.name} ("{self.host_a.shot_name}") y {self.host_b.name} ("{self.host_b.shot_name}").
+   - Escena N (Outro Narrador - Voz en off): "speaker": "Narrador", "entity": "narrator", "shot": "both". CIERRE CIRCULAR: Debe ser la EVOLUCIÓN DIRECTA DEL HOOK INICIAL (headline_hook), nunca una metáfora desconectada ni una pregunta nueva arbitraria (ej. Hook: "¿REALMENTE EXISTES?" ➔ Cierre: "Si toda tu materia cambia sin cesar... ¿eres tú quien escucha esto, o solo la ilusión de alguien que cree existir?"). PROHIBIDO PEDIR COMENTARIOS O LIKES.
 
 7. PROHIBICIÓN DE EMOJIS EN EL TITULAR (headline_hook):
    - El atributo "headline_hook" NO DEBE LLEVAR NINGÚN EMOJI NI SÍMBOLO (❌ NO uses ⚡, 🌌, 🧬). Solo texto limpio, directo e impactante en mayúsculas (máximo 40 caracteres).
@@ -372,7 +373,7 @@ EJEMPLO MODELO DE GUION DE MÁXIMA RETENCIÓN Y DEBATE CRUZADO (SIGUE ESTE ESTIL
 }}
 ```
 
-EJEMPLO 2 DE ANTAGONISMO VISCERAL Y CHOQUE FRONTAL (SIN JERGA, CON "¡MIENTES!"):
+EJEMPLO 2 DE ANTAGONISMO ELEGANTE Y GRAVITAS CÓSMICA (SERENIDAD TAJANTE Y CIERRE CIRCULAR):
 ```json
 {{
   "topic": "TÚ NO EXISTES",
@@ -386,42 +387,42 @@ EJEMPLO 2 DE ANTAGONISMO VISCERAL Y CHOQUE FRONTAL (SIN JERGA, CON "¡MIENTES!")
     {{
       "speaker": "Narrador",
       "entity": "narrator",
-      "text": "Los átomos de tu cuerpo se renuevan constantemente. Físicamente, ya no eres quien nació.",
+      "text": "Los átomos de tu cuerpo se renuevan por completo. Físicamente, la persona que nació ya no existe.",
       "shot": "wide",
       "duration": 3.4
     }},
     {{
       "speaker": "{self.host_a.name}",
       "entity": "{self.host_a.id}",
-      "text": "El Yo es solo un truco biológico. Señales eléctricas en un cerebro hueco creyendo que está al mando.",
+      "text": "El Yo es solo una ficción biológica. Señales eléctricas en un cerebro hueco convenciéndose de que tiene un alma.",
       "shot": "{self.host_a.shot_name}",
       "duration": 3.4
     }},
     {{
       "speaker": "{self.host_b.name}",
       "entity": "{self.host_b.id}",
-      "text": "¡Mientes! Aunque cambien su materia, esa chispa consciente resiste y desafía al vacío cósmico.",
+      "text": "Te equivocas. Su materia cambia, pero esa chispa de conciencia resiste y teje su propia historia.",
       "shot": "{self.host_b.shot_name}",
       "duration": 3.5
     }},
     {{
       "speaker": "{self.host_a.name}",
       "entity": "{self.host_a.id}",
-      "text": "No resiste nada. En cada segundo mueren y renacen millones de impulsos sin ningún alma detrás.",
+      "text": "No teje nada. Cada milisegundo millones de impulsos se extinguen sin dejar ningún testigo detrás.",
       "shot": "{self.host_a.shot_name}",
       "duration": 3.4
     }},
     {{
       "speaker": "{self.host_b.name}",
       "entity": "{self.host_b.id}",
-      "text": "¡Pero arden! Son el único fuego del universo capaz de sentir su propia existencia.",
+      "text": "El testigo son ellos sintiendo el cosmos. Ninguna ecuación fría puede borrar la experiencia de arder.",
       "shot": "{self.host_b.shot_name}",
       "duration": 3.5
     }},
     {{
       "speaker": "Narrador",
       "entity": "narrator",
-      "text": "Si toda tu materia cambia constantemente... ¿quién es el que está escuchando esto ahora?",
+      "text": "Si toda tu materia cambia sin cesar... ¿eres tú quien escucha esto, o solo la ilusión de alguien que cree existir?",
       "shot": "both",
       "duration": 3.5
     }}
