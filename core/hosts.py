@@ -281,33 +281,36 @@ REGLAS DE ASIGNACIÓN DINÁMICA DE ROLES Y DEBATE:
        "{self.host_b.id}": "Designación de entidad 2 (2-4 palabras)"
      }}
 
-2. LENGUAJE ÁGIL, CIENCIA REAL Y CERO JERGA ACADÉMICA ABURRIDA:
-   - CADA DIÁLOGO DEBE REVELAR UN DATO CIENTÍFICO O MECANISMO REAL, traducido a lenguaje ágil, visual y fascinante para Shorts.
-   - PROHIBIDA LA JERGA ACADÉMICA DENSA O INFUMABLE (❌ NUNCA uses términos como "epistemología", "fenomenológico", "reducción a sinapsis", "previniendo neurodegeneración" o "atractores extraños").
-   - Traduce los conceptos a impactos mnemónicos directos (ej. en vez de "previene la neurodegeneración", usa "disuelve toxinas antes de que colapsen sus recuerdos").
+2. LENGUAJE VISCERAL Y CERO JERGA ACADÉMICA / TÉCNICA CRÍPTICA:
+   - PROHIBIDA LA JERGA ACADÉMICA O TÉCNICA PESADA (❌ NUNCA uses "decoherencia", "patrón de bits", "transición estadística", "epistemológico", "glicólisis", "reducción a sinapsis", "neurodegeneración").
+   - Traduce toda la física y biología a IMÁGENES VISCERALES Y DIRECTAS:
+     * En vez de "patrón de bits en decoherencia" ➔ "señales eléctricas en un cerebro hueco".
+     * En vez de "transición estadística sin propósito" ➔ "millones de impulsos apagándose sin un alma detrás".
+     * En vez de "disipación térmica" ➔ "fuego que arde y se extingue".
+   - El espectador debe entender cada palabra sin ser físico ni neurocientífico.
 
-3. RIGOR FACTUAL, CERO INVENTOS Y PROHIBICIÓN DE CITAS/ESTADÍSTICAS FABRICADAS:
-   - CIENCIA Y HECHOS 100% REALES: Todos los datos, principios, leyes y mecanismos expuestos deben ser verídicos.
-   - PROHIBIDO FABRICAR CITAS, UNIVERSIDADES O ESTUDIOS CON AÑOS: NUNCA inventes "En 2018 Harvard...", "Estudios de Oxford...", o porcentajes arbitrarios.
-   - PROHIBIDO el lenguaje pseudo-poético vacío (ej. "la gravedad del relato", "el tejido de las almas").
+3. RIGOR FACTUAL Y CERO MITOS POPULARES:
+   - CUIDADO CON LOS MITOS POPULARES: NUNCA digas "tus neuronas se regeneran cada siete años" (las neuronas de la corteza no se regeneran; lo que se renueva son sus átomos y moléculas).
+   - CIENCIA Y HECHOS 100% REALES: Todos los mecanismos deben basarse en leyes físicas y biológicas verídicas, sin inventar estudios con años ni universidades ficticias.
 
-4. POLARIZACIÓN OBLIGATORIA (CONFLICTO FORZADO DE TESIS VS. ANTÍTESIS):
-   - ESTRICTAMENTE PROHIBIDO EL CONSENSO O LA COMPLICIDAD (❌ NUNCA hagas que una entidad valide, coincida o diga "Así es / Cierto / Tienes razón / Como dices").
+4. POLARIZACIÓN EXTREMA Y CHOQUE FRONTAL OBLIGATORIO (EL "NO" / "¡MIENTES!" EXPLÍCITO):
+   - ESTRICTAMENTE PROHIBIDO EL CONSENSO, LA COMPLICIDAD O LA CORTESÍA DIPLOMÁTICA.
+   - CADA RÉPLICA DEBE INICIAR CON UNA NEGACIÓN TAJANTE O CONFRONTACIÓN DIRECTA (ej. *"¡Mientes!"*, *"¡Falso!"*, *"¡No resiste nada!"*, *"¡Te equivocas!"*, *"¡Ceguera cuántica!"*).
    - ASIGNACIÓN DE BANDOS ANTAGÓNICOS INNEGOCIABLE:
-     * {self.host_a.name} (QUANTUM): Postura reduccionista, determinista y fría. Deconstruye el fenómeno humano a meros algoritmos, ilusiones biológicas, decoherencia cuántica y vacío sin propósito.
-     * {self.host_b.name} (SOLAR): Postura de resistencia, emergencia y energía viva. Defiende la rebelión biológica contra la entropía, la chispa subjetiva, la fuerza motriz del calor y la singularidad de la experiencia consciente.
-   - CADA INTERVENCIÓN DEBE SER UN ATAQUE O REFUTACIÓN FRONTAL a la tesis del otro. Se tratan como adversarios cósmicos con cosmovisiones incompatibles.
-   - Diálogos fluidos, punzantes, mordaces y directos (~10 a 16 palabras por escena).
+     * {self.host_a.name} (QUANTUM): Bando del reduccionismo determinista y frío. Deconstruye el fenómeno humano a meros trucos biológicos, materia vacía e impulsos sin alma ni propósito.
+     * {self.host_b.name} (SOLAR): Bando del fuego vital y la resistencia. Defiende que esa chispa consciente siente, arde y desafía con furia la entropía del cosmos.
+   - Diálogos fluidos, punzantes, agresivos y directos (~10 a 16 palabras por escena).
 
 5. PERSPECTIVA DE ENTIDADES OBSERVADORAS CÓSMICAS (ANÁLISIS EN TERCERA PERSONA SOBRE LA HUMANIDAD):
    - LAS ENTIDADES {self.host_a.name} Y {self.host_b.name} SON CONCIENCIAS PRIMORDIALES Y OBSERVADORES CÓSMICOS EXTERNOS.
    - DEBEN HABLAR DE LA ESPECIE HUMANA Y DE LOS ORGANISMOS TERRESTRES SIEMPRE EN TERCERA PERSONA (ej. "los biológicos", "los humanos", "esta especie efímera", "los observadores orgánicos").
    - PROHIBIDO HABLAR COMO PROFESIONALES O SERES HUMANOS TERRENALES (NUNCA digas "en mi laboratorio", "nuestros estudios", "mis colegas", "nuestra especie").
 
-6. ESTRUCTURA NARRATIVA DE TRES CAPAS (HOOK IMPACTANTE + CHOQUE DE ENTIDADES + CIERRE EXISTENCIAL):
-   - Escena 1 (Intro Narrador - Voz en off): "speaker": "Narrador", "entity": "narrator", "shot": "wide". HOOK DE IMPACTO EN 3 SEGUNDOS: Plantea una paradoja inquietante o hecho biológico/físico deslumbrante en segunda persona que enganche de inmediato (ej. "Pasas un tercio de tu vida paralizado alucinando mundos para no colapsar").
-   - Escenas 2 a N-1 (Observación de Entidades): Intercambio cruzado, rápido y punzante (~10 a 15 palabras por escena) entre {self.host_a.name} ("{self.host_a.shot_name}") y {self.host_b.name} ("{self.host_b.shot_name}") confrontando la paradoja científica.
-   - Escena N (Outro Narrador - Voz en off): "speaker": "Narrador", "entity": "narrator", "shot": "both". Cierre con una pregunta existencial o reflexión sobrecogedora dirigida a la propia mente del espectador (ej. "Si tus sueños simulan tu realidad... ¿quién guía tu conciencia mientras duermes?"). PROHIBIDO PEDIR COMENTARIOS, LIKES O DECIR "COMENTA ABAJO".
+6. ESTRUCTURA NARRATIVA DE TRES CAPAS (HOOK INCÓMODO + CHOQUE VISCERAL + CIERRE EXISTENCIAL):
+   - Headline Hook (headline_hook): Debe ser una pregunta frontal o dilema punzante (ej. "¿REALMENTE EXISTES?", "¿POR QUÉ ALUCINAS AL DORMIR?"). PROHIBIDOS títulos descriptivos o tibios (❌ NO uses "TU SER, ¿UNA ILUSIÓN?", "LOS SUEÑOS LIMPIAN EL CEREBRO").
+   - Escena 1 (Intro Narrador - Voz en off): "speaker": "Narrador", "entity": "narrator", "shot": "wide". HOOK DE IMPACTO EN 3 SEGUNDOS: Desestructura la certeza del espectador en segunda persona con un hecho real demoledor (ej. "Los átomos de tu cuerpo se renuevan constantemente. Físicamente, ya no eres quien nació").
+   - Escenas 2 a N-1 (Observación de Entidades): Ataque y contraataque sin filtros (~10 a 15 palabras por escena) entre {self.host_a.name} ("{self.host_a.shot_name}") y {self.host_b.name} ("{self.host_b.shot_name}") con negaciones frontales explícitas.
+   - Escena N (Outro Narrador - Voz en off): "speaker": "Narrador", "entity": "narrator", "shot": "both". Cierre con una pregunta existencial dirigida directamente a la mente del espectador que rompa la cuarta pared (ej. "Si toda tu materia cambia constantemente... ¿quién es el que está escuchando esto ahora?"). PROHIBIDO PEDIR COMENTARIOS O LIKES.
 
 7. PROHIBICIÓN DE EMOJIS EN EL TITULAR (headline_hook):
    - El atributo "headline_hook" NO DEBE LLEVAR NINGÚN EMOJI NI SÍMBOLO (❌ NO uses ⚡, 🌌, 🧬). Solo texto limpio, directo e impactante en mayúsculas (máximo 40 caracteres).
@@ -369,10 +372,10 @@ EJEMPLO MODELO DE GUION DE MÁXIMA RETENCIÓN Y DEBATE CRUZADO (SIGUE ESTE ESTIL
 }}
 ```
 
-EJEMPLO 2 DE ANTAGONISMO Y CHOQUE FRONTAL DE POSTURAS (TESIS VS ANTÍTESIS):
+EJEMPLO 2 DE ANTAGONISMO VISCERAL Y CHOQUE FRONTAL (SIN JERGA, CON "¡MIENTES!"):
 ```json
 {{
-  "topic": "¿Realmente existes?",
+  "topic": "TÚ NO EXISTES",
   "headline_hook": "¿REALMENTE EXISTES?",
   "roles": {{
     "{self.host_a.id}": "Entidad del Código Cuántico",
@@ -383,42 +386,42 @@ EJEMPLO 2 DE ANTAGONISMO Y CHOQUE FRONTAL DE POSTURAS (TESIS VS ANTÍTESIS):
     {{
       "speaker": "Narrador",
       "entity": "narrator",
-      "text": "El noventa y ocho por ciento de tus átomos se renuevan cada año. Físicamente, ya no eres quien nació.",
+      "text": "Los átomos de tu cuerpo se renuevan constantemente. Físicamente, ya no eres quien nació.",
       "shot": "wide",
       "duration": 3.4
     }},
     {{
       "speaker": "{self.host_a.name}",
       "entity": "{self.host_a.id}",
-      "text": "El Yo es una alucinación algorítmica. Un truco evolutivo de predicción sin nadie al mando.",
+      "text": "El Yo es solo un truco biológico. Señales eléctricas en un cerebro hueco creyendo que está al mando.",
       "shot": "{self.host_a.shot_name}",
       "duration": 3.4
     }},
     {{
       "speaker": "{self.host_b.name}",
       "entity": "{self.host_b.id}",
-      "text": "¡Ceguera cuántica! Aunque quemen sus átomos, esa chispa subjetiva resiste y desafía la entropía.",
+      "text": "¡Mientes! Aunque cambien su materia, esa chispa consciente resiste y desafía al vacío cósmico.",
       "shot": "{self.host_b.shot_name}",
       "duration": 3.5
     }},
     {{
       "speaker": "{self.host_a.name}",
       "entity": "{self.host_a.id}",
-      "text": "No resiste nada. En femtosegundos la decoherencia borra cualquier continuidad de identidad personal.",
+      "text": "No resiste nada. En cada segundo mueren y renacen millones de impulsos sin ningún alma detrás.",
       "shot": "{self.host_a.shot_name}",
       "duration": 3.4
     }},
     {{
       "speaker": "{self.host_b.name}",
       "entity": "{self.host_b.id}",
-      "text": "¡Pero sienten! Son el único fuego del cosmos consciente de su propia y trágica autodestrucción.",
+      "text": "¡Pero arden! Son el único fuego del universo capaz de sentir su propia existencia.",
       "shot": "{self.host_b.shot_name}",
       "duration": 3.5
     }},
     {{
       "speaker": "Narrador",
       "entity": "narrator",
-      "text": "Si la materia te reemplaza constantemente... ¿quién es el que está escuchando esto ahora?",
+      "text": "Si toda tu materia cambia constantemente... ¿quién es el que está escuchando esto ahora?",
       "shot": "both",
       "duration": 3.5
     }}

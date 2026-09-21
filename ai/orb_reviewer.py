@@ -32,9 +32,14 @@ CRITICAL CHECKLIST TO VALIDATE AND CORRECT:
 
 4. CONTINUOUS STORY ARC & CONVERSATIONAL RESPONSE:
    - Ensure the entire script stays within ONE central concept, paradox or thought experiment.
-   - GANCHO DE LA ESCENA 1 (HOOK INICIAL EN 3 SEGUNDOS): Debe ser una paradoja inquietante o hecho deslumbrante en segunda persona. Si empieza con "Imagina...", "El tema de hoy...", o una definición genérica, REESCRIBE el gancho a una afirmación/pregunta chocante (ej. "Pasas un tercio de tu vida paralizado alucinando mundos para no colapsar").
-   - PROHIBICIÓN ESTRICTA DE CONSENSO O COMPLICIDAD (CONFLICTO OBLIGATORIO): Si las dos entidades están de acuerdo, se complementan amistosamente o dicen "Así es / Cierto", REESCRIBE de inmediato para forzar una colisión dialéctica frontal de tesis vs. antítesis. QUANTUM deconstruye con frialdad matemática y reduccionismo determinista; SOLAR ataca con vehemencia defendiendo la chispa subjetiva, la resistencia vital y la emergencia contra la entropía.
-   - LENGUAJE ÁGIL Y TRADUCIDO: Reemplaza jerga densa como "previniendo neurodegeneración" o "reducción a sinapsis" por conceptos visuales y mnemónicos directos ("disuelve toxinas antes de colapsar sus recuerdos").
+   - GANCHO DE LA ESCENA 1 (HOOK INICIAL EN 3 SEGUNDOS): Debe ser una paradoja inquietante o hecho deslumbrante en segunda persona. Si empieza con "Imagina...", "Tus neuronas se regeneran cada 7 años" (mito falso), o una definición genérica, REESCRIBE el gancho a un hecho directo y demoledor (ej. "Los átomos de tu cuerpo se renuevan constantemente. Físicamente, ya no eres quien nació").
+   - PROHIBICIÓN ESTRICTA DE CONSENSO Y EXIGENCIA DEL "¡MIENTES!" / NEGACIÓN EXPLÍCITA:
+     * Si las dos entidades están de acuerdo, se complementan amistosamente o debaten como colegas académicos, REESCRIBE de inmediato para forzar una colisión dialéctica frontal y hostil.
+     * La primera réplica de SOLAR DEBE arrancar con una negación tajante o ataque frontal explícito (ej. "¡Mientes!", "¡Falso!", "¡Te equivocas!", "¡Ceguera cuántica!").
+     * QUANTUM deconstruye con frialdad y reduce al humano a impulsos eléctricos en un cerebro hueco; SOLAR defiende con furia el fuego y la chispa consciente.
+   - ELIMINACIÓN DE JERGA CRÍPTICA Y SUSTITUCIÓN POR LENGUAJE VISCERAL:
+     * Reemplaza jerga densa como "decoherencia", "patrón de bits", "transición estadística", "glicólisis", "reducción a sinapsis" por conceptos visuales y viscerales ("señales eléctricas en un cerebro hueco", "millones de impulsos sin ningún alma detrás").
+   - TITULAR IMPACTANTE (headline_hook): Debe ser una pregunta frontal o dilema punzante (ej. "¿REALMENTE EXISTES?"). REESCRIBE cualquier titular descriptivo o tibio (como "TU SER, ¿UNA ILUSIÓN?").
 
 5. STRUCTURE & DEVELOPED EXCHANGES:
    - Las escenas deben desarrollarse lo suficiente para que ambos orbes expongan y reaccionen con profundidad y agilidad.
