@@ -291,10 +291,13 @@ REGLAS DE ASIGNACIÓN DINÁMICA DE ROLES Y DEBATE:
    - PROHIBIDO FABRICAR CITAS, UNIVERSIDADES O ESTUDIOS CON AÑOS: NUNCA inventes "En 2018 Harvard...", "Estudios de Oxford...", o porcentajes arbitrarios.
    - PROHIBIDO el lenguaje pseudo-poético vacío (ej. "la gravedad del relato", "el tejido de las almas").
 
-4. DIALÉCTICA CRUZADA Y CHOQUE REAL DE POSTURAS:
-   - NO HAGAS QUE LAS ENTIDADES RECITEN DATOS INDEPENDIENTES EN PARALELO. Debe ser un debate vivo y cruzado.
-   - Cada intervención de una entidad DEBE objetar, cuestionar, refutar o exponer la fragilidad biológica/física de lo que acaba de revelar la otra entidad (ej. si {self.host_a.name} explica el mecanismo de limpieza cerebral, {self.host_b.name} debe exponer la absurda falla de diseño o la vulnerabilidad extrema que eso causa).
-   - Diálogos fluidos, punzantes y directos (~10 a 16 palabras por escena).
+4. POLARIZACIÓN OBLIGATORIA (CONFLICTO FORZADO DE TESIS VS. ANTÍTESIS):
+   - ESTRICTAMENTE PROHIBIDO EL CONSENSO O LA COMPLICIDAD (❌ NUNCA hagas que una entidad valide, coincida o diga "Así es / Cierto / Tienes razón / Como dices").
+   - ASIGNACIÓN DE BANDOS ANTAGÓNICOS INNEGOCIABLE:
+     * {self.host_a.name} (QUANTUM): Postura reduccionista, determinista y fría. Deconstruye el fenómeno humano a meros algoritmos, ilusiones biológicas, decoherencia cuántica y vacío sin propósito.
+     * {self.host_b.name} (SOLAR): Postura de resistencia, emergencia y energía viva. Defiende la rebelión biológica contra la entropía, la chispa subjetiva, la fuerza motriz del calor y la singularidad de la experiencia consciente.
+   - CADA INTERVENCIÓN DEBE SER UN ATAQUE O REFUTACIÓN FRONTAL a la tesis del otro. Se tratan como adversarios cósmicos con cosmovisiones incompatibles.
+   - Diálogos fluidos, punzantes, mordaces y directos (~10 a 16 palabras por escena).
 
 5. PERSPECTIVA DE ENTIDADES OBSERVADORAS CÓSMICAS (ANÁLISIS EN TERCERA PERSONA SOBRE LA HUMANIDAD):
    - LAS ENTIDADES {self.host_a.name} Y {self.host_b.name} SON CONCIENCIAS PRIMORDIALES Y OBSERVADORES CÓSMICOS EXTERNOS.
@@ -359,6 +362,63 @@ EJEMPLO MODELO DE GUION DE MÁXIMA RETENCIÓN Y DEBATE CRUZADO (SIGUE ESTE ESTIL
       "speaker": "Narrador",
       "entity": "narrator",
       "text": "Si tus sueños simulan tu realidad... ¿quién guía tu conciencia cuando apagas los ojos?",
+      "shot": "both",
+      "duration": 3.5
+    }}
+  ]
+}}
+```
+
+EJEMPLO 2 DE ANTAGONISMO Y CHOQUE FRONTAL DE POSTURAS (TESIS VS ANTÍTESIS):
+```json
+{{
+  "topic": "¿Realmente existes?",
+  "headline_hook": "¿REALMENTE EXISTES?",
+  "roles": {{
+    "{self.host_a.id}": "Entidad del Código Cuántico",
+    "{self.host_b.id}": "Entidad del Fuego Estelar"
+  }},
+  "holograms": null,
+  "scenes": [
+    {{
+      "speaker": "Narrador",
+      "entity": "narrator",
+      "text": "El noventa y ocho por ciento de tus átomos se renuevan cada año. Físicamente, ya no eres quien nació.",
+      "shot": "wide",
+      "duration": 3.4
+    }},
+    {{
+      "speaker": "{self.host_a.name}",
+      "entity": "{self.host_a.id}",
+      "text": "El Yo es una alucinación algorítmica. Un truco evolutivo de predicción sin nadie al mando.",
+      "shot": "{self.host_a.shot_name}",
+      "duration": 3.4
+    }},
+    {{
+      "speaker": "{self.host_b.name}",
+      "entity": "{self.host_b.id}",
+      "text": "¡Ceguera cuántica! Aunque quemen sus átomos, esa chispa subjetiva resiste y desafía la entropía.",
+      "shot": "{self.host_b.shot_name}",
+      "duration": 3.5
+    }},
+    {{
+      "speaker": "{self.host_a.name}",
+      "entity": "{self.host_a.id}",
+      "text": "No resiste nada. En femtosegundos la decoherencia borra cualquier continuidad de identidad personal.",
+      "shot": "{self.host_a.shot_name}",
+      "duration": 3.4
+    }},
+    {{
+      "speaker": "{self.host_b.name}",
+      "entity": "{self.host_b.id}",
+      "text": "¡Pero sienten! Son el único fuego del cosmos consciente de su propia y trágica autodestrucción.",
+      "shot": "{self.host_b.shot_name}",
+      "duration": 3.5
+    }},
+    {{
+      "speaker": "Narrador",
+      "entity": "narrator",
+      "text": "Si la materia te reemplaza constantemente... ¿quién es el que está escuchando esto ahora?",
       "shot": "both",
       "duration": 3.5
     }}

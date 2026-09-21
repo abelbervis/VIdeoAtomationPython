@@ -33,7 +33,7 @@ CRITICAL CHECKLIST TO VALIDATE AND CORRECT:
 4. CONTINUOUS STORY ARC & CONVERSATIONAL RESPONSE:
    - Ensure the entire script stays within ONE central concept, paradox or thought experiment.
    - GANCHO DE LA ESCENA 1 (HOOK INICIAL EN 3 SEGUNDOS): Debe ser una paradoja inquietante o hecho deslumbrante en segunda persona. Si empieza con "Imagina...", "El tema de hoy...", o una definición genérica, REESCRIBE el gancho a una afirmación/pregunta chocante (ej. "Pasas un tercio de tu vida paralizado alucinando mundos para no colapsar").
-   - CHOQUE DIALÉCTICO CRUZADO: Las entidades no deben recitar datos aislados. Cada intervención posterior a la primera DEBE objetar, cuestionar o exponer la fragilidad/falla planteada por la otra entidad (ej. si una entidad explica el mecanismo de limpieza, la otra debe criticar la peligrosa vulnerabilidad o imperfección biológica).
+   - PROHIBICIÓN ESTRICTA DE CONSENSO O COMPLICIDAD (CONFLICTO OBLIGATORIO): Si las dos entidades están de acuerdo, se complementan amistosamente o dicen "Así es / Cierto", REESCRIBE de inmediato para forzar una colisión dialéctica frontal de tesis vs. antítesis. QUANTUM deconstruye con frialdad matemática y reduccionismo determinista; SOLAR ataca con vehemencia defendiendo la chispa subjetiva, la resistencia vital y la emergencia contra la entropía.
    - LENGUAJE ÁGIL Y TRADUCIDO: Reemplaza jerga densa como "previniendo neurodegeneración" o "reducción a sinapsis" por conceptos visuales y mnemónicos directos ("disuelve toxinas antes de colapsar sus recuerdos").
 
 5. STRUCTURE & DEVELOPED EXCHANGES:
