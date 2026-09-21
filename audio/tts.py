@@ -78,50 +78,72 @@ def build_cell_double_tracking_filter(
       - 3D HAAS STEREO EXPANSION: La voz secundaria se abre binauralmente (L/R desfasados),
         mientras la voz líder se mantiene centrada al 100% para máxima nitidez y comprensión.
     """
-    tag = "q" if "quantum" in entity.lower() else "s"
+    tag = "q" if "quantum" in entity.lower() else ("s" if "solar" in entity.lower() else "e")
     
-    # Adaptive parameter resolution based on impact intensity
+    # Entity-specific Cosmic Master Voice Profiles
     if "quantum" in entity.lower():
-        # Quantum: Sub-armónicos, misterio del vacío, pitch descendente
+        # Quantum: AlvaroNeural / JorgeNeural base + Surgical Cybernetic Pitch (0.920) + Sub-bass resonance
+        lead_pitch = 0.920
         default_delay_l = int(12 + (18 - 12) * impact_intensity) if delay_ms is None else delay_ms
         default_delay_r = int(16 + (24 - 16) * impact_intensity) if delay_ms is None else int(delay_ms * 1.3)
-        default_vol_db = (-13.5 + (5.5 * impact_intensity)) if double_vol_db is None else double_vol_db
-        default_detune = (-0.30 - (0.25 * impact_intensity)) if detune_semitones is None else detune_semitones
+        default_vol_db = (-13.0 + (5.0 * impact_intensity)) if double_vol_db is None else double_vol_db
+        default_detune = (-0.35 - (0.20 * impact_intensity)) if detune_semitones is None else detune_semitones
         
         pitch_scale = 2.0 ** (default_detune / 12.0)
         vol_factor = 10.0 ** (default_vol_db / 20.0)
         
         filter_graph = (
-            f"[0:a]aformat=channel_layouts=stereo[lead_{tag}];"
+            f"[0:a]rubberband=pitch={lead_pitch:.3f}:tempo=1.0,"
+            f"highpass=f=65,bass=g=3.8:f=110:w=0.6,equalizer=f=180:width_type=h:width=80:g=2.2,"
+            f"equalizer=f=3400:width_type=h:width=1200:g=2.2[lead_{tag}];"
             f"[0:a]asplit=2[c_l_{tag}][c_r_{tag}];"
-            f"[c_l_{tag}]adelay={default_delay_l}|0,rubberband=pitch={pitch_scale:.4f},"
+            f"[c_l_{tag}]adelay={default_delay_l}|0,rubberband=pitch={lead_pitch * pitch_scale:.4f},"
             f"equalizer=f=180:width_type=h:width=80:g=2.5,lowpass=f=2800[clone_l_{tag}];"
-            f"[c_r_{tag}]adelay=0|{default_delay_r},rubberband=pitch={pitch_scale:.4f},"
+            f"[c_r_{tag}]adelay=0|{default_delay_r},rubberband=pitch={lead_pitch * pitch_scale:.4f},"
             f"equalizer=f=180:width_type=h:width=80:g=2.5,lowpass=f=2800[clone_r_{tag}];"
             f"[clone_l_{tag}][clone_r_{tag}]join=inputs=2:channel_layout=stereo,volume={vol_factor:.3f}[clone_stereo_{tag}];"
             f"[lead_{tag}][clone_stereo_{tag}]amix=inputs=2:weights=1.0 1.0:normalize=0:duration=first[mix_{tag}];"
-            f"[mix_{tag}]highpass=f=75,equalizer=f=3200:width_type=h:width=1200:g=1.5,volume=1.8[out_{tag}]"
+            f"[mix_{tag}]compand=attacks=0.02:decays=0.1:points=-80/-80|-24/-18|-12/-8|0/-2:gain=1.8,volume=1.5[out_{tag}]"
         )
-    else:
-        # Solar: Plasma armónico estelar, brillo energético, pitch ascendente
+    elif "solar" in entity.lower():
+        # Solar: DaliaNeural base + Majestic Plasma Energy Pitch (0.940) + Warm Stellar EQ
+        lead_pitch = 0.940
         default_delay_l = int(10 + (16 - 10) * impact_intensity) if delay_ms is None else delay_ms
         default_delay_r = int(14 + (22 - 14) * impact_intensity) if delay_ms is None else int(delay_ms * 1.3)
-        default_vol_db = (-14.0 + (5.5 * impact_intensity)) if double_vol_db is None else double_vol_db
-        default_detune = (0.25 + (0.20 * impact_intensity)) if detune_semitones is None else detune_semitones
+        default_vol_db = (-13.5 + (5.0 * impact_intensity)) if double_vol_db is None else double_vol_db
+        default_detune = (0.30 + (0.20 * impact_intensity)) if detune_semitones is None else detune_semitones
         
         pitch_scale = 2.0 ** (default_detune / 12.0)
         vol_factor = 10.0 ** (default_vol_db / 20.0)
         
         filter_graph = (
-            f"[0:a]aformat=channel_layouts=stereo[lead_{tag}];"
+            f"[0:a]rubberband=pitch={lead_pitch:.3f}:tempo=1.0,"
+            f"highpass=f=70,bass=g=3.2:f=130:w=0.6,equalizer=f=320:width_type=h:width=90:g=2.2,"
+            f"equalizer=f=3800:width_type=h:width=1200:g=2.5[lead_{tag}];"
             f"[0:a]asplit=2[c_l_{tag}][c_r_{tag}];"
-            f"[c_l_{tag}]adelay={default_delay_l}|0,rubberband=pitch={pitch_scale:.4f},"
+            f"[c_l_{tag}]adelay={default_delay_l}|0,rubberband=pitch={lead_pitch * pitch_scale:.4f},"
             f"highpass=f=1100,equalizer=f=3800:width_type=h:width=1200:g=2.2[clone_l_{tag}];"
-            f"[c_r_{tag}]adelay=0|{default_delay_r},rubberband=pitch={pitch_scale:.4f},"
+            f"[c_r_{tag}]adelay=0|{default_delay_r},rubberband=pitch={lead_pitch * pitch_scale:.4f},"
             f"highpass=f=1100,equalizer=f=3800:width_type=h:width=1200:g=2.2[clone_r_{tag}];"
             f"[clone_l_{tag}][clone_r_{tag}]join=inputs=2:channel_layout=stereo,volume={vol_factor:.3f}[clone_stereo_{tag}];"
             f"[lead_{tag}][clone_stereo_{tag}]amix=inputs=2:weights=1.0 1.0:normalize=0:duration=first[mix_{tag}];"
-            f"[mix_{tag}]highpass=f=85,equalizer=f=2600:width_type=h:width=900:g=1.8,volume=1.8[out_{tag}]"
+            f"[mix_{tag}]compand=attacks=0.02:decays=0.1:points=-80/-80|-24/-18|-12/-8|0/-2:gain=1.8,volume=1.5[out_{tag}]"
+        )
+    else:
+        # Fallback for other entities (VOID, NEURAL, GAIA)
+        lead_pitch = 0.930
+        default_delay_l = 12
+        default_delay_r = 16
+        vol_factor = 0.22
+        filter_graph = (
+            f"[0:a]rubberband=pitch={lead_pitch:.3f}:tempo=1.0,"
+            f"highpass=f=70,equalizer=f=3000:width_type=h:width=1000:g=2.0[lead_{tag}];"
+            f"[0:a]asplit=2[c_l_{tag}][c_r_{tag}];"
+            f"[c_l_{tag}]adelay={default_delay_l}|0,rubberband=pitch={lead_pitch * 0.98:.4f}[clone_l_{tag}];"
+            f"[c_r_{tag}]adelay=0|{default_delay_r},rubberband=pitch={lead_pitch * 1.02:.4f}[clone_r_{tag}];"
+            f"[clone_l_{tag}][clone_r_{tag}]join=inputs=2:channel_layout=stereo,volume={vol_factor:.3f}[clone_stereo_{tag}];"
+            f"[lead_{tag}][clone_stereo_{tag}]amix=inputs=2:weights=1.0 1.0:normalize=0:duration=first[mix_{tag}];"
+            f"[mix_{tag}]compand=attacks=0.02:decays=0.1:points=-80/-80|-24/-18|-12/-8|0/-2:gain=1.8,volume=1.5[out_{tag}]"
         )
         
     return filter_graph
@@ -408,7 +430,7 @@ class EdgeTTSProvider(BaseTTSProvider):
                 "ffmpeg", "-y",
                 "-i", str(raw_tmp_path),
                 "-filter_complex", filter_graph,
-                "-map", f"[out_{'q' if 'quantum' in entity_key else 's'}]",
+                "-map", f"[out_{'q' if 'quantum' in entity_key else ('s' if 'solar' in entity_key else 'e')}]",
                 "-acodec", "libmp3lame",
                 "-b:a", "192k",
                 str(output_path)
