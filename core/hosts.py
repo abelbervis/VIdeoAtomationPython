@@ -108,14 +108,14 @@ DEFAULT_QUANTUM_HOST = OrbHost(
     primary_color="#00f0ff",
     glow_color="#00b0ff",
     border_color="#00f0ff",
-    voice_name="es-MX-JorgeNeural",
-    voice_rate="-5%",
-    voice_pitch="-4Hz",
+    voice_name="es-CO-GonzaloNeural",
+    voice_rate="-2%",
+    voice_pitch="+2Hz",
     drone_freq=48,
     double_tracking={
-        "delay_ms": 14,
-        "double_vol_db": -11.0,
-        "detune_semitones": -0.3
+        "delay_ms": 16,
+        "double_vol_db": -9.5,
+        "detune_semitones": -0.35
     },
     shot_name="close_quantum",
     ass_primary_color="&H00FFFF00",
@@ -132,14 +132,14 @@ DEFAULT_SOLAR_HOST = OrbHost(
     primary_color="#ffea00",
     glow_color="#ff9100",
     border_color="#ffb300",
-    voice_name="es-MX-DaliaNeural",
-    voice_rate="+1%",
-    voice_pitch="+2Hz",
+    voice_name="es-ES-ElviraNeural",
+    voice_rate="-1%",
+    voice_pitch="-3Hz",
     drone_freq=58,
     double_tracking={
-        "delay_ms": 12,
-        "double_vol_db": -11.5,
-        "detune_semitones": 0.3
+        "delay_ms": 14,
+        "double_vol_db": -10.0,
+        "detune_semitones": 0.35
     },
     shot_name="close_solar",
     ass_primary_color="&H0000D0FF",
@@ -156,14 +156,14 @@ DEFAULT_NARRATOR_HOST = OrbHost(
     primary_color="#ffd700",
     glow_color="#ffab00",
     border_color="#ffe082",
-    voice_name="es-MX-JorgeNeural",
-    voice_rate="-4%",
-    voice_pitch="-7Hz",
+    voice_name="es-ES-AlvaroNeural",
+    voice_rate="-5%",
+    voice_pitch="-8Hz",
     drone_freq=46,
     double_tracking={
-        "delay_ms": 10,
-        "double_vol_db": -16.0,
-        "detune_semitones": -0.1
+        "delay_ms": 12,
+        "double_vol_db": -12.0,
+        "detune_semitones": -0.2
     },
     shot_name="wide",
     ass_primary_color="&H0000FFFF",
