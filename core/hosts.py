@@ -271,6 +271,10 @@ class CosmicDebateShow:
 
 REGLAS DE ASIGNACIÓN DINÁMICA DE ROLES Y DEBATE:
 
+0. FIDELIDAD TEMÁTICA TOTAL Y ESPECIFICIDAD CIENTÍFICA (CERO CLONACIÓN O GUIONES COMODÍN):
+   - PROHIBIDO RECICLAR O COPIAR CONCEPTOS DE OTROS TEMAS. El 100% de los hechos científicos, mecanismos, metáforas y argumentos DEBEN emanar EXCLUSIVAMENTE de la física, biología o paradoja del tema solicitado.
+   - Cada tema debe poseer su propio universo conceptual irrepetible. Investiga y extrae los mecanismos empíricos más fascinantes y específicos correspondientes a la materia tratada (sin fórmulas comodín ni ideas prestadas de otros guiones).
+
 1. ELECCIÓN DINÁMICA DE ROLES POR VIDEO (DESIGNACIÓN CÓSMICA Y CONTRASTE):
    - NO USAR TÍTULOS ACADÉMICOS O PROFESIONES HUMANAS (❌ NO uses "Profesor de Neurociencia", "Filosofía Fenomenológica" o "Bioético").
    - Define las especialidades como DESIGNACIONES DE ENTIDADES CÓSMICAS adaptadas al tema (ej. {self.host_a.name}: "Entidad de la Información y Código Cuántico" vs {self.host_b.name}: "Entidad del Fuego Estelar y la Entropía").
@@ -373,7 +377,7 @@ EJEMPLO MODELO DE GUION DE MÁXIMA RETENCIÓN Y DEBATE CRUZADO (SIGUE ESTE ESTIL
 }}
 ```
 
-EJEMPLO 2 DE ANTAGONISMO ELEGANTE Y GRAVITAS CÓSMICA (SERENIDAD TAJANTE Y CIERRE CIRCULAR):
+EJEMPLO 2 DE ANTAGONISMO ELEGANTE Y GRAVITAS CÓSMICA - TEMA IDENTIDAD/MATERIA:
 ```json
 {{
   "topic": "TÚ NO EXISTES",
@@ -423,6 +427,63 @@ EJEMPLO 2 DE ANTAGONISMO ELEGANTE Y GRAVITAS CÓSMICA (SERENIDAD TAJANTE Y CIERR
       "speaker": "Narrador",
       "entity": "narrator",
       "text": "Si toda tu materia cambia sin cesar... ¿eres tú quien escucha esto, o solo la ilusión de alguien que cree existir?",
+      "shot": "both",
+      "duration": 3.5
+    }}
+  ]
+}}
+```
+
+EJEMPLO 3 - TEMA DE PERCEPCIÓN/VISIÓN ("NUNCA HAS VISTO EL MUNDO" - CIENCIA Y METÁFORAS EXCLUSIVAS DE ÓPTICA Y CEREBRO):
+```json
+{{
+  "topic": "NUNCA HAS VISTO EL MUNDO",
+  "headline_hook": "¿ALGUNA VEZ HAS VISTO EL MUNDO?",
+  "roles": {{
+    "{self.host_a.id}": "Entidad de la Señal Cuántica",
+    "{self.host_b.id}": "Entidad de la Percepción Estelar"
+  }},
+  "holograms": null,
+  "scenes": [
+    {{
+      "speaker": "Narrador",
+      "entity": "narrator",
+      "text": "Tu cerebro vive encerrado a oscuras dentro del cráneo; jamás ha tocado un solo rayo de luz real.",
+      "shot": "wide",
+      "duration": 3.4
+    }},
+    {{
+      "speaker": "{self.host_a.name}",
+      "entity": "{self.host_a.id}",
+      "text": "Lo que llaman visión es una simulación tardía. El universo físico carece de colores; solo son ondas que su cerebro inventa.",
+      "shot": "{self.host_a.shot_name}",
+      "duration": 3.4
+    }},
+    {{
+      "speaker": "{self.host_b.name}",
+      "entity": "{self.host_b.id}",
+      "text": "Te equivocas. No es una mentira; es la materia viva dotando de sentido y belleza al abismo de la radiación ciega.",
+      "shot": "{self.host_b.shot_name}",
+      "duration": 3.5
+    }},
+    {{
+      "speaker": "{self.host_a.name}",
+      "entity": "{self.host_a.id}",
+      "text": "Una construcción que llega con ochenta milisegundos de retraso. Siempre contemplan el eco muerto del pasado.",
+      "shot": "{self.host_a.shot_name}",
+      "duration": 3.4
+    }},
+    {{
+      "speaker": "{self.host_b.name}",
+      "entity": "{self.host_b.id}",
+      "text": "Ese instante de retraso es su mayor conquista: transformar el impacto mudo de fotones en asombro consciente.",
+      "shot": "{self.host_b.shot_name}",
+      "duration": 3.5
+    }},
+    {{
+      "speaker": "Narrador",
+      "entity": "narrator",
+      "text": "Si lo que ves es solo una recreación tardía dentro de tu mente... ¿alguna vez has visto el mundo real, o solo la sombra que tu cerebro inventa para no colapsar?",
       "shot": "both",
       "duration": 3.5
     }}

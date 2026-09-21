@@ -361,6 +361,61 @@ class DebateScriptGenerator:
             self.show.host_b.id: self.show.host_b.role
         }
 
+        if any(w in topic_lower for w in ["visto", "vista", "ojo", "ojos", "luz", "ilusion", "percepc", "ciego"]) or ("mundo" in topic_lower and "nunca" in topic_lower):
+            return {
+                "topic": "NUNCA HAS VISTO EL MUNDO",
+                "headline_hook": "¿ALGUNA VEZ HAS VISTO EL MUNDO?",
+                "roles": {
+                    self.show.host_a.id: "Entidad de la Señal Cuántica",
+                    self.show.host_b.id: "Entidad de la Percepción Estelar"
+                },
+                "holograms": None,
+                "scenes": [
+                    {
+                        "speaker": "Narrador",
+                        "entity": "narrator",
+                        "text": "Tu cerebro vive encerrado a oscuras dentro del cráneo; jamás ha tocado un solo rayo de luz real.",
+                        "shot": "wide",
+                        "duration": 3.4
+                    },
+                    {
+                        "speaker": self.show.host_a.name,
+                        "entity": self.show.host_a.id,
+                        "text": "Lo que llaman visión es una simulación tardía. El universo físico carece de colores; solo son ondas que su cerebro inventa.",
+                        "shot": self.show.host_a.shot_name,
+                        "duration": 3.4
+                    },
+                    {
+                        "speaker": self.show.host_b.name,
+                        "entity": self.show.host_b.id,
+                        "text": "Te equivocas. No es una mentira; es la materia viva dotando de sentido y belleza al abismo de la radiación ciega.",
+                        "shot": self.show.host_b.shot_name,
+                        "duration": 3.5
+                    },
+                    {
+                        "speaker": self.show.host_a.name,
+                        "entity": self.show.host_a.id,
+                        "text": "Una construcción que llega con ochenta milisegundos de retraso. Siempre contemplan el eco muerto del pasado.",
+                        "shot": self.show.host_a.shot_name,
+                        "duration": 3.4
+                    },
+                    {
+                        "speaker": self.show.host_b.name,
+                        "entity": self.show.host_b.id,
+                        "text": "Ese instante de retraso es su mayor conquista: transformar el impacto mudo de fotones en asombro consciente.",
+                        "shot": self.show.host_b.shot_name,
+                        "duration": 3.5
+                    },
+                    {
+                        "speaker": "Narrador",
+                        "entity": "narrator",
+                        "text": "Si lo que ves es solo una recreación tardía dentro de tu mente... ¿alguna vez has visto el mundo real, o solo la sombra que tu cerebro inventa para no colapsar?",
+                        "shot": "both",
+                        "duration": 3.5
+                    }
+                ]
+            }
+
         if "simula" in topic_lower or "matrix" in topic_lower:
             return {
                 "topic": "¿Es el universo una simulación?",
