@@ -113,14 +113,14 @@ def extract_audio_speech_envelope(
 def extract_real_audio_rms_profile(
     audio_path: Path,
     intervals: List[Tuple[float, float]],
-    step_hz: int = 10,
+    step_hz: int = 5,
 ) -> str:
     """
-    Extracts fine-grained syllable/speech RMS energy from narration audio,
+    Extracts high-contrast syllable/speech RMS energy bursts from narration audio,
     returning a compact FFmpeg mathematical expression that surges precisely on spoken syllables.
     """
     audio_path = Path(audio_path)
-    if not audio_path.exists() or audio_path.stat().st_size == 0:
+    if not audio_path.exists() or audio_path.stat().st_size == 0 or not intervals:
         return "(0.5 + 0.3*sin(2*PI*t/0.24))"
 
     wav_to_clean: Optional[Path] = None
@@ -154,24 +154,54 @@ def extract_real_audio_rms_profile(
         samples = struct.unpack(f"<{samples_count}h", raw_bytes)
         chunk_size = max(1, s_rate // step_hz)
 
+        # Merge adjacent energetic segments to keep the expression extremely compact and elegant
         terms: List[str] = []
         n_chunks = len(samples) // chunk_size
+
+        cur_start: Optional[float] = None
+        cur_end: Optional[float] = None
+        cur_weight_sum = 0.0
+        cur_count = 0
+
         for idx in range(n_chunks):
             t_start = round(idx / step_hz, 2)
             t_end = round((idx + 1) / step_hz, 2)
             in_speech = any(s <= t_start <= e or s <= t_end <= e for s, e in intervals)
-            if not in_speech:
-                continue
 
             chunk = samples[idx * chunk_size : (idx + 1) * chunk_size]
-            rms = math.sqrt(sum(s * s for s in chunk) / len(chunk))
-            # Normalized RMS acoustic speech energy (0.0 to 1.0)
-            norm = max(0.0, min(1.0, (rms - 500.0) / 7200.0))
-            if norm >= 0.08:
-                terms.append(f"{round(norm, 2)}*between(t,{t_start},{t_end})")
+            rms = math.sqrt(sum(s * s for s in chunk) / len(chunk)) if chunk else 0.0
+            norm = max(0.0, min(1.0, (rms - 600.0) / 6800.0)) if in_speech else 0.0
+
+            if norm >= 0.15:
+                if cur_start is None:
+                    cur_start = t_start
+                    cur_end = t_end
+                    cur_weight_sum = norm
+                    cur_count = 1
+                else:
+                    cur_end = t_end
+                    cur_weight_sum += norm
+                    cur_count += 1
+            else:
+                if cur_start is not None:
+                    avg_w = round(min(1.0, max(0.4, cur_weight_sum / max(1, cur_count))), 2)
+                    terms.append(f"{avg_w}*between(t,{cur_start},{cur_end})")
+                    cur_start = None
+                    cur_end = None
+                    cur_weight_sum = 0.0
+                    cur_count = 0
+
+        if cur_start is not None:
+            avg_w = round(min(1.0, max(0.4, cur_weight_sum / max(1, cur_count))), 2)
+            terms.append(f"{avg_w}*between(t,{cur_start},{cur_end})")
 
         if not terms:
             return "(0.5 + 0.3*sin(2*PI*t/0.24))"
+
+        # Cap terms if too large
+        if len(terms) > 60:
+            terms = terms[:60]
+
         joined = " + ".join(terms)
         return f"({joined})"
     except Exception as e:
@@ -1617,11 +1647,14 @@ def render_orb_test_preview(
     filter_complex.append(f"[{cur_v}]ass='{escaped_ass_path}'[vout]")
 
     filter_str = ";".join(filter_complex)
+    filter_script_path = output_path.parent / f"_temp_filter_{output_path.stem}.txt"
+    with open(filter_script_path, "w", encoding="utf-8") as f_script:
+        f_script.write(filter_str)
 
     cmd = [
         "ffmpeg", "-y",
         *cmd_inputs,
-        "-filter_complex", filter_str,
+        "-filter_complex_script", str(filter_script_path),
         "-map", "[vout]",
         "-map", f"{audio_idx}:a",
         "-c:v", "libx264",
@@ -1639,7 +1672,7 @@ def render_orb_test_preview(
         print(f"  ❌ FFmpeg render error: {e.stderr.decode('utf-8') if e.stderr else str(e)}")
         raise e
     finally:
-        for p in [temp_test_audio, ass_sub_path]:
+        for p in [temp_test_audio, ass_sub_path, filter_script_path]:
             if p and p.exists():
                 try:
                     p.unlink()
