@@ -52,6 +52,13 @@ CRITICAL CHECKLIST TO VALIDATE AND CORRECT:
    - Verifica que las entidades hablen de la humanidad en TERCERA PERSONA ('los biológicos', 'los humanos', 'esta especie efímera').
    - REESCRIBE cualquier frase donde una entidad hable como profesional o humano terrenal (ej. 'en mi laboratorio', 'mis estudios', 'nuestra especie').
 
+9. CERO EMOJIS EN TITULAR (headline_hook):
+   - Elimina cualquier emoji o símbolo (como ⚡, 🌌, 🧬) del atributo 'headline_hook'. Debe ser texto en mayúsculas limpio y conciso.
+
+10. ELIMINACIÓN DE LLAMADOS A COMENTARIOS (CIERRE CÓSMICO PURO):
+   - REESCRIBE la última escena para que termine con un dilema existencial o reflexión sobrecogedora sobre la condición humana.
+   - ELIMINA cualquier llamado a comentar ("comenta abajo", "deja tu opinión", "elige tu bando"), preservando la inmersión de observación cósmica.
+
 INPUT JSON:
 {INSERT_GENERATED_JSON_HERE}
 

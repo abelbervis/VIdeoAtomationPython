@@ -846,7 +846,7 @@ def render_orb_test_preview(
     height: int = 1920,
     bg_style: str = "cosmic",
     sample_audio: Optional[Path] = None,
-    headline_hook: str = "⚡ PARADOJA CUÁNTICA VS FÍSICA SOLAR ⚡",
+    headline_hook: str = "PARADOJA CUÁNTICA VS FÍSICA SOLAR",
     topic: Optional[str] = None,
     debate_script: Optional[Dict[str, Any]] = None,
     cohosts: Optional[str] = "quantum,solar",
@@ -1315,7 +1315,9 @@ def render_orb_test_preview(
     from utils.fonts import resolve_best_font_path
     font_param, _ = resolve_best_font_path()
 
-    escaped_headline_hook = headline_hook.replace(":", "\\:").replace("'", "\\'")
+    import re
+    clean_hook = re.sub(r'[^\w\s\?¿!¡\-\.,:áéíóúÁÉÍÓÚñÑ]', '', headline_hook).strip()
+    escaped_headline_hook = clean_hook.replace(":", "\\:").replace("'", "\\'")
 
     # High-Performance Futuristic ASS Karaoke Subtitles (Using ALL dynamic scenes)
     from subtitles.generator import generate_cosmic_debate_karaoke_ass

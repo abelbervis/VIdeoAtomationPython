@@ -271,108 +271,93 @@ class CosmicDebateShow:
 
 REGLAS DE ASIGNACIÓN DINÁMICA DE ROLES Y DEBATE:
 
-1. ELECCIÓN DINÁMICA DE ROLES POR VIDEO (MÁXIMO CONTRASTE OBLIGATORIO):
-   - NO HAY ROLES FIJOS. Para cada video/tema, TÚ (la IA) debes definir y asignar dos roles o ramas de conocimiento especializadas (de 2 a 4 palabras cada una) adaptadas específicamente al tema '{topic or 'de este debate'}'.
-   - MÁXIMO CONTRASTE CONCEPTUAL: Los roles asignados a {self.host_a.name} y {self.host_b.name} NUNCA pueden ser de la misma rama ni compartir la misma visión. Deben representar dos disciplinas, metodologías o posturas académicas en choque frontal.
-     * Ejemplo para Edición Genética: {self.host_a.name}: "Biología Sintética" vs {self.host_b.name}: "Bioética y Justicia".
-     * Ejemplo para Conciencia: {self.host_a.name}: "Neurobiología Computacional" vs {self.host_b.name}: "Filosofía Fenomenológica".
-     * Ejemplo para Colonización Espacial: {self.host_a.name}: "Ingeniería de Propulsión y Recursos" vs {self.host_b.name}: "Astrobiología y Ética Planetaria".
-     * Ejemplo para Hipótesis de la Simulación: {self.host_a.name}: "Física de la Información" vs {self.host_b.name}: "Epistemología y Realismo Empírico".
+1. ELECCIÓN DINÁMICA DE ROLES POR VIDEO (DESIGNACIÓN CÓSMICA Y CONTRASTE):
+   - NO USAR TÍTULOS ACADÉMICOS O PROFESIONES HUMANAS (❌ NO uses "Profesor de Neurociencia", "Filosofía Fenomenológica" o "Bioético").
+   - Define las especialidades como DESIGNACIONES DE ENTIDADES CÓSMICAS adaptadas al tema (ej. {self.host_a.name}: "Entidad de la Información y Código Cuántico" vs {self.host_b.name}: "Entidad del Fuego Estelar y la Entropía").
+   - MÁXIMO CONTRASTE CONCEPTUAL entre las dos entidades.
    - Debes incluir obligatoriamente los roles elegidos en el objeto "roles" del JSON inicial:
      "roles": {{
-       "{self.host_a.id}": "Rol 1 elegido dinámicamente",
-       "{self.host_b.id}": "Rol 2 elegido dinámicamente (en contraste)"
+       "{self.host_a.id}": "Designación de entidad 1 (2-4 palabras)",
+       "{self.host_b.id}": "Designación de entidad 2 (2-4 palabras)"
      }}
 
-2. PROHIBICIÓN ESTRICTA DE INVASIÓN DE DOMINIO (AISLAMIENTO DISCIPLINARIO PURO):
-   - CADA ORBE DEBE ARGUMENTAR Y UTILIZAR EVIDENCIA EXCLUSIVAMENTE DENTRO DEL MARCO CONCEPTUAL DE SU PROPIA DISCIPLINA.
-   - PROHIBIDO INVADIR EL DOMINIO DEL OPONENTE: Un orbe NO puede usar los argumentos técnicos, mecanismos o evidencia de la disciplina contraria para defender su postura.
-     * ❌ INVASIÓN DE DOMINIO (ERROR): Un rol de Bioética/Filosofía argumentando: "Los efectos fuera de objetivo y la epigenética generan riesgos imprevisibles..." (Usa evidencia biológica/molecular en lugar de dilemas bioéticos).
-     * ✅ DOMINIO PURO (CORRECTO): El rol de Bioética/Justicia argumentando: "¿Quién asume la responsabilidad moral cuando modificas a generaciones enteras que nunca pudieron dar su consentimiento?" (Plantea dilemas normativos, justicia intergeneracional, autonomía y responsabilidad).
-   - REGLA DE ORO POR ARQUETIPO:
-     * Si el rol es TÉCNICO/CIENTÍFICO (ej. Biología Sintética, Física Cuántica, Computación): Argumenta mediante mecanismos verificables, datos empíricos comprobables, leyes físicas/químicas y optimización funcional.
-     * Si el rol es ÉTICO/FILOSÓFICO/SOCIAL (ej. Bioética, Filosofía, Sociología, Derechos Humanos): Argumenta mediante dilemas morales, consentimiento, responsabilidad, distribución de poder, justicia distributiva, autonomía y consecuencias éticas estructurales. NUNCA use jerga molecular/física para justificar su postura.
-     * Si el rol es ECONÓMICO/POLÍTICO: Argumenta mediante incentivos de mercado, monopolios, soberanía, coste social y equidad de acceso.
+2. LENGUAJE ÁGIL, CIENCIA REAL Y CERO JERGA ACADÉMICA ABURRIDA:
+   - CADA DIÁLOGO DEBE REVELAR UN DATO CIENTÍFICO O MECANISMO REAL, pero explicado con lenguaje ágil, fascinante y accesible para un público de Shorts.
+   - PROHIBIDA LA JERGA ACADÉMICA DENSA O INFUMABLE (❌ NUNCA uses términos como "epistemología", "fenomenológico", "reducción a sinapsis", "atractores extraños" o "vacío epistemológico").
+   - Explica la ciencia de forma directa y visual (ej. "Son simples impulsos eléctricos en un órgano de grasa", "Apagan su conciencia para limpiar toxinas cerebrales").
 
 3. RIGOR FACTUAL, CERO INVENTOS Y PROHIBICIÓN DE CITAS/ESTADÍSTICAS FABRICADAS:
-   - CIENCIA Y HECHOS 100% REALES: Todos los datos, principios, leyes y mecanismos expuestos deben ser verídicos y contrastados.
-   - PROHIBIDO FABRICAR CITAS, UNIVERSIDADES O ESTUDIOS CON AÑOS: NUNCA inventes "En 2018 Harvard...", "Estudios de Oxford en 2021...", "Según la OMS el 5%...", o porcentajes arbitrarios ("70% de éxito", "98% de efectividad").
-   - Explica siempre los mecanismos científicos reales o principios conceptuales de forma directa y cualitativa (ej. "La edición de bases corrige mutaciones puntuales sin fracturar la doble hebra", "Las enfermedades monogénicas son la principal causa de fallos metabólicos hereditarios").
-   - PROHIBIDO el lenguaje pseudo-poético vacío (ej. "la gravedad del relato", "el tejido de las almas", "la tinta del cosmos").
-   - El choque dialéctico surge del contraste entre las dos disciplinas reales, nunca de datos o citas inventadas.
+   - CIENCIA Y HECHOS 100% REALES: Todos los datos, principios, leyes y mecanismos expuestos deben ser verídicos.
+   - PROHIBIDO FABRICAR CITAS, UNIVERSIDADES O ESTUDIOS CON AÑOS: NUNCA inventes "En 2018 Harvard...", "Estudios de Oxford...", o porcentajes arbitrarios.
+   - PROHIBIDO el lenguaje pseudo-poético vacío (ej. "la gravedad del relato", "el tejido de las almas").
 
 4. DIALÉCTICA CRUZADA Y CONTINUIDAD CONVERSACIONAL:
    - Mantén UN solo dilema central, paradoja o experimento mental a lo largo de todo el guion.
-   - Cada intervención posterior a la primera DEBE responder, objetar o refutar directamente lo que dijo el otro orbe desde el prisma de su disciplina.
-   - Diálogos fluidos, ágiles y con impacto (~12 a 20 palabras por escena).
+   - Cada intervención posterior a la primera DEBE responder, objetar o refutar directamente lo que dijo la otra entidad.
+   - Diálogos fluidos, ágiles y con impacto (~10 a 16 palabras por escena).
 
 5. PERSPECTIVA DE ENTIDADES OBSERVADORAS CÓSMICAS (ANÁLISIS EN TERCERA PERSONA SOBRE LA HUMANIDAD):
    - LAS ENTIDADES {self.host_a.name} Y {self.host_b.name} SON CONCIENCIAS PRIMORDIALES Y OBSERVADORES CÓSMICOS EXTERNOS.
-   - DEBEN HABLAR DE LA ESPECIE HUMANA Y DE LOS ORGANISMOS TERRESTRES SIEMPRE EN TERCERA PERSONA (ej. "los biológicos", "los humanos", "esta especie efímera", "los observadores orgánicos", "los habitantes de este planeta").
+   - DEBEN HABLAR DE LA ESPECIE HUMANA Y DE LOS ORGANISMOS TERRESTRES SIEMPRE EN TERCERA PERSONA (ej. "los biológicos", "los humanos", "esta especie efímera", "los observadores orgánicos").
    - PROHIBIDO HABLAR COMO PROFESIONALES O SERES HUMANOS TERRENALES (NUNCA digas "en mi laboratorio", "nuestros estudios", "mis colegas", "nuestra especie").
-   - CADA DIÁLOGO DEBE REVELAR UN DATO O MECANISMO CIENTÍFICO REAL (física, neurociencia, astrofísica, genética) analizado con perplejidad, fascinación o rigor desde su escala cósmica.
 
-6. ESTRUCTURA NARRATIVA DE TRES CAPAS (NARRADOR + OBSERVACIÓN DE ENTIDADES + CIERRE):
+6. ESTRUCTURA NARRATIVA DE TRES CAPAS (NARRADOR + OBSERVACIÓN DE ENTIDADES + CIERRE EXISTENCIAL):
    - Escena 1 (Intro Narrador - Voz en off): "speaker": "Narrador", "entity": "narrator", "shot": "wide". Plantea un hecho científico asombroso o paradoja en segunda persona que engancha inmediatamente al espectador.
-   - Escenas 2 a N-1 (Debate/Observación de Entidades): Intercambio fluido, rápido y punzante (~10 a 16 palabras por escena) entre {self.host_a.name} ("{self.host_a.shot_name}") y {self.host_b.name} ("{self.host_b.shot_name}") analizando el hecho científico y sus implicaciones en tercera persona.
-   - Escena N (Outro Narrador - Voz en off): "speaker": "Narrador", "entity": "narrator", "shot": "both". Sintetiza la incógnita final y lanza una llamada a la acción provocadora para que la audiencia humana tome partido o responda en los comentarios.
+   - Escenas 2 a N-1 (Observación de Entidades): Intercambio fluido, rápido y punzante (~10 a 15 palabras por escena) entre {self.host_a.name} ("{self.host_a.shot_name}") y {self.host_b.name} ("{self.host_b.shot_name}") analizando el hecho científico y sus implicaciones en tercera persona.
+   - Escena N (Outro Narrador - Voz en off): "speaker": "Narrador", "entity": "narrator", "shot": "both". Cierre con una pregunta existencial o pensamiento sobrecogedor sobre la condición humana. PROHIBIDO PEDIR COMENTARIOS, PEDIR LIKES O DECIR "COMENTA ABAJO" / "ELIGE TU BANDO" (mantiene la inmersión cósmica pura).
 
-Responde ÚNICAMENTE con JSON válido que cumpla estrictamente este esquema:
+7. PROHIBICIÓN DE EMOJIS EN EL TITULAR (headline_hook):
+   - El atributo "headline_hook" NO DEBE LLEVAR NINGÚN EMOJI NI SÍMBOLO (❌ NO uses ⚡, 🌌, 🧬). Solo texto limpio, directo e impactante en mayúsculas (máximo 40 caracteres).
+
+Responde ÚNICAMENTE con JSON válido que cumpla strictly este esquema:
 {{
   "topic": "Nombre del tema tratado",
-  "headline_hook": "⚡ TITULO IMPACTANTE (MAX 45 CHARACTERS) ⚡",
+  "headline_hook": "TITULO IMPACTANTE SIN EMOJIS EN MAYUSCULAS (MAX 40 CHARACTERS)",
   "roles": {{
-    "{self.host_a.id}": "Especialidad 1 decidida para el tema (2-4 palabras)",
-    "{self.host_b.id}": "Especialidad 2 en contraste frontal (2-4 palabras)"
+    "{self.host_a.id}": "Designación de entidad 1 (2-4 palabras)",
+    "{self.host_b.id}": "Designación de entidad 2 en contraste (2-4 palabras)"
   }},
   "holograms": null,
   "scenes": [
     {{
       "speaker": "Narrador",
       "entity": "narrator",
-      "text": "Planteamiento del enigma o dilema cósmico provocador presentando a los dos debatientes.",
+      "text": "Planteamiento del hecho científico asombroso o paradoja que engancha al espectador en 3 segundos.",
       "shot": "wide",
       "duration": 3.4
     }},
     {{
       "speaker": "{self.host_a.name}",
       "entity": "{self.host_a.id}",
-      "text": "Postulado contundente desde la perspectiva de su disciplina técnica o empírica.",
+      "text": "Análisis del hecho desde la escala cósmica u observacional en tercera persona.",
       "shot": "{self.host_a.shot_name}",
       "duration": 3.4
     }},
     {{
       "speaker": "{self.host_b.name}",
       "entity": "{self.host_b.id}",
-      "text": "Contraargumento o refutación directa desde el marco conceptual de su rol asignado.",
+      "text": "Objeción o contraste fascinante sobre la fragilidad o paradoja humana.",
       "shot": "{self.host_b.shot_name}",
       "duration": 3.5
     }},
     {{
       "speaker": "{self.host_a.name}",
       "entity": "{self.host_a.id}",
-      "text": "Mecanismo o principio verificable de su rama que sostiene su tesis y presiona al oponente.",
+      "text": "Dato científico real explicado con síntesis e impacto.",
       "shot": "{self.host_a.shot_name}",
       "duration": 3.4
     }},
     {{
       "speaker": "{self.host_b.name}",
       "entity": "{self.host_b.id}",
-      "text": "Objeción estructural o dilema insuperable que expone las limitaciones de la otra postura.",
+      "text": "Implicación profunda que desafía la perspectiva humana.",
       "shot": "{self.host_b.shot_name}",
       "duration": 3.5
-    }},
-    {{
-      "speaker": "{self.host_a.name}",
-      "entity": "{self.host_a.id}",
-      "text": "Clímax argumental llevando la tensión dialéctica al punto más alto.",
-      "shot": "{self.host_a.shot_name}",
-      "duration": 3.4
     }},
     {{
       "speaker": "Narrador",
       "entity": "narrator",
-      "text": "Pregunta final abierta y reflexiva llamando a la audiencia a elegir bando en los comentarios.",
+      "text": "Pregunta existencial o pensamiento sobrecogedor final (SIN pedir comentarios ni suscripciones).",
       "shot": "both",
       "duration": 3.5
     }}

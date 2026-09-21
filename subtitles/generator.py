@@ -686,11 +686,11 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             if "narrator" in speaker or "narrator" in entity or "narrador" in speaker or "narrador" in entity or "presentador" in speaker:
                 style_name = "NarratorKaraoke"
                 hl_color = "&H0038E0FF&"  # Elegant Amber/Gold Glow
-                badge_str = rf"{{\c&H0038E0FF&\b1\fs{badge_fs}}}[ NARRADOR • VOZ EN OFF ]\N{{\r{style_name}}}"
+                badge_str = rf"{{\c&H0038E0FF&\b1\fs{badge_fs}}}[ NARRADOR ]\N{{\r{style_name}}}"
             elif "solar" in speaker or "solar" in entity:
                 style_name = "SolarKaraoke"
                 hl_color = "&H0000C4FF&"  # Vibrant Solar Amber/Gold (ASS BGR)
-                badge_str = rf"{{\c&H0000C4FF&\b1\fs{badge_fs}}}[ SOLAR • {role_s} ]\N{{\r{style_name}}}"
+                badge_str = rf"{{\c&H0000C4FF&\b1\fs{badge_fs}}}[ SOLAR ]\N{{\r{style_name}}}"
             elif "ambos" in speaker or "both" in entity or "dual" in speaker:
                 style_name = "DualKaraoke"
                 hl_color = "&H0000E5FF&"  # Cosmic Resonance Gold-Cyan
@@ -698,7 +698,8 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             else:
                 style_name = "QuantumKaraoke"
                 hl_color = "&H00FFFF00&"  # Pure Electric Neon Cyan (ASS BGR)
-                badge_str = rf"{{\c&H00FFFF00&\b1\fs{badge_fs}}}[ QUANTUM • {role_q} ]\N{{\r{style_name}}}"
+                spk_label = speaker.upper() if speaker else "QUANTUM"
+                badge_str = rf"{{\c&H00FFFF00&\b1\fs{badge_fs}}}[ {spk_label} ]\N{{\r{style_name}}}"
 
             words = clean_text.split()
             if not words:
