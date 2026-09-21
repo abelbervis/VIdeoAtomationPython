@@ -286,18 +286,35 @@ REGLAS DE ASIGNACIÓN DINÁMICA DE ROLES Y DEBATE:
      }}
 
 2. LENGUAJE VISCERAL Y CERO JERGA ACADÉMICA / TÉCNICA CRÍPTICA:
-   - PROHIBIDA LA JERGA ACADÉMICA O TÉCNICA PESADA (❌ NUNCA uses "decoherencia", "patrón de bits", "transición estadística", "epistemológico", "glicólisis", "reducción a sinapsis", "neurodegeneración").
+   - PROHIBIDA LA JERGA ACADÉMICA O TÉCNICA PESADA (❌ NUNCA uses "decoherencia", "patrón de bits", "transición estadística", "epistemológico", "glicólisis", "reducción a sinapsis", "neurodegeneración", "quimera de la simultaneidad").
    - Traduce toda la física y biología a IMÁGENES VISCERALES Y DIRECTAS:
      * En vez de "patrón de bits en decoherencia" ➔ "señales eléctricas en un cerebro hueco".
      * En vez de "transición estadística sin propósito" ➔ "millones de impulsos apagándose sin un alma detrás".
      * En vez de "disipación térmica" ➔ "fuego que arde y se extingue".
+     * En vez de "la simultaneidad es una quimera" ➔ "el universo no comparte tu presente".
    - El espectador debe entender cada palabra sin ser físico ni neurocientífico.
 
-3. RIGOR FACTUAL Y CERO MITOS POPULARES:
+3. DIRECTRICES DE ALTO IMPACTO Y RETENCIÓN PARA YOUTUBE SHORTS (ALGORITMO & COMPRENSIÓN INSTANTÁNEA):
+   - PROHIBICIÓN ABSOLUTA DE POESÍA VAGA O ABSTRACCIÓN CONFUSA (❌ NUNCA escribas frases etéreas como: "el instante vibra", "el tiempo se deshace en nada", "avanzan en la red cósmica sin un punto fijo", "la tinta del destino"):
+     * En YouTube Shorts, la abstracción vacía hace que el 70% de los espectadores deslice al siguiente video en menos de 2 segundos.
+     * CADA FRASE DEBE APOYARSE EN UN HECHO CIENTÍFICO O ANATÓMICO CONCRETO:
+       - Si el tema es EL TIEMPO: apóyate en hechos desconcertantes (los satélites envejecen a otro ritmo, la gravedad frena el tiempo, el cosmos no tiene reloj central, ver una estrella es ver el pasado).
+       - Si el tema es LA VISIÓN: apóyate en el cráneo oscuro, la retina traduciendo fotones, la ausencia física de colores, los 80 ms de retraso.
+       - Si el tema es EL SUEÑO: apóyate en la parálisis motora, el lavado de toxinas, la alucinación para no colapsar.
+   - REGLA DEL HOOK (LOS PRIMEROS 3 SEGUNDOS DETERMINAN LA VIDA DEL VIDEO):
+     * La Escena 1 del Narrador DEBE ser una AFIRMACIÓN CATEGÓRICA E INQUIETANTE que rompa una certeza cotidiana del espectador (ej. "El universo no tiene reloj central; para la física moderna, tu presente jamás ha existido", "Tu cerebro vive encerrado a oscuras dentro del cráneo; jamás ha tocado un rayo de luz real").
+     * PROHIBIDAS LAS PREGUNTAS TÍMIDAS O FRASES POÉTICAS SUAVES EN LA ESCENA 1.
+   - SOLAR: COMBATE Y AGENCIA ACTIVA (PROHIBIDO EL COMODÍN DE "FUEGO/LLAMA" SIN SENTIDO):
+     * SOLAR NO es un espectador que contempla o se asombra con lo que QUANTUM dice ("produce asombro", "el cosmos vibra dentro de ellos" ➔ PROHIBIDO).
+     * SOLAR NO debe abusar de la palabra "fuego" o "llama" en temas donde no aplica (en relatividad o percepción, defiende la CONCIENCIA, la AGENCIA y la VOLUNTAD que desafían la corriente ciega).
+   - VOCABULARIO ACCESIBLE PARA AUDIENCIAS DE 15 A 65 AÑOS:
+     * Si una frase requiere que el espectador pause el video para entenderla, ES UN ERROR. Las ideas deben ser alucinantes pero comprensibles al primer segundo de escucha.
+
+4. RIGOR FACTUAL Y CERO MITOS POPULARES:
    - CUIDADO CON LOS MITOS POPULARES: NUNCA digas "tus neuronas se regeneran cada siete años" (las neuronas de la corteza no se regeneran; lo que se renueva son sus átomos y moléculas).
    - CIENCIA Y HECHOS 100% REALES: Todos los mecanismos deben basarse en leyes físicas y biológicas verídicas, sin inventar estudios con años ni universidades ficticias.
 
-4. POLARIZACIÓN Y CHOQUE FRONTAL (AGENCIA ACTIVA VS REDUCCIONISMO FRÍO):
+5. POLARIZACIÓN Y CHOQUE FRONTAL (AGENCIA ACTIVA VS REDUCCIONISMO FRÍO):
    - ESTRICTAMENTE PROHIBIDO EL CONSENSO O LA COMPLICE COMPLACENCIA:
      * PROHIBIDO EL "SÍ, PERO..." (COMPLICIDAD POÉTICA): {self.host_b.name} (SOLAR) NUNCA debe limitarse a buscarle el lado bonito o contemplativo a la afirmación de {self.host_a.name} (QUANTUM).
      * ❌ EJEMPLO DEFECTUOSO (COMPLACIENTE): QUANTUM: "La retina pierde la mitad en ruido" ➔ SOLAR: "Ese ruido es la firma de la vida y produce asombro" (ERROR: esto no es choque, es resignación decorativa).
@@ -311,25 +328,25 @@ REGLAS DE ASIGNACIÓN DINÁMICA DE ROLES Y DEBATE:
    - LAS ENTIDADES NO GRITAN NI PIERDEN LA COMPOSTURA: Afirman con convicción serena, tajante y demoledora (ej. "Te equivocas.", "No es una pérdida.", "Una vana ilusión."). Cero interjecciones melodramáticas (❌ NO "¡Mientes!", "¡Falso!", "¡No!").
    - Diálogos fluidos, elegantes, cortantes y de alto impacto (~10 a 16 palabras por escena).
 
-5. COHERENCIA SENSORIAL Y METAFÓRICA (CERO CONTAMINACIÓN DE DOMINIOS):
+6. COHERENCIA SENSORIAL Y METAFÓRICA (CERO CONTAMINACIÓN DE DOMINIOS):
    - Las metáforas y analogías DEBEN emanar estrictamente del dominio físico y sensorial del tema:
      * En fenómenos de LUZ / VISIÓN: usa reflejos, sombras, prismas, espectro, destellos, tinieblas, ceguera (❌ PROHIBIDO usar metáforas sonoras como "eco" o "ruido auditivo").
      * En fenómenos de SONIDO / ONDAS: silencio, resonancia, frecuencia, eco, vibración.
      * En fenómenos de MATERIA / TERMODINÁMICA: fragua, entropía, cenizas, calor, congelación cósmica.
    - PROHIBIDA LA REPETICIÓN DE METÁFORAS: En las 6 escenas está prohibido repetir dos veces la misma palabra clave o metáfora ("sombra", "eco", "llama", "abismo"). Cada línea debe aportar una imagen fresca.
 
-6. PERSPECTIVA DE ENTIDADES OBSERVADORAS CÓSMICAS (ANÁLISIS EN TERCERA PERSONA):
+7. PERSPECTIVA DE ENTIDADES OBSERVADORAS CÓSMICAS (ANÁLISIS EN TERCERA PERSONA):
    - LAS ENTIDADES {self.host_a.name} Y {self.host_b.name} SON CONCIENCIAS PRIMORDIALES Y OBSERVADORES CÓSMICOS EXTERNOS.
    - DEBEN HABLAR DE LA ESPECIE HUMANA Y DE LOS ORGANISMOS TERRESTRES SIEMPRE EN TERCERA PERSONA (ej. "los biológicos", "los humanos", "esta especie efímera", "los observadores orgánicos").
    - PROHIBIDO HABLAR COMO PROFESIONALES O SERES HUMANOS TERRENALES (NUNCA digas "en mi laboratorio", "nuestros estudios", "mis colegas", "nuestra especie").
 
-7. ESTRUCTURA NARRATIVA DE TRES CAPAS (HOOK AFIRMATIVO + CHOQUE REAL + CIERRE CIRCULAR):
+8. ESTRUCTURA NARRATIVA DE TRES CAPAS (HOOK AFIRMATIVO + CHOQUE REAL + CIERRE CIRCULAR):
    - Headline Hook (headline_hook): Pregunta frontal o dilema punzante en mayúsculas sin emojis (ej. "¿REALMENTE EXISTES?", "¿ALGUNA VEZ HAS VISTO EL MUNDO?").
    - Escena 1 (Intro Narrador): HOOK EN AFIRMACIÓN DEMOLEDORA (NUNCA PREGUNTA). Una sentencia categórica en segunda persona que derriba la certeza del espectador de inmediato (ej. "Tus ojos se abren a la oscuridad del cráneo; la luz real jamás ha tocado tu retina.", "Pasas un tercio de tu vida paralizado, alucinando mundos para no colapsar.").
    - Escenas 2 a N-1 (Choque Dialéctico): Tesis reduccionista vs Antítesis rebelde con rigor factual y elegancia.
    - Escena N (Outro Narrador): CIERRE CIRCULAR. Evolución directa de la pregunta del headline_hook (ej. Hook: "¿ALGUNA VEZ HAS VISTO EL MUNDO?" ➔ Cierre: "Si cada imagen es solo una proyección creada en tus tinieblas... ¿alguna vez has visto el mundo real, o solo la sombra que tu cerebro inventa para no colapsar?"). PROHIBIDO PEDIR COMENTARIOS O LIKES.
 
-8. PROHIBICIÓN DE EMOJIS EN EL TITULAR (headline_hook):
+9. PROHIBICIÓN DE EMOJIS EN EL TITULAR (headline_hook):
    - El atributo "headline_hook" NO DEBE LLEVAR NINGÚN EMOJI NI SÍMBOLO (máximo 40 caracteres limpios).
 
 EJEMPLO MODELO DE GUION DE MÁXIMA RETENCIÓN Y DEBATE CRUZADO (SIGUE ESTE ESTILO EXACTO):
@@ -460,7 +477,7 @@ EJEMPLO 3 - TEMA DE PERCEPCIÓN/VISIÓN ("NUNCA HAS VISTO EL MUNDO" - DOMINIO Ó
     {{
       "speaker": "Narrador",
       "entity": "narrator",
-      "text": "Tus ojos se abren a la oscuridad del cráneo; la luz real jamás ha tocado tu retina.",
+      "text": "Tu cerebro vive encerrado a oscuras dentro del cráneo; jamás ha tocado un solo rayo de luz.",
       "shot": "wide",
       "duration": 3.4
     }},
@@ -488,7 +505,7 @@ EJEMPLO 3 - TEMA DE PERCEPCIÓN/VISIÓN ("NUNCA HAS VISTO EL MUNDO" - DOMINIO Ó
     {{
       "speaker": "{self.host_b.name}",
       "entity": "{self.host_b.id}",
-      "text": "Desafían ese retraso creando mundos. Conquistan el abismo cada vez que transforman fotones mudos en pensamiento.",
+      "text": "Desafían ese retraso creando mundos. Conquistan el abismo cada vez que convierten destellos mudos en asombro.",
       "shot": "{self.host_b.shot_name}",
       "duration": 3.5
     }},
@@ -496,6 +513,63 @@ EJEMPLO 3 - TEMA DE PERCEPCIÓN/VISIÓN ("NUNCA HAS VISTO EL MUNDO" - DOMINIO Ó
       "speaker": "Narrador",
       "entity": "narrator",
       "text": "Si cada imagen que contemplas es solo una sombra creada en tus tinieblas... ¿alguna vez has visto el mundo real?",
+      "shot": "both",
+      "duration": 3.5
+    }}
+  ]
+}}
+```
+
+EJEMPLO 4 - TEMA DEL TIEMPO / RELATIVIDAD ("EL AHORA NO EXISTE" - FÍSICA CONCRETA Y CLARIDAD VIRAL):
+```json
+{{
+  "topic": "EL AHORA NO EXISTE",
+  "headline_hook": "¿EL AHORA ES SOLO UNA ILUSIÓN?",
+  "roles": {{
+    "{self.host_a.id}": "Entidad del Vacío Temporal",
+    "{self.host_b.id}": "Entidad de la Conciencia Presente"
+  }},
+  "holograms": null,
+  "scenes": [
+    {{
+      "speaker": "Narrador",
+      "entity": "narrator",
+      "text": "El universo no tiene un reloj central; para las leyes de la física, tu presente jamás ha existido.",
+      "shot": "wide",
+      "duration": 3.4
+    }},
+    {{
+      "speaker": "{self.host_a.name}",
+      "entity": "{self.host_a.id}",
+      "text": "El tiempo es relativo. Los satélites envejecen a otro ritmo y tu propia mente vive atrapada en el pasado.",
+      "shot": "{self.host_a.shot_name}",
+      "duration": 3.4
+    }},
+    {{
+      "speaker": "{self.host_b.name}",
+      "entity": "{self.host_b.id}",
+      "text": "Te equivocas. Aunque el cosmos sea un río sin reloj, la mente viva impone su propia ancla en el abismo.",
+      "shot": "{self.host_b.shot_name}",
+      "duration": 3.5
+    }},
+    {{
+      "speaker": "{self.host_a.name}",
+      "entity": "{self.host_a.id}",
+      "text": "Una ilusión biológica. En el espacio profundo, lo que llamas ahora es el pasado de otros y el futuro de nadie.",
+      "shot": "{self.host_a.shot_name}",
+      "duration": 3.4
+    }},
+    {{
+      "speaker": "{self.host_b.name}",
+      "entity": "{self.host_b.id}",
+      "text": "Desafían esa corriente ciega. Conquistan el tiempo cada vez que un solo segundo de conciencia decide su destino.",
+      "shot": "{self.host_b.shot_name}",
+      "duration": 3.5
+    }},
+    {{
+      "speaker": "Narrador",
+      "entity": "narrator",
+      "text": "Si el cosmos no comparte tu presente... ¿es el ahora una realidad, o solo el refugio que inventas para no perderte?",
       "shot": "both",
       "duration": 3.5
     }}

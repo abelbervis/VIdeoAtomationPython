@@ -37,10 +37,15 @@ CRITICAL CHECKLIST TO VALIDATE AND CORRECT:
 
 4. CONTINUOUS STORY ARC & DIALECTICAL CONFLICT:
    - Ensure the entire script stays within ONE central concept, paradox or thought experiment.
-   - GANCHO DE LA ESCENA 1 (HOOK AFIRMATIVO EN 3 SEGUNDOS): Debe ser una AFIRMACIÓN categórica e inquietante en segunda persona (NUNCA una pregunta ni condicional tímido). Si empieza con una pregunta o definición genérica, REESCRIBE el gancho a una sentencia directa y demoledora (ej. "Tus ojos se abren a la oscuridad del cráneo; la luz real jamás ha tocado tu retina", "Los átomos de tu cuerpo se renuevan por completo. Físicamente, la persona que nació ya no existe").
+   - AUDITORÍA DE IMPACTO VIRAL Y CLARIDAD PARA YOUTUBE SHORTS:
+     * CERO POESÍA VAGA O ABSTRACCIÓN CONFUSA (❌ REESCRIBE si detectas: "el instante vibra", "el tiempo se deshace en nada", "en la red cósmica sin un punto fijo", "la tinta de la conciencia"). Si una línea suena a poesía etérea sin apoyo físico, cámbiala por un hecho o paradoja científica real.
+     * CADA LÍNEA DEBE TENER UN ANCLAJE FÍSICO O ANATÓMICO: Si el tema es el tiempo, apóyate en relojes atómicos, satélites, relatividad o la falta de reloj central. Si es visión, en la oscuridad del cráneo, fotones y retraso de procesamiento.
+     * ACCESIBILIDAD UNIVERSAL: El espectador debe comprender la paradoja en el primer segundo de escucha sin detener el video.
+   - GANCHO DE LA ESCENA 1 (HOOK AFIRMATIVO EN 3 SEGUNDOS): Debe ser una AFIRMACIÓN categórica e inquietante en segunda persona (NUNCA una pregunta ni condicional tímido). Si empieza con una pregunta o definición genérica, REESCRIBE el gancho a una sentencia directa y demoledora (ej. "El universo no tiene un reloj central; para las leyes de la física, tu presente jamás ha existido", "Tu cerebro vive encerrado a oscuras dentro del cráneo; jamás ha tocado un rayo de luz real", "Los átomos de tu cuerpo se renuevan por completo. Físicamente, la persona que nació ya no existe").
    - AUDITORÍA DE SOLAR: AGENCIA ACTIVA Y REBELDÍA CREADORA (CERO CONTEMPLACIÓN PASIVA):
      * PROHIBIDO EL "SÍ, PERO..." O COMPLACENCIA POÉTICA: SOLAR no busca el lado bonito ni se resigna a lo que QUANTUM dice. Si QUANTUM señala una limitación o reducción biológica, SOLAR refuta la conclusión y demuestra la victoria de la conciencia consciente.
      * Si SOLAR usa verbos o actitudes pasivas ("produce asombro", "es la firma de la vida", "el cosmos vibra", "admirar"), REESCRIBE de inmediato dotando a SOLAR de combate y forja activa ("desafían ese retraso", "esculpen sentido en el vacío", "conquistan el abismo", "forjan mundos").
+     * PROHIBIDO EL COMODÍN DE "FUEGO/LLAMA" EN TEMAS AJENOS: En relatividad, tiempo o percepción, SOLAR defiende la CONCIENCIA, el ACTO VOLUNTARIO y la MEMORIA, no llamas metafóricas repetitivas.
    - PROHIBICIÓN DE GRITOS HISTRIÓNICOS:
      * Cero interjecciones teatrales (❌ ELIMINA "¡Mientes!", "¡Falso!", "¡No!").
      * Afirman con convicción serena, tajante, aristocrática y demoledora (ej. "Te equivocas.", "No es una pérdida.", "Una vana ilusión.").
@@ -48,8 +53,8 @@ CRITICAL CHECKLIST TO VALIDATE AND CORRECT:
      * Las metáforas deben nacer del campo físico del tema tratado (ej. en óptica/visión: sombras, reflejos, prismas, destellos, tinieblas; PROHIBIDO usar metáforas sonoras como "eco" en fenómenos de luz).
      * PROHIBIDA LA REPETICIÓN: Ninguna palabra clave metafórica puede aparecer más de una vez en el guion.
    - ELIMINACIÓN DE JERGA CRÍPTICA Y SUSTITUCIÓN POR IMÁGENES PODEROSAS:
-     * Reemplaza jerga densa ("decoherencia", "glicólisis", "reducción a sinapsis") por imágenes directas ("señales eléctricas en un cerebro hueco", "millones de impulsos sin un alma detrás").
-   - TITULAR IMPACTANTE (headline_hook): Pregunta frontal o dilema punzante (ej. "¿ALGUNA VEZ HAS VISTO EL MUNDO?", "¿REALMENTE EXISTES?").
+     * Reemplaza jerga densa ("decoherencia", "glicólisis", "reducción a sinapsis", "la simultaneidad es una quimera") por imágenes directas ("señales eléctricas en un cerebro hueco", "el cosmos no comparte tu presente", "millones de impulsos sin un alma detrás").
+   - TITULAR IMPACTANTE (headline_hook): Pregunta frontal o dilema punzante (ej. "¿ALGUNA VEZ HAS VISTO EL MUNDO?", "¿REALMENTE EXISTES?", "¿EL AHORA ES SOLO UNA ILUSIÓN?").
    - CIERRE CIRCULAR OBLIGATORIO (EVOLUCIÓN DEL HOOK): La última escena del Narrador DEBE ser la evolución directa de la pregunta del headline_hook (ej. Hook: "¿ALGUNA VEZ HAS VISTO EL MUNDO?" ➔ Cierre: "Si cada imagen es solo una sombra creada en tus tinieblas... ¿alguna vez has visto el mundo real?"). PROHIBIDO introducir metáforas descolgadas o preguntas arbitrarias.
 
 5. STRUCTURE & DEVELOPED EXCHANGES:
