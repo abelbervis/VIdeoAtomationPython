@@ -152,8 +152,10 @@ def build_cell_double_tracking_filter(
 
 def clean_tts_spoken_text(text: str) -> str:
     """
-    Cleans text for neural TTS engines so that emojis, arrows, HUD bracket tags,
-    and visual glyphs are NEVER spoken aloud as words (e.g. 'flecha hacia abajo').
+    Cleans and normalizes text for neural TTS engines so that:
+    - Single and double quotes (e.g., 'yo', "mente", «conciencia») are stripped so words are pronounced naturally without glottal pauses or literal symbol reading.
+    - Emojis, arrows, HUD bracket tags, and visual glyphs are NEVER spoken aloud as words.
+    - Accents, apostrophes, and spacing are standardized.
     """
     if not text:
         return ""
@@ -169,6 +171,18 @@ def clean_tts_spoken_text(text: str) -> str:
         flags=re.UNICODE
     )
     cleaned = emoji_pattern.sub('', cleaned)
+
+    # Normalize and remove quotes around words (e.g. 'yo', "yo", «yo», “yo”, ‘yo’)
+    # This prevents neural TTS models from inserting micro-glitches, hard glottal stops, or reading punctuation marks aloud
+    quote_chars = r"['\"`‘’“”«»„‟‹›]"
+    # Strip quotes around words: 'yo' -> yo, "conciencia" -> conciencia
+    cleaned = re.sub(rf"{quote_chars}+([a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s_-]+?){quote_chars}+", r"\1", cleaned)
+    # Also strip any isolated/stray quotation marks
+    cleaned = re.sub(quote_chars, "", cleaned)
+
+    # Clean redundant hyphens, asterisks (markdown bolding), underscores
+    cleaned = re.sub(r'[*_~`#]+', '', cleaned)
+
     # Normalize multiple spaces and punctuation
     cleaned = re.sub(r'\s+', ' ', cleaned).strip()
     cleaned = cleaned.replace("...", ",").replace("..", ".")
@@ -211,6 +225,10 @@ class EdgeTTSProvider(BaseTTSProvider):
         apply_dsp: bool = False,
         dsp_filter: Optional[str] = None
     ) -> bool:
+        clean_text = clean_tts_spoken_text(text)
+        if not clean_text:
+            return False
+
         selected_voice = (voice or self.default_voice or "es-MX-JorgeNeural").strip().strip("'\"").strip()
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -258,7 +276,7 @@ class EdgeTTSProvider(BaseTTSProvider):
                 try:
                     async def _run(v_name=v):
                         communicate = edge_tts.Communicate(
-                            text,
+                            clean_text,
                             v_name,
                             rate=rate,
                             pitch=pitch,
@@ -289,7 +307,7 @@ class EdgeTTSProvider(BaseTTSProvider):
                         "--rate", rate,
                         "--pitch", pitch,
                         "--volume", volume,
-                        "--text", text,
+                        "--text", clean_text,
                         "--write-media", str(raw_output_path)
                     ]
                     subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
@@ -304,7 +322,7 @@ class EdgeTTSProvider(BaseTTSProvider):
             try:
                 print("  ⚠️ Edge-TTS no disponible en el sistema. Utilizando fallback local temporal...")
                 gtts_provider = GoogleTTSProvider(language="es")
-                synthesized = gtts_provider.synthesize_text(text, raw_output_path)
+                synthesized = gtts_provider.synthesize_text(clean_text, raw_output_path)
             except Exception as e:
                 print(f"  ⚠️ gTTS fallback error: {e}")
 
