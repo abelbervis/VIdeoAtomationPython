@@ -76,8 +76,8 @@ def generate_cosmic_particle_bg_video(
     rgb_b = _hex_to_rgb(color_b)
     rgb_b_glow = _hex_to_rgb(color_b_glow)
 
-    # Simulation parameters
-    num_particles = 190
+    # Simulation parameters - Streamlined for maximum contrast & crispness
+    num_particles = 95
     center_ax = render_w * 0.33
     center_ay = render_h * 0.42
     center_bx = render_w * 0.67
@@ -88,17 +88,17 @@ def generate_cosmic_particle_bg_video(
     for idx in range(num_particles):
         is_a = (idx % 2 == 0)
         seed = (idx * 1.6180339887) % 1.0
-        orbit_rad_x = 60 + seed * (render_w * 0.40)
-        orbit_rad_y = 45 + ((idx * 2.718) % 1.0) * (render_h * 0.30)
+        orbit_rad_x = 70 + seed * (render_w * 0.38)
+        orbit_rad_y = 55 + ((idx * 2.718) % 1.0) * (render_h * 0.28)
         phase_offset = idx * (2 * math.pi / num_particles)
-        speed_mult = 0.55 + ((idx * 0.37) % 1.0) * 0.75  # Calibrated slow graceful drift
+        speed_mult = 0.50 + ((idx * 0.37) % 1.0) * 0.65  # Calibrated slow graceful drift
         z_depth = ((idx * 3.1415) % 2.0) - 1.0 # -1.0 to 1.0
         
-        base_size = 1.3 + (z_depth + 1.0) * 0.8
-        if z_depth > 0.5 and idx % 9 == 0:
-            base_size = 4.0 + ((idx * 0.5) % 2.5) # Foreground bokeh spark
+        base_size = 1.1 + (z_depth + 1.0) * 0.7
+        if z_depth > 0.6 and idx % 8 == 0:
+            base_size = 3.2 + ((idx * 0.4) % 1.8) # Foreground bokeh spark
 
-        opacity = 0.35 + ((idx * 0.73) % 0.55)
+        opacity = 0.40 + ((idx * 0.73) % 0.50)
         particles.append({
             "is_a": is_a,
             "rx": orbit_rad_x,
@@ -133,37 +133,17 @@ def generate_cosmic_particle_bg_video(
             svg_parts = [
                 f'<svg width="{render_w}" height="{render_h}" viewBox="0 0 {render_w} {render_h}" xmlns="http://www.w3.org/2000/svg">',
                 '  <defs>',
-                '    <filter id="bgBlurDeep" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="65" /></filter>',
-                '    <filter id="coreBlur" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="22" /></filter>',
-                '    <filter id="glowBlur" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="7" /></filter>',
+                '    <filter id="glowBlur" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="5" /></filter>',
                 '    <linearGradient id="deepVoidGrad" x1="0%" y1="0%" x2="100%" y2="100%">',
-                '      <stop offset="0%" stop-color="#040508" />',
-                '      <stop offset="50%" stop-color="#070810" />',
-                '      <stop offset="100%" stop-color="#09060d" />',
+                '      <stop offset="0%" stop-color="#020306" />',
+                '      <stop offset="50%" stop-color="#05060b" />',
+                '      <stop offset="100%" stop-color="#030207" />',
                 '    </linearGradient>',
-                '    <radialGradient id="nebulaA" cx="50%" cy="50%" r="50%">',
-                f'      <stop offset="0%" stop-color="{color_a}" stop-opacity="0.30" />',
-                f'      <stop offset="45%" stop-color="{color_a_glow}" stop-opacity="0.16" />',
-                '      <stop offset="85%" stop-color="#000000" stop-opacity="0.0" />',
-                '    </radialGradient>',
-                '    <radialGradient id="nebulaB" cx="50%" cy="50%" r="50%">',
-                f'      <stop offset="0%" stop-color="{color_b}" stop-opacity="0.32" />',
-                f'      <stop offset="45%" stop-color="{color_b_glow}" stop-opacity="0.18" />',
-                '      <stop offset="85%" stop-color="#000000" stop-opacity="0.0" />',
-                '    </radialGradient>',
-                '    <radialGradient id="bridgePulseGrad" cx="50%" cy="50%" r="50%">',
-                f'      <stop offset="0%" stop-color="{mid_hex}" stop-opacity="{0.16 * bridge_pulse + 0.06:.2f}" />',
-                '      <stop offset="70%" stop-color="#000000" stop-opacity="0.0" />',
-                '    </radialGradient>',
                 '  </defs>',
-                '  <!-- 1. Deep Space Base -->',
+                '  <!-- 1. Deep Space High-Contrast Black Base -->',
                 f'  <rect width="{render_w}" height="{render_h}" fill="url(#deepVoidGrad)" />',
-                '  <!-- 2. Dual Atmospheric Nebulae -->',
-                f'  <circle cx="{ent_a_x:.1f}" cy="{ent_a_y:.1f}" r="270" fill="url(#nebulaA)" filter="url(#bgBlurDeep)" />',
-                f'  <circle cx="{ent_b_x:.1f}" cy="{ent_b_y:.1f}" r="290" fill="url(#nebulaB)" filter="url(#bgBlurDeep)" />',
-                f'  <circle cx="{mid_x:.1f}" cy="{mid_y:.1f}" r="170" fill="url(#bridgePulseGrad)" filter="url(#coreBlur)" />',
-                '  <!-- 3. Astrometric Resonance Bridge Lines -->',
-                f'  <line x1="{ent_a_x:.1f}" y1="{ent_a_y:.1f}" x2="{ent_b_x:.1f}" y2="{ent_b_y:.1f}" stroke="{mid_hex}" stroke-opacity="0.20" stroke-width="1.2" stroke-dasharray="3 9" />',
+                '  <!-- 2. Astrometric Subtle Resonance Bridge -->',
+                f'  <line x1="{ent_a_x:.1f}" y1="{ent_a_y:.1f}" x2="{ent_b_x:.1f}" y2="{ent_b_y:.1f}" stroke="{mid_hex}" stroke-opacity="0.14" stroke-width="1.0" stroke-dasharray="2 8" />',
             ]
 
             # Separate into Background (Z < 0) and Foreground (Z >= 0)
@@ -233,10 +213,13 @@ def generate_cosmic_particle_bg_video(
             "ffmpeg", "-y",
             "-framerate", str(fps),
             "-i", str(frames_dir / "frame_%04d.svg"),
-            "-vf", f"scale={width}:{height}:flags=bicubic,format=yuv420p",
+            "-vf", f"scale={width}:{height}:flags=lanczos,format=yuv420p",
             "-c:v", "libx264",
-            "-preset", "fast",
-            "-crf", "18",
+            "-preset", "medium",
+            "-crf", "16",
+            "-color_primaries", "bt709",
+            "-color_trc", "bt709",
+            "-colorspace", "bt709",
             "-pix_fmt", "yuv420p",
             str(mp4_path)
         ]
