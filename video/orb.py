@@ -1643,11 +1643,11 @@ def render_orb_test_preview(
 
     # Calculate exact number of split pads needed for Quantum and Solar (wide talk, idle, and close frontal talk)
     q_talk_uses = sum(1 for sc in scene_records if (sc["shot"] == "both") or (sc["shot"] == "wide" and sc["entity"] in ["quantum", "both"]))
-    q_idle_uses = 1 + sum(1 for sc in scene_records if sc["shot"] == "wide" and sc["entity"] not in ["quantum", "both"])
+    q_idle_uses = sum(1 for sc in scene_records if sc["shot"] == "wide" and sc["entity"] not in ["quantum", "both"])
     q_close_uses = sum(1 for sc in scene_records if sc["shot"] == "close_quantum")
 
     s_talk_uses = sum(1 for sc in scene_records if (sc["shot"] == "both") or (sc["shot"] == "wide" and sc["entity"] in ["solar", "both"]))
-    s_idle_uses = 1 + sum(1 for sc in scene_records if sc["shot"] == "wide" and sc["entity"] not in ["solar", "both"])
+    s_idle_uses = sum(1 for sc in scene_records if sc["shot"] == "wide" and sc["entity"] not in ["solar", "both"])
     s_close_uses = sum(1 for sc in scene_records if sc["shot"] == "close_solar")
 
     filter_complex = [
@@ -1659,23 +1659,16 @@ def render_orb_test_preview(
         f"[5:v]split={max(1, s_idle_uses)}" + "".join(f"[s_idle_{k}]" for k in range(max(1, s_idle_uses))),
         f"[6:v]split={max(1, s_close_uses)}" + "".join(f"[s_close_{k}]" for k in range(max(1, s_close_uses))),
 
-        # Background Ambient Luminescence (Ultra-smooth diffuse glow via 120x120 3-pass boxblur)
-        # Deep cosmic illumination breathes in direct sync with speech RMS energy
-        f"[q_idle_0]scale=120:120,eq={eq_glow_q},hue={hue_q},boxblur=26:3,scale={width}:{height},format=yuva420p,colorchannelmixer=aa=0.30[bg_glow_q]",
-        f"[s_idle_0]scale=120:120,eq={eq_glow_s},hue={hue_s},boxblur=26:3,scale={width}:{height},format=yuva420p,colorchannelmixer=aa=0.30[bg_glow_s]",
-
-        f"[0:v]eq=brightness=-0.02:contrast=1.16:saturation=1.12[bg_graded]",
-        f"[bg_graded][bg_glow_q]overlay=eval=frame:enable='{speech_mask_q}'[bg_glowed_1]",
-        f"[bg_glowed_1][bg_glow_s]overlay=eval=frame:enable='{speech_mask_s}'[bg_ambient]"
+        # Clean High-Contrast Cosmic Deep Void Background
+        f"[0:v]eq=brightness=-0.02:contrast=1.16:saturation=1.12[bg_ambient]"
     ]
 
     cur_v = "bg_ambient"
     q_talk_cur = 0
-    q_idle_cur = 1  # 0 used for bg_glow_q
+    q_idle_cur = 0
     q_close_cur = 0
     s_talk_cur = 0
-    s_idle_cur = 1  # 0 used for bg_glow_s
-    s_close_cur = 0
+    s_idle_cur = 0
     holo_q_used = False
     holo_s_used = False
 
