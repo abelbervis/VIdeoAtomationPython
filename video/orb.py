@@ -1669,6 +1669,7 @@ def render_orb_test_preview(
     q_close_cur = 0
     s_talk_cur = 0
     s_idle_cur = 0
+    s_close_cur = 0
     holo_q_used = False
     holo_s_used = False
 
