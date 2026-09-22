@@ -436,59 +436,89 @@ def generate_animated_orb_loop(
             t = i / loop_frames
             tau = 2 * math.pi * t
 
-            # Conscious Conversational Gaze Dynamics:
-            # Subtle organic focal adjustments - focused smoothly toward audience/companion without mechanical side-to-side swings
+            # Conscious Conversational Gaze Dynamics (Organic Sweet-Spot Harmonic Sweep):
+            # Smooth conversational focus sweep between the interlocutor and the audience/camera.
+            # Uses harmonic cubic ease (sin(tau) - 0.25*sin(3*tau)) for a natural hesitation at the extremes.
+            smooth_sweep = math.sin(tau) - 0.20 * math.sin(3 * tau)
+            smooth_vert = math.cos(tau) * 0.7 + math.sin(2 * tau) * 0.3
+
             if is_talk:
-                gaze_shift_x = 0.035 * math.sin(tau)
-                gaze_shift_y = 0.025 * math.cos(tau)
+                # Active speaker: broad, confident conversational sweep looking at companion & audience
+                gaze_shift_x = 0.085 * smooth_sweep
+                gaze_shift_y = 0.040 * smooth_vert
+                body_shift_x = 2.4 * math.sin(tau)
+                body_shift_y = 1.4 * math.cos(tau)
             else:
-                gaze_shift_x = 0.015 * math.sin(tau)
-                gaze_shift_y = 0.012 * math.cos(tau)
+                # Attentive listener: subtle, respectful micro-tracking and organic drift
+                gaze_shift_x = 0.035 * smooth_sweep
+                gaze_shift_y = 0.020 * smooth_vert
+                body_shift_x = 1.2 * math.sin(tau)
+                body_shift_y = 0.8 * math.cos(tau)
 
             curr_gaze_x = gaze_primary_x + gaze_shift_x
             curr_gaze_y = gaze_primary_y + gaze_shift_y
-            curr_body_cx = body_base_cx + 1.2 * math.sin(tau)
-            curr_body_cy = body_base_cy + 0.8 * math.cos(tau)
+            curr_body_cx = body_base_cx + body_shift_x
+            curr_body_cy = body_base_cy + body_shift_y
 
-            # Volumetric 3D Stellar Bokeh & Particle Depth Layers:
-            # Emits particles emerging from the rear hemisphere into outer foreground corona.
-            # Never crosses through the orb core (minimum distance >= r_sphere * 0.98).
+            # ═════════════════════════════════════════════════════════════════════
+            # 🎥 VOLUMETRIC 3D PARTICLE & CINEMATIC CAMERA BOKEH SYSTEM:
+            # Simulates true 3D orbital perspective with depth of field:
+            # - Z < -0.05: Deep cosmic rear particles (behind the orb sphere)
+            # - Z in [-0.05, 0.45]: Mid-plane stellar sparkles gliding across foreground
+            # - Z > 0.45: Proximate camera bokeh (soft, out-of-focus, highly translucent disks)
+            # ═════════════════════════════════════════════════════════════════════
             rear_particles_svg = []
             fore_particles_svg = []
-            num_particles = 14 if is_talk else 9
-            for p_idx in range(num_particles):
-                # Cycle progress per particle across the loop duration
-                p_t = (t + (p_idx / num_particles)) % 1.0
-                # Golden angle spiral dispersion so particles travel in rich organic paths
-                p_angle = (p_idx * 2.39996) + 0.35 * math.sin(tau + p_idx)
-                # Z depth: < 0 is rear depth (behind orb), > 0 is front bokeh layer
-                z_depth = math.sin(p_t * 2 * math.pi)
+            num_particles = 18 if is_talk else 12
+            col_bright = palette["aura_bright"]
+            col_core = palette["spot1_core"]
+            col_glow = palette["spot1_glow"]
 
-                # Expansion starts from outer rim to outer halo (never inside core)
-                r_dist = r_sphere_base * (0.98 + 0.58 * p_t)
-                px = c + r_dist * math.cos(p_angle)
-                py = c + r_dist * math.sin(p_angle)
+            for p_idx in range(num_particles):
+                p_t = (t + (p_idx / num_particles)) % 1.0
                 
-                # Smooth optical bell-curve opacity
-                alpha = math.sin(p_t * math.pi)
-                col_bright = palette["aura_bright"]
-                col_core = palette["spot1_core"]
+                # 3D Depth coordinate z in [-1.0 (far rear), +1.0 (closest to lens)]
+                z = math.cos(2 * math.pi * p_t)
                 
-                if z_depth < 0:
-                    # 3D Rear Particle (Moving outward from behind the orb body)
-                    p_size = 1.0 + 1.2 * p_t
-                    p_alpha = max(0.0, min(0.70, alpha * (0.65 if is_talk else 0.40)))
+                # 3D Camera Perspective Projection scale factor:
+                # Far background: scale ~ 0.45; Near camera: scale ~ 1.25
+                persp_scale = 1.0 / (1.55 - 0.70 * z)
+                
+                # 3D Inclined Spatial Orbital Spiral:
+                p_angle = (p_idx * 2.39996) + 1.25 * math.sin(2 * math.pi * p_t)
+                orbit_rad_xy = 75.0 + 85.0 * (1.0 - 0.35 * (z ** 2))
+                
+                px = c + (orbit_rad_xy * math.cos(p_angle)) * (persp_scale * 1.05)
+                py = c + (orbit_rad_xy * math.sin(p_angle) * 0.78 - 32.0 * z) * persp_scale
+                
+                # Optical lifecycle curve (bell curve):
+                lifecycle = math.sin(math.pi * p_t)
+
+                if z < -0.05:
+                    # 🌑 DEEP REAR LAYER (Behind the orb silhouette):
+                    p_size = (1.1 + 1.2 * p_t) * persp_scale * 1.4
+                    p_alpha = max(0.0, min(0.65, lifecycle * (0.60 if is_talk else 0.40) * (0.5 + 0.5 * (z + 1.0))))
                     rear_particles_svg.append(
-                        f'<circle cx="{px:.1f}" cy="{py:.1f}" r="{p_size:.1f}" fill="{col_bright}" opacity="{p_alpha:.2f}" filter="url(#coreBlur_{i})" />'
+                        f'<circle cx="{px:.1f}" cy="{py:.1f}" r="{p_size:.1f}" fill="{col_bright}" opacity="{p_alpha:.2f}" filter="url(#rearParticleBlur_{i})" />'
                     )
                 else:
-                    # 3D Foreground Particle (Luminous bokeh flare in front, outside the core)
-                    p_size = 2.0 + 3.2 * p_t
-                    p_alpha = max(0.0, min(0.92, alpha * (0.88 if is_talk else 0.55)))
-                    fore_particles_svg.append(
-                        f'<circle cx="{px:.1f}" cy="{py:.1f}" r="{p_size:.1f}" fill="{col_core}" opacity="{p_alpha:.2f}" filter="url(#ringGlow_{i})" />'
-                        f'<circle cx="{px:.1f}" cy="{py:.1f}" r="{max(0.8, p_size * 0.4):.1f}" fill="#ffffff" opacity="{p_alpha:.2f}" />'
-                    )
+                    # 🌟 FOREGROUND LAYER (Crossing in front of the orb & surrounding atmosphere):
+                    if z > 0.45:
+                        # 🔮 PROXIMATE CINEMATIC BOKEH DISC (Closest to camera lens):
+                        # Expansive, ultra-soft, and ethereal (low opacity) so the orb glows through unobstructed!
+                        bokeh_radius = (7.0 + 12.0 * (z - 0.45) * 1.8) * persp_scale
+                        bokeh_alpha = max(0.0, min(0.30, lifecycle * (0.28 if is_talk else 0.18) * (1.2 - z * 0.3)))
+                        fore_particles_svg.append(
+                            f'<circle cx="{px:.1f}" cy="{py:.1f}" r="{bokeh_radius:.1f}" fill="{col_glow}" opacity="{bokeh_alpha:.2f}" filter="url(#foreBokehBlur_{i})" />'
+                        )
+                    else:
+                        # ✨ MID-FOREGROUND STELLAR SPARKLE (Crisp core with soft aura flare):
+                        p_size = (2.0 + 2.6 * p_t) * persp_scale * 1.15
+                        p_alpha = max(0.0, min(0.85, lifecycle * (0.80 if is_talk else 0.50)))
+                        fore_particles_svg.append(
+                            f'<circle cx="{px:.1f}" cy="{py:.1f}" r="{p_size:.1f}" fill="{col_core}" opacity="{p_alpha:.2f}" filter="url(#ringGlow_{i})" />'
+                            f'<circle cx="{px:.1f}" cy="{py:.1f}" r="{max(0.7, p_size * 0.45):.1f}" fill="#ffffff" opacity="{p_alpha:.2f}" />'
+                        )
 
             rear_particles_str = "\n  ".join(rear_particles_svg)
             fore_particles_str = "\n  ".join(fore_particles_svg)
@@ -575,6 +605,12 @@ def generate_animated_orb_loop(
     </filter>
     <filter id="ringGlow_{i}" x="-30%" y="-30%" width="160%" height="160%">
       <feGaussianBlur stdDeviation="7" />
+    </filter>
+    <filter id="rearParticleBlur_{i}" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="1.8" />
+    </filter>
+    <filter id="foreBokehBlur_{i}" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="9.0" />
     </filter>
 
     <clipPath id="sphereClip_{i}">
@@ -760,6 +796,12 @@ def generate_animated_orb_loop(
     </filter>
     <filter id="ringGlow_{i}" x="-30%" y="-30%" width="160%" height="160%">
       <feGaussianBlur stdDeviation="7" />
+    </filter>
+    <filter id="rearParticleBlur_{i}" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="1.8" />
+    </filter>
+    <filter id="foreBokehBlur_{i}" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="9.0" />
     </filter>
 
     <clipPath id="sphereClip_{i}">
