@@ -171,57 +171,81 @@ def synthesize_camera_servo_sfx(
         sec = i / sample_rate
 
         if sfx_type in ("intro", "sub_drop"):
-            # Cinematic Sub-Bass Impact Drop (808 style) + Sci-Fi Ethereal Chime Hook
-            env = math.exp(-t * 3.4)
-            # Pitch sweep downwards rapidly: 140Hz -> 38Hz
-            drop_freq = 38.0 + (140.0 - 38.0) * math.exp(-t * 9.0)
-            sub = 0.72 * math.sin(2.0 * math.pi * drop_freq * sec) + 0.22 * math.sin(4.0 * math.pi * drop_freq * sec)
-            punch = 0.40 * math.exp(-t * 40.0) * random.uniform(-0.9, 0.9)
-            # High crystalline harmonics
-            chime = (
-                0.25 * math.sin(2.0 * math.pi * 587.33 * sec) * math.exp(-t * 3.2) +
-                0.20 * math.sin(2.0 * math.pi * 880.00 * sec) * math.exp(-t * 4.0) +
-                0.15 * math.sin(2.0 * math.pi * 1174.66 * sec) * math.exp(-t * 4.8)
+            # Next-Gen Cinematic 808 Sub-Drop + Shimmering Quantum Particle Chime
+            env = math.exp(-t * 2.8)
+            # Pitch sweep downwards smoothly: 160Hz -> 36Hz
+            drop_freq = 36.0 + (160.0 - 36.0) * math.exp(-t * 8.5)
+            sub = 0.82 * math.sin(2.0 * math.pi * drop_freq * sec) + 0.35 * math.sin(4.0 * math.pi * drop_freq * sec)
+            # Transient acoustic punch
+            punch = 0.50 * math.exp(-t * 50.0) * (math.sin(2.0 * math.pi * 95.0 * sec) + random.uniform(-0.6, 0.6))
+            # Shimmering high-fidelity celestial overtone chords
+            chime_l = (
+                0.22 * math.sin(2.0 * math.pi * 587.33 * sec) * math.exp(-t * 2.8) +
+                0.16 * math.sin(2.0 * math.pi * 880.00 * sec) * math.exp(-t * 3.6) +
+                0.12 * math.sin(2.0 * math.pi * 1760.00 * sec) * math.exp(-t * 4.4)
             )
-            val = (sub + punch + chime) * env
-            l_val, r_val = val, val
+            chime_r = (
+                0.16 * math.sin(2.0 * math.pi * 587.33 * sec) * math.exp(-t * 2.8) +
+                0.22 * math.sin(2.0 * math.pi * 1174.66 * sec) * math.exp(-t * 3.6) +
+                0.14 * math.sin(2.0 * math.pi * 1760.00 * sec) * math.exp(-t * 4.4)
+            )
+            l_val = (sub * 0.75 + punch * 0.6 + chime_l) * env
+            r_val = (sub * 0.75 + punch * 0.6 + chime_r) * env
 
         elif sfx_type in ("zoom_in", "whoosh_quantum"):
-            # High-velocity futuristic Sci-Fi Woosh / Swish (Left-to-Right Haas whip)
-            env = math.exp(-((t - 0.48) ** 2) / (2 * (0.13 ** 2)))
-            # Frequency acceleration curve
-            sweep_freq = 220.0 + 1400.0 * (t ** 2.2)
-            synth = 0.35 * math.sin(2.0 * math.pi * sweep_freq * sec) + 0.18 * math.sin(3.0 * math.pi * sweep_freq * sec)
-            filtered_noise = 0.55 * random.uniform(-1.0, 1.0) * (0.6 + 0.4 * math.sin(t * math.pi))
-            sub_tail = 0.28 * math.sin(2.0 * math.pi * 65.0 * sec) * math.exp(-((t - 0.65) ** 2) / 0.05)
-            # High-tech laser lock snap at the end
-            snap = 0.30 * math.exp(-((t - 0.72) ** 2) / (2 * (0.015 ** 2))) * math.sin(2.0 * math.pi * 1800.0 * sec)
-            raw = (synth + filtered_noise + sub_tail) * env + snap
-            # Dynamic stereo pan (Left -> Right sweeping swish)
-            l_val = raw * (1.1 - 0.85 * t)
-            r_val = raw * (0.25 + 0.85 * t)
+            # High-velocity Quantum Warp Swish with Haas 3D Spatial Panning (Left -> Center/Right)
+            env = math.exp(-((t - 0.46) ** 2) / (2 * (0.12 ** 2)))
+            sweep_freq = 240.0 + 1650.0 * (t ** 2.4)
+            synth = 0.38 * math.sin(2.0 * math.pi * sweep_freq * sec) + 0.22 * math.sin(3.0 * math.pi * sweep_freq * sec)
+            # Crystalline quantum granular texture
+            q_grain = 0.45 * random.uniform(-1.0, 1.0) * (0.7 + 0.3 * math.sin(t * math.pi * 4.0))
+            sub_tail = 0.32 * math.sin(2.0 * math.pi * 58.0 * sec) * math.exp(-((t - 0.60) ** 2) / 0.04)
+            # Laser quantum snap stinger
+            snap = 0.35 * math.exp(-((t - 0.70) ** 2) / (2 * (0.012 ** 2))) * math.sin(2.0 * math.pi * 2100.0 * sec)
+            raw = (synth + q_grain + sub_tail) * env + snap
+            # Binaural 3D Left-to-Right sweep
+            l_val = raw * (1.15 - 0.85 * t)
+            r_val = raw * (0.20 + 0.90 * t)
 
         elif sfx_type in ("pan", "whoosh_solar"):
-            # Radiant Plasma Swoosh (Right-to-Center blazing transition)
-            env = math.exp(-((t - 0.50) ** 2) / (2 * (0.14 ** 2)))
-            # Downward solar frequency glide
-            plasma_freq = 1100.0 - 650.0 * (t ** 0.8)
-            plasma_osc = 0.38 * math.sin(2.0 * math.pi * plasma_freq * sec) + 0.20 * math.sin(2.0 * math.pi * (plasma_freq * 1.5) * sec)
-            sizzle = 0.48 * random.uniform(-1.0, 1.0)
-            sub_pulse = 0.30 * math.sin(2.0 * math.pi * 82.0 * sec)
-            raw = (plasma_osc + sizzle + sub_pulse) * env
-            # Dynamic stereo pan (Right -> Center/Left)
-            l_val = raw * (0.2 + 0.8 * t)
-            r_val = raw * (1.0 - 0.6 * t)
+            # Blazing Radiant Plasma Swoosh (Right -> Center/Left Stereo Transition)
+            env = math.exp(-((t - 0.48) ** 2) / (2 * (0.13 ** 2)))
+            plasma_freq = 1250.0 - 750.0 * (t ** 0.75)
+            plasma_osc = 0.42 * math.sin(2.0 * math.pi * plasma_freq * sec) + 0.24 * math.sin(2.0 * math.pi * (plasma_freq * 1.5) * sec)
+            # Sizzling stellar prominence noise
+            solar_sizzle = 0.45 * random.uniform(-1.0, 1.0) * (0.6 + 0.4 * math.sin(t * math.pi))
+            sub_corona = 0.34 * math.sin(2.0 * math.pi * 75.0 * sec)
+            raw = (plasma_osc + solar_sizzle + sub_corona) * env
+            # Binaural 3D Right-to-Left sweep
+            l_val = raw * (0.20 + 0.90 * t)
+            r_val = raw * (1.15 - 0.85 * t)
 
         elif sfx_type in ("pull_back", "wide"):
-            # Deep Cosmic Suction / Wide Camera Release
-            env = math.exp(-((t - 0.45) ** 2) / (2 * (0.16 ** 2)))
-            sub_drone = 0.45 * math.sin(2.0 * math.pi * 95.0 * (1.0 - 0.45 * t) * sec)
-            whoosh_air = 0.45 * random.uniform(-1.0, 1.0)
-            bass_lock = 0.35 * math.exp(-((t - 0.80) ** 2) / (2 * (0.025 ** 2))) * math.sin(2.0 * math.pi * 120.0 * sec)
-            val = (sub_drone + whoosh_air) * env + bass_lock
-            l_val, r_val = val, val
+            # Deep Volumetric Cosmic Suction / Wide Camera Zoom Out
+            env = math.exp(-((t - 0.42) ** 2) / (2 * (0.15 ** 2)))
+            sub_drone = 0.52 * math.sin(2.0 * math.pi * 88.0 * (1.0 - 0.40 * t) * sec)
+            whoosh_air = 0.42 * random.uniform(-1.0, 1.0)
+            bass_anchor = 0.40 * math.exp(-((t - 0.75) ** 2) / (2 * (0.022 ** 2))) * math.sin(2.0 * math.pi * 105.0 * sec)
+            val = (sub_drone + whoosh_air) * env + bass_anchor
+            l_val = val * (0.95 + 0.1 * math.sin(2.0 * math.pi * 1.5 * sec))
+            r_val = val * (0.95 - 0.1 * math.sin(2.0 * math.pi * 1.5 * sec))
+
+        elif sfx_type in ("cosmic_resonance", "verdict_chime"):
+            # Rich Dual Cosmic Bell Stinger (Sub-bass + Quantum Cyan Chime + Solar Plasma Bell)
+            env = min(1.0, sec / 0.05) * math.exp(-t * 1.9)
+            sub_base = 0.65 * math.sin(2.0 * math.pi * 52.0 * sec) + 0.30 * math.sin(2.0 * math.pi * 104.0 * sec)
+            cyan_crystal = (
+                0.32 * math.sin(2.0 * math.pi * 880.0 * sec) * math.exp(-t * 2.8) +
+                0.22 * math.sin(2.0 * math.pi * 1320.0 * sec) * math.exp(-t * 3.5) +
+                0.14 * math.sin(2.0 * math.pi * 2640.0 * sec) * math.exp(-t * 4.2)
+            )
+            solar_plasma = (
+                0.32 * math.sin(2.0 * math.pi * 440.0 * sec) * math.exp(-t * 2.5) +
+                0.20 * math.sin(2.0 * math.pi * 660.0 * sec) * math.exp(-t * 3.2)
+            )
+            val = (sub_base + cyan_crystal + solar_plasma) * env
+            l_val = val * (0.85 + 0.25 * math.sin(2.0 * math.pi * 2.5 * sec))
+            r_val = val * (0.85 - 0.25 * math.sin(2.0 * math.pi * 2.5 * sec))
 
         elif sfx_type == "quantum_hum":
             # Ominous Deep Sub-Bass Quantum Revelation Hum
@@ -281,29 +305,41 @@ def synthesize_space_ambient_pad(
     duration: float = 12.0,
     sample_rate: int = 44100
 ) -> Path:
-    """Synthesize a lush, cinematic sci-fi ambient space drone soundtrack."""
+    """Synthesize a lush, multi-harmonic cinematic sci-fi ambient space drone soundtrack."""
+    output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     total_samples = int(duration * sample_rate)
     samples = []
 
     for i in range(total_samples):
         sec = i / sample_rate
-        fade_in = min(1.0, sec / 1.2)
-        fade_out = min(1.0, (duration - sec) / 2.0) if sec > duration - 2.0 else 1.0
+        fade_in = min(1.0, sec / 1.5)
+        fade_out = min(1.0, (duration - sec) / 2.2) if sec > duration - 2.2 else 1.0
         env = fade_in * fade_out
 
-        f1, f2, f3, f4 = 65.41, 130.81, 196.00, 329.63
-        lfo_slow = math.sin(2.0 * math.pi * 0.18 * sec)
-        lfo_phase = math.cos(2.0 * math.pi * 0.12 * sec)
+        # Celestial modal frequencies (D Dorian / Deep Space Harmonic Spectrum)
+        # Fundamental roots: D2 (73.42Hz), A2 (110.00Hz), F3 (174.61Hz), C4 (261.63Hz), E4 (329.63Hz)
+        lfo_slow = math.sin(2.0 * math.pi * 0.08 * sec)
+        lfo_fast = math.sin(2.0 * math.pi * 0.22 * sec)
+        lfo_chorus = math.cos(2.0 * math.pi * 0.14 * sec)
 
-        osc1 = 0.35 * math.sin(2.0 * math.pi * f1 * sec)
-        osc2 = 0.25 * math.sin(2.0 * math.pi * (f2 + 0.4 * lfo_slow) * sec)
-        osc3 = 0.20 * math.sin(2.0 * math.pi * (f3 + 0.6 * lfo_phase) * sec)
-        osc4 = 0.12 * math.sin(2.0 * math.pi * f4 * sec)
-        space_air = 0.08 * random.uniform(-1.0, 1.0) * (0.7 + 0.3 * lfo_slow)
+        # Warm deep sub-bass foundation
+        sub_d = 0.40 * math.sin(2.0 * math.pi * 36.71 * sec)
+        sub_root = 0.35 * math.sin(2.0 * math.pi * 73.42 * sec)
 
-        val_l = (osc1 + osc2 * 1.1 + osc3 * 0.8 + osc4 + space_air) * env * 0.40
-        val_r = (osc1 + osc2 * 0.8 + osc3 * 1.1 + osc4 + space_air) * env * 0.40
+        # Ethereal mid pads with organic analog detune
+        pad_fifth = 0.25 * math.sin(2.0 * math.pi * (110.00 + 0.35 * lfo_slow) * sec)
+        pad_third = 0.20 * math.sin(2.0 * math.pi * (174.61 + 0.45 * lfo_chorus) * sec)
+        pad_seventh = 0.16 * math.sin(2.0 * math.pi * (261.63 + 0.25 * lfo_fast) * sec)
+        pad_ninth = 0.12 * math.sin(2.0 * math.pi * (329.63 + 0.50 * lfo_slow) * sec)
+
+        # High crystal shimmer
+        shimmer = 0.06 * math.sin(2.0 * math.pi * (1046.50 + math.sin(2.0 * math.pi * 2.0 * sec)) * sec) * (0.6 + 0.4 * lfo_fast)
+        cosmic_air = 0.04 * random.uniform(-1.0, 1.0) * (0.8 + 0.2 * lfo_slow)
+
+        # Stereo binaural widening
+        val_l = (sub_d + sub_root + pad_fifth * 1.15 + pad_third * 0.85 + pad_seventh * 1.1 + pad_ninth * 0.9 + shimmer + cosmic_air) * env * 0.42
+        val_r = (sub_d + sub_root + pad_fifth * 0.85 + pad_third * 1.15 + pad_seventh * 0.9 + pad_ninth * 1.1 + shimmer * 1.1 + cosmic_air) * env * 0.42
 
         val_l = max(-1.0, min(1.0, val_l))
         val_r = max(-1.0, min(1.0, val_r))
