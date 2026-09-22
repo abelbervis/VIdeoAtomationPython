@@ -1551,6 +1551,7 @@ def render_orb_test_preview(
 
     # Dynamic Sci-Fi Cosmic Particle Background Video Loop (Dynamic Palette Inheritance)
     from video.cosmic_bg import get_cosmic_particle_background_video
+    from video.atmosphere import generate_global_foreground_atmosphere_loop
     try:
         color_a = getattr(debate_show.host_a, "primary_color", "#00f0ff")
         color_a_glow = getattr(debate_show.host_a, "glow_color", "#0284c7")
@@ -1573,6 +1574,20 @@ def render_orb_test_preview(
         print(f"  ⚠️ Usando fallback de color para fondo: {bg_err}")
         bg_cmd_args = ["-f", "lavfi", "-i", f"color=c=0x08090f:s={width}x{height}:r=30:d={total_duration}"]
 
+    # Global Foreground Atmosphere Loop (Floating sparks & out-of-focus camera lens bokeh)
+    try:
+        atmos_loop = generate_global_foreground_atmosphere_loop(
+            width=width,
+            height=height,
+            color_a=color_a,
+            color_b=color_b,
+        )
+        has_atmos = atmos_loop.exists() and atmos_loop.stat().st_size > 1000
+    except Exception as atmos_err:
+        print(f"  ⚠️ Atmósfera frontal no disponible: {atmos_err}")
+        has_atmos = False
+        atmos_loop = None
+
     # Build FFmpeg command inputs (wide talk, wide idle, close-up frontal talk for both hosts)
     cmd_inputs = [
         *bg_cmd_args,
@@ -1584,6 +1599,12 @@ def render_orb_test_preview(
         "-stream_loop", "-1", "-i", str(orb_s_close_talk),
     ]
     curr_input_idx = 7
+
+    atmos_idx = None
+    if has_atmos and atmos_loop:
+        cmd_inputs.extend(["-stream_loop", "-1", "-i", str(atmos_loop)])
+        atmos_idx = curr_input_idx
+        curr_input_idx += 1
 
     holo_q_idx = None
     if has_holo_q:
@@ -1751,6 +1772,11 @@ def render_orb_test_preview(
             filter_complex.append(f"[{s_src}]scale={scale_expr_s_wide},eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.98[s_sc_{idx}]")
             filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W*0.75-w/2 - 28 + {ds_x}':y='H*0.39-h/2 + {ds_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_s]")
             cur_v = f"v_sc_{idx}_s"
+
+    # Global Foreground Particle Atmosphere Overlay (Submerges the orbs in 3D floating space)
+    if has_atmos and atmos_idx is not None:
+        filter_complex.append(f"[{cur_v}][{atmos_idx}:v]overlay=0:0:enable='between(t,0,{total_duration})'[v_atmos]")
+        cur_v = "v_atmos"
 
     # Headline Hook (Cinematic Floating Title Top Center during first scene - No heavy opaque box)
     first_sc_end = min(scene_records[0]["end"] if scene_records else 2.8, 2.8)
