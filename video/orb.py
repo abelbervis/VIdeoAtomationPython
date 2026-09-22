@@ -437,18 +437,61 @@ def generate_animated_orb_loop(
             tau = 2 * math.pi * t
 
             # Conscious Conversational Gaze Dynamics:
-            # Active speaker sweeps focal ocular presence between interlocutor and audience
+            # Subtle organic focal adjustments - focused smoothly toward audience/companion without mechanical side-to-side swings
             if is_talk:
-                gaze_shift_x = 0.12 * math.sin(2 * tau)
-                gaze_shift_y = 0.05 * math.cos(tau)
+                gaze_shift_x = 0.035 * math.sin(tau)
+                gaze_shift_y = 0.025 * math.cos(tau)
             else:
-                gaze_shift_x = 0.03 * math.sin(tau)
-                gaze_shift_y = 0.02 * math.cos(tau)
+                gaze_shift_x = 0.015 * math.sin(tau)
+                gaze_shift_y = 0.012 * math.cos(tau)
 
             curr_gaze_x = gaze_primary_x + gaze_shift_x
             curr_gaze_y = gaze_primary_y + gaze_shift_y
-            curr_body_cx = body_base_cx + 2.0 * math.sin(tau)
-            curr_body_cy = body_base_cy + 1.2 * math.cos(tau)
+            curr_body_cx = body_base_cx + 1.2 * math.sin(tau)
+            curr_body_cy = body_base_cy + 0.8 * math.cos(tau)
+
+            # Volumetric 3D Stellar Bokeh & Particle Depth Layers:
+            # Emits particles emerging from the rear hemisphere into outer foreground corona.
+            # Never crosses through the orb core (minimum distance >= r_sphere * 0.98).
+            rear_particles_svg = []
+            fore_particles_svg = []
+            num_particles = 14 if is_talk else 9
+            for p_idx in range(num_particles):
+                # Cycle progress per particle across the loop duration
+                p_t = (t + (p_idx / num_particles)) % 1.0
+                # Golden angle spiral dispersion so particles travel in rich organic paths
+                p_angle = (p_idx * 2.39996) + 0.35 * math.sin(tau + p_idx)
+                # Z depth: < 0 is rear depth (behind orb), > 0 is front bokeh layer
+                z_depth = math.sin(p_t * 2 * math.pi)
+
+                # Expansion starts from outer rim to outer halo (never inside core)
+                r_dist = r_sphere_base * (0.98 + 0.58 * p_t)
+                px = c + r_dist * math.cos(p_angle)
+                py = c + r_dist * math.sin(p_angle)
+                
+                # Smooth optical bell-curve opacity
+                alpha = math.sin(p_t * math.pi)
+                col_bright = palette["aura_bright"]
+                col_core = palette["spot1_core"]
+                
+                if z_depth < 0:
+                    # 3D Rear Particle (Moving outward from behind the orb body)
+                    p_size = 1.0 + 1.2 * p_t
+                    p_alpha = max(0.0, min(0.70, alpha * (0.65 if is_talk else 0.40)))
+                    rear_particles_svg.append(
+                        f'<circle cx="{px:.1f}" cy="{py:.1f}" r="{p_size:.1f}" fill="{col_bright}" opacity="{p_alpha:.2f}" filter="url(#coreBlur_{i})" />'
+                    )
+                else:
+                    # 3D Foreground Particle (Luminous bokeh flare in front, outside the core)
+                    p_size = 2.0 + 3.2 * p_t
+                    p_alpha = max(0.0, min(0.92, alpha * (0.88 if is_talk else 0.55)))
+                    fore_particles_svg.append(
+                        f'<circle cx="{px:.1f}" cy="{py:.1f}" r="{p_size:.1f}" fill="{col_core}" opacity="{p_alpha:.2f}" filter="url(#ringGlow_{i})" />'
+                        f'<circle cx="{px:.1f}" cy="{py:.1f}" r="{max(0.8, p_size * 0.4):.1f}" fill="#ffffff" opacity="{p_alpha:.2f}" />'
+                    )
+
+            rear_particles_str = "\n  ".join(rear_particles_svg)
+            fore_particles_str = "\n  ".join(fore_particles_svg)
 
             is_solar = ("solar" in palette_key)
 
@@ -586,6 +629,11 @@ def generate_animated_orb_loop(
   <circle cx="{c}" cy="{c}" r="{r_aura_outer}" fill="url(#outerAuraDeep_{i})" filter="url(#auraGlowDeep_{i})" />
   <circle cx="{c}" cy="{c}" r="{r_aura_inner}" fill="url(#innerAuraBright_{i})" filter="url(#auraGlowDeep_{i})" />
 
+  <!-- 1.5. Deep Cosmic Rear Particles (Emitted from behind the celestial sphere) -->
+  <g id="rear_stellar_stream_{i}">
+  {rear_particles_str}
+  </g>
+
   <!-- 2. Coronal Shockwaves & Eruptive Flares -->
   {rings_svg}
 
@@ -607,6 +655,11 @@ def generate_animated_orb_loop(
 
   <!-- 5. Inner Concentric Rim Light -->
   <circle cx="{c}" cy="{c}" r="{r_sphere - 2}" fill="none" stroke="{palette['aura_inner']}" stroke-width="2.5" opacity="0.75" />
+
+  <!-- 6. Foreground Stellar Bokeh Flares (Dancing around the outer corona, never piercing the core) -->
+  <g id="fore_stellar_bokeh_{i}">
+  {fore_particles_str}
+  </g>
 </svg>"""
 
             else:
@@ -768,6 +821,11 @@ def generate_animated_orb_loop(
   <circle cx="{c}" cy="{c}" r="{r_aura_outer}" fill="url(#outerAuraDeep_{i})" filter="url(#auraGlowDeep_{i})" />
   <circle cx="{c}" cy="{c}" r="{r_aura_inner}" fill="url(#innerAuraBright_{i})" filter="url(#auraGlowDeep_{i})" />
 
+  <!-- 1.5. Deep Cosmic Rear Particles (Emitted from behind the celestial sphere) -->
+  <g id="rear_quantum_stream_{i}">
+  {rear_particles_str}
+  </g>
+
   <!-- 2. Concentric Surrounding Acoustic Shockwave Rings -->
   {rings_svg}
 
@@ -789,6 +847,11 @@ def generate_animated_orb_loop(
 
   <!-- 5. Inner Concentric Rim Light -->
   <circle cx="{c}" cy="{c}" r="{r_sphere - 2}" fill="none" stroke="{palette['aura_inner']}" stroke-width="2.5" opacity="0.70" />
+
+  <!-- 6. Foreground Stellar Bokeh Flares (Dancing around the outer corona, never piercing the core) -->
+  <g id="fore_quantum_bokeh_{i}">
+  {fore_particles_str}
+  </g>
 </svg>"""
             (frames_dir / f"frame_{i:03d}.svg").write_text(svg, encoding="utf-8")
 
