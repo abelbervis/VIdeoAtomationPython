@@ -71,36 +71,36 @@ def generate_global_foreground_atmosphere_loop(
     rgb_a = _hex_to_rgb(color_a)
     rgb_b = _hex_to_rgb(color_b)
 
-    # 48 calibrated ambient particles distributed across the entire screen
-    num_particles = 48
+    # 54 calibrated ambient particles distributed with multi-prime chaotic dispersion
+    num_particles = 54
     particles = []
     for idx in range(num_particles):
-        # Deterministic pseudo-random seed distribution
-        seed_x = (idx * 0.6180339887) % 1.0
-        seed_y = (idx * 0.3819660113) % 1.0
-        seed_z = ((idx * 3.14159) % 1.0)  # 0.0 (near orbs) to 1.0 (near camera lens)
+        # Deterministic multi-prime chaotic seed distribution (eliminates any collinear alignments)
+        seed_x = ((idx * 0.6180339887 + 0.137) * 1.41421356) % 1.0
+        seed_y = ((idx * 0.3819660113 + 0.293) * 1.73205080) % 1.0
+        seed_z = ((idx * 2.7182818284 + 0.511) % 1.0)  # 0.0 (near orbs) to 1.0 (near camera lens)
 
         base_x = seed_x * render_w
         base_y = seed_y * render_h
 
-        # Drift speeds and paths (seamless periodic looping with integer frequencies)
-        freq_x = 1 if (idx % 2 == 0) else 2
-        freq_y = 1 if (idx % 3 == 0) else 2
-        amp_x = 25.0 + ((idx * 7) % 35)
-        amp_y = 35.0 + ((idx * 11) % 45)
-        phase_x = (idx * 1.7) % (2 * math.pi)
-        phase_y = (idx * 2.3) % (2 * math.pi)
+        # Multi-harmonic organic drift (seamless periodic looping with variable frequencies and phase shifts)
+        freq_x = 1 if (idx % 3 == 0) else (2 if (idx % 3 == 1) else 1)
+        freq_y = 1 if (idx % 2 == 0) else 2
+        amp_x = 22.0 + ((idx * 13) % 38)
+        amp_y = 28.0 + ((idx * 17) % 48)
+        phase_x = (idx * 2.39996) % (2 * math.pi)
+        phase_y = (idx * 1.61803) % (2 * math.pi)
 
         # Particle type:
-        # If seed_z > 0.75: Large, highly-translucent cinematic lens bokeh disk (soft blur)
-        # If seed_z <= 0.75: Fine crystalline ember sparkle
-        is_lens_bokeh = (seed_z > 0.72)
+        # If seed_z > 0.78: Large, highly-translucent cinematic lens bokeh disk (soft blur)
+        # If seed_z <= 0.78: Fine crystalline ember sparkle
+        is_lens_bokeh = (seed_z > 0.76)
         if is_lens_bokeh:
-            size = 14.0 + ((idx * 4.3) % 18.0)
-            opacity = 0.08 + ((idx * 0.03) % 0.12)  # Ultra-subtle so it never occludes orbs
+            size = 11.0 + ((idx * 3.7) % 14.0)
+            opacity = 0.06 + ((idx * 0.02) % 0.08)  # Ultra-subtle, airy and organic
         else:
-            size = 1.2 + ((idx * 0.8) % 2.4)
-            opacity = 0.25 + ((idx * 0.08) % 0.40)
+            size = 1.1 + ((idx * 0.7) % 2.1)
+            opacity = 0.20 + ((idx * 0.06) % 0.35)
 
         particles.append({
             "idx": idx,

@@ -474,22 +474,33 @@ def generate_animated_orb_loop(
             col_core = palette["spot1_core"]
             col_glow = palette["spot1_glow"]
 
+            is_solar = ("solar" in palette_key)
+
+            # Unique pseudo-random deterministic seed offset per palette key
+            # Ensures Solar, Quantum and other orbs have completely unique, non-identical organic orbits
+            palette_seed_offset = 0.5829 if is_solar else 0.0
+
             for p_idx in range(num_particles):
-                p_t = (t + (p_idx / num_particles)) % 1.0
+                # Pseudo-chaotic phase offset using golden ratio to prevent periodic clustering / repetitive lines
+                p_seed = (p_idx * 0.6180339887 + palette_seed_offset) % 1.0
+                p_t = (t + (p_idx / num_particles) + 0.15 * math.sin(p_seed * 6.28)) % 1.0
                 
                 # 3D Depth coordinate z in [-1.0 (far rear), +1.0 (closest to lens)]
-                z = math.cos(2 * math.pi * p_t)
+                # Non-linear z oscillation with harmonics to avoid pure symmetrical ping-pong
+                z = math.cos(2 * math.pi * p_t + p_seed * 1.5)
                 
                 # 3D Camera Perspective Projection scale factor:
                 # Far background: scale ~ 0.45; Near camera: scale ~ 1.25
                 persp_scale = 1.0 / (1.55 - 0.70 * z)
                 
-                # 3D Inclined Spatial Orbital Spiral:
-                p_angle = (p_idx * 2.39996) + 1.25 * math.sin(2 * math.pi * p_t)
-                orbit_rad_xy = 75.0 + 85.0 * (1.0 - 0.35 * (z ** 2))
+                # 3D Inclined Spatial Orbital Spiral (Distinct inclination per particle):
+                # Varied 3D plane tilts (azimuth & elevation) to break repetitive lines or circles
+                tilt_factor = 0.55 + 0.45 * math.sin(p_idx * 1.37 + palette_seed_offset * 4.0)
+                p_angle = (p_idx * 2.39996 + palette_seed_offset * 3.14) + 1.15 * math.sin(2 * math.pi * p_t + p_idx)
+                orbit_rad_xy = (68.0 + 80.0 * (1.0 - 0.35 * (z ** 2))) * (0.85 + 0.30 * p_seed)
                 
                 px = c + (orbit_rad_xy * math.cos(p_angle)) * (persp_scale * 1.05)
-                py = c + (orbit_rad_xy * math.sin(p_angle) * 0.78 - 32.0 * z) * persp_scale
+                py = c + (orbit_rad_xy * math.sin(p_angle) * tilt_factor - 30.0 * z) * persp_scale
                 
                 # Optical lifecycle curve (bell curve):
                 lifecycle = math.sin(math.pi * p_t)
