@@ -76,51 +76,38 @@ def generate_cosmic_particle_bg_video(
     rgb_b = _hex_to_rgb(color_b)
     rgb_b_glow = _hex_to_rgb(color_b_glow)
 
-    # Simulation parameters - Elegant cinematic celestial field
-    num_particles = 68
+    # Simulation parameters
+    num_particles = 190
+    center_ax = render_w * 0.33
+    center_ay = render_h * 0.42
+    center_bx = render_w * 0.67
+    center_by = render_h * 0.46
+
+    # Deterministic particle seed distribution with 3D Z-depth
     particles = []
     for idx in range(num_particles):
-        # Deterministic multi-prime chaotic seed distribution
-        seed_x = ((idx * 0.6180339887 + 0.173) * 1.41421356) % 1.0
-        seed_y = ((idx * 0.3819660113 + 0.317) * 1.73205080) % 1.0
-        seed_z = ((idx * 2.7182818284 + 0.643) % 1.0)
+        is_a = (idx % 2 == 0)
+        seed = (idx * 1.6180339887) % 1.0
+        orbit_rad_x = 60 + seed * (render_w * 0.40)
+        orbit_rad_y = 45 + ((idx * 2.718) % 1.0) * (render_h * 0.30)
+        phase_offset = idx * (2 * math.pi / num_particles)
+        speed_mult = 0.55 + ((idx * 0.37) % 1.0) * 0.75  # Calibrated slow graceful drift
+        z_depth = ((idx * 3.1415) % 2.0) - 1.0 # -1.0 to 1.0
+        
+        base_size = 1.3 + (z_depth + 1.0) * 0.8
+        if z_depth > 0.5 and idx % 9 == 0:
+            base_size = 4.0 + ((idx * 0.5) % 2.5) # Foreground bokeh spark
 
-        base_x = seed_x * render_w
-        base_y = seed_y * render_h
-
-        # Harmonious organic floating drift
-        freq_x = 1 if (idx % 3 == 0) else (2 if (idx % 3 == 1) else 1)
-        freq_y = 1 if (idx % 2 == 0) else 2
-        amp_x = 18.0 + ((idx * 11) % 32)
-        amp_y = 22.0 + ((idx * 15) % 40)
-        phase_x = (idx * 2.39996) % (2 * math.pi)
-        phase_y = (idx * 1.61803) % (2 * math.pi)
-
-        # Particle aesthetic categorization:
-        # If seed_z > 0.74: Soft luminous distant bokeh disc
-        # If seed_z <= 0.74: Fine sharp crystalline ember sparkle
-        is_bokeh = (seed_z > 0.74)
-        if is_bokeh:
-            size = 9.0 + ((idx * 3.1) % 12.0)
-            opacity = 0.08 + ((idx * 0.02) % 0.10)
-        else:
-            size = 1.2 + ((idx * 0.6) % 1.9)
-            opacity = 0.35 + ((idx * 0.06) % 0.45)
-
+        opacity = 0.35 + ((idx * 0.73) % 0.55)
         particles.append({
-            "idx": idx,
-            "base_x": base_x,
-            "base_y": base_y,
-            "amp_x": amp_x,
-            "amp_y": amp_y,
-            "freq_x": freq_x,
-            "freq_y": freq_y,
-            "phase_x": phase_x,
-            "phase_y": phase_y,
-            "size": size,
+            "is_a": is_a,
+            "rx": orbit_rad_x,
+            "ry": orbit_rad_y,
+            "phase": phase_offset,
+            "speed": speed_mult,
+            "size": base_size,
+            "z": z_depth,
             "opacity": opacity,
-            "is_bokeh": is_bokeh,
-            "seed_z": seed_z,
         })
 
     try:
@@ -128,47 +115,108 @@ def generate_cosmic_particle_bg_video(
             progress = f / loop_frames
             tau = 2 * math.pi * progress
 
+            # Orbiting Entity Centers (gentle drift)
+            ent_a_x = center_ax + 24 * math.cos(tau)
+            ent_a_y = center_ay + 16 * math.sin(tau * 1.2)
+
+            ent_b_x = center_bx + 26 * math.cos(tau + math.pi)
+            ent_b_y = center_by + 18 * math.sin((tau + math.pi) * 1.1)
+
+            # Midpoint Bridge
+            mid_x = (ent_a_x + ent_b_x) / 2
+            mid_y = (ent_a_y + ent_b_y) / 2
+            bridge_pulse = 0.5 + 0.5 * math.sin(tau * 2)
+
+            mid_color_rgb = _lerp_rgb(rgb_a, rgb_b, 0.5)
+            mid_hex = _rgb_to_hex(mid_color_rgb)
+
             svg_parts = [
                 f'<svg width="{render_w}" height="{render_h}" viewBox="0 0 {render_w} {render_h}" xmlns="http://www.w3.org/2000/svg">',
                 '  <defs>',
-                '    <filter id="bokehBlur" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="9.0" /></filter>',
-                '    <filter id="emberGlow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.8" /></filter>',
+                '    <filter id="bgBlurDeep" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="65" /></filter>',
+                '    <filter id="coreBlur" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="22" /></filter>',
+                '    <filter id="glowBlur" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="7" /></filter>',
                 '    <linearGradient id="deepVoidGrad" x1="0%" y1="0%" x2="100%" y2="100%">',
                 '      <stop offset="0%" stop-color="#040508" />',
-                '      <stop offset="50%" stop-color="#06070e" />',
-                '      <stop offset="100%" stop-color="#08050c" />',
+                '      <stop offset="50%" stop-color="#070810" />',
+                '      <stop offset="100%" stop-color="#09060d" />',
                 '    </linearGradient>',
+                '    <radialGradient id="nebulaA" cx="50%" cy="50%" r="50%">',
+                f'      <stop offset="0%" stop-color="{color_a}" stop-opacity="0.30" />',
+                f'      <stop offset="45%" stop-color="{color_a_glow}" stop-opacity="0.16" />',
+                '      <stop offset="85%" stop-color="#000000" stop-opacity="0.0" />',
+                '    </radialGradient>',
+                '    <radialGradient id="nebulaB" cx="50%" cy="50%" r="50%">',
+                f'      <stop offset="0%" stop-color="{color_b}" stop-opacity="0.32" />',
+                f'      <stop offset="45%" stop-color="{color_b_glow}" stop-opacity="0.18" />',
+                '      <stop offset="85%" stop-color="#000000" stop-opacity="0.0" />',
+                '    </radialGradient>',
+                '    <radialGradient id="bridgePulseGrad" cx="50%" cy="50%" r="50%">',
+                f'      <stop offset="0%" stop-color="{mid_hex}" stop-opacity="{0.16 * bridge_pulse + 0.06:.2f}" />',
+                '      <stop offset="70%" stop-color="#000000" stop-opacity="0.0" />',
+                '    </radialGradient>',
                 '  </defs>',
-                '  <!-- 1. Deep Space Void Base -->',
+                '  <!-- 1. Deep Space Base -->',
                 f'  <rect width="{render_w}" height="{render_h}" fill="url(#deepVoidGrad)" />',
+                '  <!-- 2. Dual Atmospheric Nebulae -->',
+                f'  <circle cx="{ent_a_x:.1f}" cy="{ent_a_y:.1f}" r="270" fill="url(#nebulaA)" filter="url(#bgBlurDeep)" />',
+                f'  <circle cx="{ent_b_x:.1f}" cy="{ent_b_y:.1f}" r="290" fill="url(#nebulaB)" filter="url(#bgBlurDeep)" />',
+                f'  <circle cx="{mid_x:.1f}" cy="{mid_y:.1f}" r="170" fill="url(#bridgePulseGrad)" filter="url(#coreBlur)" />',
+                '  <!-- 3. Astrometric Resonance Bridge Lines -->',
+                f'  <line x1="{ent_a_x:.1f}" y1="{ent_a_y:.1f}" x2="{ent_b_x:.1f}" y2="{ent_b_y:.1f}" stroke="{mid_hex}" stroke-opacity="0.20" stroke-width="1.2" stroke-dasharray="3 9" />',
             ]
 
-            # Render particles with harmonious spatial color gradation & depth
+            # Separate into Background (Z < 0) and Foreground (Z >= 0)
+            bg_p = []
+            fg_p = []
+
             for p in particles:
-                # Organic seamless drift
-                dx = p["amp_x"] * math.sin(tau * p["freq_x"] + p["phase_x"])
-                dy = -p["amp_y"] * math.sin(tau * p["freq_y"] + p["phase_y"])
+                host_x = ent_a_x if p["is_a"] else ent_b_x
+                host_y = ent_a_y if p["is_a"] else ent_b_y
+                direction = 1 if p["is_a"] else -1
 
-                px = (p["base_x"] + dx) % render_w
-                py = (p["base_y"] + dy) % render_h
+                ang = p["phase"] + (tau * p["speed"] * direction)
+                px = host_x + p["rx"] * math.cos(ang)
+                py = host_y + p["ry"] * math.sin(ang)
 
-                # Dynamic color blending based on screen X position (Left Host -> Right Host)
-                x_ratio = max(0.0, min(1.0, px / max(1.0, render_w)))
-                p_rgb = _lerp_rgb(rgb_a, rgb_b, x_ratio)
-                p_hex = _rgb_to_hex(p_rgb)
+                # Relative proximity for color lerping
+                dA = math.hypot(px - ent_a_x, py - ent_a_y)
+                dB = math.hypot(px - ent_b_x, py - ent_b_y)
+                ratio = max(0.0, min(1.0, dA / (dA + dB + 0.001)))
+                p_color_rgb = _lerp_rgb(rgb_a, rgb_b, ratio)
+                p_hex = _rgb_to_hex(p_color_rgb)
 
-                if p["is_bokeh"]:
-                    # Soft luminous celestial bokeh disc (no harsh edges)
-                    svg_parts.append(
-                        f'  <circle cx="{px:.1f}" cy="{py:.1f}" r="{p["size"]:.1f}" fill="{p_hex}" opacity="{p["opacity"]:.2f}" filter="url(#bokehBlur)" />'
-                    )
+                # Tail
+                tail_ang = ang - (0.14 * direction)
+                tx = host_x + p["rx"] * math.cos(tail_ang)
+                ty = host_y + p["ry"] * math.sin(tail_ang)
+
+                item = (px, py, tx, ty, p["size"], p_hex, p["opacity"], p["z"])
+                if p["z"] < 0:
+                    bg_p.append(item)
                 else:
-                    # Elegant crystalline ember with glowing colored bloom and brilliant core
+                    fg_p.append(item)
+
+            # Draw background particles
+            for px, py, tx, ty, sz, col, op, z in bg_p:
+                svg_parts.append(
+                    f'  <line x1="{tx:.1f}" y1="{ty:.1f}" x2="{px:.1f}" y2="{py:.1f}" stroke="{col}" stroke-width="{sz*0.65:.1f}" opacity="{op*0.35:.2f}" />'
+                )
+                svg_parts.append(
+                    f'  <circle cx="{px:.1f}" cy="{py:.1f}" r="{sz:.1f}" fill="{col}" opacity="{op:.2f}" />'
+                )
+
+            # Draw foreground particles (crossing in front with extra optical glow)
+            for px, py, tx, ty, sz, col, op, z in fg_p:
+                svg_parts.append(
+                    f'  <line x1="{tx:.1f}" y1="{ty:.1f}" x2="{px:.1f}" y2="{py:.1f}" stroke="{col}" stroke-width="{sz*0.85:.1f}" opacity="{op*0.48:.2f}" />'
+                )
+                svg_parts.append(
+                    f'  <circle cx="{px:.1f}" cy="{py:.1f}" r="{sz:.1f}" fill="{col}" opacity="{min(1.0, op*1.15):.2f}" />'
+                )
+                if sz > 2.5:
                     svg_parts.append(
-                        f'  <circle cx="{px:.1f}" cy="{py:.1f}" r="{p["size"]*2.2:.1f}" fill="{p_hex}" opacity="{p["opacity"]*0.45:.2f}" filter="url(#emberGlow)" />'
-                    )
-                    svg_parts.append(
-                        f'  <circle cx="{px:.1f}" cy="{py:.1f}" r="{p["size"]:.1f}" fill="#ffffff" opacity="{p["opacity"]:.2f}" />'
+                        f'  <circle cx="{px:.1f}" cy="{py:.1f}" r="{sz*2.4:.1f}" fill="{col}" opacity="{op*0.35:.2f}" filter="url(#glowBlur)" />'
                     )
 
             # Deep Vignette border overlay
@@ -185,13 +233,10 @@ def generate_cosmic_particle_bg_video(
             "ffmpeg", "-y",
             "-framerate", str(fps),
             "-i", str(frames_dir / "frame_%04d.svg"),
-            "-vf", f"scale={width}:{height}:flags=lanczos,format=yuv420p",
+            "-vf", f"scale={width}:{height}:flags=bicubic,format=yuv420p",
             "-c:v", "libx264",
-            "-preset", "medium",
-            "-crf", "16",
-            "-color_primaries", "bt709",
-            "-color_trc", "bt709",
-            "-colorspace", "bt709",
+            "-preset", "fast",
+            "-crf", "18",
             "-pix_fmt", "yuv420p",
             str(mp4_path)
         ]
