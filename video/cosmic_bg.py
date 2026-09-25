@@ -65,9 +65,9 @@ def generate_cosmic_particle_bg_video(
 
     print(f"  ✨ Generando fondo cósmico dinámico ({color_a} & {color_b} | {width}x{height} @ {fps}fps)...")
 
-    # Render directly at native resolution for pristine, uncompressed sharpness
-    render_w = width
-    render_h = height
+    # Render at a crisp resolution optimized for speed and fidelity
+    render_w = min(width, 720)
+    render_h = min(height, 1280)
     frames_dir = dest_dir / f"_temp_bg_{render_w}x{render_h}_{slug_a}_{slug_b}"
     frames_dir.mkdir(parents=True, exist_ok=True)
 
@@ -233,12 +233,10 @@ def generate_cosmic_particle_bg_video(
             "ffmpeg", "-y",
             "-framerate", str(fps),
             "-i", str(frames_dir / "frame_%04d.svg"),
-            "-vf", "format=yuv420p",
+            "-vf", f"scale={width}:{height}:flags=lanczos,format=yuv420p",
             "-c:v", "libx264",
             "-preset", "medium",
-            "-tune", "film",
             "-crf", "16",
-            "-color_range", "tv",
             "-color_primaries", "bt709",
             "-color_trc", "bt709",
             "-colorspace", "bt709",
@@ -265,7 +263,6 @@ def get_cosmic_particle_background_video(
     color_a_glow: str = "#0284c7",
     color_b: str = "#ffea00",
     color_b_glow: str = "#ff5500",
-    force_refresh: bool = False,
 ) -> Path:
     """Helper to retrieve or generate the cached cosmic particle background video with dynamic colors."""
     return generate_cosmic_particle_bg_video(
@@ -275,5 +272,4 @@ def get_cosmic_particle_background_video(
         color_a_glow=color_a_glow,
         color_b=color_b,
         color_b_glow=color_b_glow,
-        force_refresh=force_refresh,
     )

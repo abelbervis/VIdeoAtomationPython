@@ -62,9 +62,9 @@ def generate_global_foreground_atmosphere_loop(
 
     print(f"  🌌 Generando atmósfera cósmica frontal global ({color_a} & {color_b} | {width}x{height})...")
 
-    # Render directly at native resolution for crisp crystalline embers & bokeh
-    render_w = width
-    render_h = height
+    # Render optimized frame resolution, scaled up by ffmpeg
+    render_w = min(width, 540)
+    render_h = min(height, 960)
     frames_dir = dest_dir / f"_temp_atmos_{render_w}x{render_h}_{slug_a}_{slug_b}"
     frames_dir.mkdir(parents=True, exist_ok=True)
 
@@ -169,7 +169,7 @@ def generate_global_foreground_atmosphere_loop(
             "ffmpeg", "-y",
             "-framerate", str(fps),
             "-i", str(frames_dir / "frame_%04d.svg"),
-            "-vf", "format=yuva420p",
+            "-vf", f"scale={width}:{height}:flags=bicubic,format=yuva420p",
             "-c:v", "qtrle",
             str(mov_path)
         ]

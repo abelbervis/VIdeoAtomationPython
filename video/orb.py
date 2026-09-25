@@ -1438,15 +1438,6 @@ def render_orb_test_preview(
         mix_inputs.append("[sfx_intro]")
         stream_idx += 1
 
-        # ⚡ 1.8s Rule Early Camera Switch SFX (Camera servo whoosh for Scene 0 dynamic split)
-        first_sc_dur = scene_records[0]["end"] - scene_records[0]["start"] if scene_records else 0.0
-        if first_sc_dur > 2.2 and len(scene_records) > 1:
-            early_cut_ms = int(1.72 * 1000)
-            audio_inputs.extend(["-i", str(sfx_zoom_path)])
-            audio_filter_lines.append(f"[{stream_idx}:a]adelay={early_cut_ms}|{early_cut_ms},volume=0.36[sfx_early_cut]")
-            mix_inputs.append("[sfx_early_cut]")
-            stream_idx += 1
-
         for sc in scene_records[1:]:
             sfx_delay_ms = int(max(0.0, sc["start"] - 0.08) * 1000)
             if sc["shot"] == "close_solar":
@@ -1526,26 +1517,21 @@ def render_orb_test_preview(
     voice_pulse_q = extract_real_audio_rms_profile(resolved_audio, intervals_q) if (resolved_audio and resolved_audio.exists()) else "(0.5 + 0.30*sin(2*PI*t/0.24))"
     voice_pulse_s = extract_real_audio_rms_profile(resolved_audio, intervals_s) if (resolved_audio and resolved_audio.exists()) else "(0.5 + 0.30*sin(2*PI*t/0.24))"
 
-    # 💥 Warp-In Spawn Dynamics (t = 0.0s to 0.42s):
-    # Starts from a compressed singularity (0.08x), surges to 1.22x with incandescent flare, settling to 1.0x at 0.40s
-    spawn_scale = "if(lt(t\\,0.40)\\,(0.08 + 1.14*min(1.0\\,t/0.24) - 0.22*if(gt(t\\,0.24)\\,(t-0.24)/0.16\\,0))\\,1.0)"
-    spawn_flash = "if(lt(t\\,0.36)\\,0.45*(1.0 - t/0.36)\\,0.0)"
+    # Acoustic Respiratory Volume (Physical breathing scale surges +4.5% on active voice syllables)
+    scale_expr_q_wide = f"eval=frame:w='trunc(420*(1.0 + 0.045*({voice_pulse_q})*({speech_mask_q}))/2)*2':h='trunc(420*(1.0 + 0.045*({voice_pulse_q})*({speech_mask_q}))/2)*2'"
+    scale_expr_s_wide = f"eval=frame:w='trunc(370*(1.0 + 0.045*({voice_pulse_s})*({speech_mask_s}))/2)*2':h='trunc(370*(1.0 + 0.045*({voice_pulse_s})*({speech_mask_s}))/2)*2'"
+    scale_expr_q_close = f"eval=frame:w='trunc(820*(1.0 + 0.045*({voice_pulse_q})*({speech_mask_q}))/2)*2':h='trunc(820*(1.0 + 0.045*({voice_pulse_q})*({speech_mask_q}))/2)*2'"
+    scale_expr_s_close = f"eval=frame:w='trunc(820*(1.0 + 0.045*({voice_pulse_s})*({speech_mask_s}))/2)*2':h='trunc(820*(1.0 + 0.045*({voice_pulse_s})*({speech_mask_s}))/2)*2'"
 
-    # Acoustic Respiratory Volume (Physical breathing scale surges +4.5% on active voice syllables + explosive spawn)
-    scale_expr_q_wide = f"eval=frame:w='trunc(420*({spawn_scale})*(1.0 + 0.045*({voice_pulse_q})*({speech_mask_q}))/2)*2':h='trunc(420*({spawn_scale})*(1.0 + 0.045*({voice_pulse_q})*({speech_mask_q}))/2)*2'"
-    scale_expr_s_wide = f"eval=frame:w='trunc(370*({spawn_scale})*(1.0 + 0.045*({voice_pulse_s})*({speech_mask_s}))/2)*2':h='trunc(370*({spawn_scale})*(1.0 + 0.045*({voice_pulse_s})*({speech_mask_s}))/2)*2'"
-    scale_expr_q_close = f"eval=frame:w='trunc(820*({spawn_scale})*(1.0 + 0.045*({voice_pulse_q})*({speech_mask_q}))/2)*2':h='trunc(820*({spawn_scale})*(1.0 + 0.045*({voice_pulse_q})*({speech_mask_q}))/2)*2'"
-    scale_expr_s_close = f"eval=frame:w='trunc(820*({spawn_scale})*(1.0 + 0.045*({voice_pulse_s})*({speech_mask_s}))/2)*2':h='trunc(820*({spawn_scale})*(1.0 + 0.045*({voice_pulse_s})*({speech_mask_s}))/2)*2'"
-
-    eq_q = f"eval=frame:brightness='-0.03 + ({spawn_flash}) + (0.18 + 0.22*{voice_pulse_q})*({speech_mask_q})':contrast='1.0 + (0.24 + 0.20*{voice_pulse_q})*({speech_mask_q})':saturation='1.0 + (0.26 + 0.18*{voice_pulse_q})*({speech_mask_q})'"
+    eq_q = f"eval=frame:brightness='-0.03 + (0.18 + 0.22*{voice_pulse_q})*({speech_mask_q})':contrast='1.0 + (0.24 + 0.20*{voice_pulse_q})*({speech_mask_q})':saturation='1.0 + (0.26 + 0.18*{voice_pulse_q})*({speech_mask_q})'"
     hue_q = f"h='(10 + 6*{voice_pulse_q})*({speech_mask_q}) + 4*sin(2*PI*t/3.6)':s='1.0 + (0.22 + 0.15*{voice_pulse_q})*({speech_mask_q})'"
 
-    eq_s = f"eval=frame:brightness='-0.03 + ({spawn_flash}) + (0.18 + 0.22*{voice_pulse_s})*({speech_mask_s})':contrast='1.0 + (0.24 + 0.20*{voice_pulse_s})*({speech_mask_s})':saturation='1.0 + (0.26 + 0.18*{voice_pulse_s})*({speech_mask_s})'"
+    eq_s = f"eval=frame:brightness='-0.03 + (0.18 + 0.22*{voice_pulse_s})*({speech_mask_s})':contrast='1.0 + (0.24 + 0.20*{voice_pulse_s})*({speech_mask_s})':saturation='1.0 + (0.26 + 0.18*{voice_pulse_s})*({speech_mask_s})'"
     hue_s = f"h='(10 + 6*{voice_pulse_s})*({speech_mask_s}) + 4*sin(2*PI*t/3.6)':s='1.0 + (0.22 + 0.15*{voice_pulse_s})*({speech_mask_s})'"
 
     # Dynamic Cosmic Vacuum Illumination: Ambient nebula radiance breathes with acoustic intensity
-    eq_glow_q = f"eval=frame:brightness='(0.08 + 0.28*{voice_pulse_q})*({speech_mask_q}) + ({spawn_flash})*0.8':contrast='1.0 + 0.35*({speech_mask_q})'"
-    eq_glow_s = f"eval=frame:brightness='(0.08 + 0.28*{voice_pulse_s})*({speech_mask_s}) + ({spawn_flash})*0.8':contrast='1.0 + 0.35*({speech_mask_s})'"
+    eq_glow_q = f"eval=frame:brightness='(0.08 + 0.28*{voice_pulse_q})*({speech_mask_q})':contrast='1.0 + 0.35*({speech_mask_q})'"
+    eq_glow_s = f"eval=frame:brightness='(0.08 + 0.28*{voice_pulse_s})*({speech_mask_s})':contrast='1.0 + 0.35*({speech_mask_s})'"
 
     # Organic Celestial Motion Physics:
     # 1. Non-repetitive Lissajous 8-figure orbital float (harmonics with golden ratio periods 5.8s & 8.6s)
@@ -1655,58 +1641,14 @@ def render_orb_test_preview(
     if has_holo_s and holo_s_idx is not None:
         pre_scale_lines.append(f"[{holo_s_idx}:v]scale=540:-2,format=yuva420p[holo_s]")
 
-    # 🎬 1.8s Rule: Build dynamic visual camera shot list (splits Scene 0 into Wide Spawn + Early Close-Up)
-    visual_shots = []
-    for idx, sc in enumerate(scene_records):
-        st = sc["start"]
-        sc_visual_end = scene_records[idx + 1]["start"] if idx + 1 < len(scene_records) else total_duration
-        ent = sc["entity"]
-        shot = sc["shot"]
-        sc_dur = max(0.2, round(sc_visual_end - st, 2))
-
-        # If first scene (intro) is in wide shot and exceeds 2.2s, split at 1.8s for maximum pattern interrupt retention
-        if idx == 0 and shot == "wide" and sc_dur > 2.2 and len(scene_records) > 1:
-            early_cut_time = round(st + 1.80, 2)
-            # Target close-up of the contender speaking in Scene 1
-            next_entity = scene_records[1]["entity"]
-            next_close_shot = "close_solar" if next_entity == "solar" else "close_quantum"
-
-            # Part 0a: Wide shot with explosive warp-in spawn (0.0s -> 1.8s)
-            visual_shots.append({
-                "shot_id": "0_wide",
-                "start": st,
-                "end": early_cut_time,
-                "entity": ent,
-                "speaker": sc["speaker"],
-                "shot": "wide"
-            })
-            # Part 0b: Dramatic Early Close-Up (1.8s -> end of intro)
-            visual_shots.append({
-                "shot_id": "0_closeup",
-                "start": early_cut_time,
-                "end": sc_visual_end,
-                "entity": ent,
-                "speaker": sc["speaker"],
-                "shot": next_close_shot
-            })
-        else:
-            visual_shots.append({
-                "shot_id": f"{idx}_{shot}",
-                "start": st,
-                "end": sc_visual_end,
-                "entity": ent,
-                "speaker": sc["speaker"],
-                "shot": shot
-            })
-
     # Calculate exact number of split pads needed for Quantum and Solar (wide talk, idle, and close frontal talk)
-    q_talk_uses = sum(1 for vs in visual_shots if (vs["shot"] == "both") or (vs["shot"] == "wide" and vs["entity"] in ["quantum", "both"]))
-    q_idle_uses = 1 + sum(1 for vs in visual_shots if vs["shot"] == "wide" and vs["entity"] not in ["quantum", "both"])
-    q_close_uses = sum(1 for vs in visual_shots if vs["shot"] == "close_quantum")
+    q_talk_uses = sum(1 for sc in scene_records if (sc["shot"] == "both") or (sc["shot"] == "wide" and sc["entity"] in ["quantum", "both"]))
+    q_idle_uses = 1 + sum(1 for sc in scene_records if sc["shot"] == "wide" and sc["entity"] not in ["quantum", "both"])
+    q_close_uses = sum(1 for sc in scene_records if sc["shot"] == "close_quantum")
 
-    s_talk_uses = sum(1 for vs in visual_shots if (vs["shot"] == "both") or (vs["shot"] == "wide" and vs["entity"] in ["solar", "both"]))
-    s_idle_uses = 1 + sum(1 for vs in visual_shots if vs["shot"] == "wide" and vs["entity"] not in ["solar", "both"])
-    s_close_uses = sum(1 for vs in visual_shots if vs["shot"] == "close_solar")
+    s_talk_uses = sum(1 for sc in scene_records if (sc["shot"] == "both") or (sc["shot"] == "wide" and sc["entity"] in ["solar", "both"]))
+    s_idle_uses = 1 + sum(1 for sc in scene_records if sc["shot"] == "wide" and sc["entity"] not in ["solar", "both"])
+    s_close_uses = sum(1 for sc in scene_records if sc["shot"] == "close_solar")
 
     filter_complex = [
         *pre_scale_lines,
@@ -1722,7 +1664,7 @@ def render_orb_test_preview(
         f"[q_idle_0]scale=120:120,eq={eq_glow_q},hue={hue_q},boxblur=26:3,scale={width}:{height},format=yuva420p,colorchannelmixer=aa=0.30[bg_glow_q]",
         f"[s_idle_0]scale=120:120,eq={eq_glow_s},hue={hue_s},boxblur=26:3,scale={width}:{height},format=yuva420p,colorchannelmixer=aa=0.30[bg_glow_s]",
 
-        f"[0:v]eq=brightness=-0.01:contrast=1.05[bg_graded]",
+        f"[0:v]eq=brightness=-0.02:contrast=1.16:saturation=1.12[bg_graded]",
         f"[bg_graded][bg_glow_q]overlay=eval=frame:enable='{speech_mask_q}'[bg_glowed_1]",
         f"[bg_glowed_1][bg_glow_s]overlay=eval=frame:enable='{speech_mask_s}'[bg_ambient]"
     ]
@@ -1737,9 +1679,10 @@ def render_orb_test_preview(
     holo_q_used = False
     holo_s_used = False
 
-    for idx, sc in enumerate(visual_shots):
+    for idx, sc in enumerate(scene_records):
         st = sc["start"]
-        sc_visual_end = sc["end"]
+        # Seamless scene continuity: visual shot stays active until exact start of next scene
+        sc_visual_end = scene_records[idx + 1]["start"] if idx + 1 < len(scene_records) else total_duration
         ent = sc["entity"]
         shot = sc["shot"]
         sc_dur = max(0.2, round(sc_visual_end - st, 2))
@@ -1867,9 +1810,22 @@ def render_orb_test_preview(
         "-map", "[vout]",
         "-map", f"{audio_idx}:a",
         "-c:v", "libx264",
-        "-preset", "ultrafast",
+        "-preset", "medium",
+        "-crf", "17",
+        "-maxrate", "16M",
+        "-bufsize", "32M",
+        "-profile:v", "high",
+        "-level:v", "4.2",
+        "-g", "60",
+        "-keyint_min", "30",
+        "-sc_threshold", "0",
+        "-color_primaries", "bt709",
+        "-color_trc", "bt709",
+        "-colorspace", "bt709",
         "-pix_fmt", "yuv420p",
         "-c:a", "aac",
+        "-b:a", "320k",
+        "-ar", "48000",
         "-shortest",
         "-movflags", "+faststart",
         str(output_path)

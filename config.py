@@ -172,16 +172,6 @@ VIDEO_FORMATS = {
         "subtitle_font_size": 52,
         "description": "Vertical 9:16 (1080x1920) - YouTube Shorts, TikTok, Instagram Reels (Shorts Safe Zone)",
     },
-    "vertical_2k": {
-        "name": "vertical_2k",
-        "width": 1440,
-        "height": 2560,
-        "aspect_ratio": "9:16",
-        "orientation": "portrait",
-        "subtitle_margin_bottom": 745,
-        "subtitle_font_size": 68,
-        "description": "Vertical 9:16 2K Quad HD (1440x2560) - Master for YouTube Shorts (Bypasses AVC1, forces VP9/AV1 codec)",
-    },
     "horizontal": {
         "name": "horizontal",
         "width": 1920,
@@ -215,15 +205,6 @@ FORMAT_ALIASES = {
     "reel": "vertical",
     "9:16": "vertical",
     "9/16": "vertical",
-    "vertical_2k": "vertical_2k",
-    "2k": "vertical_2k",
-    "1440p": "vertical_2k",
-    "1440": "vertical_2k",
-    "1440x2560": "vertical_2k",
-    "shorts_2k": "vertical_2k",
-    "master": "vertical_2k",
-    "yt_master": "vertical_2k",
-    "youtube_master": "vertical_2k",
     "horizontal": "horizontal",
     "horiz": "horizontal",
     "landscape": "horizontal",
@@ -296,10 +277,7 @@ def resolve_video_format(fmt_input: Optional[str] = None) -> Dict[str, Any]:
 
 
 # Video Standards (Configurable preset or custom dimensions)
-DEFAULT_VIDEO_FORMAT = clean_env(
-    "VIDEO_FORMAT",
-    "vertical_2k" if clean_env("YOUTUBE_MASTER", "false").lower() in ("true", "1", "yes") else "vertical"
-)
+DEFAULT_VIDEO_FORMAT = clean_env("VIDEO_FORMAT", "vertical")
 _default_format_cfg = resolve_video_format(DEFAULT_VIDEO_FORMAT)
 
 VIDEO_WIDTH = int(clean_env("VIDEO_WIDTH", str(_default_format_cfg["width"])))
@@ -307,10 +285,10 @@ VIDEO_HEIGHT = int(clean_env("VIDEO_HEIGHT", str(_default_format_cfg["height"]))
 VIDEO_FPS = int(clean_env("VIDEO_FPS", "30"))
 VIDEO_CODEC = "libx264"
 AUDIO_CODEC = "aac"
-AUDIO_BITRATE = clean_env("AUDIO_BITRATE", "320k")
-VIDEO_BITRATE = clean_env("VIDEO_BITRATE", "18000k")
-VIDEO_CRF = int(clean_env("VIDEO_CRF", "17"))
-VIDEO_PRESET = clean_env("VIDEO_PRESET", "medium")
+AUDIO_BITRATE = "192k"
+VIDEO_BITRATE = clean_env("VIDEO_BITRATE", "12000k")
+VIDEO_CRF = int(clean_env("VIDEO_CRF", "18"))
+VIDEO_PRESET = clean_env("VIDEO_PRESET", "fast")
 
 # Default Target Duration for Shorts (in seconds)
 DEFAULT_DURATION = 35
