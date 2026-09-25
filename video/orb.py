@@ -1715,7 +1715,7 @@ def render_orb_test_preview(
 
     pre_scale_lines = [
         f"[{sw_q_idx}:v]scale=500:500,format=yuva420p[sw_q]",
-        f"[{sw_s_idx}:v]scale=500:500,setpts=PTS-STARTPTS+(0.22/TB),format=yuva420p[sw_s]",
+        f"[{sw_s_idx}:v]scale=500:500,tpad=start_duration=0.22:color=black@0.0,format=yuva420p[sw_s]",
     ]
     if has_holo_q and holo_q_idx is not None:
         pre_scale_lines.append(f"[{holo_q_idx}:v]scale=540:-2,format=yuva420p[holo_q]")
@@ -1733,12 +1733,12 @@ def render_orb_test_preview(
 
     filter_complex = [
         *pre_scale_lines,
-        f"[1:v]split={max(1, q_talk_uses)}" + "".join(f"[q_talk_{k}]" for k in range(max(1, q_talk_uses))),
-        f"[2:v]split={max(1, q_idle_uses)}" + "".join(f"[q_idle_{k}]" for k in range(max(1, q_idle_uses))),
-        f"[3:v]split={max(1, q_close_uses)}" + "".join(f"[q_close_{k}]" for k in range(max(1, q_close_uses))),
-        f"[4:v]split={max(1, s_talk_uses)}" + "".join(f"[s_talk_{k}]" for k in range(max(1, s_talk_uses))),
-        f"[5:v]split={max(1, s_idle_uses)}" + "".join(f"[s_idle_{k}]" for k in range(max(1, s_idle_uses))),
-        f"[6:v]split={max(1, s_close_uses)}" + "".join(f"[s_close_{k}]" for k in range(max(1, s_close_uses))),
+        f"[1:v]setpts=N/30/TB,split={max(1, q_talk_uses)}" + "".join(f"[q_talk_{k}]" for k in range(max(1, q_talk_uses))),
+        f"[2:v]setpts=N/30/TB,split={max(1, q_idle_uses)}" + "".join(f"[q_idle_{k}]" for k in range(max(1, q_idle_uses))),
+        f"[3:v]setpts=N/30/TB,split={max(1, q_close_uses)}" + "".join(f"[q_close_{k}]" for k in range(max(1, q_close_uses))),
+        f"[4:v]setpts=N/30/TB,split={max(1, s_talk_uses)}" + "".join(f"[s_talk_{k}]" for k in range(max(1, s_talk_uses))),
+        f"[5:v]setpts=N/30/TB,split={max(1, s_idle_uses)}" + "".join(f"[s_idle_{k}]" for k in range(max(1, s_idle_uses))),
+        f"[6:v]setpts=N/30/TB,split={max(1, s_close_uses)}" + "".join(f"[s_close_{k}]" for k in range(max(1, s_close_uses))),
 
         # Background Ambient Luminescence (Ultra-smooth diffuse glow via 120x120 3-pass boxblur)
         # Deep cosmic illumination breathes in direct sync with speech RMS energy and ignites on entrance
@@ -1789,18 +1789,17 @@ def render_orb_test_preview(
                 # Attentive Listening stance: Cushioned celestial orbit with subtle listening tilt
                 dq_x = f"{orbit_lx_q} - 6.0"
                 dq_y = f"{orbit_ly_q}"
-                q_alpha = 0.88
+                q_alpha = 0.92
+
+            q_scale_str = scale_expr_q_wide if is_q_active else "410:410"
 
             # Singularity Ignition & Elastic Zero-G Cushioning for Quantum in Scene 0 (t = 0.0s to 0.45s)
             if idx == 0:
-                q_intro_scale = "(lt(t\\,0.45)*(0.02 + 0.98*(sin(PI/2*t/0.45) + 0.10*sin(PI*t/0.45))) + gte(t\\,0.45))"
-                q_scale_str = f"eval=frame:w='trunc(420*({q_intro_scale})*(1.0 + 0.045*({voice_pulse_q})*({speech_mask_q}))/2)*2':h='trunc(420*({q_intro_scale})*(1.0 + 0.045*({voice_pulse_q})*({speech_mask_q}))/2)*2'"
-                flash_q = "(lt(t\\,0.28) * 0.42 * (1.0 - t/0.28))"
-                q_eq_str = f"eval=frame:brightness='-0.03 + ({flash_q}) + (0.18 + 0.22*{voice_pulse_q})*({speech_mask_q})':contrast='1.0 + 0.50*({flash_q}) + (0.24 + 0.20*{voice_pulse_q})*({speech_mask_q})':saturation='1.0 + 0.30*({flash_q}) + (0.26 + 0.18*{voice_pulse_q})*({speech_mask_q})'"
-                dy_intro_q = " + (lt(t\\,0.45) * -24.0 * (1.0 - (sin(PI/2*t/0.45) + 0.10*sin(PI*t/0.45))))"
-                dx_intro_q = " + (lt(t\\,0.45) * 14.0 * (1.0 - (sin(PI/2*t/0.45) + 0.10*sin(PI*t/0.45))))"
+                flash_q = "(lt(t\\,0.35) * 0.45 * (1.0 - t/0.35))"
+                q_eq_str = f"eval=frame:brightness='-0.03 + ({flash_q}) + (0.18 + 0.22*{voice_pulse_q})*({speech_mask_q})':contrast='1.0 + 0.45*({flash_q}) + (0.24 + 0.20*{voice_pulse_q})*({speech_mask_q})':saturation='1.0 + 0.35*({flash_q}) + (0.26 + 0.18*{voice_pulse_q})*({speech_mask_q})'"
+                dy_intro_q = " + (lt(t\\,0.45) * -28.0 * (1.0 - (sin(PI/2*t/0.45) + 0.10*sin(PI*t/0.45))))"
+                dx_intro_q = " + (lt(t\\,0.45) * 16.0 * (1.0 - sin(PI/2*t/0.45)))"
             else:
-                q_scale_str = scale_expr_q_wide if is_q_active else "410:410"
                 q_eq_str = eq_q if is_q_active else "eval=frame:brightness='-0.03':contrast='1.0':saturation='1.0'"
                 dy_intro_q = ""
                 dx_intro_q = ""
@@ -1824,19 +1823,18 @@ def render_orb_test_preview(
                 # Attentive Listening stance: Cushioned celestial orbit with subtle listening tilt
                 ds_x = f"{orbit_lx_s} + 6.0"
                 ds_y = f"{orbit_ly_s}"
-                s_alpha = 0.88
+                s_alpha = 0.92
+
+            s_scale_str = scale_expr_s_wide if is_s_active else "360:360"
 
             # Singularity Ignition & Staggered Elastic Zero-G Cushioning for Solar in Scene 0 (t = 0.22s to 0.67s)
             if idx == 0:
-                s_intro_scale = "(lt(t\\,0.22)*0.02 + gte(t\\,0.22)*lt(t\\,0.67)*(0.02 + 0.98*(sin(PI/2*(t-0.22)/0.45) + 0.10*sin(PI*(t-0.22)/0.45))) + gte(t\\,0.67))"
-                s_scale_str = f"eval=frame:w='trunc(370*({s_intro_scale})*(1.0 + 0.045*({voice_pulse_s})*({speech_mask_s}))/2)*2':h='trunc(370*({s_intro_scale})*(1.0 + 0.045*({voice_pulse_s})*({speech_mask_s}))/2)*2'"
-                flash_s = "(gte(t\\,0.22)*lt(t\\,0.50) * 0.42 * (1.0 - (t-0.22)/0.28))"
-                s_eq_str = f"eval=frame:brightness='-0.03 + ({flash_s}) + (0.18 + 0.22*{voice_pulse_s})*({speech_mask_s})':contrast='1.0 + 0.50*({flash_s}) + (0.24 + 0.20*{voice_pulse_s})*({speech_mask_s})':saturation='1.0 + 0.30*({flash_s}) + (0.26 + 0.18*{voice_pulse_s})*({speech_mask_s})'"
-                dy_intro_s = " + (gte(t\\,0.22)*lt(t\\,0.67) * -24.0 * (1.0 - (sin(PI/2*(t-0.22)/0.45) + 0.10*sin(PI*(t-0.22)/0.45))))"
-                dx_intro_s = " + (gte(t\\,0.22)*lt(t\\,0.67) * -14.0 * (1.0 - (sin(PI/2*(t-0.22)/0.45) + 0.10*sin(PI*(t-0.22)/0.45))))"
+                flash_s = "(gte(t\\,0.22)*lt(t\\,0.55) * 0.45 * (1.0 - (t-0.22)/0.33))"
+                s_eq_str = f"eval=frame:brightness='-0.03 + ({flash_s}) + (0.18 + 0.22*{voice_pulse_s})*({speech_mask_s})':contrast='1.0 + 0.45*({flash_s}) + (0.24 + 0.20*{voice_pulse_s})*({speech_mask_s})':saturation='1.0 + 0.35*({flash_s}) + (0.26 + 0.18*{voice_pulse_s})*({speech_mask_s})'"
+                dy_intro_s = " + (gte(t\\,0.22)*lt(t\\,0.67) * -28.0 * (1.0 - (sin(PI/2*(t-0.22)/0.45) + 0.10*sin(PI*(t-0.22)/0.45))))"
+                dx_intro_s = " + (gte(t\\,0.22)*lt(t\\,0.67) * -16.0 * (1.0 - sin(PI/2*(t-0.22)/0.45)))"
                 s_enable = f"between(t\\,0.22\\,{sc_visual_end})"
             else:
-                s_scale_str = scale_expr_s_wide if is_s_active else "360:360"
                 s_eq_str = eq_s if is_s_active else "eval=frame:brightness='-0.03':contrast='1.0':saturation='1.0'"
                 dy_intro_s = ""
                 dx_intro_s = ""
@@ -1853,14 +1851,12 @@ def render_orb_test_preview(
             # Cinematic Push-In Dolly with Ease-in-Out progression + Lissajous orbital levitation:
             d_cq_x = f"{orbit_lx_q} + {voice_jitter_q}"
             d_cq_y = f"{orbit_ly_q} - 14.0*{prog_expr}"
+            sc_close_q = scale_expr_q_close
             if idx == 0:
-                q_intro_scale = "(lt(t\\,0.45)*(0.02 + 0.98*(sin(PI/2*t/0.45) + 0.10*sin(PI*t/0.45))) + gte(t\\,0.45))"
-                sc_close_q = f"eval=frame:w='trunc(820*({q_intro_scale})*(1.0 + 0.045*({voice_pulse_q})*({speech_mask_q}))/2)*2':h='trunc(820*({q_intro_scale})*(1.0 + 0.045*({voice_pulse_q})*({speech_mask_q}))/2)*2'"
-                flash_q = "(lt(t\\,0.28) * 0.42 * (1.0 - t/0.28))"
-                eq_close_q = f"eval=frame:brightness='-0.03 + ({flash_q}) + (0.18 + 0.22*{voice_pulse_q})*({speech_mask_q})':contrast='1.0 + 0.50*({flash_q}) + (0.24 + 0.20*{voice_pulse_q})*({speech_mask_q})':saturation='1.0 + 0.30*({flash_q}) + (0.26 + 0.18*{voice_pulse_q})*({speech_mask_q})'"
-                d_cq_y = f"{d_cq_y} + (lt(t\\,0.45) * -24.0 * (1.0 - (sin(PI/2*t/0.45) + 0.10*sin(PI*t/0.45))))"
+                flash_q = "(lt(t\\,0.35) * 0.45 * (1.0 - t/0.35))"
+                eq_close_q = f"eval=frame:brightness='-0.03 + ({flash_q}) + (0.18 + 0.22*{voice_pulse_q})*({speech_mask_q})':contrast='1.0 + 0.45*({flash_q}) + (0.24 + 0.20*{voice_pulse_q})*({speech_mask_q})':saturation='1.0 + 0.35*({flash_q}) + (0.26 + 0.18*{voice_pulse_q})*({speech_mask_q})'"
+                d_cq_y = f"{d_cq_y} + (lt(t\\,0.45) * -28.0 * (1.0 - (sin(PI/2*t/0.45) + 0.10*sin(PI*t/0.45))))"
             else:
-                sc_close_q = scale_expr_q_close
                 eq_close_q = eq_q
 
             filter_complex.append(f"[{q_src}]format=yuva420p,scale={sc_close_q},eq={eq_close_q},hue={hue_q},colorchannelmixer=aa=0.98[q_sc_{idx}]")
@@ -1878,15 +1874,13 @@ def render_orb_test_preview(
             # Cinematic Push-In Dolly with Ease-in-Out progression + Lissajous orbital levitation:
             d_cs_x = f"{orbit_lx_s} + {voice_jitter_s}"
             d_cs_y = f"{orbit_ly_s} - 14.0*{prog_expr}"
+            sc_close_s = scale_expr_s_close
             if idx == 0:
-                s_intro_scale = "(lt(t\\,0.22)*0.02 + gte(t\\,0.22)*lt(t\\,0.67)*(0.02 + 0.98*(sin(PI/2*(t-0.22)/0.45) + 0.10*sin(PI*(t-0.22)/0.45))) + gte(t\\,0.67))"
-                sc_close_s = f"eval=frame:w='trunc(820*({s_intro_scale})*(1.0 + 0.045*({voice_pulse_s})*({speech_mask_s}))/2)*2':h='trunc(820*({s_intro_scale})*(1.0 + 0.045*({voice_pulse_s})*({speech_mask_s}))/2)*2'"
-                flash_s = "(gte(t\\,0.22)*lt(t\\,0.50) * 0.42 * (1.0 - (t-0.22)/0.28))"
-                eq_close_s = f"eval=frame:brightness='-0.03 + ({flash_s}) + (0.18 + 0.22*{voice_pulse_s})*({speech_mask_s})':contrast='1.0 + 0.50*({flash_s}) + (0.24 + 0.20*{voice_pulse_s})*({speech_mask_s})':saturation='1.0 + 0.30*({flash_s}) + (0.26 + 0.18*{voice_pulse_s})*({speech_mask_s})'"
-                d_cs_y = f"{d_cs_y} + (gte(t\\,0.22)*lt(t\\,0.67) * -24.0 * (1.0 - (sin(PI/2*(t-0.22)/0.45) + 0.10*sin(PI*(t-0.22)/0.45))))"
+                flash_s = "(gte(t\\,0.22)*lt(t\\,0.55) * 0.45 * (1.0 - (t-0.22)/0.33))"
+                eq_close_s = f"eval=frame:brightness='-0.03 + ({flash_s}) + (0.18 + 0.22*{voice_pulse_s})*({speech_mask_s})':contrast='1.0 + 0.45*({flash_s}) + (0.24 + 0.20*{voice_pulse_s})*({speech_mask_s})':saturation='1.0 + 0.35*({flash_s}) + (0.26 + 0.18*{voice_pulse_s})*({speech_mask_s})'"
+                d_cs_y = f"{d_cs_y} + (gte(t\\,0.22)*lt(t\\,0.67) * -28.0 * (1.0 - (sin(PI/2*(t-0.22)/0.45) + 0.10*sin(PI*(t-0.22)/0.45))))"
                 s_close_enable = f"between(t\\,0.22\\,{sc_visual_end})"
             else:
-                sc_close_s = scale_expr_s_close
                 eq_close_s = eq_s
                 s_close_enable = f"between(t,{st},{sc_visual_end})"
 
