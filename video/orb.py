@@ -1695,9 +1695,9 @@ def render_orb_test_preview(
                 mix_inputs.append(f"[a_{stream_idx}]")
                 stream_idx += 1
 
-        # Add SFX
+        # Add SFX - Heavy Sub-Bass Drop Opening Hook Impact (Option 2)
         audio_inputs.extend(["-i", str(sfx_intro_path)])
-        audio_filter_lines.append(f"[{stream_idx}:a]adelay=20|20,volume=0.40[sfx_intro]")
+        audio_filter_lines.append(f"[{stream_idx}:a]adelay=20|20,volume=0.88[sfx_intro]")
         mix_inputs.append("[sfx_intro]")
         stream_idx += 1
 
@@ -2132,6 +2132,11 @@ def render_orb_test_preview(
     # 3-Second Micro-Dolly Zoom Hook (Cinematic camera push-in 1.0x -> 1.08x during initial 3s retention window)
     filter_complex.append(f"[{cur_v}]zoompan=z='min(1.08\\,1.0+0.08*on/(30*3.0))':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s={width}x{height}:fps=30[v_dolly]")
     cur_v = "v_dolly"
+
+    # Option 1: Initial Plasma Shockwave Impulse (Ráfaga Magnética Inicial t = 0.0s -> 0.28s)
+    flash_impulse = "(gt(t\\,0)*lt(t\\,0.28) * 0.50 * (1.0 - t/0.28))"
+    filter_complex.append(f"[{cur_v}]eq=brightness='({flash_impulse})':contrast='1.0 + ({flash_impulse})':saturation='1.0 + 0.65*({flash_impulse})'[v_shock]")
+    cur_v = "v_shock"
 
     # Headline Hook (Cinematic Floating Title Top Center during first scene - No heavy opaque box)
     first_sc_end = min(scene_records[0]["end"] if scene_records else 2.8, 2.8)
