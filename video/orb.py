@@ -949,6 +949,72 @@ def get_or_create_orb_asset(
     )
 
 
+def get_or_create_shockwave_asset(
+    color_hex: str = "#00f0ff",
+    duration_sec: float = 0.45,
+    canvas_size: int = 500,
+    fps: int = 30,
+    target_dir: Optional[Path] = None,
+    force_refresh: bool = False,
+) -> Path:
+    """
+    Renders an ephemeral expanding shockwave burst MOV (QuickTime qtrle with alpha).
+    Fires at orb singularity ignition with a luminous expanding shockwave ring and incandescent center flare.
+    """
+    dest_dir = target_dir or (Path(__file__).resolve().parent.parent / "assets" / "orbs")
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    slug = color_hex.replace("#", "").lower()[:6]
+    mov_path = dest_dir / f"shockwave_{slug}_{int(duration_sec * 1000)}ms.mov"
+
+    if not force_refresh and mov_path.exists() and mov_path.stat().st_size > 5000:
+        return mov_path
+
+    frames_dir = dest_dir / f"_temp_sw_{slug}"
+    frames_dir.mkdir(parents=True, exist_ok=True)
+
+    n_frames = max(10, int(duration_sec * fps))
+    c = canvas_size // 2
+
+    try:
+        for i in range(n_frames):
+            p = i / max(1, n_frames - 1)
+            # Cubic ease-out: explosive expansion at start, decelerating gracefully
+            r_prog = 1.0 - (1.0 - p) ** 3
+            r = 28.0 + r_prog * 210.0
+            sw = max(1.0, 7.5 * (1.0 - p * 0.70))
+            alpha = max(0.0, ((1.0 - p) ** 1.5) * 0.95)
+            core_alpha = max(0.0, (1.0 - p / 0.28) * 0.95) if p < 0.28 else 0.0
+            core_r = max(2.0, 26.0 * (1.0 - p / 0.28))
+
+            svg = f"""<svg width="{canvas_size}" height="{canvas_size}" viewBox="0 0 {canvas_size} {canvas_size}" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="sw_glow_{i}" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="8" />
+    </filter>
+  </defs>
+  <!-- Incandescent white ignition pinpoint flare -->
+  <circle cx="{c}" cy="{c}" r="{core_r:.1f}" fill="#ffffff" opacity="{core_alpha:.2f}" filter="url(#sw_glow_{i})" />
+  <!-- Radiant chromatic shockwave glow ring -->
+  <circle cx="{c}" cy="{c}" r="{r:.1f}" fill="none" stroke="{color_hex}" stroke-width="{sw * 2.2:.1f}" opacity="{alpha * 0.65:.2f}" filter="url(#sw_glow_{i})" />
+  <!-- Crisp inner energy rim -->
+  <circle cx="{c}" cy="{c}" r="{r:.1f}" fill="none" stroke="#ffffff" stroke-width="{sw:.1f}" opacity="{alpha * 0.90:.2f}" />
+</svg>"""
+            (frames_dir / f"sw_{i:03d}.svg").write_text(svg, encoding="utf-8")
+
+        temp_mov = frames_dir / f"_sw_{slug}.mov"
+        subprocess.run([
+            "ffmpeg", "-y", "-framerate", str(fps),
+            "-i", str(frames_dir / "sw_%03d.svg"),
+            "-c:v", "qtrle",
+            str(temp_mov)
+        ], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        temp_mov.replace(mov_path)
+        return mov_path
+    finally:
+        if frames_dir.exists():
+            shutil.rmtree(frames_dir, ignore_errors=True)
+
+
 # Alias for backward compatibility
 generate_gradient_orb_svg = generate_animated_orb_loop
 
@@ -982,11 +1048,13 @@ class GradientOrbManager:
         self.intro_duration = max(1.5, float(intro_duration))
 
     def get_overlay_coordinates(self, video_width: int, video_height: int) -> Tuple[str, str]:
-        """Calculates 2D organic floating drift coordinates for the AI Presenter entity."""
+        """Calculates 2D organic floating drift coordinates with zero-G cushioning entrance."""
         base_x = f"(W-w)/2"
         base_y = f"(H-h)/2 - {int(video_height * 0.05)}"
+        # Zero-G cushioning drop: drops 24px into equilibrium position in first 450ms
+        dy_intro = "(lt(t,0.45) * -24.0 * (1.0 - (sin(PI/2*t/0.45) + 0.10*sin(PI*t/0.45))))"
         x_anim = f"{base_x} + 18*sin(2*PI*t/3.6)"
-        y_anim = f"{base_y} + 24*sin(2*PI*t/2.4)"
+        y_anim = f"{base_y} + 24*sin(2*PI*t/2.4) + {dy_intro}"
         return x_anim, y_anim
 
     def build_filter_chain(
@@ -998,8 +1066,8 @@ class GradientOrbManager:
         fps: int = 30,
     ) -> str:
         """
-        Builds the FFmpeg filter chain that applies speech-envelope audio reactivity
-        on top of the continuously breathing transparent MOV loop stream.
+        Builds the FFmpeg filter chain that applies singularity ignition entrance,
+        core flash, and speech-envelope audio reactivity.
         """
         target_size = self.pixel_size
         effective_opacity = self.opacity
@@ -1009,34 +1077,26 @@ class GradientOrbManager:
             speech_intervals = extract_audio_speech_envelope(self.audio_path)
 
         filters = []
-        scale_expr = f"{target_size}:{target_size}"
+        # Singularity Ignition entrance scale curve (0 -> 106% overshoot -> 100% in 450ms)
+        intro_scale = "(lt(t\\,0.45) * (0.02 + 0.98*(sin(PI/2*t/0.45) + 0.10*sin(PI*t/0.45))) + gte(t\\,0.45))"
+        scale_expr = f"eval=frame:w='trunc({target_size}*({intro_scale})/2)*2':h='trunc({target_size}*({intro_scale})/2)*2'"
+        # Core ignition flash: decaying incandescent brightness boost over first 280ms
+        flash_expr = "(lt(t\\,0.28) * 0.42 * (1.0 - t/0.28))"
 
         if speech_intervals:
-            conds = [f"between(t,{start:.2f},{end:.2f})" for start, end in speech_intervals]
-            speech_mask = f"min(1,{'+'.join(conds)})"
-            # Active voice ripple (small micro-modulation of speaking intensity)
+            conds = [f"between(t\\,{start:.2f}\\,{end:.2f})" for start, end in speech_intervals]
+            speech_mask = f"min(1\\,{'+'.join(conds)})"
             voice_ripple = f"(0.5 + 0.5 * sin(2*PI*t/0.38))"
 
-            # Dynamic Speech Reactivity (Highly Luminous Active State & Dimmed Rest State):
-            # - Silence Pause (speech_mask = 0): Dims down gracefully (brightness -0.12, contrast 0.80, sat 0.75)
-            # - Active Speech (speech_mask = 1): Maintains a bright glowing baseline (+0.16) with subtle voice ripples (up to +0.24)
-            eq_expr = f"brightness='-0.12 + (0.28 + 0.08*{voice_ripple})*{speech_mask}':contrast='0.80 + (0.35 + 0.15*{voice_ripple})*{speech_mask}'"
-            hue_expr = f"h='(12 + 4*{voice_ripple})*{speech_mask} + 6*sin(2*PI*t/2.4)':s='0.75 + (0.45 + 0.20*{voice_ripple})*{speech_mask}'"
+            eq_expr = f"brightness='-0.12 + ({flash_expr}) + (0.28 + 0.08*{voice_ripple})*{speech_mask}':contrast='0.80 + 0.50*({flash_expr}) + (0.35 + 0.15*{voice_ripple})*{speech_mask}'"
+            hue_expr = f"h='(12 + 4*{voice_ripple})*{speech_mask} + 6*sin(2*PI*t/2.4)':s='0.75 + 0.30*({flash_expr}) + (0.45 + 0.20*{voice_ripple})*{speech_mask}'"
 
-            filters.append(f"[{input_idx}:v]scale={scale_expr}")
-            filters.append(f"eq={eq_expr}")
-            filters.append(f"hue={hue_expr}")
-            filters.append("format=yuva420p")
-            filters.append(f"colorchannelmixer=aa={effective_opacity:.2f}[{output_label}]")
+            return f"[{input_idx}:v]format=yuva420p,scale={scale_expr},eq={eq_expr},hue={hue_expr},colorchannelmixer=aa={effective_opacity:.2f}[{output_label}]"
         else:
+            eq_expr = f"brightness='-0.03 + ({flash_expr})':contrast='1.0 + 0.50*({flash_expr})':saturation='1.0 + 0.30*({flash_expr})'"
             hue_expr = "h='10*sin(2*PI*t/2.5)':s='1.0 + 0.08*sin(2*PI*t/2.5)'"
 
-            filters.append(f"[{input_idx}:v]scale={scale_expr}")
-            filters.append(f"hue={hue_expr}")
-            filters.append("format=yuva420p")
-            filters.append(f"colorchannelmixer=aa={effective_opacity:.2f}[{output_label}]")
-
-        return ",".join(filters)
+            return f"[{input_idx}:v]format=yuva420p,scale={scale_expr},eq={eq_expr},hue={hue_expr},colorchannelmixer=aa={effective_opacity:.2f}[{output_label}]"
 
 
 def _get_audio_duration_secs(file_path: Path, default_fallback: float = 3.0) -> float:
@@ -1438,6 +1498,12 @@ def render_orb_test_preview(
         mix_inputs.append("[sfx_intro]")
         stream_idx += 1
 
+        # Add Staggered Solar Singularity Ignition Stinger at 220ms
+        audio_inputs.extend(["-i", str(sfx_pan_path)])
+        audio_filter_lines.append(f"[{stream_idx}:a]adelay=220|220,volume=0.32[sfx_solar_intro]")
+        mix_inputs.append("[sfx_solar_intro]")
+        stream_idx += 1
+
         for sc in scene_records[1:]:
             sfx_delay_ms = int(max(0.0, sc["start"] - 0.08) * 1000)
             if sc["shot"] == "close_solar":
@@ -1611,6 +1677,18 @@ def render_orb_test_preview(
     ]
     curr_input_idx = 7
 
+    # Ephemeral Expanding Singularity Shockwave Bursts
+    sw_q_asset = get_or_create_shockwave_asset(color_a, duration_sec=0.45, target_dir=output_path.parent)
+    sw_s_asset = get_or_create_shockwave_asset(color_b, duration_sec=0.45, target_dir=output_path.parent)
+
+    cmd_inputs.extend(["-i", str(sw_q_asset)])
+    sw_q_idx = curr_input_idx
+    curr_input_idx += 1
+
+    cmd_inputs.extend(["-i", str(sw_s_asset)])
+    sw_s_idx = curr_input_idx
+    curr_input_idx += 1
+
     atmos_idx = None
     if has_atmos and atmos_loop:
         cmd_inputs.extend(["-stream_loop", "-1", "-i", str(atmos_loop)])
@@ -1635,7 +1713,10 @@ def render_orb_test_preview(
     else:
         cmd_inputs.extend(["-f", "lavfi", "-i", "anullsrc=r=44100:cl=stereo"])
 
-    pre_scale_lines = []
+    pre_scale_lines = [
+        f"[{sw_q_idx}:v]scale=500:500,format=yuva420p[sw_q]",
+        f"[{sw_s_idx}:v]scale=500:500,setpts=PTS-STARTPTS+(0.22/TB),format=yuva420p[sw_s]",
+    ]
     if has_holo_q and holo_q_idx is not None:
         pre_scale_lines.append(f"[{holo_q_idx}:v]scale=540:-2,format=yuva420p[holo_q]")
     if has_holo_s and holo_s_idx is not None:
@@ -1660,13 +1741,15 @@ def render_orb_test_preview(
         f"[6:v]split={max(1, s_close_uses)}" + "".join(f"[s_close_{k}]" for k in range(max(1, s_close_uses))),
 
         # Background Ambient Luminescence (Ultra-smooth diffuse glow via 120x120 3-pass boxblur)
-        # Deep cosmic illumination breathes in direct sync with speech RMS energy
+        # Deep cosmic illumination breathes in direct sync with speech RMS energy and ignites on entrance
         f"[q_idle_0]scale=120:120,eq={eq_glow_q},hue={hue_q},boxblur=26:3,scale={width}:{height},format=yuva420p,colorchannelmixer=aa=0.30[bg_glow_q]",
         f"[s_idle_0]scale=120:120,eq={eq_glow_s},hue={hue_s},boxblur=26:3,scale={width}:{height},format=yuva420p,colorchannelmixer=aa=0.30[bg_glow_s]",
 
         f"[0:v]eq=brightness=-0.02:contrast=1.16:saturation=1.12[bg_graded]",
-        f"[bg_graded][bg_glow_q]overlay=eval=frame:enable='{speech_mask_q}'[bg_glowed_1]",
-        f"[bg_glowed_1][bg_glow_s]overlay=eval=frame:enable='{speech_mask_s}'[bg_ambient]"
+        f"[bg_graded][bg_glow_q]overlay=eval=frame:enable='({speech_mask_q} + between(t,0,0.48))'[bg_glowed_1]",
+        f"[bg_glowed_1][bg_glow_s]overlay=eval=frame:enable='({speech_mask_s} + between(t,0.22,0.70))'[bg_glowed_2]",
+        f"[bg_glowed_2][sw_q]overlay=eval=frame:x='W*0.25-w/2':y='H*0.38-h/2':enable='between(t,0,0.45)':eof_action=pass[bg_sw_1]",
+        f"[bg_sw_1][sw_s]overlay=eval=frame:x='W*0.75-w/2 - 28':y='H*0.39-h/2':enable='between(t,0.22,0.67)':eof_action=pass[bg_ambient]"
     ]
 
     cur_v = "bg_ambient"
@@ -1700,7 +1783,6 @@ def render_orb_test_preview(
                 dq_x = f"{orbit_lx_q} + 18.0*{prog_expr} + {voice_jitter_q}"
                 dq_y = f"{orbit_ly_q} - 10.0*{prog_expr}"
                 q_alpha = 1.0
-                q_filt = f"scale={scale_expr_q_wide},eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa={q_alpha}"
             else:
                 q_src = f"q_idle_{q_idle_cur}"
                 q_idle_cur += 1
@@ -1708,10 +1790,24 @@ def render_orb_test_preview(
                 dq_x = f"{orbit_lx_q} - 6.0"
                 dq_y = f"{orbit_ly_q}"
                 q_alpha = 0.88
-                q_filt = f"scale=410:410,format=yuva420p,colorchannelmixer=aa={q_alpha}"
 
+            # Singularity Ignition & Elastic Zero-G Cushioning for Quantum in Scene 0 (t = 0.0s to 0.45s)
+            if idx == 0:
+                q_intro_scale = "(lt(t\\,0.45)*(0.02 + 0.98*(sin(PI/2*t/0.45) + 0.10*sin(PI*t/0.45))) + gte(t\\,0.45))"
+                q_scale_str = f"eval=frame:w='trunc(420*({q_intro_scale})*(1.0 + 0.045*({voice_pulse_q})*({speech_mask_q}))/2)*2':h='trunc(420*({q_intro_scale})*(1.0 + 0.045*({voice_pulse_q})*({speech_mask_q}))/2)*2'"
+                flash_q = "(lt(t\\,0.28) * 0.42 * (1.0 - t/0.28))"
+                q_eq_str = f"eval=frame:brightness='-0.03 + ({flash_q}) + (0.18 + 0.22*{voice_pulse_q})*({speech_mask_q})':contrast='1.0 + 0.50*({flash_q}) + (0.24 + 0.20*{voice_pulse_q})*({speech_mask_q})':saturation='1.0 + 0.30*({flash_q}) + (0.26 + 0.18*{voice_pulse_q})*({speech_mask_q})'"
+                dy_intro_q = " + (lt(t\\,0.45) * -24.0 * (1.0 - (sin(PI/2*t/0.45) + 0.10*sin(PI*t/0.45))))"
+                dx_intro_q = " + (lt(t\\,0.45) * 14.0 * (1.0 - (sin(PI/2*t/0.45) + 0.10*sin(PI*t/0.45))))"
+            else:
+                q_scale_str = scale_expr_q_wide if is_q_active else "410:410"
+                q_eq_str = eq_q if is_q_active else "eval=frame:brightness='-0.03':contrast='1.0':saturation='1.0'"
+                dy_intro_q = ""
+                dx_intro_q = ""
+
+            q_filt = f"format=yuva420p,{q_scale_str if 'scale=' in q_scale_str else f'scale={q_scale_str}'},eq={q_eq_str},hue={hue_q},colorchannelmixer=aa={q_alpha}"
             filter_complex.append(f"[{q_src}]{q_filt}[q_sc_{idx}]")
-            filter_complex.append(f"[{cur_v}][q_sc_{idx}]overlay=eval=frame:x='W*0.25-w/2 + {dq_x}':y='H*0.38-h/2 + {dq_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_q]")
+            filter_complex.append(f"[{cur_v}][q_sc_{idx}]overlay=eval=frame:x='W*0.25-w/2 + {dq_x}{dx_intro_q}':y='H*0.38-h/2 + {dq_y}{dy_intro_q}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_q]")
             cur_v = f"v_sc_{idx}_q"
 
             is_s_active = (ent in ["solar", "both"])
@@ -1722,7 +1818,6 @@ def render_orb_test_preview(
                 ds_x = f"{orbit_lx_s} - 18.0*{prog_expr} + {voice_jitter_s}"
                 ds_y = f"{orbit_ly_s} - 10.0*{prog_expr}"
                 s_alpha = 1.0
-                s_filt = f"scale={scale_expr_s_wide},eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa={s_alpha}"
             else:
                 s_src = f"s_idle_{s_idle_cur}"
                 s_idle_cur += 1
@@ -1730,10 +1825,26 @@ def render_orb_test_preview(
                 ds_x = f"{orbit_lx_s} + 6.0"
                 ds_y = f"{orbit_ly_s}"
                 s_alpha = 0.88
-                s_filt = f"scale=360:360,format=yuva420p,colorchannelmixer=aa={s_alpha}"
 
+            # Singularity Ignition & Staggered Elastic Zero-G Cushioning for Solar in Scene 0 (t = 0.22s to 0.67s)
+            if idx == 0:
+                s_intro_scale = "(lt(t\\,0.22)*0.02 + gte(t\\,0.22)*lt(t\\,0.67)*(0.02 + 0.98*(sin(PI/2*(t-0.22)/0.45) + 0.10*sin(PI*(t-0.22)/0.45))) + gte(t\\,0.67))"
+                s_scale_str = f"eval=frame:w='trunc(370*({s_intro_scale})*(1.0 + 0.045*({voice_pulse_s})*({speech_mask_s}))/2)*2':h='trunc(370*({s_intro_scale})*(1.0 + 0.045*({voice_pulse_s})*({speech_mask_s}))/2)*2'"
+                flash_s = "(gte(t\\,0.22)*lt(t\\,0.50) * 0.42 * (1.0 - (t-0.22)/0.28))"
+                s_eq_str = f"eval=frame:brightness='-0.03 + ({flash_s}) + (0.18 + 0.22*{voice_pulse_s})*({speech_mask_s})':contrast='1.0 + 0.50*({flash_s}) + (0.24 + 0.20*{voice_pulse_s})*({speech_mask_s})':saturation='1.0 + 0.30*({flash_s}) + (0.26 + 0.18*{voice_pulse_s})*({speech_mask_s})'"
+                dy_intro_s = " + (gte(t\\,0.22)*lt(t\\,0.67) * -24.0 * (1.0 - (sin(PI/2*(t-0.22)/0.45) + 0.10*sin(PI*(t-0.22)/0.45))))"
+                dx_intro_s = " + (gte(t\\,0.22)*lt(t\\,0.67) * -14.0 * (1.0 - (sin(PI/2*(t-0.22)/0.45) + 0.10*sin(PI*(t-0.22)/0.45))))"
+                s_enable = f"between(t\\,0.22\\,{sc_visual_end})"
+            else:
+                s_scale_str = scale_expr_s_wide if is_s_active else "360:360"
+                s_eq_str = eq_s if is_s_active else "eval=frame:brightness='-0.03':contrast='1.0':saturation='1.0'"
+                dy_intro_s = ""
+                dx_intro_s = ""
+                s_enable = f"between(t,{st},{sc_visual_end})"
+
+            s_filt = f"format=yuva420p,{s_scale_str if 'scale=' in s_scale_str else f'scale={s_scale_str}'},eq={s_eq_str},hue={hue_s},colorchannelmixer=aa={s_alpha}"
             filter_complex.append(f"[{s_src}]{s_filt}[s_sc_{idx}]")
-            filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W*0.75-w/2 - 28 + {ds_x}':y='H*0.39-h/2 + {ds_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_s]")
+            filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W*0.75-w/2 - 28 + {ds_x}{dx_intro_s}':y='H*0.39-h/2 + {ds_y}{dy_intro_s}':enable='{s_enable}'[v_sc_{idx}_s]")
             cur_v = f"v_sc_{idx}_s"
 
         elif shot == "close_quantum":
@@ -1742,7 +1853,17 @@ def render_orb_test_preview(
             # Cinematic Push-In Dolly with Ease-in-Out progression + Lissajous orbital levitation:
             d_cq_x = f"{orbit_lx_q} + {voice_jitter_q}"
             d_cq_y = f"{orbit_ly_q} - 14.0*{prog_expr}"
-            filter_complex.append(f"[{q_src}]scale={scale_expr_q_close},eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.98[q_sc_{idx}]")
+            if idx == 0:
+                q_intro_scale = "(lt(t\\,0.45)*(0.02 + 0.98*(sin(PI/2*t/0.45) + 0.10*sin(PI*t/0.45))) + gte(t\\,0.45))"
+                sc_close_q = f"eval=frame:w='trunc(820*({q_intro_scale})*(1.0 + 0.045*({voice_pulse_q})*({speech_mask_q}))/2)*2':h='trunc(820*({q_intro_scale})*(1.0 + 0.045*({voice_pulse_q})*({speech_mask_q}))/2)*2'"
+                flash_q = "(lt(t\\,0.28) * 0.42 * (1.0 - t/0.28))"
+                eq_close_q = f"eval=frame:brightness='-0.03 + ({flash_q}) + (0.18 + 0.22*{voice_pulse_q})*({speech_mask_q})':contrast='1.0 + 0.50*({flash_q}) + (0.24 + 0.20*{voice_pulse_q})*({speech_mask_q})':saturation='1.0 + 0.30*({flash_q}) + (0.26 + 0.18*{voice_pulse_q})*({speech_mask_q})'"
+                d_cq_y = f"{d_cq_y} + (lt(t\\,0.45) * -24.0 * (1.0 - (sin(PI/2*t/0.45) + 0.10*sin(PI*t/0.45))))"
+            else:
+                sc_close_q = scale_expr_q_close
+                eq_close_q = eq_q
+
+            filter_complex.append(f"[{q_src}]format=yuva420p,scale={sc_close_q},eq={eq_close_q},hue={hue_q},colorchannelmixer=aa=0.98[q_sc_{idx}]")
             filter_complex.append(f"[{cur_v}][q_sc_{idx}]overlay=eval=frame:x='W/2-w/2 + {d_cq_x}':y='H*0.38-h/2 + {d_cq_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_q]")
             cur_v = f"v_sc_{idx}_q"
 
@@ -1757,14 +1878,21 @@ def render_orb_test_preview(
             # Cinematic Push-In Dolly with Ease-in-Out progression + Lissajous orbital levitation:
             d_cs_x = f"{orbit_lx_s} + {voice_jitter_s}"
             d_cs_y = f"{orbit_ly_s} - 14.0*{prog_expr}"
-            filter_complex.append(f"[{s_src}]scale={scale_expr_s_close},eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.98[s_sc_{idx}]")
-            filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W/2-w/2 + {d_cs_x}':y='H*0.38-h/2 + {d_cs_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_s]")
-            cur_v = f"v_sc_{idx}_s"
+            if idx == 0:
+                s_intro_scale = "(lt(t\\,0.22)*0.02 + gte(t\\,0.22)*lt(t\\,0.67)*(0.02 + 0.98*(sin(PI/2*(t-0.22)/0.45) + 0.10*sin(PI*(t-0.22)/0.45))) + gte(t\\,0.67))"
+                sc_close_s = f"eval=frame:w='trunc(820*({s_intro_scale})*(1.0 + 0.045*({voice_pulse_s})*({speech_mask_s}))/2)*2':h='trunc(820*({s_intro_scale})*(1.0 + 0.045*({voice_pulse_s})*({speech_mask_s}))/2)*2'"
+                flash_s = "(gte(t\\,0.22)*lt(t\\,0.50) * 0.42 * (1.0 - (t-0.22)/0.28))"
+                eq_close_s = f"eval=frame:brightness='-0.03 + ({flash_s}) + (0.18 + 0.22*{voice_pulse_s})*({speech_mask_s})':contrast='1.0 + 0.50*({flash_s}) + (0.24 + 0.20*{voice_pulse_s})*({speech_mask_s})':saturation='1.0 + 0.30*({flash_s}) + (0.26 + 0.18*{voice_pulse_s})*({speech_mask_s})'"
+                d_cs_y = f"{d_cs_y} + (gte(t\\,0.22)*lt(t\\,0.67) * -24.0 * (1.0 - (sin(PI/2*(t-0.22)/0.45) + 0.10*sin(PI*(t-0.22)/0.45))))"
+                s_close_enable = f"between(t\\,0.22\\,{sc_visual_end})"
+            else:
+                sc_close_s = scale_expr_s_close
+                eq_close_s = eq_s
+                s_close_enable = f"between(t,{st},{sc_visual_end})"
 
-            if has_holo_s and not holo_s_used:
-                holo_s_used = True
-                filter_complex.append(f"[{cur_v}][holo_s]overlay=eval=frame:x='(W-w)/2':y='H*0.12-h/2 + 6.0*cos(2*PI*(t-{round(st+0.1, 2)})/2.6)':enable='between(t,{round(st+0.1, 2)},{max(round(st+0.2, 2), round(sc_visual_end-0.2, 2))})'[v_sc_{idx}_hs]")
-                cur_v = f"v_sc_{idx}_hs"
+            filter_complex.append(f"[{s_src}]format=yuva420p,scale={sc_close_s},eq={eq_close_s},hue={hue_s},colorchannelmixer=aa=0.98[s_sc_{idx}]")
+            filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W/2-w/2 + {d_cs_x}':y='H*0.38-h/2 + {d_cs_y}':enable='{s_close_enable}'[v_sc_{idx}_s]")
+            cur_v = f"v_sc_{idx}_s"
 
         elif shot == "both":
             q_src = f"q_talk_{q_talk_cur}"
@@ -1772,7 +1900,7 @@ def render_orb_test_preview(
             # Cinematic Cosmic Reveal Pull-Back with Smooth Ease-in-out:
             dq_x = f"{orbit_lx_q} + 12.0*(1.0 - {prog_expr}) + {voice_jitter_q}"
             dq_y = f"{orbit_ly_q} + 10.0*{prog_expr}"
-            filter_complex.append(f"[{q_src}]scale={scale_expr_q_wide},eq={eq_q},hue={hue_q},format=yuva420p,colorchannelmixer=aa=0.98[q_sc_{idx}]")
+            filter_complex.append(f"[{q_src}]format=yuva420p,scale={scale_expr_q_wide},eq={eq_q},hue={hue_q},colorchannelmixer=aa=0.98[q_sc_{idx}]")
             filter_complex.append(f"[{cur_v}][q_sc_{idx}]overlay=eval=frame:x='W*0.25-w/2 + {dq_x}':y='H*0.38-h/2 + {dq_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_q]")
             cur_v = f"v_sc_{idx}_q"
 
@@ -1780,7 +1908,7 @@ def render_orb_test_preview(
             s_talk_cur += 1
             ds_x = f"{orbit_lx_s} - 12.0*(1.0 - {prog_expr}) + {voice_jitter_s}"
             ds_y = f"{orbit_ly_s} + 10.0*{prog_expr}"
-            filter_complex.append(f"[{s_src}]scale={scale_expr_s_wide},eq={eq_s},hue={hue_s},format=yuva420p,colorchannelmixer=aa=0.98[s_sc_{idx}]")
+            filter_complex.append(f"[{s_src}]format=yuva420p,scale={scale_expr_s_wide},eq={eq_s},hue={hue_s},colorchannelmixer=aa=0.98[s_sc_{idx}]")
             filter_complex.append(f"[{cur_v}][s_sc_{idx}]overlay=eval=frame:x='W*0.75-w/2 - 28 + {ds_x}':y='H*0.39-h/2 + {ds_y}':enable='between(t,{st},{sc_visual_end})'[v_sc_{idx}_s]")
             cur_v = f"v_sc_{idx}_s"
 
