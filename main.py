@@ -468,7 +468,12 @@ def main():
     sfx_enabled = args.sfx and not args.no_sfx
     sfx_track = None
     if sfx_enabled:
-        sfx_mgr = SFXManager(randomize=args.random_sfx)
+        sfx_mgr = SFXManager(
+            sfx_dir=getattr(args, "sfx_dir", None),
+            randomize=args.random_sfx,
+            custom_intro_file=getattr(args, "intro_sfx", None),
+            custom_swoosh_file=getattr(args, "whoosh_sfx", None)
+        )
         sfx_track = sfx_mgr.build_sfx_timeline(scene_timings, total_duration=total_duration)
 
     music_mgr = MusicManager()

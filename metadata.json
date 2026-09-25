@@ -1,6 +1,6 @@
 {
   "name": "NASA Shorts Generator",
-  "description": "Interactive cosmic observatory featuring a dual-gravity particle simulation and sci-fi astrometric visuals.",
+  "description": "Aplicación CLI minimalista de consola para terminal (sin interfaz gráfica) para generación de videos de la NASA.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

@@ -1648,24 +1648,16 @@ def render_orb_test_preview(
             print(f"     - Escena {sc['index']+1} [{sc['speaker']}] ({sc['shot']}): {sc['start']}s -> {sc['end']}s | \"{sc['text'][:45]}...\"")
         print(f"     - Duración Total: {total_duration}s")
 
-        # Camera transition SFX & entity stingers (Cached in assets/sfx/cached for 0ms overhead)
+        # Camera transition SFX & entity stingers (Checks user assets/sfx/ before procedural fallback)
+        from audio.sfx import resolve_sfx_path
         sfx_cache_dir = Path(__file__).resolve().parent.parent / "assets" / "sfx" / "cached"
         sfx_cache_dir.mkdir(parents=True, exist_ok=True)
 
-        sfx_intro_path = sfx_cache_dir / "sfx_intro_1100.wav"
-        sfx_zoom_path = sfx_cache_dir / "sfx_whoosh_quantum_520.wav"
-        sfx_pan_path = sfx_cache_dir / "sfx_whoosh_solar_520.wav"
-        sfx_res_path = sfx_cache_dir / "sfx_cosmic_resonance_2500.wav"
+        sfx_intro_path = resolve_sfx_path("intro", output_dir=sfx_cache_dir, duration=1.1)
+        sfx_zoom_path = resolve_sfx_path("whoosh_quantum", output_dir=sfx_cache_dir, duration=0.52)
+        sfx_pan_path = resolve_sfx_path("whoosh_solar", output_dir=sfx_cache_dir, duration=0.52)
+        sfx_res_path = resolve_sfx_path("cosmic_resonance", output_dir=sfx_cache_dir, duration=2.5)
         music_bg_path = output_path.parent / "_temp_music_ambient.wav"
-
-        if not sfx_intro_path.exists() or sfx_intro_path.stat().st_size < 100:
-            synthesize_camera_servo_sfx(sfx_intro_path, duration=1.1, sfx_type="intro")
-        if not sfx_zoom_path.exists() or sfx_zoom_path.stat().st_size < 100:
-            synthesize_camera_servo_sfx(sfx_zoom_path, duration=0.52, sfx_type="whoosh_quantum")
-        if not sfx_pan_path.exists() or sfx_pan_path.stat().st_size < 100:
-            synthesize_camera_servo_sfx(sfx_pan_path, duration=0.52, sfx_type="whoosh_solar")
-        if not sfx_res_path.exists() or sfx_res_path.stat().st_size < 100:
-            synthesize_camera_servo_sfx(sfx_res_path, duration=2.5, sfx_type="cosmic_resonance")
 
         sfx_plasma_path = sfx_cache_dir / "sfx_plasma_arc_750.wav"
         if not sfx_plasma_path.exists() or sfx_plasma_path.stat().st_size < 100:

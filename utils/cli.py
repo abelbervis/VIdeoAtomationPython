@@ -419,6 +419,26 @@ def parse_args() -> argparse.Namespace:
         help="Disable automatic sound effects"
     )
     parser.add_argument(
+        "--sfx-dir",
+        type=str,
+        default=None,
+        help="Path to custom folder containing SFX files (.wav, .mp3, .ogg, .flac, .m4a)"
+    )
+    parser.add_argument(
+        "--intro-sfx", "--boom-sfx", "--hook-sfx",
+        dest="intro_sfx",
+        type=str,
+        default=None,
+        help="Path to custom audio file for the opening hook impact / sub-drop (e.g. 'assets/sfx/intro/my_boom.wav')"
+    )
+    parser.add_argument(
+        "--whoosh-sfx", "--swoosh-sfx", "--transition-sfx",
+        dest="whoosh_sfx",
+        type=str,
+        default=None,
+        help="Path to custom audio file for scene transitions (e.g. 'assets/sfx/swoosh/my_whoosh.wav')"
+    )
+    parser.add_argument(
         "--random-sfx",
         action="store_true",
         default=True,
