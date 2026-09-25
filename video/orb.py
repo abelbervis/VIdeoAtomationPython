@@ -1015,6 +1015,205 @@ def get_or_create_shockwave_asset(
             shutil.rmtree(frames_dir, ignore_errors=True)
 
 
+def synthesize_plasma_arc_sfx(out_path: Path):
+    """Generates an elegant, high-frequency ionized cosmic chime/hum stinger for the plasma bridge."""
+    out_path = Path(out_path)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    sample_rate = 44100
+    duration = 0.75
+    n_samples = int(sample_rate * duration)
+    frames = bytearray()
+
+    for i in range(n_samples):
+        t = i / sample_rate
+        # Envelope: 80ms smooth attack, gentle exponential decay
+        if t < 0.08:
+            env = (t / 0.08) ** 2
+        else:
+            env = math.exp(-(t - 0.08) * 4.5)
+
+        # Ionized harmonic frequency glide
+        f0 = 260.0 + 80.0 * math.sin(math.pi * min(1.0, t / 0.4))
+        sig1 = math.sin(2 * math.pi * f0 * t) * 0.40
+        sig2 = math.sin(2 * math.pi * f0 * 2.0 * t + 0.5) * 0.22
+        sig3 = math.sin(2 * math.pi * f0 * 3.0 * t + 1.0) * 0.12
+        shimmer = math.sin(2 * math.pi * 18.0 * t) * 0.10 * sig1
+
+        sample_val = int(32767 * max(-1.0, min(1.0, (sig1 + sig2 + sig3 + shimmer) * env * 0.35)))
+        frames.extend(struct.pack('<h', sample_val))
+
+    with wave.open(str(out_path), 'wb') as wf:
+        wf.setnchannels(1)
+        wf.setsampwidth(2)
+        wf.setframerate(sample_rate)
+        wf.writeframes(frames)
+
+
+def get_or_create_plasma_bridge_asset(
+    color_a: str = "#00f0ff",
+    color_b: str = "#ffea00",
+    canvas_w: int = 800,
+    canvas_h: int = 360,
+    fps: int = 30,
+    loop_frames: int = 45,
+    target_dir: Optional[Path] = None,
+    force_refresh: bool = False,
+) -> Path:
+    """
+    Renders an ethereal, high-end quantum-solar magnetic plasma bridge (QuickTime MOV with ARGB alpha).
+    Features:
+      - Soft atmospheric vacuum glow ribbon bridging Quantum and Solar.
+      - Dual braided counter-oscillating harmonic filaments (Lissajous standing waves).
+      - Central Lagrange gravitational equilibrium focal node.
+      - Luminous bidirectional energy packets (photonic quanta) flowing across the connection.
+      - Seamless 45-frame (1.5s @ 30fps) loop for zero overhead.
+    """
+    dest_dir = target_dir or (Path(__file__).resolve().parent.parent / "assets" / "orbs")
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    slug_a = color_a.replace("#", "").lower()[:6]
+    slug_b = color_b.replace("#", "").lower()[:6]
+    mov_path = dest_dir / f"plasma_bridge_{slug_a}_{slug_b}_800x360.mov"
+
+    if not force_refresh and mov_path.exists() and mov_path.stat().st_size > 10000:
+        return mov_path
+
+    frames_dir = dest_dir / f"_temp_bridge_{slug_a}_{slug_b}"
+    frames_dir.mkdir(parents=True, exist_ok=True)
+
+    w, h = canvas_w, canvas_h
+    # Anchor coordinates relative to the 800x360 box (which is overlaid at x=140, y=560)
+    x1, y1 = 130, 170
+    x2, y2 = 642, 188
+    dx = x2 - x1
+    n_points = 36
+
+    try:
+        for i in range(loop_frames):
+            t_norm = i / loop_frames
+            tau = 2 * math.pi * t_norm
+
+            pts_main = []
+            pts_twin = []
+            pts_ribbon_top = []
+            pts_ribbon_bot = []
+
+            for k in range(n_points + 1):
+                p = k / n_points
+                px = x1 + dx * p
+                base_y = y1 + (y2 - y1) * p
+                env = math.sin(math.pi * p) ** 0.85
+
+                w1 = math.sin(2 * math.pi * p * 1.5 + tau) * 15.0 * env
+                w2 = math.cos(2 * math.pi * p * 3.0 - tau * 1.2) * 6.5 * env
+                pts_main.append(f"{px:.1f},{base_y + w1 + w2:.1f}")
+
+                tw1 = math.sin(2 * math.pi * p * 2.2 - tau * 1.1 + 2.1) * 12.0 * env
+                tw2 = math.cos(2 * math.pi * p * 3.6 + tau * 0.9) * 5.0 * env
+                pts_twin.append(f"{px:.1f},{base_y + tw1 + tw2:.1f}")
+
+                rw = (22.0 + 8.0 * math.sin(tau + p * math.pi)) * env
+                pts_ribbon_top.append(f"{px:.1f},{base_y - rw:.1f}")
+                pts_ribbon_bot.insert(0, f"{px:.1f},{base_y + rw:.1f}")
+
+            path_main = "M " + " L ".join(pts_main)
+            path_twin = "M " + " L ".join(pts_twin)
+            path_ribbon = "M " + " L ".join(pts_ribbon_top) + " L " + " L ".join(pts_ribbon_bot) + " Z"
+
+            quanta_svg = []
+            for q_idx in range(4):
+                if q_idx % 2 == 0:
+                    q_p = (t_norm * 1.2 + (q_idx / 4.0)) % 1.0
+                    q_col = "#ffffff"
+                else:
+                    q_p = (1.0 - (t_norm * 1.2 + (q_idx / 4.0))) % 1.0
+                    q_col = "#fef08a" if q_p > 0.5 else "#a5f3fc"
+
+                q_px = x1 + dx * q_p
+                q_env = math.sin(math.pi * q_p) ** 0.85
+                q_base_y = y1 + (y2 - y1) * q_p
+                q_w = (math.sin(2 * math.pi * q_p * 1.5 + tau) * 15.0 + math.cos(2 * math.pi * q_p * 3.0 - tau * 1.2) * 6.5) * q_env
+                q_py = q_base_y + q_w
+                q_r = 3.2 + 2.2 * q_env
+                q_a = 0.90 * q_env
+                quanta_svg.append(f'<circle cx="{q_px:.1f}" cy="{q_py:.1f}" r="{q_r:.1f}" fill="{q_col}" opacity="{q_a:.2f}" filter="url(#pulseGlow_{i})"/>')
+
+            cx_lag = (x1 + x2) // 2
+            cy_lag = (y1 + y2) // 2
+            lag_pulse = 1.0 + 0.18 * math.sin(tau * 2.0)
+
+            svg = f"""<svg width="{w}" height="{h}" viewBox="0 0 {w} {h}" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="plasmaGrad_{i}" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="{color_a}" stop-opacity="0.0" />
+      <stop offset="10%" stop-color="{color_a}" stop-opacity="0.80" />
+      <stop offset="36%" stop-color="#818cf8" stop-opacity="0.85" />
+      <stop offset="50%" stop-color="#ffffff" stop-opacity="1.0" />
+      <stop offset="64%" stop-color="#f59e0b" stop-opacity="0.85" />
+      <stop offset="90%" stop-color="{color_b}" stop-opacity="0.80" />
+      <stop offset="100%" stop-color="{color_b}" stop-opacity="0.0" />
+    </linearGradient>
+
+    <linearGradient id="ribbonGrad_{i}" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="{color_a}" stop-opacity="0.0" />
+      <stop offset="20%" stop-color="{color_a}" stop-opacity="0.22" />
+      <stop offset="50%" stop-color="#e0e7ff" stop-opacity="0.32" />
+      <stop offset="80%" stop-color="{color_b}" stop-opacity="0.22" />
+      <stop offset="100%" stop-color="{color_b}" stop-opacity="0.0" />
+    </linearGradient>
+
+    <radialGradient id="lagrangeCore_{i}" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95" />
+      <stop offset="35%" stop-color="#c7d2fe" stop-opacity="0.65" />
+      <stop offset="70%" stop-color="#818cf8" stop-opacity="0.25" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.0" />
+    </radialGradient>
+
+    <filter id="deepBloom_{i}" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="14" />
+    </filter>
+    <filter id="midGlow_{i}" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="5.5" />
+    </filter>
+    <filter id="pulseGlow_{i}" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3.5" />
+    </filter>
+  </defs>
+
+  <!-- 1. Ambient Cosmic Plasma Ribbon (Volumetric atmospheric ionization) -->
+  <path d="{path_ribbon}" fill="url(#ribbonGrad_{i})" filter="url(#deepBloom_{i})" />
+
+  <!-- 2. Counter-Oscillating Twin Harmonic Tendril (Braided magnetic streamline) -->
+  <path d="{path_twin}" fill="none" stroke="url(#plasmaGrad_{i})" stroke-width="1.8" stroke-dasharray="14 6" opacity="0.72" filter="url(#midGlow_{i})" />
+
+  <!-- 3. Primary Plasma Bridge (High-energy ion stream with bloom) -->
+  <path d="{path_main}" fill="none" stroke="url(#plasmaGrad_{i})" stroke-width="6.5" opacity="0.48" filter="url(#midGlow_{i})" />
+  <path d="{path_main}" fill="none" stroke="url(#plasmaGrad_{i})" stroke-width="2.6" opacity="0.92" />
+  <path d="{path_main}" fill="none" stroke="#ffffff" stroke-width="1.1" opacity="0.95" />
+
+  <!-- 4. Central Lagrange Equilibrium Node (Gravitational nexus) -->
+  <circle cx="{cx_lag}" cy="{cy_lag}" r="{14 * lag_pulse:.1f}" fill="url(#lagrangeCore_{i})" filter="url(#pulseGlow_{i})" />
+  <circle cx="{cx_lag}" cy="{cy_lag}" r="{3.5 * lag_pulse:.1f}" fill="#ffffff" opacity="0.98" />
+  <line x1="{cx_lag - 16 * lag_pulse:.1f}" y1="{cy_lag}" x2="{cx_lag + 16 * lag_pulse:.1f}" y2="{cy_lag}" stroke="#ffffff" stroke-width="0.8" opacity="0.70" filter="url(#pulseGlow_{i})" />
+
+  <!-- 5. Photonic Quanta Pulses (Bidirectional energy packets) -->
+  {' '.join(quanta_svg)}
+</svg>"""
+            (frames_dir / f"frame_{i:03d}.svg").write_text(svg, encoding="utf-8")
+
+        temp_mov = frames_dir / f"_bridge_{slug_a}_{slug_b}.mov"
+        subprocess.run([
+            "ffmpeg", "-y", "-framerate", str(fps),
+            "-i", str(frames_dir / "frame_%03d.svg"),
+            "-c:v", "qtrle",
+            str(temp_mov)
+        ], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        temp_mov.replace(mov_path)
+        return mov_path
+    finally:
+        if frames_dir.exists():
+            shutil.rmtree(frames_dir, ignore_errors=True)
+
+
 # Alias for backward compatibility
 generate_gradient_orb_svg = generate_animated_orb_loop
 
@@ -1468,6 +1667,10 @@ def render_orb_test_preview(
         if not sfx_res_path.exists() or sfx_res_path.stat().st_size < 100:
             synthesize_camera_servo_sfx(sfx_res_path, duration=2.5, sfx_type="cosmic_resonance")
 
+        sfx_plasma_path = sfx_cache_dir / "sfx_plasma_arc_750.wav"
+        if not sfx_plasma_path.exists() or sfx_plasma_path.stat().st_size < 100:
+            synthesize_plasma_arc_sfx(sfx_plasma_path)
+
         # Background soundtrack
         music_mgr = MusicManager()
         bg_track = music_mgr.get_background_track()
@@ -1502,6 +1705,12 @@ def render_orb_test_preview(
         audio_inputs.extend(["-i", str(sfx_pan_path)])
         audio_filter_lines.append(f"[{stream_idx}:a]adelay=220|220,volume=0.32[sfx_solar_intro]")
         mix_inputs.append("[sfx_solar_intro]")
+        stream_idx += 1
+
+        # Add Ionized Plasma Bridge Resonance Stinger at 380ms
+        audio_inputs.extend(["-i", str(sfx_plasma_path)])
+        audio_filter_lines.append(f"[{stream_idx}:a]adelay=380|380,volume=0.28[sfx_plasma]")
+        mix_inputs.append("[sfx_plasma]")
         stream_idx += 1
 
         for sc in scene_records[1:]:
@@ -1689,6 +1898,12 @@ def render_orb_test_preview(
     sw_s_idx = curr_input_idx
     curr_input_idx += 1
 
+    # Ethereal Quantum-Solar Magnetic Plasma Bridge (Scene 0 wide hook tension)
+    bridge_asset = get_or_create_plasma_bridge_asset(color_a, color_b, target_dir=output_path.parent)
+    cmd_inputs.extend(["-stream_loop", "-1", "-i", str(bridge_asset)])
+    bridge_idx = curr_input_idx
+    curr_input_idx += 1
+
     atmos_idx = None
     if has_atmos and atmos_loop:
         cmd_inputs.extend(["-stream_loop", "-1", "-i", str(atmos_loop)])
@@ -1716,6 +1931,7 @@ def render_orb_test_preview(
     pre_scale_lines = [
         f"[{sw_q_idx}:v]scale=500:500,format=yuva420p[sw_q]",
         f"[{sw_s_idx}:v]scale=500:500,tpad=start_duration=0.22:color=black@0.0,format=yuva420p[sw_s]",
+        f"[{bridge_idx}:v]setpts=N/30/TB,format=yuva420p,fade=t=in:st=0.38:d=0.45:alpha=1,fade=t=out:st=3.75:d=0.75:alpha=1[bridge_faded]",
     ]
     if has_holo_q and holo_q_idx is not None:
         pre_scale_lines.append(f"[{holo_q_idx}:v]scale=540:-2,format=yuva420p[holo_q]")
@@ -1749,10 +1965,12 @@ def render_orb_test_preview(
         f"[bg_graded][bg_glow_q]overlay=eval=frame:enable='({speech_mask_q} + between(t,0,0.48))'[bg_glowed_1]",
         f"[bg_glowed_1][bg_glow_s]overlay=eval=frame:enable='({speech_mask_s} + between(t,0.22,0.70))'[bg_glowed_2]",
         f"[bg_glowed_2][sw_q]overlay=eval=frame:x='W*0.25-w/2':y='H*0.38-h/2':enable='between(t,0,0.45)':eof_action=pass[bg_sw_1]",
-        f"[bg_sw_1][sw_s]overlay=eval=frame:x='W*0.75-w/2 - 28':y='H*0.39-h/2':enable='between(t,0.22,0.67)':eof_action=pass[bg_ambient]"
+        f"[bg_sw_1][sw_s]overlay=eval=frame:x='W*0.75-w/2 - 28':y='H*0.39-h/2':enable='between(t,0.22,0.67)':eof_action=pass[bg_ambient]",
+        # Ethereal Quantum-Solar Magnetic Plasma Bridge (Scene 0 wide shot: t = 0.38s to 4.55s)
+        f"[bg_ambient][bridge_faded]overlay=eval=frame:x=140:y=560:enable='between(t,0.38,4.55)':eof_action=pass[bg_bridged]"
     ]
 
-    cur_v = "bg_ambient"
+    cur_v = "bg_bridged"
     q_talk_cur = 0
     q_idle_cur = 1  # 0 used for bg_glow_q
     q_close_cur = 0
