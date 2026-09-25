@@ -64,9 +64,66 @@ function aistudioMediaPlugin(): Plugin {
 }
 // LINT.ThenChange(//depot/google3/java/com/google/alkali/boq/makersuite/applet_dev_service/templates/initializers/react_theme/vite.config.ts:aistudio_media_plugin)
 
+function outputMediaPlugin(): Plugin {
+  return {
+    name: 'vite-plugin-output-media',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if (req.url && req.url.startsWith('/output/')) {
+          const rawPath = req.url.split('?')[0].split('#')[0];
+          try {
+            const decodedPath = decodeURIComponent(rawPath);
+            const filePath = path.resolve(__dirname, '.' + decodedPath);
+            if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+              const ext = path.extname(filePath).toLowerCase();
+              const mimeMap: Record<string, string> = {
+                '.mp4': 'video/mp4',
+                '.webm': 'video/webm',
+                '.mp3': 'audio/mpeg',
+                '.png': 'image/png',
+                '.jpg': 'image/jpeg',
+              };
+              const stat = fs.statSync(filePath);
+              const fileSize = stat.size;
+              const range = req.headers.range;
+
+              res.setHeader('Content-Type', mimeMap[ext] || 'application/octet-stream');
+              res.setHeader('Accept-Ranges', 'bytes');
+              res.setHeader('Cache-Control', 'no-cache');
+
+              if (range) {
+                const parts = range.replace(/bytes=/, '').split('-');
+                const start = parseInt(parts[0], 10);
+                const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+                const chunksize = end - start + 1;
+                const file = fs.createReadStream(filePath, { start, end });
+                res.writeHead(206, {
+                  'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+                  'Accept-Ranges': 'bytes',
+                  'Content-Length': chunksize,
+                  'Content-Type': mimeMap[ext] || 'application/octet-stream',
+                });
+                file.pipe(res);
+                return;
+              } else {
+                res.setHeader('Content-Length', fileSize);
+                fs.createReadStream(filePath).pipe(res);
+                return;
+              }
+            }
+          } catch {
+            // Fall through
+          }
+        }
+        next();
+      });
+    },
+  };
+}
+
 export default defineConfig(() => {
   return {
-    plugins: [react(), tailwindcss(), aistudioMediaPlugin()],
+    plugins: [react(), tailwindcss(), aistudioMediaPlugin(), outputMediaPlugin()],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),

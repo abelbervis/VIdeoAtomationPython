@@ -2129,6 +2129,10 @@ def render_orb_test_preview(
         filter_complex.append(f"[{cur_v}][{atmos_idx}:v]overlay=0:0:enable='between(t,0,{total_duration})'[v_atmos]")
         cur_v = "v_atmos"
 
+    # 3-Second Micro-Dolly Zoom Hook (Cinematic camera push-in 1.0x -> 1.08x during initial 3s retention window)
+    filter_complex.append(f"[{cur_v}]zoompan=z='min(1.08\\,1.0+0.08*on/(30*3.0))':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s={width}x{height}:fps=30[v_dolly]")
+    cur_v = "v_dolly"
+
     # Headline Hook (Cinematic Floating Title Top Center during first scene - No heavy opaque box)
     first_sc_end = min(scene_records[0]["end"] if scene_records else 2.8, 2.8)
     filter_complex.append(f"[{cur_v}]drawtext=text='{escaped_headline_hook}':{font_param}:fontcolor=0xFFFFFF:fontsize=42:borderw=3:bordercolor=0x000000@0.8:shadowx=2:shadowy=3:shadowcolor=0x00f0ff@0.4:x=(w-text_w)/2:y=140:enable='between(t,0,{first_sc_end})'[v_hook]")
