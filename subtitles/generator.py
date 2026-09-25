@@ -633,13 +633,15 @@ def generate_cosmic_debate_karaoke_ass(
     if "," in font_family:
         font_family = font_family.split(",")[0].strip()
 
-    # Font sizing adapted to vertical mobile canvas
-    font_size = 44 if width < height else 36
-    badge_fs = 26 if width < height else 22
-    outline_val = 5.8
+    # Font sizing adapted to canvas resolution
+    scale_factor = width / 1080.0 if width < height else width / 1920.0
+    font_size = int((44 if width < height else 36) * scale_factor)
+    badge_fs = int((26 if width < height else 22) * scale_factor)
+    outline_val = round((5.8 if width < height else 4.2) * scale_factor, 1)
+    shadow_val = round(2.6 * scale_factor, 1)
     if margin_v is None:
-        margin_v = 560 if width < height else 160
-    margin_side = 80 if width < height else 60
+        margin_v = int((560 if width < height else 160) * scale_factor)
+    margin_side = int((80 if width < height else 60) * scale_factor)
 
     header = f"""[Script Info]
 ScriptType: v4.00+
@@ -650,10 +652,10 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: QuantumKaraoke,{font_family},{font_size},&H00F8FFFF,&H000000FF,&H00241400,&HA0000000,-1,0,0,0,100,100,1.2,0,1,{outline_val},2.6,2,{margin_side},{margin_side},{margin_v},1
-Style: SolarKaraoke,{font_family},{font_size},&H00F5FFFF,&H000000FF,&H00001026,&HA0000000,-1,0,0,0,100,100,1.2,0,1,{outline_val},2.6,2,{margin_side},{margin_side},{margin_v},1
-Style: NarratorKaraoke,{font_family},{font_size},&H00F0FFFF,&H000000FF,&H00081C30,&HA0000000,-1,0,0,0,100,100,1.2,0,1,{outline_val + 0.4},2.8,2,{margin_side},{margin_side},{margin_v},1
-Style: DualKaraoke,{font_family},{font_size},&H00FFFFFF,&H000000FF,&H00201004,&HA0000000,-1,0,0,0,100,100,1.2,0,1,{outline_val + 0.4},2.8,2,{margin_side},{margin_side},{margin_v},1
+Style: QuantumKaraoke,{font_family},{font_size},&H00F8FFFF,&H000000FF,&H00241400,&HA0000000,-1,0,0,0,100,100,1.2,0,1,{outline_val},{shadow_val},2,{margin_side},{margin_side},{margin_v},1
+Style: SolarKaraoke,{font_family},{font_size},&H00F5FFFF,&H000000FF,&H00001026,&HA0000000,-1,0,0,0,100,100,1.2,0,1,{outline_val},{shadow_val},2,{margin_side},{margin_side},{margin_v},1
+Style: NarratorKaraoke,{font_family},{font_size},&H00F0FFFF,&H000000FF,&H00081C30,&HA0000000,-1,0,0,0,100,100,1.2,0,1,{outline_val + 0.4},{shadow_val + 0.2},2,{margin_side},{margin_side},{margin_v},1
+Style: DualKaraoke,{font_family},{font_size},&H00FFFFFF,&H000000FF,&H00201004,&HA0000000,-1,0,0,0,100,100,1.2,0,1,{outline_val + 0.4},{shadow_val + 0.2},2,{margin_side},{margin_side},{margin_v},1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text

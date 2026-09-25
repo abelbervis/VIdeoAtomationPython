@@ -65,9 +65,9 @@ def generate_cosmic_particle_bg_video(
 
     print(f"  ✨ Generando fondo cósmico dinámico ({color_a} & {color_b} | {width}x{height} @ {fps}fps)...")
 
-    # Render at a crisp resolution optimized for speed and fidelity
-    render_w = min(width, 720)
-    render_h = min(height, 1280)
+    # Render directly at native resolution for pristine, uncompressed sharpness
+    render_w = width
+    render_h = height
     frames_dir = dest_dir / f"_temp_bg_{render_w}x{render_h}_{slug_a}_{slug_b}"
     frames_dir.mkdir(parents=True, exist_ok=True)
 
@@ -76,8 +76,8 @@ def generate_cosmic_particle_bg_video(
     rgb_b = _hex_to_rgb(color_b)
     rgb_b_glow = _hex_to_rgb(color_b_glow)
 
-    # Simulation parameters
-    num_particles = 190
+    # Simulation parameters - Streamlined for maximum contrast & crispness
+    num_particles = 95
     center_ax = render_w * 0.33
     center_ay = render_h * 0.42
     center_bx = render_w * 0.67
@@ -88,17 +88,17 @@ def generate_cosmic_particle_bg_video(
     for idx in range(num_particles):
         is_a = (idx % 2 == 0)
         seed = (idx * 1.6180339887) % 1.0
-        orbit_rad_x = 60 + seed * (render_w * 0.40)
-        orbit_rad_y = 45 + ((idx * 2.718) % 1.0) * (render_h * 0.30)
+        orbit_rad_x = 70 + seed * (render_w * 0.38)
+        orbit_rad_y = 55 + ((idx * 2.718) % 1.0) * (render_h * 0.28)
         phase_offset = idx * (2 * math.pi / num_particles)
-        speed_mult = 0.55 + ((idx * 0.37) % 1.0) * 0.75  # Calibrated slow graceful drift
+        speed_mult = 0.50 + ((idx * 0.37) % 1.0) * 0.65  # Calibrated slow graceful drift
         z_depth = ((idx * 3.1415) % 2.0) - 1.0 # -1.0 to 1.0
         
-        base_size = 1.3 + (z_depth + 1.0) * 0.8
-        if z_depth > 0.5 and idx % 9 == 0:
-            base_size = 4.0 + ((idx * 0.5) % 2.5) # Foreground bokeh spark
+        base_size = 1.1 + (z_depth + 1.0) * 0.7
+        if z_depth > 0.6 and idx % 8 == 0:
+            base_size = 3.2 + ((idx * 0.4) % 1.8) # Foreground bokeh spark
 
-        opacity = 0.35 + ((idx * 0.73) % 0.55)
+        opacity = 0.40 + ((idx * 0.73) % 0.50)
         particles.append({
             "is_a": is_a,
             "rx": orbit_rad_x,
@@ -233,10 +233,15 @@ def generate_cosmic_particle_bg_video(
             "ffmpeg", "-y",
             "-framerate", str(fps),
             "-i", str(frames_dir / "frame_%04d.svg"),
-            "-vf", f"scale={width}:{height}:flags=bicubic,format=yuv420p",
+            "-vf", "format=yuv420p",
             "-c:v", "libx264",
-            "-preset", "fast",
-            "-crf", "18",
+            "-preset", "medium",
+            "-tune", "film",
+            "-crf", "16",
+            "-color_range", "tv",
+            "-color_primaries", "bt709",
+            "-color_trc", "bt709",
+            "-colorspace", "bt709",
             "-pix_fmt", "yuv420p",
             str(mp4_path)
         ]
@@ -260,6 +265,7 @@ def get_cosmic_particle_background_video(
     color_a_glow: str = "#0284c7",
     color_b: str = "#ffea00",
     color_b_glow: str = "#ff5500",
+    force_refresh: bool = False,
 ) -> Path:
     """Helper to retrieve or generate the cached cosmic particle background video with dynamic colors."""
     return generate_cosmic_particle_bg_video(
@@ -269,4 +275,5 @@ def get_cosmic_particle_background_video(
         color_a_glow=color_a_glow,
         color_b=color_b,
         color_b_glow=color_b_glow,
+        force_refresh=force_refresh,
     )
