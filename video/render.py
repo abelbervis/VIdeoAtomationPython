@@ -213,92 +213,106 @@ class VideoRenderer:
             total_frames = max(1, int(self.fps * clip_duration))
             d = max(1, total_frames)
             progress = f"(on/{d})"
-            # Smoothstep easing (Ease-In-Out: silky acceleration and deceleration)
+            # Balanced Ease-In-Out (smooth acceleration and deceleration with confident mid-motion)
             ease_io = f"({progress}*{progress}*(3-2*{progress}))"
 
             if is_hook_punch:
-                # Hook Pattern Interrupt: Smooth rapid push in the first 10 frames (~0.33s),
-                # followed by gentle continuous forward drift. No abrupt snap.
-                punch_frames = min(10, max(4, total_frames // 3))
+                # Hook Pattern Interrupt: Rapid punch from 1.00 to 1.14 in first 9 frames (~0.3s),
+                # then steady, noticeable forward drive to 1.22 for strong viewer retention.
+                punch_frames = min(9, max(4, total_frames // 3))
                 rem_frames = max(1, total_frames - punch_frames)
                 zoom_expr = (
-                    f"z='if(lte(on\\,{punch_frames})\\,1.0+0.10*sqrt(on/{punch_frames})\\,1.10+0.04*((on-{punch_frames})/{rem_frames}))':"
+                    f"z='if(lte(on\\,{punch_frames})\\,1.0+0.14*sqrt(on/{punch_frames})\\,1.14+0.08*((on-{punch_frames})/{rem_frames}))':"
                     f"x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
                 )
             elif camera_variation == "closeup":
-                # Close-up angle cut for detail focus
-                zoom_expr = f"z='1.24+0.05*{ease_io}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
+                # Close-up detail cut: Noticeable focus zoom from 1.25 to 1.35
+                zoom_expr = f"z='1.25+0.10*{ease_io}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
             else:
-                # Professional Product Commercial Movements:
-                # Always centered on the product (NO aggressive sideways pans that slice the product).
+                # Cinematic Commercial Motion (Noticeable, Dynamic & Centered):
                 pattern = (scene_idx - 1) % 5
                 if scene_idx == 1 and self.enable_punch_in:
-                    punch_frames = min(10, max(4, total_frames // 3))
+                    punch_frames = min(9, max(4, total_frames // 3))
                     rem_frames = max(1, total_frames - punch_frames)
                     zoom_expr = (
-                        f"z='if(lte(on\\,{punch_frames})\\,1.0+0.10*sqrt(on/{punch_frames})\\,1.10+0.04*((on-{punch_frames})/{rem_frames}))':"
+                        f"z='if(lte(on\\,{punch_frames})\\,1.0+0.14*sqrt(on/{punch_frames})\\,1.14+0.08*((on-{punch_frames})/{rem_frames}))':"
                         f"x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
                     )
                 elif pattern == 0:
-                    # Smooth Forward Push-In (1.00 -> 1.10): Focuses directly on product details
-                    zoom_expr = f"z='1.0+0.10*{ease_io}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
+                    # Dynamic Forward Push (1.00 -> 1.16): Strong, confident zoom into product details
+                    zoom_expr = f"z='1.0+0.16*{ease_io}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
                 elif pattern == 1:
-                    # Gentle Reveal Pull-Back (1.10 -> 1.01): Unveils the full product silhouette
-                    zoom_expr = f"z='1.10-0.09*{ease_io}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
+                    # Dynamic Reveal Pull-Back (1.18 -> 1.02): Noticeable pullback showcasing entire product
+                    zoom_expr = f"z='1.18-0.16*{ease_io}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
                 elif pattern == 2:
-                    # Subtle Hero Tilt-Up: Centered upward drift from base to hero angle
-                    zoom_expr = f"z='1.07':x='iw/2-(iw/zoom/2)':y='(ih-ih/zoom)*(1.0-0.65*{ease_io})'"
+                    # Hero Tilt-Up Showcase: 1.14 zoom with vertical camera climb from base to top
+                    zoom_expr = f"z='1.14':x='iw/2-(iw/zoom/2)':y='(ih-ih/zoom)*(1.0-0.80*{ease_io})'"
                 elif pattern == 3:
-                    # Elegant Breathing Push (1.02 -> 1.09): Gentle floating presence
-                    zoom_expr = f"z='1.02+0.07*{ease_io}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
+                    # Dynamic Breathing Push (1.03 -> 1.17): Majestic, living product presence
+                    zoom_expr = f"z='1.03+0.14*{ease_io}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
                 else:
-                    # Subtle Showcase Tilt-Down: Centered downward drift from brand header to product
-                    zoom_expr = f"z='1.07':x='iw/2-(iw/zoom/2)':y='(ih-ih/zoom)*(0.25+0.60*{ease_io})'"
+                    # Showcase Tilt-Down: 1.14 zoom with vertical descent from brand header to product
+                    zoom_expr = f"z='1.14':x='iw/2-(iw/zoom/2)':y='(ih-ih/zoom)*(0.15+0.75*{ease_io})'"
 
             if should_blur:
                 w_orig, h_orig = get_media_dimensions(asset_path)
-                print(f"  🖼️  Foto horizontal/cuadrada detectada ({w_orig}x{h_orig}): Aplicando efecto Parallax 2.5D desacoplado (fondo dinámico + tarjeta flotante)...")
-                max_fg_w = int(self.width * 0.92)  # Clean aesthetic margins
-                max_fg_h = int(self.height * 0.76)
+                print(f"  🖼️  Foto horizontal/cuadrada detectada ({w_orig}x{h_orig}): Aplicando Parallax 2.5D de Alto Impacto (Doble Zoom Opuesto + Levitación)...")
+                
+                # Calculate exact card aspect-ratio dimensions to avoid any distortion
+                max_w = int(self.width * 0.90)   # 972px width
+                max_h = int(self.height * 0.74)  # 1420px height
+                scale_factor = min(max_w / w_orig, max_h / h_orig)
+                card_w = max(320, int(w_orig * scale_factor))
+                card_h = max(320, int(h_orig * scale_factor))
+                card_w = (card_w // 2) * 2
+                card_h = (card_h // 2) * 2
 
-                # 1. Independent Background Ambient Drift (Alternating slow push and slow pull)
+                # 1. Background Motion (Noticeable Ambient Push/Pull):
+                # Scene 1 & 3: Background pulls back from 1.16 to 1.02
+                # Scene 2 & 4: Background pushes in from 1.00 to 1.15
                 if scene_idx % 2 == 1:
-                    bg_zoom = f"z='1.0+0.05*(on/{total_frames})':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
+                    bg_zoom = f"z='1.16-0.14*(on/{total_frames})':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
                 else:
-                    bg_zoom = f"z='1.06-0.05*(on/{total_frames})':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
+                    bg_zoom = f"z='1.00+0.15*(on/{total_frames})':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
 
-                # 2. Independent Foreground Parallax Floating Motion (Cinematic Levitation)
+                # 2. Foreground Product Motion (Active Cinematic Zoom INSIDE the card):
+                # Opposing movement creates the 3D Vertigo / Parallax effect
                 pat = (scene_idx - 1) % 4
                 if pat == 0:
-                    # Smooth upward floating arrival
-                    y_float = f"(H-h)/2 - 18*(t/{clip_duration:.2f})"
+                    # Push forward by 15% (Noticeable, crisp product expansion)
+                    fg_zoom = f"z='1.00+0.15*(on/{total_frames})':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
+                    y_float = f"(H-h)/2 - 45*sin(3.14159*t/{clip_duration:.2f})"
                 elif pat == 1:
-                    # Gentle downward elegance
-                    y_float = f"(H-h)/2 + 14*(t/{clip_duration:.2f})"
+                    # Pull back by 14% (Noticeable reveal pullback)
+                    fg_zoom = f"z='1.15-0.14*(on/{total_frames})':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
+                    y_float = f"(H-h)/2 + 35*(t/{clip_duration:.2f}) - 18"
                 elif pat == 2:
-                    # Levitating floating arc
-                    y_float = f"(H-h)/2 - 14*sin(3.14159*t/{clip_duration:.2f})"
+                    # Hero focus push by 14% + floating elevation
+                    fg_zoom = f"z='1.02+0.14*(on/{total_frames})':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
+                    y_float = f"(H-h)/2 - 40*(t/{clip_duration:.2f}) + 20"
                 else:
-                    # Rising hero presentation
-                    y_float = f"(H-h)/2 - 20*(t/{clip_duration:.2f})"
+                    # Grand CTA presentation push by 16%
+                    fg_zoom = f"z='1.00+0.16*(on/{total_frames})':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
+                    y_float = f"(H-h)/2 - 48*sin(3.14159*t/{clip_duration:.2f})"
 
-                y_shadow = f"{y_float} + 8"
+                y_shadow = f"{y_float} + 12"
 
-                # Multi-plane Parallax Composition:
-                # [bg]: living blurred background with independent ambient zoom
-                # [shadow]: dynamic drop-shadow that travels with the card
-                # [fg]: crisp product card with glass luxury border that floats on its own optical plane
+                # Filter Graph:
+                # [bg]: 1080x1920 blurred backdrop with noticeable ambient zoom
+                # [fg]: product scaled to 2x resolution then zoomed cleanly with zoompan, luxury border added
+                # [shadow]: deep realistic ambient drop-shadow that travels with the card
+                # Overlay: dynamic 45px vertical floating travel with opposing parallax
                 filter_complex = (
                     f"[0:v]scale={self.width}:{self.height}:force_original_aspect_ratio=increase,"
-                    f"crop={self.width}:{self.height},boxblur=24:4,eq=brightness=-0.16:saturation=1.15,"
+                    f"crop={self.width}:{self.height},boxblur=24:4,eq=brightness=-0.18:saturation=1.2,"
                     f"zoompan={bg_zoom}:d={total_frames}:s={self.width}x{self.height}:fps={self.fps}[bg];"
-                    f"[0:v]scale=w='min({max_fg_w},ceil(iw*min({max_fg_w}/iw,{max_fg_h}/ih)/2)*2)':"
-                    f"h='min({max_fg_h},ceil(ih*min({max_fg_w}/iw,{max_fg_h}/ih)/2)*2)':"
-                    f"force_original_aspect_ratio=decrease,setsar=1,drawbox=x=0:y=0:w=iw:h=ih:color=white@0.22:t=2[fg_raw];"
-                    f"[fg_raw]split=2[fg1][fg2];"
-                    f"[fg1]drawbox=x=0:y=0:w=iw:h=ih:color=black@0.45:t=fill,boxblur=16:3[shadow];"
+                    f"[0:v]scale={card_w*2}:{card_h*2}:force_original_aspect_ratio=increase,"
+                    f"zoompan={fg_zoom}:d={total_frames}:s={card_w}x{card_h}:fps={self.fps},"
+                    f"drawbox=x=0:y=0:w=iw:h=ih:color=white@0.30:t=3[fg_card];"
+                    f"[fg_card]split=2[c1][c2];"
+                    f"[c1]drawbox=x=0:y=0:w=iw:h=ih:color=black@0.55:t=fill,boxblur=20:4[shadow];"
                     f"[bg][shadow]overlay=x='(W-w)/2+4':y='{y_shadow}':eval=frame[bg_s];"
-                    f"[bg_s][fg2]overlay=x='(W-w)/2':y='{y_float}':eval=frame,setsar=1,fps={self.fps}"
+                    f"[bg_s][c2]overlay=x='(W-w)/2':y='{y_float}':eval=frame,setsar=1,fps={self.fps}"
                 )
                 cmd = [
                     "ffmpeg", "-y",
