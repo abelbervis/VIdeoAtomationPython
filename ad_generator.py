@@ -534,9 +534,9 @@ Ejemplos de uso:
     parser.add_argument(
         "--contact-pos",
         type=str,
-        default="top-right",
-        choices=["top-right", "top-left", "top-center", "bottom-left", "bottom-right"],
-        help="Posición fija del distintivo de WhatsApp en pantalla (default: top-right)."
+        default="top-center",
+        choices=["top-center", "top-left", "top-right", "bottom-center", "bottom-left", "bottom-right"],
+        help="Posición fija del distintivo de WhatsApp en pantalla optimizada para TikTok/Shorts (default: top-center)."
     )
     parser.add_argument(
         "--duration", "-d",
