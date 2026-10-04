@@ -140,24 +140,26 @@ class VideoRenderer:
             # Video asset processing
             if should_blur:
                 w_orig, h_orig = get_media_dimensions(asset_path)
-                print(f"  🎬 Video panorámico detectado ({w_orig}x{h_orig}): Aplicando vitrina con fondo borroso y movimiento desacoplado...")
-                max_fg_w = int(self.width * 0.92)
-                max_fg_h = int(self.height * 0.78)
+                print(f"  🎬 Video panorámico detectado ({w_orig}x{h_orig}): Aplicando fusión con bordes difuminados (Feathered Edge Blend)...")
+                max_fg_w = int(self.width * 0.94)
+                max_fg_h = int(self.height * 0.80)
+                feather = max(24, int(min(max_fg_w, max_fg_h) * 0.06))
                 
                 # Floating parallax elevation curve
-                y_float = f"(H-h)/2 - 12*sin(3.14159*t/{clip_duration:.2f})"
-                y_shadow = f"(H-h)/2 + 8 - 12*sin(3.14159*t/{clip_duration:.2f})"
+                y_float = f"(H-h)/2 - 35*sin(3.14159*t/{clip_duration:.2f})"
 
                 filter_chain = (
                     f"[0:v]scale={self.width}:{self.height}:force_original_aspect_ratio=increase,"
-                    f"crop={self.width}:{self.height},boxblur=22:4,eq=brightness=-0.14:saturation=1.12[bg];"
+                    f"crop={self.width}:{self.height},boxblur=22:4,eq=brightness=-0.14:saturation=1.15[bg];"
                     f"[0:v]scale=w='min({max_fg_w},ceil(iw*min({max_fg_w}/iw,{max_fg_h}/ih)/2)*2)':"
                     f"h='min({max_fg_h},ceil(ih*min({max_fg_w}/iw,{max_fg_h}/ih)/2)*2)':"
-                    f"force_original_aspect_ratio=decrease,setsar=1,drawbox=x=0:y=0:w=iw:h=ih:color=white@0.22:t=2[fg_raw];"
-                    f"[fg_raw]split=2[fg1][fg2];"
-                    f"[fg1]drawbox=x=0:y=0:w=iw:h=ih:color=black@0.45:t=fill,boxblur=14:3[shadow];"
-                    f"[bg][shadow]overlay=x='(W-w)/2+4':y='{y_shadow}':eval=frame[bg_s];"
-                    f"[bg_s][fg2]overlay=x='(W-w)/2':y='{y_float}':eval=frame,setsar=1,fps={self.fps}"
+                    f"force_original_aspect_ratio=decrease,setsar=1,"
+                    f"format=rgba,split=2[fg_base][fg_m_src];"
+                    f"[fg_m_src]drawbox=x=0:y=0:w=iw:h=ih:color=black:t=fill,"
+                    f"drawbox=x={feather}:y={feather}:w=iw-2*{feather}:h=ih-2*{feather}:color=white:t=fill,"
+                    f"boxblur={feather}:4,format=gray[mask];"
+                    f"[fg_base][mask]alphamerge[fg_feathered];"
+                    f"[bg][fg_feathered]overlay=x='(W-w)/2':y='{y_float}':eval=frame,setsar=1,fps={self.fps}"
                 )
                 cmd = [
                     "ffmpeg", "-y",
@@ -295,24 +297,23 @@ class VideoRenderer:
                     fg_zoom = f"z='1.00+0.16*(on/{total_frames})':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
                     y_float = f"(H-h)/2 - 48*sin(3.14159*t/{clip_duration:.2f})"
 
-                y_shadow = f"{y_float} + 12"
+                # 3. Soft Feathered Alpha Edge Blend:
+                # Creates a silky, seamless gradient around the outer 32-45px so the sharp product
+                # melts and dissolves naturally into the blurred bokeh background without any hard box edges.
+                feather = max(28, int(min(card_w, card_h) * 0.08))
 
-                # Filter Graph:
-                # [bg]: 1080x1920 blurred backdrop with noticeable ambient zoom
-                # [fg]: product scaled to 2x resolution then zoomed cleanly with zoompan, luxury border added
-                # [shadow]: deep realistic ambient drop-shadow that travels with the card
-                # Overlay: dynamic 45px vertical floating travel with opposing parallax
                 filter_complex = (
                     f"[0:v]scale={self.width}:{self.height}:force_original_aspect_ratio=increase,"
-                    f"crop={self.width}:{self.height},boxblur=24:4,eq=brightness=-0.18:saturation=1.2,"
+                    f"crop={self.width}:{self.height},boxblur=24:4,eq=brightness=-0.16:saturation=1.2,"
                     f"zoompan={bg_zoom}:d={total_frames}:s={self.width}x{self.height}:fps={self.fps}[bg];"
                     f"[0:v]scale={card_w*2}:{card_h*2}:force_original_aspect_ratio=increase,"
                     f"zoompan={fg_zoom}:d={total_frames}:s={card_w}x{card_h}:fps={self.fps},"
-                    f"drawbox=x=0:y=0:w=iw:h=ih:color=white@0.30:t=3[fg_card];"
-                    f"[fg_card]split=2[c1][c2];"
-                    f"[c1]drawbox=x=0:y=0:w=iw:h=ih:color=black@0.55:t=fill,boxblur=20:4[shadow];"
-                    f"[bg][shadow]overlay=x='(W-w)/2+4':y='{y_shadow}':eval=frame[bg_s];"
-                    f"[bg_s][c2]overlay=x='(W-w)/2':y='{y_float}':eval=frame,setsar=1,fps={self.fps}"
+                    f"format=rgba,split=2[fg_base][fg_m_src];"
+                    f"[fg_m_src]drawbox=x=0:y=0:w=iw:h=ih:color=black:t=fill,"
+                    f"drawbox=x={feather}:y={feather}:w=iw-2*{feather}:h=ih-2*{feather}:color=white:t=fill,"
+                    f"boxblur={feather}:4,format=gray[mask];"
+                    f"[fg_base][mask]alphamerge[fg_feathered];"
+                    f"[bg][fg_feathered]overlay=x='(W-w)/2':y='{y_float}':eval=frame,setsar=1,fps={self.fps}"
                 )
                 cmd = [
                     "ffmpeg", "-y",
