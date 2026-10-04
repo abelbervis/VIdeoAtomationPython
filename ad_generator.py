@@ -24,11 +24,14 @@ import os
 import sys
 import time
 import shutil
+import subprocess
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Tuple
 
 from ai.ad_copywriter import AdCopywriter, AD_SYSTEM_PROMPT
+from audio.beat_sync import BeatGrid
 from audio.music import MusicManager
+from audio.pixabay_music import PixabayMusicEngine, GENRE_PROFILES
 from audio.tts import TTSManager
 from config import (
     BASE_DIR,
@@ -170,6 +173,19 @@ def display_prompt_and_script_review(
     print(f"💥 Hook en Pantalla:  {hook_title}")
     print(f"🎞️  Total Escenas:     {len(scenes)} escenas ({len(media_files)} archivos multimedia)")
     print(sep_single)
+    # Music & Rhythm summary
+    genre_key = script.get("music_genre", "commercial_trap")
+    genre_info = GENRE_PROFILES.get(genre_key, GENRE_PROFILES["commercial_trap"])
+    bpm = float(script.get("target_bpm", genre_info["bpm"]))
+    vibe = script.get("music_vibe_reason") or genre_info["desc"]
+    bar_sec = (60.0 / bpm) * 4.0
+    beat_sec = 60.0 / bpm
+
+    print("🎵 MÚSICA & RITMO (PIXABAY / BEAT-SYNC):")
+    print(f"   Pista/Estilo:   {genre_info['name']} ({bpm:.0f} BPM)")
+    print(f"   Sincronización: Cortes visuales alineados a golpes de compás (cada {bar_sec:.2f}s | beat: {beat_sec:.2f}s)")
+    print(f"   Justificación:  \"{vibe}\"")
+    print(sep_single)
     print("📋 CONTENIDO DE CADA ESCENA:")
 
     for idx, scene in enumerate(scenes):
@@ -219,18 +235,19 @@ def interactive_prompt_review_menu(
         print("\n¿Qué deseas hacer antes del renderizado?")
         print("  [1] ✅ APROBAR Y COMENZAR RENDERIZADO (Presiona Enter)")
         print("  [2] ✏️  MODIFICAR EL PROMPT Y REGENERAR EL GUION CON IA")
-        print("  [3] 📝 EDITAR LAS FRASES DEL GUION MANUALMENTE")
-        print("  [4] 👁️  VER EL SYSTEM PROMPT COMPLETO DE MARKETING")
-        print("  [5] ❌ CANCELAR Y SALIR")
+        print("  [3] 🎵 CAMBIAR ESTILO MUSICAL O RITMO (BPM)")
+        print("  [4] 📝 EDITAR LAS FRASES DEL GUION MANUALMENTE")
+        print("  [5] 👁️  VER EL SYSTEM PROMPT COMPLETO DE MARKETING")
+        print("  [6] ❌ CANCELAR Y SALIR")
         
         try:
-            choice = input("\n👉 Elige una opción [1-5] (por defecto: 1): ").strip()
+            choice = input("\n👉 Elige una opción [1-6] (por defecto: 1): ").strip()
         except (KeyboardInterrupt, EOFError):
             print("\nOperación cancelada por el usuario.")
             return False, current_script, current_prompt
 
         if not choice or choice == "1":
-            print("\n✅ Guion aprobado. Iniciando síntesis de voz y renderizado de video...")
+            print("\n✅ Guion y música aprobados. Iniciando síntesis de voz y renderizado de video...")
             return True, current_script, current_prompt
 
         elif choice == "2":
@@ -259,6 +276,36 @@ def interactive_prompt_review_menu(
                 print("No se ingresó ningún cambio.")
 
         elif choice == "3":
+            print("\n" + "─" * 65)
+            print("🎵 SELECCIÓN DE ESTILO MUSICAL (PIXABAY / BEAT-SYNC)")
+            print("─" * 65)
+            genre_list = list(GENRE_PROFILES.keys())
+            for idx, g_key in enumerate(genre_list, start=1):
+                g_info = GENRE_PROFILES[g_key]
+                print(f"  [{idx}] {g_info['name']} ({g_info['bpm']:.0f} BPM)")
+                print(f"      👉 {g_info['desc']}")
+            print(f"  [6] 🎛️  Ingresar BPM personalizado manualmente")
+
+            g_choice = input(f"\nElige un estilo [1-{len(genre_list)+1}] (Enter para mantener actual): ").strip()
+            if g_choice.isdigit():
+                val = int(g_choice)
+                if 1 <= val <= len(genre_list):
+                    selected_key = genre_list[val - 1]
+                    current_script["music_genre"] = selected_key
+                    current_script["target_bpm"] = GENRE_PROFILES[selected_key]["bpm"]
+                    current_script["music_vibe_reason"] = GENRE_PROFILES[selected_key]["desc"]
+                    print(f"✅ Estilo musical cambiado a: {GENRE_PROFILES[selected_key]['name']}")
+                elif val == len(genre_list) + 1:
+                    custom_bpm_str = input("Ingresa el valor de BPM deseado (ej: 128): ").strip()
+                    try:
+                        c_bpm = float(custom_bpm_str)
+                        current_script["target_bpm"] = c_bpm
+                        current_script["music_vibe_reason"] = f"Tempo manual fijado a {c_bpm:.0f} BPM."
+                        print(f"✅ BPM actualizado a: {c_bpm:.0f}")
+                    except ValueError:
+                        print("Valor de BPM inválido.")
+
+        elif choice == "4":
             scenes = current_script.get("scenes", [])
             print(f"\nEditar escenas (1 a {len(scenes)}) o 'H' para editar el Hook Title:")
             target_scene = input("Número de escena a modificar [1-N o H] (Enter para volver): ").strip()
@@ -283,7 +330,7 @@ def interactive_prompt_review_menu(
                 else:
                     print("Número de escena fuera de rango.")
 
-        elif choice == "4":
+        elif choice == "5":
             print("\n" + "═" * 65)
             print("📜 SYSTEM PROMPT DE COPYWRITING PUBLICITARIO")
             print("═" * 65)
@@ -291,12 +338,12 @@ def interactive_prompt_review_menu(
             print("═" * 65)
             input("\nPresiona Enter para volver al menú...")
 
-        elif choice == "5":
+        elif choice == "6":
             print("\n❌ Renderizado cancelado. No se realizaron cambios.")
             return False, current_script, current_prompt
 
         else:
-            print("Opción no válida. Por favor selecciona del 1 al 5.")
+            print("Opción no válida. Por favor selecciona del 1 al 6.")
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -371,6 +418,24 @@ Ejemplos de uso:
         type=str,
         default=None,
         help="Ruta a un archivo de música de fondo personalizado (o 'none' para silenciar)."
+    )
+    parser.add_argument(
+        "--music-genre",
+        type=str,
+        default="auto",
+        choices=["auto", "commercial_trap", "tech_electronic", "upbeat_pop", "chill_lofi", "energetic_stomp"],
+        help="Estilo musical libre de derechos de Pixabay (default: auto, seleccionado por IA según el producto)."
+    )
+    parser.add_argument(
+        "--bpm",
+        type=float,
+        default=None,
+        help="Velocidad en Beats Por Minuto (BPM) para sincronizar los cortes de video al ritmo (default: automático según género)."
+    )
+    parser.add_argument(
+        "--no-beat-sync",
+        action="store_true",
+        help="Desactivar la alineación rítmica Beat-Sync (los cortes se harán sólo según la voz)."
     )
     parser.add_argument(
         "--output", "-o",
@@ -501,7 +566,7 @@ def main():
 
     # 6. Audio Synthesis (TTS)
     tts_mgr = TTSManager(language=args.language, voice=args.voice)
-    narration_audio, scene_timings, total_duration = tts_mgr.synthesize_script(
+    narration_audio, scene_timings, raw_total_duration = tts_mgr.synthesize_script(
         script=script,
         output_dir=TEMP_DIR / "ad_audio"
     )
@@ -510,9 +575,77 @@ def main():
         print("\n❌ Error: Falló la síntesis de audio para la narración.")
         sys.exit(1)
 
-    # 7. Subtitles Generation (Karaoke with High Contrast & Hook Title Banner)
+    # 7. Pixabay Music Engine & Beat-Sync Alignment
+    genre_key = args.music_genre if args.music_genre != "auto" else script.get("music_genre", "commercial_trap")
+    target_bpm = args.bpm if args.bpm else float(script.get("target_bpm", 124.0))
+
+    music_engine = PixabayMusicEngine()
+    bg_track, beat_grid = music_engine.get_or_create_ad_music(
+        genre_key=genre_key,
+        target_duration=raw_total_duration + 8.0,
+        custom_music_path=args.music if (args.music and args.music != "none") else None
+    )
+    if args.bpm:
+        beat_grid = BeatGrid(bpm=args.bpm)
+
+    enable_trans = (args.transition != "none")
+    trans_duration = TRANSITION_DURATION if enable_trans else 0.0
+
+    # Rhythmic Beat-Snapping: align scene durations to musical downbeats
+    if not args.no_beat_sync:
+        speech_durations = [t["duration"] for t in scene_timings]
+        aligned_scenes = beat_grid.align_scene_durations(
+            speech_durations=speech_durations,
+            transition_duration=trans_duration
+        )
+        print(f"\n🥁 Sincronización Rítmica Beat-Sync activada ({beat_grid.bpm:.0f} BPM):")
+        print(f"   Compás de 4 tiempos: {beat_grid.seconds_per_bar:.2f}s | Beat: {beat_grid.seconds_per_beat:.2f}s")
+        for s in aligned_scenes:
+            print(f"   - Escena {s['scene_idx']:02d}: Voz {s['speech_duration']:.1f}s ➔ Toma visual {s['snapped_duration']:.2f}s (Corte en compás: {s['cut_time']:.2f}s)")
+
+        # Pad individual scene audio files with rhythmic breathing pause before the cut
+        padded_files = []
+        current_time_acc = 0.0
+        for i, s_info in enumerate(aligned_scenes):
+            orig_timing = scene_timings[i]
+            orig_audio = Path(orig_timing["audio_file"])
+            padded_audio = TEMP_DIR / "ad_audio" / f"scene_{s_info['scene_idx']:02d}_padded.mp3"
+            pad_needed = s_info["padding_after_speech"]
+
+            if pad_needed > 0.04:
+                pad_cmd = [
+                    "ffmpeg", "-y",
+                    "-i", str(orig_audio),
+                    "-af", f"apad=pad_dur={pad_needed:.3f}",
+                    "-t", f"{s_info['snapped_duration']:.3f}",
+                    "-acodec", "libmp3lame", "-b:a", "192k",
+                    str(padded_audio)
+                ]
+                subprocess.run(pad_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+                padded_files.append(padded_audio)
+            else:
+                padded_files.append(orig_audio)
+
+            orig_timing["start"] = round(current_time_acc, 2)
+            orig_timing["duration"] = s_info["snapped_duration"]
+            orig_timing["end"] = round(current_time_acc + s_info["snapped_duration"], 2)
+            current_time_acc += s_info["snapped_duration"]
+
+        # Recombine audio tracks with beat pauses
+        beatsynced_audio = TEMP_DIR / "ad_audio" / "narration_beatsynced.mp3"
+        tts_mgr._concat_audios(padded_files, beatsynced_audio)
+        if beatsynced_audio.exists() and beatsynced_audio.stat().st_size > 0:
+            narration_audio = beatsynced_audio
+            total_duration = get_media_duration(narration_audio)
+        else:
+            total_duration = raw_total_duration
+    else:
+        total_duration = raw_total_duration
+
+    # 8. Subtitles Generation (Karaoke with High Contrast & Hook Title Banner)
     fmt_cfg = resolve_video_format("vertical")
     hook_banner = script.get("hook_title") or script.get("title") or "¡OFERTA EXCLUSIVA!"
+    hook_bar_duration = round(beat_grid.seconds_per_bar * 2, 2) if not args.no_beat_sync else 2.8
 
     sub_gen = SubtitleGenerator(
         width=fmt_cfg["width"],
@@ -528,22 +661,20 @@ def main():
         scene_timings=scene_timings,
         language=args.language,
         hook_title=hook_banner,
-        hook_duration=2.8
+        hook_duration=hook_bar_duration
     )
 
-    # 8. Background Music Preparation
+    # 9. Background Music Preparation (Auto-Ducking)
     prepared_music = None
-    if args.music != "none":
+    if args.music != "none" and bg_track and bg_track.exists():
         music_mgr = MusicManager()
-        bg_track = music_mgr.get_background_track(args.music, shuffle=True)
-        if bg_track:
-            prepared_music = music_mgr.prepare_music(
-                bg_track,
-                target_duration=total_duration,
-                volume=MUSIC_VOLUME
-            )
+        prepared_music = music_mgr.prepare_music(
+            bg_track,
+            target_duration=total_duration,
+            volume=MUSIC_VOLUME
+        )
 
-    # 9. Visual Scene Clips Rendering (Smart vertical framing & Ken Burns motion)
+    # 10. Visual Scene Clips Rendering (Smart vertical framing & Ken Burns motion)
     renderer = VideoRenderer(
         width=fmt_cfg["width"],
         height=fmt_cfg["height"],

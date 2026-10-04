@@ -55,6 +55,9 @@ Debes responder ÚNICAMENTE con un objeto JSON válido con la siguiente estructu
   "product_name": "Nombre conciso del producto o servicio",
   "hook_title": "TITULAR CORTO EN MAYÚSCULAS (3 a 6 palabras) para superponer en pantalla en segundos 0-3",
   "target_audience": "Público objetivo",
+  "music_genre": "commercial_trap | tech_electronic | upbeat_pop | chill_lofi | energetic_stomp",
+  "target_bpm": 124,
+  "music_vibe_reason": "Explicación breve de por qué este ritmo eleva la conversión del producto",
   "scenes": [
     {
       "scene_number": 1,
@@ -394,10 +397,36 @@ class AdCopywriter:
 
         hook_word = clean_product.upper() if len(clean_product.split()) <= 4 else "¡NO BUSQUES MÁS!"
 
+        # Music selection heuristic based on keywords
+        combined_text = f"{clean_product} {concept} {user_prompt}".lower()
+        if any(w in combined_text for w in ["audio", "auricular", "audifono", "tech", "gadget", "app", "smart", "reloj", "computador", "pro"]):
+            music_genre = "tech_electronic"
+            target_bpm = 124
+            vibe_reason = "Ritmo futurista y limpio (124 BPM) para sincronizar cortes visuales de tecnología y gadgets."
+        elif any(w in combined_text for w in ["fitness", "gym", "deporte", "urgente", "fuerte", "rapido", "correr"]):
+            music_genre = "energetic_stomp"
+            target_bpm = 138
+            vibe_reason = "Alta energía e intensidad (138 BPM) con cortes rápidos para deportes y acción."
+        elif any(w in combined_text for w in ["skincare", "crema", "cafe", "piel", "belleza", "relax", "vela", "aroma", "paz"]):
+            music_genre = "chill_lofi"
+            target_bpm = 92
+            vibe_reason = "Vibra relajante y elegante (92 BPM) con transiciones suaves para cuidado personal y bienestar."
+        elif any(w in combined_text for w in ["hogar", "cocina", "limpieza", "familia", "comida", "juguete"]):
+            music_genre = "upbeat_pop"
+            target_bpm = 120
+            vibe_reason = "Vibra alegre y positiva (120 BPM) ideal para productos cotidianos y de hogar."
+        else:
+            music_genre = "commercial_trap"
+            target_bpm = 130
+            vibe_reason = "Bajos 808 contundentes y percusión moderna (130 BPM) para impacto comercial en TikTok y Reels."
+
         return {
             "product_name": clean_product,
             "hook_title": f"¡DESCUBRE {hook_word}!",
             "target_audience": "Público general interesado en calidad",
+            "music_genre": music_genre,
+            "target_bpm": target_bpm,
+            "music_vibe_reason": vibe_reason,
             "scenes": scenes
         }
 
