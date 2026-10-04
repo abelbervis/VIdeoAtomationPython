@@ -531,6 +531,13 @@ Ejemplos de uso:
         help="Efecto de transición visual entre tomas (default: fade)."
     )
     parser.add_argument(
+        "--framing",
+        type=str,
+        default="auto",
+        choices=["auto", "blur", "crop"],
+        help="Ajuste de relación de aspecto de fotos/videos: 'auto' (fondo borroso en horizontales/cuadradas, crop en verticales), 'blur' (siempre fondo borroso), 'crop' (recorte central)."
+    )
+    parser.add_argument(
         "--non-interactive", "--yes", "-y",
         action="store_true",
         help="Omitir la pausa de revisión interactiva en consola y renderizar directamente."
@@ -783,7 +790,8 @@ def main():
         crf=VIDEO_CRF,
         preset=VIDEO_PRESET,
         enable_broll_split=False,  # Keep user's primary photos clean
-        enable_punch_in=True
+        enable_punch_in=True,
+        framing=args.framing
     )
 
     print(f"\n🎞️  Procesando {len(scene_timings)} tomas visuales en formato vertical 9:16 ({fmt_cfg['width']}x{fmt_cfg['height']})...")

@@ -13,7 +13,7 @@ import subprocess
 import shutil
 import random
 from pathlib import Path
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Tuple
 
 from config import (
     ASSETS_DIR,
@@ -53,6 +53,35 @@ from utils.files import save_json, check_ffmpeg
 from video.orb import generate_gradient_orb_svg, get_or_create_orb_asset, GradientOrbManager
 
 
+def get_media_dimensions(asset_path: Path) -> Tuple[int, int]:
+    """Retrieves pixel width and height of an image or video asset via ffprobe."""
+    try:
+        cmd = [
+            "ffprobe", "-v", "error",
+            "-select_streams", "v:0",
+            "-show_entries", "stream=width,height",
+            "-of", "csv=s=x:p=0",
+            str(asset_path)
+        ]
+        res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
+        parts = res.stdout.strip().split("x")
+        if len(parts) == 2:
+            return int(parts[0]), int(parts[1])
+    except Exception:
+        pass
+    return 1080, 1920
+
+
+def is_horizontal_or_square(asset_path: Path) -> bool:
+    """Returns True if the media is horizontal (16:9, 4:3) or square (1:1), avoiding aggressive crop."""
+    w, h = get_media_dimensions(asset_path)
+    if h <= 0:
+        return False
+    aspect = w / h
+    # Vertical 9:16 is 0.5625. If aspect ratio > 0.65, it is square or horizontal.
+    return aspect > 0.65
+
+
 class VideoRenderer:
     """Renders final vertical science short videos using FFmpeg directly."""
 
@@ -67,7 +96,8 @@ class VideoRenderer:
         preset: str = VIDEO_PRESET,
         enable_broll_split: bool = ENABLE_BROLL_SPLIT,
         broll_split_threshold: float = BROLL_SPLIT_THRESHOLD,
-        enable_punch_in: bool = ENABLE_PUNCH_IN
+        enable_punch_in: bool = ENABLE_PUNCH_IN,
+        framing: str = "auto"
     ):
         self.output_dir = Path(output_dir)
         self.temp_dir = Path(temp_dir)
@@ -79,6 +109,7 @@ class VideoRenderer:
         self.enable_broll_split = enable_broll_split
         self.broll_split_threshold = broll_split_threshold
         self.enable_punch_in = enable_punch_in
+        self.framing = framing.lower() if framing else "auto"
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.temp_dir.mkdir(parents=True, exist_ok=True)
 
@@ -94,61 +125,88 @@ class VideoRenderer:
     ) -> Path:
         """
         Renders a single visual shot segment formatted to target vertical dimensions.
-        Supports snap punch-in zoom (pattern interrupt), close-up angle cuts, and Ken Burns easing.
+        Supports:
+        - Smart Blurred Background for horizontal/square assets (no distortion, 0 stretched pixels)
+        - Snap punch-in zoom (pattern interrupt for hook retention)
+        - Close-up angle cuts and Ken Burns easing
         """
         clip_duration = max(0.2, duration)
 
+        # Determine framing mode
+        is_wide_or_sq = is_horizontal_or_square(asset_path)
+        should_blur = (self.framing == "blur") or (self.framing == "auto" and is_wide_or_sq)
+
         if is_video:
             # Video asset processing
-            if is_hook_punch:
-                # Video punch-in zoom during the first 12 frames (~0.4s) for hook retention
-                crop_expr = "iw/(1.0+0.16*if(lte(n\\,12)\\,sqrt(n/12)\\,1.0))"
+            if should_blur:
+                w_orig, h_orig = get_media_dimensions(asset_path)
+                print(f"  🎬 Video panorámico detectado ({w_orig}x{h_orig}): Aplicando fondo borroso (Blurred Background)...")
+                max_fg_h = int(self.height * 0.82)
                 filter_chain = (
-                    f"crop=w='{crop_expr}':h='ih/(1.0+0.16*if(lte(n\\,12)\\,sqrt(n/12)\\,1.0))':"
-                    f"x='(in_w-out_w)/2':y='(in_h-out_h)/2',"
-                    f"scale={self.width}:{self.height}:force_original_aspect_ratio=increase,"
-                    f"crop={self.width}:{self.height},"
-                    f"setsar=1,fps={self.fps}"
+                    f"[0:v]scale={self.width}:{self.height}:force_original_aspect_ratio=increase,"
+                    f"crop={self.width}:{self.height},gblur=sigma=28:steps=2,eq=brightness=-0.12:saturation=1.1[bg];"
+                    f"[0:v]scale=w='min({self.width},ceil(iw*min({self.width}/iw,{max_fg_h}/ih)/2)*2)':"
+                    f"h='min({max_fg_h},ceil(ih*min({self.width}/iw,{max_fg_h}/ih)/2)*2)':"
+                    f"force_original_aspect_ratio=decrease,setsar=1[fg];"
+                    f"[bg][fg]overlay=(W-w)/2:(H-h)/2,setsar=1,fps={self.fps}"
                 )
-            elif camera_variation == "closeup":
-                # Detail cut zoom on video
-                filter_chain = (
-                    f"scale={int(self.width*1.30)}:{int(self.height*1.30)}:force_original_aspect_ratio=increase,"
-                    f"crop={self.width}:{self.height},"
-                    f"setsar=1,fps={self.fps}"
-                )
+                cmd = [
+                    "ffmpeg", "-y",
+                    "-stream_loop", "-1",
+                    "-i", str(asset_path),
+                    "-t", f"{clip_duration:.2f}",
+                    "-filter_complex", filter_chain,
+                    "-c:v", VIDEO_CODEC,
+                    "-preset", "fast",
+                    "-crf", str(self.crf),
+                    "-pix_fmt", "yuv420p",
+                    "-an",
+                    str(output_clip)
+                ]
             else:
-                filter_chain = (
-                    f"scale={self.width}:{self.height}:force_original_aspect_ratio=increase,"
-                    f"crop={self.width}:{self.height},"
-                    f"setsar=1,fps={self.fps}"
-                )
+                if is_hook_punch:
+                    crop_expr = "iw/(1.0+0.16*if(lte(n\\,12)\\,sqrt(n/12)\\,1.0))"
+                    filter_chain = (
+                        f"crop=w='{crop_expr}':h='ih/(1.0+0.16*if(lte(n\\,12)\\,sqrt(n/12)\\,1.0))':"
+                        f"x='(in_w-out_w)/2':y='(in_h-out_h)/2',"
+                        f"scale={self.width}:{self.height}:force_original_aspect_ratio=increase,"
+                        f"crop={self.width}:{self.height},"
+                        f"setsar=1,fps={self.fps}"
+                    )
+                elif camera_variation == "closeup":
+                    filter_chain = (
+                        f"scale={int(self.width*1.30)}:{int(self.height*1.30)}:force_original_aspect_ratio=increase,"
+                        f"crop={self.width}:{self.height},"
+                        f"setsar=1,fps={self.fps}"
+                    )
+                else:
+                    filter_chain = (
+                        f"scale={self.width}:{self.height}:force_original_aspect_ratio=increase,"
+                        f"crop={self.width}:{self.height},"
+                        f"setsar=1,fps={self.fps}"
+                    )
 
-            cmd = [
-                "ffmpeg", "-y",
-                "-stream_loop", "-1",
-                "-i", str(asset_path),
-                "-t", f"{clip_duration:.2f}",
-                "-vf", filter_chain,
-                "-c:v", VIDEO_CODEC,
-                "-preset", "fast",
-                "-crf", str(self.crf),
-                "-pix_fmt", "yuv420p",
-                "-an",
-                str(output_clip)
-            ]
+                cmd = [
+                    "ffmpeg", "-y",
+                    "-stream_loop", "-1",
+                    "-i", str(asset_path),
+                    "-t", f"{clip_duration:.2f}",
+                    "-vf", filter_chain,
+                    "-c:v", VIDEO_CODEC,
+                    "-preset", "fast",
+                    "-crf", str(self.crf),
+                    "-pix_fmt", "yuv420p",
+                    "-an",
+                    str(output_clip)
+                ]
         else:
-            # Static image: Ken Burns / Punch-in motion
+            # Static image processing
             total_frames = max(1, int(self.fps * clip_duration))
             d = max(1, total_frames)
             progress = f"(on/{d})"
-            # Smoothstep curve (Ease-In-Out: smooth start, organic mid motion, gentle deceleration)
             ease_io = f"({progress}*{progress}*(3-2*{progress}))"
 
             if is_hook_punch:
-                # 💥 PUNTO 2.1: Punch-in de Impacto Inmediato (Pattern Interrupt)
-                # En los primeros 12 frames (~0.4s a 30fps), zoom rápido de 1.0 a 1.16 siguiendo curva sqrt (explosivo),
-                # seguido por un avance suave continuo de 1.16 a 1.22 durante el resto de la toma.
                 punch_frames = min(12, max(4, total_frames // 2))
                 rem_frames = max(1, total_frames - punch_frames)
                 zoom_expr = (
@@ -156,7 +214,6 @@ class VideoRenderer:
                     f"x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
                 )
             elif camera_variation == "closeup":
-                # Close-up angle cut for B-roll split on single image (focal length shift)
                 zoom_expr = f"z='1.35+0.06*{ease_io}':x='iw*0.48-(iw/zoom/2)':y='(ih-ih/zoom)*(1-{ease_io})'"
             else:
                 pattern = (scene_idx - 1) % 5
@@ -168,39 +225,67 @@ class VideoRenderer:
                         f"x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
                     )
                 elif pattern == 0:
-                    # Smooth center zoom in (1.0 -> 1.18) with organic Ease-In-Out
                     zoom_expr = f"z='1.0+0.18*{ease_io}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
                 elif pattern == 1:
-                    # Reveal zoom out (1.20 -> 1.02) revealing cosmic scope with Ease-In-Out
                     zoom_expr = f"z='1.20-0.18*{ease_io}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
                 elif pattern == 2:
-                    # Cinematic pan right with smooth acceleration/deceleration
                     zoom_expr = f"z='1.14':x='(iw-iw/zoom)*{ease_io}':y='ih/2-(ih/zoom/2)'"
                 elif pattern == 3:
-                    # Cinematic pan left with smooth acceleration/deceleration
                     zoom_expr = f"z='1.14':x='(iw-iw/zoom)*(1-{ease_io})':y='ih/2-(ih/zoom/2)'"
                 else:
-                    # Subtle upward tilt with smooth acceleration/deceleration
                     zoom_expr = f"z='1.14':x='iw/2-(iw/zoom/2)':y='(ih-ih/zoom)*(1-{ease_io})'"
 
-            filter_chain = (
-                f"scale={self.width*2}:{self.height*2}:force_original_aspect_ratio=increase,"
-                f"zoompan={zoom_expr}:d={total_frames}:s={self.width}x{self.height}:fps={self.fps},"
-                f"setsar=1"
-            )
-            cmd = [
-                "ffmpeg", "-y",
-                "-loop", "1",
-                "-i", str(asset_path),
-                "-t", f"{clip_duration:.2f}",
-                "-vf", filter_chain,
-                "-c:v", VIDEO_CODEC,
-                "-preset", "fast",
-                "-crf", str(self.crf),
-                "-pix_fmt", "yuv420p",
-                "-an",
-                str(output_clip)
-            ]
+            if should_blur:
+                w_orig, h_orig = get_media_dimensions(asset_path)
+                print(f"  🖼️  Foto horizontal/cuadrada detectada ({w_orig}x{h_orig}): Aplicando fondo borroso (Blurred Background) para proteger producto...")
+                max_fg_h = int(self.height * 0.82)
+                # Blurred background composite:
+                # [bg]: scaled to fill 1080x1920 with smooth gaussian blur & subtle darkening for depth
+                # [fg]: scaled to fit inside 1080x1574 keeping pixel-perfect original aspect ratio (0 distortion)
+                # [overlay + zoompan]: smooth cinematic motion across the combined scene
+                filter_complex = (
+                    f"[0:v]scale={self.width}:{self.height}:force_original_aspect_ratio=increase,"
+                    f"crop={self.width}:{self.height},gblur=sigma=30:steps=2,eq=brightness=-0.12:saturation=1.12[bg];"
+                    f"[0:v]scale=w='min({self.width},ceil(iw*min({self.width}/iw,{max_fg_h}/ih)/2)*2)':"
+                    f"h='min({max_fg_h},ceil(ih*min({self.width}/iw,{max_fg_h}/ih)/2)*2)':"
+                    f"force_original_aspect_ratio=decrease,setsar=1[fg];"
+                    f"[bg][fg]overlay=(W-w)/2:(H-h)/2,"
+                    f"zoompan=z='1.0+0.07*{ease_io}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':"
+                    f"d={total_frames}:s={self.width}x{self.height}:fps={self.fps},"
+                    f"setsar=1"
+                )
+                cmd = [
+                    "ffmpeg", "-y",
+                    "-loop", "1",
+                    "-i", str(asset_path),
+                    "-t", f"{clip_duration:.2f}",
+                    "-filter_complex", filter_complex,
+                    "-c:v", VIDEO_CODEC,
+                    "-preset", "fast",
+                    "-crf", str(self.crf),
+                    "-pix_fmt", "yuv420p",
+                    "-an",
+                    str(output_clip)
+                ]
+            else:
+                filter_chain = (
+                    f"scale={self.width*2}:{self.height*2}:force_original_aspect_ratio=increase,"
+                    f"zoompan={zoom_expr}:d={total_frames}:s={self.width}x{self.height}:fps={self.fps},"
+                    f"setsar=1"
+                )
+                cmd = [
+                    "ffmpeg", "-y",
+                    "-loop", "1",
+                    "-i", str(asset_path),
+                    "-t", f"{clip_duration:.2f}",
+                    "-vf", filter_chain,
+                    "-c:v", VIDEO_CODEC,
+                    "-preset", "fast",
+                    "-crf", str(self.crf),
+                    "-pix_fmt", "yuv420p",
+                    "-an",
+                    str(output_clip)
+                ]
 
         try:
             subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
