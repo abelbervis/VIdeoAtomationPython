@@ -9,6 +9,7 @@ import base64
 import json
 import os
 import re
+import subprocess
 import urllib.request
 import urllib.error
 from pathlib import Path
@@ -21,6 +22,7 @@ from config import (
     GROQ_API_BASE,
     OPENAI_API_KEY,
     LLM_PROVIDER,
+    TEMP_DIR,
     sanitize_env_value,
 )
 
@@ -28,8 +30,18 @@ AD_SYSTEM_PROMPT = """Eres un Director Creativo y Copywriter Publicitario de él
 
 Tu objetivo es transformar imágenes o videos reales tomados por el usuario de un producto o servicio en un anuncio vertical (9:16) dinámico, hipnótico e imposible de ignorar.
 
-REGLAS DE ORO DEL COPYWRITING PUBLICITARIO:
-1. EL GANCHO DE 3 SEGUNDOS (HOOK OBLIGATORIO - Escena 1):
+REGLAS DE ORO DEL COPYWRITING Y DIRECCIÓN VISUAL:
+1. SELECCIÓN INTELIGENTE DEL ORDEN VISUAL Y NARRATIVO (AIDA):
+   - NO estás obligado a usar los archivos en orden alfabético ni en el orden en que se recibieron.
+   - Analiza minuciosamente el contenido visual de cada foto y video para determinar su rol publicitario ideal:
+     * HOOK_HERO: La toma más estética, llamativa, intrigante o nítida para detener el scroll de golpe en los primeros 3 segundos.
+     * PROBLEM: Foto/video que ilustre la necesidad o dolor que resuelve el producto.
+     * DEMO_FEATURE: Tomas de uso práctico, movimiento, textura, materiales o funciones destacadas.
+     * DESIRE_BENEFIT: Tomas de calidad, durabilidad, detalles que despiertan el deseo irresistible de compra.
+     * OFFER_CTA: Tomas del producto completo, empaque, precio, descuento o presentación final para cerrar la venta.
+   - En cada escena asigna el "media_file" idóneo para ese momento de la narración, junto con su "narrative_role" y "order_reason".
+
+2. EL GANCHO DE 3 SEGUNDOS (HOOK OBLIGATORIO - Escena 1):
    - Los primeros 3 segundos deciden el éxito del anuncio.
    - Debe detener el scroll de golpe con:
      * Una pregunta provocativa sobre un dolor del cliente ("¿Sigues cometiendo este error con tu...?").
@@ -37,19 +49,19 @@ REGLAS DE ORO DEL COPYWRITING PUBLICITARIO:
      * Una afirmación contundente contra el producto tradicional ("Deja de gastar en X...").
    - NUNCA abras con saludos aburridos ("Hola amigos", "Hoy les traigo...").
 
-2. ESTRUCTURA AIDA DINÁMICA (20 a 35 segundos en total):
-   - Escena 1 (0-3s): GANCHO (Hook) de alto impacto visual y sonoro.
+3. ESTRUCTURA AIDA DINÁMICA (20 a 35 segundos en total):
+   - Escena 1 (0-3s): GANCHO (Hook) de alto impacto visual y sonoro con la mejor toma introductoria.
    - Escena 2 (3-9s): EL PROBLEMA / AGITACIÓN (El dolor o frustración que sufre el cliente).
-   - Escena 3 (9-16s): LA SOLUCIÓN / DEMOSTRACIÓN (Presentación del producto resolviendo el problema).
+   - Escena 3 (9-16s): LA SOLUCIÓN / DEMOSTRACIÓN (Presentación del producto en acción o detalle).
    - Escena 4 (16-22s): BENEFICIOS CLAVE Y DIFERENCIALES (Por qué este producto es superior o único).
    - Escena 5 / Final (22-28s): OFERTA Y LLAMADO A LA ACCIÓN (CTA claro: "Haz clic", "Aprovecha el envío gratis hoy").
 
-3. ESTILO DE LENGUAJE:
+4. ESTILO DE LENGUAJE:
    - Natural, enérgico, conversacional, como una recomendación de confianza o un creador de contenido genuino.
    - Frases cortas y contundentes (8 a 15 palabras por escena).
    - Palabras fáciles de pronunciar para el motor de voz (TTS).
 
-4. FORMATO DE SALIDA (ESTRICTAMENTE JSON):
+5. FORMATO DE SALIDA (ESTRICTAMENTE JSON):
 Debes responder ÚNICAMENTE con un objeto JSON válido con la siguiente estructura:
 {
   "product_name": "Nombre conciso del producto o servicio",
@@ -61,9 +73,12 @@ Debes responder ÚNICAMENTE con un objeto JSON válido con la siguiente estructu
   "scenes": [
     {
       "scene_number": 1,
+      "media_file": "nombre_exacto_del_archivo.jpg",
+      "narrative_role": "HOOK_HERO | PROBLEM | DEMO_FEATURE | DESIRE_BENEFIT | OFFER_CTA",
+      "order_reason": "Breve explicación de por qué este archivo específico va en esta posición de la narrativa",
       "narration": "Texto exacto que dirá la voz en off en esta escena",
       "visual_focus": "Qué debe mostrarse o enfocarse de la foto/video asignada",
-      "callout_text": "Texto breve de apoyo visual para subtítulo (ej: '100% Resistente')"
+      "callout_text": "Texto breve de apoyo visual para subtítulo (ej: 'Calidad Premium')"
     }
   ]
 }
@@ -120,14 +135,19 @@ class AdCopywriter:
         """Constructs the comprehensive user prompt sent to the LLM."""
         num_scenes = max(3, min(len(media_files), 7))
         file_summary = "\n".join(
-            [f"  - Escena {i+1}: archivo '{f.name}' ({'Video' if f.suffix.lower() in ('.mp4', '.mov', '.webm') else 'Foto'})"
+            [f"  - Recurso [{i+1}]: '{f.name}' ({'Video dinámico' if f.suffix.lower() in ('.mp4', '.mov', '.webm') else 'Foto estática'})"
              for i, f in enumerate(media_files[:num_scenes])]
         )
 
         prompt_lines = [
             f"Crea un anuncio publicitario de alta conversión para un video de formato vertical (9:16).",
-            f"Número exacto de escenas requeridas: {num_scenes} escenas (una por cada uno de los siguientes archivos de medios):",
+            f"Archivos multimedia disponibles del producto ({len(media_files[:num_scenes])} tomas):",
             file_summary,
+            f"\n🎯 DIRECTIVA DE ORDENAMIENTO VISUAL Y NARRATIVO (CRUCIAL):",
+            f"- Examina lo que muestra cada foto y video recibido.",
+            f"- Determina TÚ el orden más persuasivo para la narrativa comercial AIDA (Gancho ➔ Problema ➔ Demostración ➔ Deseo ➔ Oferta/CTA).",
+            f"- NO sigas obligatoriamente el orden numérico o alfabético. Asigna a la Escena 1 el archivo con mayor impacto para captar la atención en el segundo 0 ('HOOK_HERO').",
+            f"- En cada escena de 'scenes', asigna el nombre exacto del archivo en el campo 'media_file', su rol publicitario en 'narrative_role', y una breve justificación en 'order_reason'.",
             f"\nInstrucciones del anunciante:",
             f"- Descripción/Objetivo del anuncio: {user_prompt}",
         ]
@@ -233,21 +253,34 @@ class AdCopywriter:
         # Build parts list
         parts: List[Dict[str, Any]] = []
 
-        # Add image data if images exist
+        # Add image and video frame data tagged with file names
         image_count = 0
-        for f in media_files:
-            if f.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp"):
-                b64 = _encode_image_to_base64(f)
+        for idx, f in enumerate(media_files):
+            tipo = "Video dinámico" if f.suffix.lower() in (".mp4", ".mov", ".webm") else "Foto"
+            temp_thumb = None
+            if f.suffix.lower() in (".mp4", ".mov", ".webm"):
+                temp_thumb = TEMP_DIR / f"thumb_vision_{idx+1}_{f.stem}.jpg"
+                try:
+                    subprocess.run([
+                        "ffmpeg", "-y", "-ss", "00:00:01", "-i", str(f),
+                        "-vframes", "1", "-q:v", "3", str(temp_thumb)
+                    ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=5)
+                except Exception:
+                    temp_thumb = None
+
+            img_path = temp_thumb if (temp_thumb and temp_thumb.exists()) else f
+            if img_path.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp"):
+                b64 = _encode_image_to_base64(img_path)
                 if b64:
-                    mime = "image/png" if f.suffix.lower() == ".png" else "image/jpeg"
+                    parts.append({"text": f"--- MUESTRA VISUAL {idx+1} ---\nNombre de archivo: '{f.name}'\nTipo: {tipo}"})
                     parts.append({
                         "inlineData": {
-                            "mimeType": mime,
+                            "mimeType": "image/jpeg",
                             "data": b64
                         }
                     })
                     image_count += 1
-                    if image_count >= 5:  # Limit images to 5 to avoid large payload
+                    if image_count >= 7:
                         break
 
         # Append instructions text
@@ -384,14 +417,43 @@ class AdCopywriter:
             f"Aprovecha porque está {clean_offer}. {clean_cta}"
         ]
 
+        # Smart narrative ordering heuristic for media files
+        def get_media_role_score(f: Path) -> Tuple[int, str, str]:
+            name = f.name.lower()
+            if any(k in name for k in ["frontal", "hero", "portada", "principal", "main", "01"]):
+                return (1, "HOOK_HERO", "Toma principal o frontal elegida para apertura y retención inmediata.")
+            elif any(k in name for k in ["problema", "dolor", "antes", "error", "diferencia"]):
+                return (2, "PROBLEM", "Toma seleccionada para evidenciar el problema o dolor.")
+            elif f.suffix.lower() in (".mp4", ".mov", ".webm") or any(k in name for k in ["video", "ergonomia", "detalle", "accion", "uso", "demo"]):
+                return (3, "DEMO_FEATURE", "Toma de acción o detalle seleccionada para demostrar el funcionamiento.")
+            elif any(k in name for k in ["bateria", "calidad", "resistencia", "duracion", "beneficio"]):
+                return (4, "DESIRE_BENEFIT", "Toma seleccionada para resaltar beneficios clave y durabilidad.")
+            elif any(k in name for k in ["oferta", "precio", "descuento", "lanzamiento", "cta", "final", "caja", "empaque"]):
+                return (5, "OFFER_CTA", "Toma seleccionada para el cierre con oferta y llamado a la acción.")
+            else:
+                return (3, "DEMO_FEATURE", "Toma de apoyo para enriquecer la demostración visual.")
+
+        sorted_files = sorted(media_files, key=lambda f: get_media_role_score(f)[0]) if media_files else []
+
         # Adjust length to match num_scenes
         scenes = []
         for i in range(num_scenes):
             narration_idx = min(i, len(template_narrations) - 1)
+            assigned_file = sorted_files[i % len(sorted_files)] if sorted_files else None
+            role = "DEMO_FEATURE"
+            reason = "Toma visual integrada en la narrativa."
+            fname = f"toma_{i+1}.jpg"
+            if assigned_file:
+                _, role, reason = get_media_role_score(assigned_file)
+                fname = assigned_file.name
+
             scenes.append({
                 "scene_number": i + 1,
+                "media_file": fname,
+                "narrative_role": role,
+                "order_reason": reason,
                 "narration": template_narrations[narration_idx],
-                "visual_focus": f"Detalle destacado del producto en toma {i+1}",
+                "visual_focus": f"Detalle destacado en '{fname}'",
                 "callout_text": "Calidad Premium" if i == 0 else ("Garantía Total" if i == num_scenes-1 else "Innovación")
             })
 

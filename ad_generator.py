@@ -200,6 +200,48 @@ def save_cached_script(
         print(f"  ⚠️ No se pudo guardar la caché ({e})")
 
 
+def align_media_to_scenes(media_files: List[Path], script: Dict[str, Any]) -> List[Path]:
+    """
+    Reorders media_files so that index i matches scene i+1 based on
+    the AI Vision's chosen narrative sequence (script['scenes'][i]['media_file']).
+    """
+    scenes = script.get("scenes", [])
+    if not scenes or not media_files:
+        return media_files
+
+    name_map = {f.name.lower(): f for f in media_files}
+    stem_map = {f.stem.lower(): f for f in media_files}
+    ordered: List[Path] = []
+    used_files = set()
+
+    for idx, sc in enumerate(scenes):
+        target_name = sc.get("media_file", "").strip().lower()
+        matched = None
+        if target_name in name_map:
+            matched = name_map[target_name]
+        elif target_name in stem_map:
+            matched = stem_map[target_name]
+        else:
+            for fname, fpath in name_map.items():
+                if target_name and (target_name in fname or fname in target_name):
+                    matched = fpath
+                    break
+
+        if not matched or matched in used_files:
+            for f in media_files:
+                if f not in used_files:
+                    matched = f
+                    break
+            if not matched:
+                matched = media_files[idx % len(media_files)]
+
+        ordered.append(matched)
+        used_files.add(matched)
+        sc["media_file"] = matched.name
+
+    return ordered
+
+
 def display_prompt_and_script_review(
     user_prompt: str,
     script: Dict[str, Any],
@@ -208,7 +250,7 @@ def display_prompt_and_script_review(
     offer: Optional[str] = None,
     cta: Optional[str] = None,
 ) -> None:
-    """Formats and prints the advertising prompt and generated scenes for user inspection."""
+    """Formats and prints the advertising prompt, narrative visual order and generated scenes."""
     terminal_width = min(shutil.get_terminal_size((80, 20)).columns, 82)
     sep_double = "═" * terminal_width
     sep_single = "─" * terminal_width
@@ -218,7 +260,7 @@ def display_prompt_and_script_review(
     prod = script.get("product_name") or product_name or "Producto"
 
     print("\n" + sep_double)
-    print("📢  REVISIÓN DEL GUION PUBLICITARIO (ANTES DE RENDERIZAR)")
+    print("📢  REVISIÓN DEL GUION Y ORDEN VISUAL NARRATIVO (ANTES DE RENDERIZAR)")
     print(sep_double)
     print(f"🎯 Prompt del Usuario: \"{user_prompt}\"")
     if offer:
@@ -242,18 +284,22 @@ def display_prompt_and_script_review(
     print(f"   Sincronización: Cortes visuales alineados a golpes de compás (cada {bar_sec:.2f}s | beat: {beat_sec:.2f}s)")
     print(f"   Justificación:  \"{vibe}\"")
     print(sep_single)
-    print("📋 CONTENIDO DE CADA ESCENA:")
+    print("🎬 SECUENCIA VISUAL Y NARRATIVA DETERMINADA POR LA IA (AIDA):")
 
     for idx, scene in enumerate(scenes):
-        media_name = media_files[idx % len(media_files)].name if media_files else "Sin archivo"
+        media_name = scene.get("media_file") or (media_files[idx % len(media_files)].name if media_files else "Sin archivo")
+        role = scene.get("narrative_role", "TOMA")
+        reason = scene.get("order_reason", "")
         narration = scene.get("narration", "").strip()
         callout = scene.get("callout_text", "")
         focus = scene.get("visual_focus", "")
 
         callout_str = f" | Badge: [{callout}]" if callout else ""
-        print(f"\n  [Escena {idx + 1:02d}] 📁 Recurso: {media_name}{callout_str}")
+        print(f"\n  [Escena {idx + 1:02d}] 📁 Archivo: {media_name}  ➔ Rol: [{role}]{callout_str}")
+        if reason:
+            print(f"    💡 Estrategia visual: {reason}")
         if focus:
-            print(f"    🔍 Enfoque visual: {focus}")
+            print(f"    🔍 Enfoque: {focus}")
         print(f"    🗣️  Locución: \"{narration}\"")
 
     print("\n" + sep_double)
@@ -294,17 +340,18 @@ def interactive_prompt_review_menu(
         print("  [2] ✏️  MODIFICAR EL PROMPT Y REGENERAR EL GUION CON IA")
         print("  [3] 🎵 CAMBIAR ESTILO MUSICAL O RITMO (BPM)")
         print("  [4] 📝 EDITAR LAS FRASES DEL GUION MANUALMENTE")
-        print("  [5] 👁️  VER EL SYSTEM PROMPT COMPLETO DE MARKETING")
-        print("  [6] ❌ CANCELAR Y SALIR")
+        print("  [5] 🔀 REORDENAR SECUENCIA VISUAL DE TOMAS O ASIGNAR ARCHIVOS")
+        print("  [6] 👁️  VER EL SYSTEM PROMPT COMPLETO DE MARKETING")
+        print("  [7] ❌ CANCELAR Y SALIR")
         
         try:
-            choice = input("\n👉 Elige una opción [1-6] (por defecto: 1): ").strip()
+            choice = input("\n👉 Elige una opción [1-7] (por defecto: 1): ").strip()
         except (KeyboardInterrupt, EOFError):
             print("\nOperación cancelada por el usuario.")
             return False, current_script, current_prompt
 
         if not choice or choice == "1":
-            print("\n✅ Guion y música aprobados. Iniciando síntesis de voz y renderizado de video...")
+            print("\n✅ Guion, orden visual y música aprobados. Iniciando síntesis de voz y renderizado de video...")
             if cache_file:
                 save_cached_script(cache_file, current_script, current_prompt, media_files)
             return True, current_script, current_prompt
@@ -400,6 +447,61 @@ def interactive_prompt_review_menu(
                     print("Número de escena fuera de rango.")
 
         elif choice == "5":
+            scenes = current_script.get("scenes", [])
+            print("\n" + "─" * 65)
+            print("🔀 REORDENAR SECUENCIA VISUAL DE TOMAS")
+            print("─" * 65)
+            print("Secuencia visual actual:")
+            for idx, sc in enumerate(scenes):
+                fname = sc.get("media_file", media_files[idx % len(media_files)].name if media_files else "N/A")
+                role = sc.get("narrative_role", "TOMA")
+                print(f"  [{idx + 1}] Escena {idx + 1:02d}: {fname} (Rol: {role})")
+
+            print("\nArchivos multimedia disponibles en la carpeta:")
+            for f_idx, f in enumerate(media_files, start=1):
+                print(f"  [{f_idx}] {f.name}")
+
+            print("\n¿Cómo deseas reordenar?")
+            print(f"  👉 Escribe el nuevo orden numérico separado por comas (ej: 2, 1, 3, 4)")
+            print("  👉 O escribe 'S' para cambiar el archivo de una escena individual")
+            print("  👉 O presiona Enter para mantener el orden actual")
+            
+            sub = input("\nTu elección: ").strip()
+            if not sub:
+                continue
+
+            tokens = [t.strip() for t in sub.replace(",", " ").split() if t.strip().isdigit()]
+            if len(tokens) == len(scenes):
+                indices = [int(t) - 1 for t in tokens]
+                if all(0 <= i < len(scenes) for i in indices) and len(set(indices)) == len(scenes):
+                    new_scenes = []
+                    for new_idx, old_idx in enumerate(indices):
+                        sc_copy = dict(scenes[old_idx])
+                        sc_copy["scene_number"] = new_idx + 1
+                        new_scenes.append(sc_copy)
+                    current_script["scenes"] = new_scenes
+                    media_files = align_media_to_scenes(media_files, current_script)
+                    print(f"✅ Secuencia visual reordenada exitosamente a: {', '.join(tokens)}")
+                    if cache_file:
+                        save_cached_script(cache_file, current_script, current_prompt, media_files)
+                else:
+                    print("⚠️ Números inválidos o fuera de rango.")
+            elif sub.upper() == "S":
+                sc_num_str = input(f"Número de escena a modificar [1-{len(scenes)}]: ").strip()
+                if sc_num_str.isdigit() and 1 <= int(sc_num_str) <= len(scenes):
+                    s_i = int(sc_num_str) - 1
+                    f_num_str = input(f"Número de archivo a asignarle [1-{len(media_files)}]: ").strip()
+                    if f_num_str.isdigit() and 1 <= int(f_num_str) <= len(media_files):
+                        f_i = int(f_num_str) - 1
+                        chosen_f = media_files[f_i]
+                        scenes[s_i]["media_file"] = chosen_f.name
+                        scenes[s_i]["order_reason"] = "Asignado manualmente por el usuario."
+                        media_files = align_media_to_scenes(media_files, current_script)
+                        print(f"✅ Escena {s_i + 1} vinculada a: {chosen_f.name}")
+                        if cache_file:
+                            save_cached_script(cache_file, current_script, current_prompt, media_files)
+
+        elif choice == "6":
             print("\n" + "═" * 65)
             print("📜 SYSTEM PROMPT DE COPYWRITING PUBLICITARIO")
             print("═" * 65)
@@ -407,12 +509,12 @@ def interactive_prompt_review_menu(
             print("═" * 65)
             input("\nPresiona Enter para volver al menú...")
 
-        elif choice == "6":
+        elif choice == "7":
             print("\n❌ Renderizado cancelado. No se realizaron cambios.")
             return False, current_script, current_prompt
 
         else:
-            print("Opción no válida. Por favor selecciona del 1 al 6.")
+            print("Opción no válida. Por favor selecciona del 1 al 7.")
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -646,6 +748,9 @@ def main():
         # Save to cache file for instant future reruns
         save_cached_script(cache_file, script, active_prompt, media_files)
 
+    # Align media files to the AI Vision's chosen narrative sequence
+    media_files = align_media_to_scenes(media_files, script)
+
     # 5. Interactive Review Menu (Requested: "ver el prompt en consola y modificarlo antes de renderizar")
     if not args.non_interactive:
         proceed, script, active_prompt = interactive_prompt_review_menu(
@@ -662,6 +767,8 @@ def main():
         )
         if not proceed:
             sys.exit(0)
+        # Ensure alignment in case user reordered scenes in interactive menu
+        media_files = align_media_to_scenes(media_files, script)
     else:
         print("⚡ Modo no interactivo activado: Procediendo directo al renderizado.")
 
