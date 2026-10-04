@@ -599,11 +599,12 @@ class VideoRenderer:
         transition_duration: float = TRANSITION_DURATION,
         auto_ducking: bool = ENABLE_AUTO_DUCKING,
         orb_config: Optional[Dict[str, Any]] = None,
+        contact_config: Optional[Dict[str, Any]] = None,
     ) -> Path:
         """
         Concatenate visual scene clips with transitions, mix audio tracks (voice, music, SFX),
         apply dynamic sidechain auto-ducking, burn styled subtitles, optionally composite
-        an animated gradient orb overlay, and render final production-ready MP4.
+        a persistent WhatsApp / contact badge and an animated gradient orb overlay, and render final production-ready MP4.
         """
         if not check_ffmpeg():
             raise RuntimeError("FFmpeg is not installed or not found in system PATH.")
@@ -679,7 +680,7 @@ class VideoRenderer:
             # Voice only
             filter_complex.append("[1:a]aformat=channel_layouts=stereo,volume=1.0[aout]")
 
-        # 3. Gradient Orb Overlay & Subtitles burning
+        # 3. Gradient Orb Overlay, WhatsApp Contact Badge & Subtitles burning
         orb_active = False
         if orb_config and orb_config.get("enabled", False):
             orb_active = True
@@ -739,6 +740,30 @@ class VideoRenderer:
             )
             video_source = "[v_orb]"
             print(f"  🔮 Animated Gradient Orb active (Palette: '{palette}', Position: '{position}', Style: '{animation}', Size: '{size}')")
+
+        # Persistent WhatsApp & Contact Badge Overlay (Fixed on screen across entire video)
+        if contact_config and (contact_config.get("phone") or contact_config.get("location") or contact_config.get("city")):
+            from video.contact_badge import ContactBadgeManager
+            contact_mgr = ContactBadgeManager(
+                phone=contact_config.get("phone"),
+                city=contact_config.get("city"),
+                country=contact_config.get("country"),
+                location=contact_config.get("location"),
+                position=contact_config.get("position", "top-right"),
+                video_width=self.width,
+                video_height=self.height
+            )
+            badge_png = self.temp_dir / "contact_badge.png"
+            rendered_badge = contact_mgr.generate_badge_image(badge_png)
+            if rendered_badge and rendered_badge.exists():
+                cmd.extend(["-loop", "1", "-i", str(rendered_badge.resolve())])
+                badge_input_idx = curr_idx
+                curr_idx += 1
+                bx, by = contact_mgr.get_overlay_coordinates()
+                filter_complex.append(f"{video_source}[{badge_input_idx}:v]overlay=x='{bx}':y='{by}':shortest=1[v_contact]")
+                video_source = "[v_contact]"
+                loc_text = f" (📍 {contact_mgr.location})" if contact_mgr.location else ""
+                print(f"  📱 Distintivo de WhatsApp / Contacto activo: {contact_mgr.phone or ''}{loc_text} (Posición: '{contact_mgr.position}')")
 
         # Subtitles burning
         subtitle_filter = ""

@@ -207,6 +207,7 @@ def display_prompt_and_script_review(
     product_name: Optional[str] = None,
     offer: Optional[str] = None,
     cta: Optional[str] = None,
+    contact_info: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Formats and prints the advertising prompt and generated scenes for user inspection."""
     terminal_width = min(shutil.get_terminal_size((80, 20)).columns, 82)
@@ -225,6 +226,11 @@ def display_prompt_and_script_review(
         print(f"🎁 Oferta destacada:  {offer}")
     if cta:
         print(f"🚀 Llamado a la acción: {cta}")
+    if contact_info and (contact_info.get("phone") or contact_info.get("location")):
+        p_val = contact_info.get("phone") or "Sin teléfono"
+        l_val = f" | 📍 {contact_info.get('location')}" if contact_info.get("location") else ""
+        pos_val = f" | Posición: [{contact_info.get('position', 'top-right')}]"
+        print(f"📱 WhatsApp / Contacto: {p_val}{l_val}{pos_val}")
     print(f"🏷️  Producto:         {prod}")
     print(f"💥 Hook en Pantalla:  {hook_title}")
     print(f"🎞️  Total Escenas:     {len(scenes)} escenas ({len(media_files)} archivos multimedia)")
@@ -267,17 +273,19 @@ def interactive_prompt_review_menu(
     product_name: Optional[str] = None,
     offer: Optional[str] = None,
     cta: Optional[str] = None,
+    contact_info: Optional[Dict[str, Any]] = None,
     target_duration: int = 25,
     language: str = "es",
     cache_file: Optional[Path] = None,
-) -> Tuple[bool, Dict[str, Any], str]:
+) -> Tuple[bool, Dict[str, Any], str, Dict[str, Any]]:
     """
     Interactive CLI loop allowing user to review, edit, or regenerate the prompt and script.
     Returns:
-        (proceed_to_render: bool, final_script: dict, active_user_prompt: str)
+        (proceed_to_render: bool, final_script: dict, active_user_prompt: str, active_contact_info: dict)
     """
     current_prompt = user_prompt
     current_script = script
+    current_contact = dict(contact_info) if contact_info else {}
 
     while True:
         display_prompt_and_script_review(
@@ -287,6 +295,7 @@ def interactive_prompt_review_menu(
             product_name=product_name,
             offer=offer,
             cta=cta,
+            contact_info=current_contact,
         )
 
         print("\n¿Qué deseas hacer antes del renderizado?")
@@ -294,20 +303,21 @@ def interactive_prompt_review_menu(
         print("  [2] ✏️  MODIFICAR EL PROMPT Y REGENERAR EL GUION CON IA")
         print("  [3] 🎵 CAMBIAR ESTILO MUSICAL O RITMO (BPM)")
         print("  [4] 📝 EDITAR LAS FRASES DEL GUION MANUALMENTE")
-        print("  [5] 👁️  VER EL SYSTEM PROMPT COMPLETO DE MARKETING")
-        print("  [6] ❌ CANCELAR Y SALIR")
+        print("  [5] 📱 CONFIGURAR / CAMBIAR NÚMERO DE WHATSAPP O UBICACIÓN")
+        print("  [6] 👁️  VER EL SYSTEM PROMPT COMPLETO DE MARKETING")
+        print("  [7] ❌ CANCELAR Y SALIR")
         
         try:
-            choice = input("\n👉 Elige una opción [1-6] (por defecto: 1): ").strip()
+            choice = input("\n👉 Elige una opción [1-7] (por defecto: 1): ").strip()
         except (KeyboardInterrupt, EOFError):
             print("\nOperación cancelada por el usuario.")
-            return False, current_script, current_prompt
+            return False, current_script, current_prompt, current_contact
 
         if not choice or choice == "1":
-            print("\n✅ Guion y música aprobados. Iniciando síntesis de voz y renderizado de video...")
+            print("\n✅ Guion, contacto y música aprobados. Iniciando síntesis de voz y renderizado de video...")
             if cache_file:
                 save_cached_script(cache_file, current_script, current_prompt, media_files)
-            return True, current_script, current_prompt
+            return True, current_script, current_prompt, current_contact
 
         elif choice == "2":
             print("\n" + "─" * 65)
@@ -400,6 +410,40 @@ def interactive_prompt_review_menu(
                     print("Número de escena fuera de rango.")
 
         elif choice == "5":
+            print("\n" + "─" * 65)
+            print("📱 CONFIGURACIÓN DEL DISTINTIVO DE WHATSAPP / CONTACTO")
+            print("─" * 65)
+            cur_phone = current_contact.get("phone") or "Ninguno"
+            cur_loc = current_contact.get("location") or "Ninguna"
+            cur_pos = current_contact.get("position", "top-right")
+            print(f"Número actual:    {cur_phone}")
+            print(f"Ubicación actual: {cur_loc}")
+            print(f"Posición actual:  {cur_pos}")
+            print("─" * 65)
+            new_phone = input("Nuevo número de WhatsApp (ej: +57 300 123 4567, o 'none' para quitar, Enter para mantener):\n> ").strip()
+            if new_phone.lower() == "none":
+                current_contact["phone"] = None
+                print("🗑️  Número de teléfono eliminado.")
+            elif new_phone:
+                current_contact["phone"] = new_phone
+                print(f"✅ Número de WhatsApp actualizado a: {new_phone}")
+
+            new_loc = input("Ciudad / País / Cobertura (ej: Bogotá, Colombia, o Enter para mantener):\n> ").strip()
+            if new_loc.lower() == "none":
+                current_contact["location"] = None
+                print("🗑️  Ubicación eliminada.")
+            elif new_loc:
+                current_contact["location"] = new_loc
+                print(f"✅ Ubicación actualizada a: {new_loc}")
+
+            print("\nPosiciones disponibles: [1] top-right (recomendada), [2] top-left, [3] top-center, [4] bottom-left, [5] bottom-right")
+            pos_choice = input("Elige posición [1-5] (Enter para mantener actual): ").strip()
+            pos_map = {"1": "top-right", "2": "top-left", "3": "top-center", "4": "bottom-left", "5": "bottom-right"}
+            if pos_choice in pos_map:
+                current_contact["position"] = pos_map[pos_choice]
+                print(f"✅ Posición actualizada a: {current_contact['position']}")
+
+        elif choice == "6":
             print("\n" + "═" * 65)
             print("📜 SYSTEM PROMPT DE COPYWRITING PUBLICITARIO")
             print("═" * 65)
@@ -407,12 +451,12 @@ def interactive_prompt_review_menu(
             print("═" * 65)
             input("\nPresiona Enter para volver al menú...")
 
-        elif choice == "6":
+        elif choice == "7":
             print("\n❌ Renderizado cancelado. No se realizaron cambios.")
-            return False, current_script, current_prompt
+            return False, current_script, current_prompt, current_contact
 
         else:
-            print("Opción no válida. Por favor selecciona del 1 al 6.")
+            print("Opción no válida. Por favor selecciona del 1 al 7.")
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -422,14 +466,14 @@ def parse_arguments() -> argparse.Namespace:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Ejemplos de uso:
-  # 1. Ejecutar con una carpeta de fotos de tu producto:
-  python3 ad_generator.py --folder ./mis_fotos/ --prompt "Vende este termo inteligente que mantiene el agua fria por 24h"
+  # 1. Ejecutar con fotos y distintivo fijo de WhatsApp:
+  python3 ad_generator.py --folder ./mis_fotos/ --prompt "Vende este reloj" --whatsapp "+57 300 123 4567" --city "Bogota" --country "Colombia"
 
   # 2. Agregar oferta especial y llamada a la accion:
-  python3 ad_generator.py --folder ./fotos_zapatillas/ --product "Sneakers AirUrban" --offer "30%% OFF por 48 horas" --cta "Pide las tuyas en el link de la bio"
+  python3 ad_generator.py --folder ./fotos_zapatillas/ --product "Sneakers Air" --offer "30%% OFF" --whatsapp "555-0199"
 
   # 3. Probar inmediatamente con imagenes de muestra generadas automaticamente:
-  python3 ad_generator.py --sample
+  python3 ad_generator.py --sample --whatsapp "+1 800 555 0199" --city "Miami" --country "USA"
         """
     )
 
@@ -462,6 +506,37 @@ Ejemplos de uso:
         type=str,
         default=None,
         help="Llamado a la acción (ej: 'Haz clic en el enlace', 'Compra ahora')."
+    )
+    parser.add_argument(
+        "--whatsapp", "--phone", "-w",
+        type=str,
+        default=None,
+        help="Número de WhatsApp o teléfono de contacto persistente en pantalla (ej: '+57 300 123 4567')."
+    )
+    parser.add_argument(
+        "--city",
+        type=str,
+        default=None,
+        help="Ciudad del negocio o tienda (opcional, ej: 'Bogotá', 'Madrid', 'Medellín')."
+    )
+    parser.add_argument(
+        "--country",
+        type=str,
+        default=None,
+        help="País del negocio o tienda (opcional, ej: 'Colombia', 'España', 'México')."
+    )
+    parser.add_argument(
+        "--location",
+        type=str,
+        default=None,
+        help="Ubicación o cobertura completa (opcional, ej: 'Bogotá, Colombia', 'Envíos a todo el país')."
+    )
+    parser.add_argument(
+        "--contact-pos",
+        type=str,
+        default="top-right",
+        choices=["top-right", "top-left", "top-center", "bottom-left", "bottom-right"],
+        help="Posición fija del distintivo de WhatsApp en pantalla (default: top-right)."
     )
     parser.add_argument(
         "--duration", "-d",
@@ -654,8 +729,16 @@ def main():
         save_cached_script(cache_file, script, active_prompt, media_files)
 
     # 5. Interactive Review Menu (Requested: "ver el prompt en consola y modificarlo antes de renderizar")
+    contact_info = {
+        "phone": args.whatsapp,
+        "city": args.city,
+        "country": args.country,
+        "location": args.location,
+        "position": args.contact_pos,
+    }
+
     if not args.non_interactive:
-        proceed, script, active_prompt = interactive_prompt_review_menu(
+        proceed, script, active_prompt, contact_info = interactive_prompt_review_menu(
             copywriter=copywriter,
             media_files=media_files,
             user_prompt=active_prompt,
@@ -663,6 +746,7 @@ def main():
             product_name=args.product,
             offer=args.offer,
             cta=args.cta,
+            contact_info=contact_info,
             target_duration=args.duration,
             language=args.language,
             cache_file=cache_file,
@@ -835,7 +919,8 @@ def main():
         scene_durations=[t["duration"] for t in scene_timings],
         transition=args.transition,
         transition_duration=trans_duration,
-        auto_ducking=True
+        auto_ducking=True,
+        contact_config=contact_info
     )
 
     elapsed = time.time() - start_time
@@ -847,6 +932,10 @@ def main():
     print(f"📐 Formato:           {fmt_cfg['width']}x{fmt_cfg['height']} (9:16 Vertical)")
     print(f"⚡ Tiempo de render:  {elapsed:.1f} segundos")
     print(f"💬 Subtítulos:        {ass_path.name} (Animación dinámica Karaoke)")
+    if contact_info and (contact_info.get("phone") or contact_info.get("location")):
+        p_str = contact_info.get("phone") or "Sin teléfono"
+        l_str = f" (📍 {contact_info.get('location')})" if contact_info.get("location") else ""
+        print(f"📱 Distintivo WhatsApp: {p_str}{l_str} [{contact_info.get('position', 'top-right')}]")
     print("=" * 65)
     print(f"🚀 Listo para publicar en TikTok Ads, Meta Reels y YouTube Shorts.\n")
 
