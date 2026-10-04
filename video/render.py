@@ -140,15 +140,24 @@ class VideoRenderer:
             # Video asset processing
             if should_blur:
                 w_orig, h_orig = get_media_dimensions(asset_path)
-                print(f"  🎬 Video panorámico detectado ({w_orig}x{h_orig}): Aplicando fondo borroso (Blurred Background)...")
-                max_fg_h = int(self.height * 0.82)
+                print(f"  🎬 Video panorámico detectado ({w_orig}x{h_orig}): Aplicando vitrina con fondo borroso y movimiento desacoplado...")
+                max_fg_w = int(self.width * 0.92)
+                max_fg_h = int(self.height * 0.78)
+                
+                # Floating parallax elevation curve
+                y_float = f"(H-h)/2 - 12*sin(3.14159*t/{clip_duration:.2f})"
+                y_shadow = f"(H-h)/2 + 8 - 12*sin(3.14159*t/{clip_duration:.2f})"
+
                 filter_chain = (
                     f"[0:v]scale={self.width}:{self.height}:force_original_aspect_ratio=increase,"
-                    f"crop={self.width}:{self.height},gblur=sigma=28:steps=2,eq=brightness=-0.12:saturation=1.1[bg];"
-                    f"[0:v]scale=w='min({self.width},ceil(iw*min({self.width}/iw,{max_fg_h}/ih)/2)*2)':"
-                    f"h='min({max_fg_h},ceil(ih*min({self.width}/iw,{max_fg_h}/ih)/2)*2)':"
-                    f"force_original_aspect_ratio=decrease,setsar=1[fg];"
-                    f"[bg][fg]overlay=(W-w)/2:(H-h)/2,setsar=1,fps={self.fps}"
+                    f"crop={self.width}:{self.height},boxblur=22:4,eq=brightness=-0.14:saturation=1.12[bg];"
+                    f"[0:v]scale=w='min({max_fg_w},ceil(iw*min({max_fg_w}/iw,{max_fg_h}/ih)/2)*2)':"
+                    f"h='min({max_fg_h},ceil(ih*min({max_fg_w}/iw,{max_fg_h}/ih)/2)*2)':"
+                    f"force_original_aspect_ratio=decrease,setsar=1,drawbox=x=0:y=0:w=iw:h=ih:color=white@0.22:t=2[fg_raw];"
+                    f"[fg_raw]split=2[fg1][fg2];"
+                    f"[fg1]drawbox=x=0:y=0:w=iw:h=ih:color=black@0.45:t=fill,boxblur=14:3[shadow];"
+                    f"[bg][shadow]overlay=x='(W-w)/2+4':y='{y_shadow}':eval=frame[bg_s];"
+                    f"[bg_s][fg2]overlay=x='(W-w)/2':y='{y_float}':eval=frame,setsar=1,fps={self.fps}"
                 )
                 cmd = [
                     "ffmpeg", "-y",
@@ -248,23 +257,48 @@ class VideoRenderer:
 
             if should_blur:
                 w_orig, h_orig = get_media_dimensions(asset_path)
-                print(f"  🖼️  Foto horizontal/cuadrada detectada ({w_orig}x{h_orig}): Aplicando vitrina con fondo borroso y sombra suave...")
-                max_fg_w = int(self.width * 0.94)  # 1015px width (clean margins)
-                max_fg_h = int(self.height * 0.78)  # 1497px height
-                # High-Fidelity Showcase Card:
-                # 1. Background [bg]: Soft boxblur, subtle darkening and rich saturation
-                # 2. Foreground [fg]: 100% pixel-perfect aspect ratio, crisp and stable (no border crawl)
-                # 3. Soft drop-shadow [shadow]: Gives organic separation so the product card floats seamlessly
+                print(f"  🖼️  Foto horizontal/cuadrada detectada ({w_orig}x{h_orig}): Aplicando efecto Parallax 2.5D desacoplado (fondo dinámico + tarjeta flotante)...")
+                max_fg_w = int(self.width * 0.92)  # Clean aesthetic margins
+                max_fg_h = int(self.height * 0.76)
+
+                # 1. Independent Background Ambient Drift (Alternating slow push and slow pull)
+                if scene_idx % 2 == 1:
+                    bg_zoom = f"z='1.0+0.05*(on/{total_frames})':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
+                else:
+                    bg_zoom = f"z='1.06-0.05*(on/{total_frames})':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
+
+                # 2. Independent Foreground Parallax Floating Motion (Cinematic Levitation)
+                pat = (scene_idx - 1) % 4
+                if pat == 0:
+                    # Smooth upward floating arrival
+                    y_float = f"(H-h)/2 - 18*(t/{clip_duration:.2f})"
+                elif pat == 1:
+                    # Gentle downward elegance
+                    y_float = f"(H-h)/2 + 14*(t/{clip_duration:.2f})"
+                elif pat == 2:
+                    # Levitating floating arc
+                    y_float = f"(H-h)/2 - 14*sin(3.14159*t/{clip_duration:.2f})"
+                else:
+                    # Rising hero presentation
+                    y_float = f"(H-h)/2 - 20*(t/{clip_duration:.2f})"
+
+                y_shadow = f"{y_float} + 8"
+
+                # Multi-plane Parallax Composition:
+                # [bg]: living blurred background with independent ambient zoom
+                # [shadow]: dynamic drop-shadow that travels with the card
+                # [fg]: crisp product card with glass luxury border that floats on its own optical plane
                 filter_complex = (
                     f"[0:v]scale={self.width}:{self.height}:force_original_aspect_ratio=increase,"
-                    f"crop={self.width}:{self.height},boxblur=24:4,eq=brightness=-0.14:saturation=1.12[bg];"
+                    f"crop={self.width}:{self.height},boxblur=24:4,eq=brightness=-0.16:saturation=1.15,"
+                    f"zoompan={bg_zoom}:d={total_frames}:s={self.width}x{self.height}:fps={self.fps}[bg];"
                     f"[0:v]scale=w='min({max_fg_w},ceil(iw*min({max_fg_w}/iw,{max_fg_h}/ih)/2)*2)':"
                     f"h='min({max_fg_h},ceil(ih*min({max_fg_w}/iw,{max_fg_h}/ih)/2)*2)':"
-                    f"force_original_aspect_ratio=decrease,setsar=1[fg_raw];"
+                    f"force_original_aspect_ratio=decrease,setsar=1,drawbox=x=0:y=0:w=iw:h=ih:color=white@0.22:t=2[fg_raw];"
                     f"[fg_raw]split=2[fg1][fg2];"
-                    f"[fg1]drawbox=x=0:y=0:w=iw:h=ih:color=black@0.45:t=fill,boxblur=14:3[shadow];"
-                    f"[bg][shadow]overlay=(W-w)/2+4:(H-h)/2+8[bg_shadow];"
-                    f"[bg_shadow][fg2]overlay=(W-w)/2:(H-h)/2,setsar=1,fps={self.fps}"
+                    f"[fg1]drawbox=x=0:y=0:w=iw:h=ih:color=black@0.45:t=fill,boxblur=16:3[shadow];"
+                    f"[bg][shadow]overlay=x='(W-w)/2+4':y='{y_shadow}':eval=frame[bg_s];"
+                    f"[bg_s][fg2]overlay=x='(W-w)/2':y='{y_float}':eval=frame,setsar=1,fps={self.fps}"
                 )
                 cmd = [
                     "ffmpeg", "-y",
