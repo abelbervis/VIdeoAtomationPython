@@ -20,6 +20,7 @@ Usage:
 """
 
 import argparse
+import json
 import os
 import sys
 import time
@@ -144,6 +145,61 @@ def create_sample_media(target_dir: Path) -> List[Path]:
     return created_files
 
 
+def resolve_cache_file_path(media_folder: Path, custom_cache: Optional[str] = None) -> Path:
+    """Determines the target cache file path for persisting vision & copywriting results."""
+    if custom_cache:
+        return Path(custom_cache).expanduser().resolve()
+    
+    target = media_folder / "ad_script_cache.json"
+    try:
+        # Test if media_folder is writable
+        target.touch(exist_ok=True)
+        return target
+    except Exception:
+        # Fallback to TEMP_DIR if folder is mounted read-only
+        safe_name = "".join(c if c.isalnum() else "_" for c in media_folder.name)
+        return TEMP_DIR / f"ad_cache_{safe_name}.json"
+
+
+def load_cached_script(cache_file: Path) -> Optional[Tuple[Dict[str, Any], str]]:
+    """Loads previously generated ad script and prompt from JSON cache."""
+    if not cache_file.exists() or cache_file.stat().st_size == 0:
+        return None
+    try:
+        with open(cache_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        script = data.get("script")
+        prompt = data.get("user_prompt", "")
+        if script and isinstance(script, dict) and script.get("scenes"):
+            return script, prompt
+    except Exception as e:
+        print(f"  ⚠️ Error al leer archivo de caché ({e}). Se regenerará.")
+    return None
+
+
+def save_cached_script(
+    cache_file: Path,
+    script: Dict[str, Any],
+    user_prompt: str,
+    media_files: List[Path]
+) -> None:
+    """Saves the vision copywriting results to disk for zero-cost instant reruns."""
+    try:
+        cache_file.parent.mkdir(parents=True, exist_ok=True)
+        payload = {
+            "cached_at": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "user_prompt": user_prompt,
+            "media_files": [f.name for f in media_files],
+            "script": script
+        }
+        with open(cache_file, "w", encoding="utf-8") as f:
+            json.dump(payload, f, indent=2, ensure_ascii=False)
+        print(f"  💾 Guion y visión guardados en caché: {cache_file.name}")
+        print(f"     (Las próximas ejecuciones serán instantáneas y no consumirán API de visión)")
+    except Exception as e:
+        print(f"  ⚠️ No se pudo guardar la caché ({e})")
+
+
 def display_prompt_and_script_review(
     user_prompt: str,
     script: Dict[str, Any],
@@ -213,6 +269,7 @@ def interactive_prompt_review_menu(
     cta: Optional[str] = None,
     target_duration: int = 25,
     language: str = "es",
+    cache_file: Optional[Path] = None,
 ) -> Tuple[bool, Dict[str, Any], str]:
     """
     Interactive CLI loop allowing user to review, edit, or regenerate the prompt and script.
@@ -248,6 +305,8 @@ def interactive_prompt_review_menu(
 
         if not choice or choice == "1":
             print("\n✅ Guion y música aprobados. Iniciando síntesis de voz y renderizado de video...")
+            if cache_file:
+                save_cached_script(cache_file, current_script, current_prompt, media_files)
             return True, current_script, current_prompt
 
         elif choice == "2":
@@ -270,6 +329,8 @@ def interactive_prompt_review_menu(
                 if new_script:
                     current_script = new_script
                     print("✅ Nuevo guion generado exitosamente.")
+                    if cache_file:
+                        save_cached_script(cache_file, current_script, current_prompt, media_files)
                 else:
                     print("⚠️ No se pudo regenerar; manteniendo el guion anterior.")
             else:
@@ -295,6 +356,8 @@ def interactive_prompt_review_menu(
                     current_script["target_bpm"] = GENRE_PROFILES[selected_key]["bpm"]
                     current_script["music_vibe_reason"] = GENRE_PROFILES[selected_key]["desc"]
                     print(f"✅ Estilo musical cambiado a: {GENRE_PROFILES[selected_key]['name']}")
+                    if cache_file:
+                        save_cached_script(cache_file, current_script, current_prompt, media_files)
                 elif val == len(genre_list) + 1:
                     custom_bpm_str = input("Ingresa el valor de BPM deseado (ej: 128): ").strip()
                     try:
@@ -302,6 +365,8 @@ def interactive_prompt_review_menu(
                         current_script["target_bpm"] = c_bpm
                         current_script["music_vibe_reason"] = f"Tempo manual fijado a {c_bpm:.0f} BPM."
                         print(f"✅ BPM actualizado a: {c_bpm:.0f}")
+                        if cache_file:
+                            save_cached_script(cache_file, current_script, current_prompt, media_files)
                     except ValueError:
                         print("Valor de BPM inválido.")
 
@@ -317,6 +382,8 @@ def interactive_prompt_review_menu(
                 if new_hook:
                     current_script["hook_title"] = new_hook.upper()
                     print("✅ Hook Title actualizado.")
+                    if cache_file:
+                        save_cached_script(cache_file, current_script, current_prompt, media_files)
             elif target_scene.isdigit():
                 s_num = int(target_scene)
                 if 1 <= s_num <= len(scenes):
@@ -327,6 +394,8 @@ def interactive_prompt_review_menu(
                     if new_text:
                         scenes[s_num - 1]["narration"] = new_text
                         print(f"✅ Escena {s_num} actualizada.")
+                        if cache_file:
+                            save_cached_script(cache_file, current_script, current_prompt, media_files)
                 else:
                     print("Número de escena fuera de rango.")
 
@@ -438,6 +507,17 @@ Ejemplos de uso:
         help="Desactivar la alineación rítmica Beat-Sync (los cortes se harán sólo según la voz)."
     )
     parser.add_argument(
+        "--force-vision", "--force",
+        action="store_true",
+        help="Forzar un nuevo análisis de visión por API ignorando el archivo de caché existente."
+    )
+    parser.add_argument(
+        "--cache-file",
+        type=str,
+        default=None,
+        help="Ruta personalizada para guardar o leer el guion en caché (default: <carpeta>/ad_script_cache.json)."
+    )
+    parser.add_argument(
         "--output", "-o",
         type=str,
         default=None,
@@ -529,22 +609,42 @@ def main():
         groq_key=args.groq_key,
     )
 
-    # 4. Generate Initial Commercial Script
-    print(f"\n🧠 Analizando medios y redactando guion publicitario de alta retención...")
-    script, active_prompt = copywriter.generate_ad_script(
-        media_files=media_files,
-        user_prompt=args.prompt,
-        product_name=args.product,
-        offer=args.offer,
-        cta=args.cta,
-        target_duration=args.duration,
-        language=args.language,
-        include_vision=True,
-    )
+    # 4. Check Script Cache or Generate with AI Vision
+    cache_file = resolve_cache_file_path(media_folder, args.cache_file)
+    cached_data = None if args.force_vision else load_cached_script(cache_file)
 
-    if not script or not script.get("scenes"):
-        print("\n❌ Error: No fue posible generar el guion publicitario.")
-        sys.exit(1)
+    if cached_data:
+        script, active_prompt = cached_data
+        print(f"\n⚡ CACHÉ ACTIVADO: Se cargó el guion y análisis previo desde '{cache_file.name}'")
+        print(f"   (0 llamadas a la API de Visión. Para forzar un nuevo análisis usa '--force-vision')")
+        # If user provided a specific product/offer/cta flag on this run, update it
+        if args.product:
+            script["product_name"] = args.product
+        if args.prompt and args.prompt != "Vende este producto de forma irresistible":
+            active_prompt = args.prompt
+    else:
+        if args.force_vision and cache_file.exists():
+            print(f"\n🔄 Flag '--force-vision' detectado: Reanalizando imágenes con la API e ignorando caché...")
+        else:
+            print(f"\n🧠 Analizando medios y redactando guion publicitario de alta retención...")
+
+        script, active_prompt = copywriter.generate_ad_script(
+            media_files=media_files,
+            user_prompt=args.prompt,
+            product_name=args.product,
+            offer=args.offer,
+            cta=args.cta,
+            target_duration=args.duration,
+            language=args.language,
+            include_vision=True,
+        )
+
+        if not script or not script.get("scenes"):
+            print("\n❌ Error: No fue posible generar el guion publicitario.")
+            sys.exit(1)
+
+        # Save to cache file for instant future reruns
+        save_cached_script(cache_file, script, active_prompt, media_files)
 
     # 5. Interactive Review Menu (Requested: "ver el prompt en consola y modificarlo antes de renderizar")
     if not args.non_interactive:
@@ -558,6 +658,7 @@ def main():
             cta=args.cta,
             target_duration=args.duration,
             language=args.language,
+            cache_file=cache_file,
         )
         if not proceed:
             sys.exit(0)
