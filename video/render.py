@@ -204,55 +204,67 @@ class VideoRenderer:
             total_frames = max(1, int(self.fps * clip_duration))
             d = max(1, total_frames)
             progress = f"(on/{d})"
+            # Smoothstep easing (Ease-In-Out: silky acceleration and deceleration)
             ease_io = f"({progress}*{progress}*(3-2*{progress}))"
 
             if is_hook_punch:
-                punch_frames = min(12, max(4, total_frames // 2))
+                # Hook Pattern Interrupt: Smooth rapid push in the first 10 frames (~0.33s),
+                # followed by gentle continuous forward drift. No abrupt snap.
+                punch_frames = min(10, max(4, total_frames // 3))
                 rem_frames = max(1, total_frames - punch_frames)
                 zoom_expr = (
-                    f"z='if(lte(on\\,{punch_frames})\\,1.0+0.16*sqrt(on/{punch_frames})\\,1.16+0.06*((on-{punch_frames})/{rem_frames}))':"
+                    f"z='if(lte(on\\,{punch_frames})\\,1.0+0.10*sqrt(on/{punch_frames})\\,1.10+0.04*((on-{punch_frames})/{rem_frames}))':"
                     f"x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
                 )
             elif camera_variation == "closeup":
-                zoom_expr = f"z='1.35+0.06*{ease_io}':x='iw*0.48-(iw/zoom/2)':y='(ih-ih/zoom)*(1-{ease_io})'"
+                # Close-up angle cut for detail focus
+                zoom_expr = f"z='1.24+0.05*{ease_io}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
             else:
+                # Professional Product Commercial Movements:
+                # Always centered on the product (NO aggressive sideways pans that slice the product).
                 pattern = (scene_idx - 1) % 5
                 if scene_idx == 1 and self.enable_punch_in:
-                    punch_frames = min(12, max(4, total_frames // 2))
+                    punch_frames = min(10, max(4, total_frames // 3))
                     rem_frames = max(1, total_frames - punch_frames)
                     zoom_expr = (
-                        f"z='if(lte(on\\,{punch_frames})\\,1.0+0.16*sqrt(on/{punch_frames})\\,1.16+0.06*((on-{punch_frames})/{rem_frames}))':"
+                        f"z='if(lte(on\\,{punch_frames})\\,1.0+0.10*sqrt(on/{punch_frames})\\,1.10+0.04*((on-{punch_frames})/{rem_frames}))':"
                         f"x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
                     )
                 elif pattern == 0:
-                    zoom_expr = f"z='1.0+0.18*{ease_io}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
+                    # Smooth Forward Push-In (1.00 -> 1.10): Focuses directly on product details
+                    zoom_expr = f"z='1.0+0.10*{ease_io}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
                 elif pattern == 1:
-                    zoom_expr = f"z='1.20-0.18*{ease_io}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
+                    # Gentle Reveal Pull-Back (1.10 -> 1.01): Unveils the full product silhouette
+                    zoom_expr = f"z='1.10-0.09*{ease_io}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
                 elif pattern == 2:
-                    zoom_expr = f"z='1.14':x='(iw-iw/zoom)*{ease_io}':y='ih/2-(ih/zoom/2)'"
+                    # Subtle Hero Tilt-Up: Centered upward drift from base to hero angle
+                    zoom_expr = f"z='1.07':x='iw/2-(iw/zoom/2)':y='(ih-ih/zoom)*(1.0-0.65*{ease_io})'"
                 elif pattern == 3:
-                    zoom_expr = f"z='1.14':x='(iw-iw/zoom)*(1-{ease_io})':y='ih/2-(ih/zoom/2)'"
+                    # Elegant Breathing Push (1.02 -> 1.09): Gentle floating presence
+                    zoom_expr = f"z='1.02+0.07*{ease_io}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
                 else:
-                    zoom_expr = f"z='1.14':x='iw/2-(iw/zoom/2)':y='(ih-ih/zoom)*(1-{ease_io})'"
+                    # Subtle Showcase Tilt-Down: Centered downward drift from brand header to product
+                    zoom_expr = f"z='1.07':x='iw/2-(iw/zoom/2)':y='(ih-ih/zoom)*(0.25+0.60*{ease_io})'"
 
             if should_blur:
                 w_orig, h_orig = get_media_dimensions(asset_path)
-                print(f"  🖼️  Foto horizontal/cuadrada detectada ({w_orig}x{h_orig}): Aplicando fondo borroso (Blurred Background) para proteger producto...")
-                max_fg_h = int(self.height * 0.82)
-                # Blurred background composite:
-                # [bg]: scaled to fill 1080x1920 with smooth gaussian blur & subtle darkening for depth
-                # [fg]: scaled to fit inside 1080x1574 keeping pixel-perfect original aspect ratio (0 distortion)
-                # [overlay + zoompan]: smooth cinematic motion across the combined scene
+                print(f"  🖼️  Foto horizontal/cuadrada detectada ({w_orig}x{h_orig}): Aplicando vitrina con fondo borroso y sombra suave...")
+                max_fg_w = int(self.width * 0.94)  # 1015px width (clean margins)
+                max_fg_h = int(self.height * 0.78)  # 1497px height
+                # High-Fidelity Showcase Card:
+                # 1. Background [bg]: Soft boxblur, subtle darkening and rich saturation
+                # 2. Foreground [fg]: 100% pixel-perfect aspect ratio, crisp and stable (no border crawl)
+                # 3. Soft drop-shadow [shadow]: Gives organic separation so the product card floats seamlessly
                 filter_complex = (
                     f"[0:v]scale={self.width}:{self.height}:force_original_aspect_ratio=increase,"
-                    f"crop={self.width}:{self.height},gblur=sigma=30:steps=2,eq=brightness=-0.12:saturation=1.12[bg];"
-                    f"[0:v]scale=w='min({self.width},ceil(iw*min({self.width}/iw,{max_fg_h}/ih)/2)*2)':"
-                    f"h='min({max_fg_h},ceil(ih*min({self.width}/iw,{max_fg_h}/ih)/2)*2)':"
-                    f"force_original_aspect_ratio=decrease,setsar=1[fg];"
-                    f"[bg][fg]overlay=(W-w)/2:(H-h)/2,"
-                    f"zoompan=z='1.0+0.07*{ease_io}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':"
-                    f"d={total_frames}:s={self.width}x{self.height}:fps={self.fps},"
-                    f"setsar=1"
+                    f"crop={self.width}:{self.height},boxblur=24:4,eq=brightness=-0.14:saturation=1.12[bg];"
+                    f"[0:v]scale=w='min({max_fg_w},ceil(iw*min({max_fg_w}/iw,{max_fg_h}/ih)/2)*2)':"
+                    f"h='min({max_fg_h},ceil(ih*min({max_fg_w}/iw,{max_fg_h}/ih)/2)*2)':"
+                    f"force_original_aspect_ratio=decrease,setsar=1[fg_raw];"
+                    f"[fg_raw]split=2[fg1][fg2];"
+                    f"[fg1]drawbox=x=0:y=0:w=iw:h=ih:color=black@0.45:t=fill,boxblur=14:3[shadow];"
+                    f"[bg][shadow]overlay=(W-w)/2+4:(H-h)/2+8[bg_shadow];"
+                    f"[bg_shadow][fg2]overlay=(W-w)/2:(H-h)/2,setsar=1,fps={self.fps}"
                 )
                 cmd = [
                     "ffmpeg", "-y",
