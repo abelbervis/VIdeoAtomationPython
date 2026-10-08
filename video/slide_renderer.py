@@ -422,7 +422,7 @@ class GCPSlideRenderer:
                 Creating resource / revision... [OK]
               </text>
               <text x="20" y="92" fill="#93C5FD" font-family="'DejaVu Sans Mono', monospace" font-size="15">
-                Setting IAM policy bindings & network endpoints... [OK]
+                Setting IAM policy bindings and network endpoints... [OK]
               </text>
               <text x="20" y="124" fill="#4ADE80" font-family="'DejaVu Sans Mono', monospace" font-size="15" font-weight="bold">
                 ✓ STATUS 200 OK: Servicio desplegado con éxito en región europe-west1 (Exit code: 0)
@@ -527,10 +527,25 @@ class GCPSlideRenderer:
                 str(output_png_path)
             ]
             res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            return res.returncode == 0 and output_png_path.exists()
+            if res.returncode != 0:
+                err_msg = res.stderr.decode("utf-8", errors="ignore")
+                print(f"  ⚠️ Error rasterizando SVG a PNG ({output_png_path.name}):\n{err_msg[-400:]}")
         except Exception as e:
-            print(f"  ❌ Error rasterizing slide SVG to PNG: {e}")
-            return False
+            print(f"  ❌ Error ejecutando FFmpeg para rasterizar SVG: {e}")
         finally:
             if tmp_svg.exists():
                 tmp_svg.unlink()
+
+        # Guarantee output PNG exists so subsequent FFmpeg video steps never fail
+        if not output_png_path.exists() or output_png_path.stat().st_size == 0:
+            print(f"  ℹ️ Generando frame de respaldo seguro para {output_png_path.name}...")
+            cmd_fb = [
+                "ffmpeg", "-y",
+                "-f", "lavfi",
+                "-i", f"color=c=0x0B0F19:s={self.width}x{self.height}:d=1",
+                "-vframes", "1",
+                str(output_png_path)
+            ]
+            subprocess.run(cmd_fb, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        return output_png_path.exists()

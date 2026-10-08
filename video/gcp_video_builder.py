@@ -208,6 +208,18 @@ class GCPVideoBuilder:
             spk = asset["speaker"]
             seg_out = segments_dir / f"segment_{idx:02d}.mp4"
 
+            # Resilience: Ensure input image exists, fallback to solid background if missing
+            if not img.exists() or img.stat().st_size == 0:
+                print(f"  ⚠️ Frame ausente detectado ({img.name}), autogenerando fallback seguro...")
+                cmd_fb = [
+                    "ffmpeg", "-y",
+                    "-f", "lavfi",
+                    "-i", f"color=c=0x0B0F19:s={self.width}x{self.height}:d=1",
+                    "-vframes", "1",
+                    str(img)
+                ]
+                subprocess.run(cmd_fb, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
             # Optional burned subtitles via textfile
             subtitle_filter = ""
             if self.burn_subtitles:
