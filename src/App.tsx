@@ -429,6 +429,18 @@ export default function App() {
         '   🎬 [Renderizado Vectorial] Compilando keyframes SVG a 10 FPS...',
         `   ✅ Video animado Full HD generado: ~75 KB (Ultra ligero)`
       );
+    } else if (cmd.includes('--hybrid')) {
+      newLogs.push(
+        '🎬 [Orquestador de Recursos Visuales • Router Semántico]',
+        '   • Línea de tiempo multi-recurso activa (<1ms de decisión local)',
+        '   • Escena 01: [DIAPOSITIVA] Tarjeta conceptual y reglas de oro',
+        '   • Escena 02: [ANIMACIÓN RAG] Clip vectorial en tiempo real (Escalado/Flujo)',
+        '   • Escena 03: [CONSOLA GCP] Simulación interactiva de UI con clics',
+        '   • Escena 04: [DIAPOSITIVA] Matriz comparativa con resaltado dinámico',
+        '   • Concatena micro-clips MP4 con audio neural es-MX-JorgeNeural (+8%)',
+        '   • Banda sonora ambiental mezclada con auto-ducking (volume=0.04)',
+        '✅ ¡Tutorial HÍBRIDO completado exitosamente! Video optimizado en 1080p.'
+      );
     } else if (cmd.includes('gcp_tutorial.py --slides-only')) {
       newLogs.push(
         '🖼️ [GCP Slide Renderer] Generando diapositivas vectoriales SVG...',
@@ -1485,10 +1497,11 @@ export default function App() {
             <span className="text-xs text-slate-400 font-medium mr-1">Comandos rápidos:</span>
             {[
               'python gcp_tutorial.py --sample',
+              'python gcp_tutorial.py --topic "cloud_run" --hybrid',
+              'python gcp_tutorial.py --motion-templates',
               'python gcp_tutorial.py --list-topics',
               'python gcp_tutorial.py --slides-only --topic "cloud_run"',
               'python gcp_tutorial.py --help',
-              'python main.py --help',
               'ls output/'
             ].map((cmd) => (
               <button

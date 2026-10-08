@@ -125,6 +125,11 @@ def parse_args():
         help="Lista las plantillas de animación registradas e indexadas en la base de datos ligera (RAG de Componentes)."
     )
     parser.add_argument(
+        "--hybrid",
+        action="store_true",
+        help="Línea de tiempo híbrida inteligente: orquesta y combina automáticamente diapositivas, animaciones RAG y consola según la intención semántica de cada escena."
+    )
+    parser.add_argument(
         "--interactive", "-i",
         action="store_true",
         help="Modo interactivo: revisa el guion y el esquema de diapositivas en la terminal antes de renderizar."
@@ -317,7 +322,7 @@ def main():
     )
 
     out_file = Path(args.output).name if args.output else None
-    video_path = builder.build_tutorial_video(lesson=lesson, output_file_name=out_file)
+    video_path = builder.build_tutorial_video(lesson=lesson, output_file_name=out_file, force_hybrid=args.hybrid)
 
     print("\n" + "=" * 70)
     print("🎬  ¡VIDEO TUTORIAL DE GOOGLE CLOUD GENERADO CON ÉXITO!  🎉")

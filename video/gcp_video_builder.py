@@ -36,6 +36,7 @@ from utils.files import get_media_duration
 from utils.fonts import resolve_best_font_path
 from video.slide_renderer import GCPSlideRenderer
 from video.gcp_console_renderer import GCPConsoleRenderer
+from video.visual_resource_router import VisualResourceRouter
 
 
 def wrap_text_for_subtitles(text: str, max_chars_per_line: int = 80) -> str:
@@ -87,6 +88,7 @@ class GCPVideoBuilder:
         self.audio_bitrate = audio_bitrate
         self.slide_renderer = GCPSlideRenderer(width, height)
         self.console_renderer = GCPConsoleRenderer(width, height)
+        self.router = VisualResourceRouter()
 
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.temp_dir.mkdir(parents=True, exist_ok=True)
@@ -94,13 +96,284 @@ class GCPVideoBuilder:
     def build_tutorial_video(
         self,
         lesson: Dict[str, Any],
-        output_file_name: Optional[str] = None
+        output_file_name: Optional[str] = None,
+        force_hybrid: bool = False
     ) -> Path:
-        """Dispatches to console tutorial simulation or classic slide builder."""
-        if lesson.get("mode") == "console_tutorial" or "scenes" in lesson:
+        """Dispatches to hybrid multi-resource router, console tutorial simulation, or classic slide builder."""
+        if force_hybrid or lesson.get("mode") == "hybrid" or lesson.get("hybrid_timeline"):
+            return self._build_hybrid_timeline_video(lesson, output_file_name)
+        elif lesson.get("mode") == "console_tutorial" or "scenes" in lesson:
             return self._build_console_tutorial_video(lesson, output_file_name)
         else:
             return self._build_classic_slide_video(lesson, output_file_name)
+
+    def _build_hybrid_timeline_video(
+        self,
+        lesson: Dict[str, Any],
+        output_file_name: Optional[str] = None
+    ) -> Path:
+        """
+        Builds a multi-resource video where each scene alternates between:
+        - Slide (vector infographic with sequential highlight)
+        - AI Motion Clip (RAG-powered vector animation loop)
+        - Console (simulated GCP Console walkthrough)
+        - Terminal (live CLI command execution)
+        """
+        topic_slug = lesson.get("topic", "gcp_hybrid").lower().replace(" ", "_")
+        topic_slug = "".join(c for c in topic_slug if c.isalnum() or c == "_")[:32]
+        target_name = output_file_name or f"tutorial_hybrid_{topic_slug}.mp4"
+        final_video_path = self.output_dir / target_name
+
+        timeline = self.router.plan_hybrid_timeline(lesson)
+        total_scenes = len(timeline)
+
+        # Count resource distribution
+        counts: Dict[str, int] = {}
+        for item in timeline:
+            k = item.get("resource_kind", "slide")
+            counts[k] = counts.get(k, 0) + 1
+
+        dist_str = ", ".join(f"{count} {kind.upper()}" for kind, count in counts.items())
+        print(f"\n🎬 [Orquestador de Recursos Visuales • Router Semántico]")
+        print(f"   • Título: '{lesson.get('title')}'")
+        print(f"   • Línea de Tiempo Multi-Recurso: {total_scenes} escenas")
+        print(f"   • Distribución Asignada: {dist_str}")
+        print(f"   • Locutor: es-MX-JorgeNeural (+8% ritmo ágil)")
+
+        audio_dir = self.temp_dir / "audio"
+        slides_cache_dir = self.temp_dir / "slides"
+        segments_dir = self.temp_dir / "segments"
+        subs_dir = self.temp_dir / "subtitles"
+        motion_cache_dir = self.temp_dir / "motion_cache"
+
+        audio_dir.mkdir(parents=True, exist_ok=True)
+        slides_cache_dir.mkdir(parents=True, exist_ok=True)
+        segments_dir.mkdir(parents=True, exist_ok=True)
+        subs_dir.mkdir(parents=True, exist_ok=True)
+        motion_cache_dir.mkdir(parents=True, exist_ok=True)
+
+        user_assets_export_dir = self.output_dir / f"{topic_slug}_hybrid_scenes"
+        user_assets_export_dir.mkdir(parents=True, exist_ok=True)
+
+        # Lazy load AIMotionGenerator
+        from video.ai_motion_generator import AIMotionGenerator
+        motion_gen = AIMotionGenerator(
+            width=self.width,
+            height=self.height,
+            fps=self.fps,
+            crf=self.crf,
+            temp_dir=self.temp_dir / "motion_tmp",
+            output_dir=motion_cache_dir
+        )
+
+        segment_assets = []
+        font_param, _ = resolve_best_font_path()
+
+        for idx, item in enumerate(timeline, start=1):
+            kind = item.get("resource_kind", "slide")
+            r_id = item.get("resource_id", "default")
+            dialogue_text = item.get("dialogue", "")
+            slide_data = item.get("slide_data", {})
+            speaker = item.get("speaker", "Carlos")
+
+            # 1. Synthesize neural audio
+            audio_path = audio_dir / f"turn_{idx:02d}.mp3"
+            self._synthesize_mexican_male_voice(dialogue_text, audio_path)
+            duration = max(get_media_duration(audio_path), 2.5)
+
+            # 2. Render visual asset based on resource_kind
+            visual_video_clip: Optional[Path] = None
+            visual_img_path: Optional[Path] = None
+
+            if kind == "motion":
+                motion_topic = item.get("title") or lesson.get("topic") or "GCP Concept"
+                try:
+                    clip_path, _ = motion_gen.generate_motion_for_topic(
+                        topic=motion_topic,
+                        user_notes=dialogue_text,
+                        output_filename=f"clip_seg_{idx:02d}.mp4"
+                    )
+                    if clip_path.exists() and clip_path.stat().st_size > 0:
+                        visual_video_clip = clip_path
+                except Exception as e:
+                    print(f"   ⚠️ Fallback a diapositiva para escena {idx} ({e})")
+                    kind = "slide"
+
+            if kind == "console":
+                console_svg = self.console_renderer.render_console_scene_svg(
+                    scene_type=item.get("scene_data", {}).get("scene_type", "storage_analogies"),
+                    title=item.get("title", "Google Cloud Console"),
+                    highlight_keyword=item.get("scene_data", {}).get("keyword", ""),
+                    extra_data={"active_index": idx % 4}
+                )
+                visual_img_path = slides_cache_dir / f"console_{idx:02d}.png"
+                self.console_renderer.rasterize_svg_to_png(console_svg, visual_img_path)
+
+            if kind == "slide" or (not visual_video_clip and not visual_img_path):
+                slide_data_to_use = slide_data or {
+                    "layout": "concept_card",
+                    "title": item.get("title", lesson.get("title", "Concepto")),
+                    "subtitle": lesson.get("summary", ""),
+                    "badge": "PUNTO CLAVE",
+                    "concept_title": item.get("title", "Google Cloud Architecture"),
+                    "bullet_points": [dialogue_text[:120]]
+                }
+                slide_svg = self.slide_renderer.render_slide_svg(
+                    slide=slide_data_to_use,
+                    active_speaker=speaker,
+                    current_slide_num=idx,
+                    total_slides=total_scenes,
+                    series_category=lesson.get("category", "Google Cloud Architecture"),
+                    focus_index=idx % 3
+                )
+                visual_img_path = slides_cache_dir / f"slide_{idx:02d}.png"
+                self.slide_renderer.rasterize_svg_to_png(slide_svg, visual_img_path)
+
+            segment_assets.append({
+                "index": idx,
+                "kind": kind,
+                "r_id": r_id,
+                "text": dialogue_text,
+                "duration": duration,
+                "audio_path": audio_path,
+                "video_clip": visual_video_clip,
+                "img_path": visual_img_path
+            })
+
+        # 3. Encode segments
+        segment_files = []
+        for asset in segment_assets:
+            idx = asset["index"]
+            dur = asset["duration"]
+            aud = asset["audio_path"]
+            seg_out = segments_dir / f"segment_{idx:02d}.mp4"
+
+            # Discrete subtitle filter
+            subtitle_filter = ""
+            if self.burn_subtitles:
+                sub_file = subs_dir / f"caption_{idx:02d}.txt"
+                wrapped = wrap_text_for_subtitles(asset["text"], max_chars_per_line=85)
+                sub_file.write_text(wrapped, encoding="utf-8")
+                escaped_sub_path = str(sub_file.resolve()).replace("\\", "/").replace(":", "\\:")
+                subtitle_filter = (
+                    f",drawtext={font_param}:textfile='{escaped_sub_path}':"
+                    f"fontcolor=white:fontsize=17:line_spacing=4:box=1:boxcolor=0x000000@0.75:boxborderw=8:"
+                    f"x=(w-text_w)/2:y=h-96"
+                )
+
+            vf_string = f"scale={self.width}:{self.height},format=yuv420p{subtitle_filter}"
+
+            if asset["video_clip"] and asset["video_clip"].exists():
+                cmd = [
+                    "ffmpeg", "-y",
+                    "-stream_loop", "-1",
+                    "-t", f"{dur:.2f}",
+                    "-i", str(asset["video_clip"]),
+                    "-i", str(aud),
+                    "-vf", vf_string,
+                    "-r", str(self.fps),
+                    "-c:v", self.codec,
+                    "-preset", "veryfast",
+                    "-crf", str(self.crf),
+                    "-c:a", "aac",
+                    "-b:a", self.audio_bitrate,
+                    "-shortest",
+                    str(seg_out)
+                ]
+            else:
+                img = asset["img_path"]
+                if not img.exists() or img.stat().st_size == 0:
+                    cmd_fb = [
+                        "ffmpeg", "-y",
+                        "-f", "lavfi",
+                        "-i", f"color=c=0x0B0F19:s={self.width}x{self.height}:d=1",
+                        "-vframes", "1",
+                        str(img)
+                    ]
+                    subprocess.run(cmd_fb, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+                cmd = [
+                    "ffmpeg", "-y",
+                    "-loop", "1",
+                    "-t", f"{dur:.2f}",
+                    "-i", str(img),
+                    "-i", str(aud),
+                    "-vf", vf_string,
+                    "-r", str(self.fps),
+                    "-c:v", self.codec,
+                    "-preset", "veryfast",
+                    "-crf", str(self.crf)
+                ]
+                if self.codec == "libx264":
+                    cmd.extend(["-tune", "stillimage"])
+                cmd.extend([
+                    "-c:a", "aac",
+                    "-b:a", self.audio_bitrate,
+                    "-shortest",
+                    str(seg_out)
+                ])
+
+            subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+            segment_files.append(seg_out)
+
+        # 4. Concatenate segments
+        concat_list_file = self.temp_dir / "concat_list.txt"
+        with open(concat_list_file, "w", encoding="utf-8") as f:
+            for s in segment_files:
+                f.write(f"file '{s.resolve()}'\n")
+
+        raw_stitched = self.temp_dir / "raw_stitched.mp4"
+        subprocess.run(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(concat_list_file), "-c", "copy", str(raw_stitched)], check=True)
+
+        # 5. Background soundtrack
+        bg_music = self._find_ambient_soundtrack()
+        total_seconds = sum(a["duration"] for a in segment_assets)
+        if self.enable_music and bg_music and bg_music.exists():
+            cmd_mix = [
+                "ffmpeg", "-y",
+                "-i", str(raw_stitched),
+                "-stream_loop", "-1",
+                "-i", str(bg_music),
+                "-filter_complex",
+                f"[1:a]volume=0.04,afade=t=out:st={max(0, total_seconds - 3)}:d=3[bg];"
+                f"[0:a][bg]amix=inputs=2:duration=first:dropout_transition=2[aout]",
+                "-map", "0:v",
+                "-map", "[aout]",
+                "-c:v", "copy",
+                "-c:a", "aac",
+                "-b:a", self.audio_bitrate,
+                str(final_video_path)
+            ]
+            subprocess.run(cmd_mix, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        else:
+            raw_stitched.rename(final_video_path)
+
+        file_bytes = final_video_path.stat().st_size if final_video_path.exists() else 0
+        file_mb = file_bytes / (1024 * 1024)
+
+        meta_path = self.output_dir / f"{topic_slug}_hybrid_metadata.json"
+        with open(meta_path, "w", encoding="utf-8") as f:
+            json.dump({
+                "title": lesson.get("title"),
+                "topic": lesson.get("topic"),
+                "mode": "hybrid_multi_resource",
+                "narrator": "es-MX-JorgeNeural (Hombre Mexicano)",
+                "total_duration": total_seconds,
+                "scenes_count": total_scenes,
+                "resource_distribution": counts,
+                "video_path": str(final_video_path),
+                "file_size_mb": round(file_mb, 2),
+                "fps": self.fps,
+                "codec": self.codec
+            }, f, indent=2, ensure_ascii=False)
+
+        print(f"\n✅ [Completado Exitosamente] Video tutorial HÍBRIDO generado:")
+        print(f"   📹 Archivo: {final_video_path}")
+        print(f"   📦 Tamaño: {file_mb:.2f} MB ({file_bytes:,} bytes)")
+        print(f"   ⏱️ Duración: {total_seconds:.1f} segundos (~{round(total_seconds / 60, 1)} minutos)")
+        print(f"   🎭 Recursos combinados: {dist_str}")
+
+        return final_video_path
 
     def _build_console_tutorial_video(
         self,
