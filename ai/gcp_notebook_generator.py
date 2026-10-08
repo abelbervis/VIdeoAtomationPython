@@ -43,26 +43,51 @@ CURATED_GCP_LESSONS: Dict[str, Dict[str, Any]] = {
             {
                 "scene_id": 3,
                 "scene_type": "storage_analogies",
-                "title": "Las 4 Clases de Almacenamiento con Metáforas Reales",
-                "keyword": "METÁFORAS",
-                "dialogue": "Para no pagar de más, piensa en esto con objetos de tu casa. Standard es el cajón de tu escritorio: lo usas todos los días para tu web o fotos activas. Nearline es el armario: lo abres una vez al mes para respaldos periódicos y ahorras el 50 por ciento. Coldline es la bodega o trastero: accedes una vez al año para archivos históricos y ahorras el 75 por ciento. Y Archive es una caja fuerte bajo tierra: solo para auditorías legales, a un costo prácticamente de cero."
+                "active_index": 0,
+                "title": "Las 4 Clases de Almacenamiento: Standard",
+                "keyword": "STANDARD",
+                "dialogue": "Para no pagar de más, piensa en esto con objetos de tu casa. Standard es el cajón de tu escritorio: lo usas todos los días para tu web o fotos activas sin costo adicional por lectura."
             },
             {
                 "scene_id": 4,
+                "scene_type": "storage_analogies",
+                "active_index": 1,
+                "title": "Las 4 Clases de Almacenamiento: Nearline",
+                "keyword": "NEARLINE",
+                "dialogue": "Nearline es el armario: lo abres una vez al mes para respaldos periódicos y de inmediato ahorras el 50 por ciento."
+            },
+            {
+                "scene_id": 5,
+                "scene_type": "storage_analogies",
+                "active_index": 2,
+                "title": "Las 4 Clases de Almacenamiento: Coldline",
+                "keyword": "COLDLINE",
+                "dialogue": "Coldline es la bodega o trastero: accedes una vez al año para archivos históricos y ahorras el 75 por ciento."
+            },
+            {
+                "scene_id": 6,
+                "scene_type": "storage_analogies",
+                "active_index": 3,
+                "title": "Las 4 Clases de Almacenamiento: Archive",
+                "keyword": "ARCHIVE",
+                "dialogue": "Y Archive es una caja fuerte bajo tierra: solo para auditorías legales, a un costo prácticamente de cero."
+            },
+            {
+                "scene_id": 7,
                 "scene_type": "drag_and_drop_upload",
                 "title": "Subiendo Archivos con Cifrado Bancario Automático",
                 "keyword": "SUBIR ARCHIVOS",
                 "dialogue": "Una vez creado tu bucket, subir archivos es tan fácil como arrastrar y soltar tu carpeta o archivo comprimido directamente en el navegador. Lo mejor es que Google Cloud cifra automáticamente toda tu información en reposo con el estándar bancario AES-256 sin que tengas que configurar llaves complejas."
             },
             {
-                "scene_id": 5,
+                "scene_id": 8,
                 "scene_type": "cli_zoom",
                 "title": "Comando Rápido con gcloud storage CLI",
                 "keyword": "GCLOUD CLI",
-                "dialogue": "Y si prefieres la terminal, con una sola línea de gcloud storage buckets create con la opción default-storage-class igual a Coldline, automatizas tus respaldos en tus scripts de integración continua en menos de 2 segundos."
+                "dialogue": "Y si prefieres la terminal, con una sola línea de gcloud storage buckets create asignando la clase coldline, automatizas tus respaldos en tus scripts en menos de dos segundos."
             },
             {
-                "scene_id": 6,
+                "scene_id": 9,
                 "scene_type": "golden_rules_summary",
                 "title": "Las 3 Reglas de Oro para Ahorrar el 80%",
                 "keyword": "AHORRA 80%",

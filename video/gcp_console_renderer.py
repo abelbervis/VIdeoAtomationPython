@@ -4,6 +4,8 @@ Replaces abstract, text-heavy slides with visual, hands-on demonstrations of the
 - Google Cloud Top Header & Navigation Bar
 - Real interactive forms (Create Bucket, Location selection, Storage Class picker)
 - Real-world visual metaphors (Desk Drawer, Closet, Storage Unit, Underground Vault)
+- Standard SVG <text> and <tspan> elements (100% librsvg and FFmpeg compatible, zero empty boxes)
+- Dynamic Step-by-Step Sequential Highlighting without increasing filesize or rendering compute
 - Drag & Drop file uploads with progress indicators
 - Zoomed-in focused CLI terminals
 - Extreme visual rule: Max 1 core idea and 3 keywords at a time!
@@ -20,6 +22,30 @@ def escape_xml(text: str) -> str:
     return html.escape(str(text))
 
 
+def wrap_svg_tspan(text: str, x: int, y_start: int, line_height: int = 24, max_chars: int = 34) -> str:
+    """Wraps text into native SVG tspans guaranteed to render in librsvg/FFmpeg without foreignObject."""
+    words = text.split()
+    lines: List[str] = []
+    current_line: List[str] = []
+    current_len = 0
+    for w in words:
+        if current_len + len(w) + 1 > max_chars and current_line:
+            lines.append(" ".join(current_line))
+            current_line = [w]
+            current_len = len(w)
+        else:
+            current_line.append(w)
+            current_len += len(w) + 1
+    if current_line:
+        lines.append(" ".join(current_line))
+
+    tspans = []
+    for i, line in enumerate(lines[:4]):
+        dy = 0 if i == 0 else line_height
+        tspans.append(f'<tspan x="{x}" dy="{dy}">{escape_xml(line)}</tspan>')
+    return f'<text x="{x}" y="{y_start}" fill="#E2E8F0" font-family="\'Liberation Sans\', sans-serif" font-size="16">{"".join(tspans)}</text>'
+
+
 class GCPConsoleRenderer:
     """Renders pixel-perfect Google Cloud Console UI simulation scenes."""
 
@@ -34,7 +60,7 @@ class GCPConsoleRenderer:
         highlight_keyword: str = "",
         extra_data: Optional[Dict[str, Any]] = None
     ) -> str:
-        """Renders an engaging, practical GCP Console scene."""
+        """Renders an engaging, practical GCP Console scene with optional sequential focus."""
         w, h = self.width, self.height
         data = extra_data or {}
         
@@ -82,7 +108,7 @@ class GCPConsoleRenderer:
     </filter>
 
     <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="0" stdDeviation="10" flood-color="#38BDF8" flood-opacity="0.5"/>
+      <feDropShadow dx="0" dy="0" stdDeviation="12" flood-color="#38BDF8" flood-opacity="0.6"/>
     </filter>
   </defs>
 
@@ -157,8 +183,8 @@ class GCPConsoleRenderer:
     {body_svg}
   </g>
 
-  <!-- SLEEK MINIMALIST PRESENTER STATUS (Bottom) -->
-  <g transform="translate(40, {h - 60})">
+  <!-- SLEEK MINIMALIST PRESENTER STATUS (Bottom Bar) -->
+  <g transform="translate(40, {h - 55})">
     <rect x="0" y="0" width="{w - 80}" height="42" rx="10" fill="#0A0E17" stroke="#1E293B" stroke-width="1.2"/>
     <circle cx="24" cy="21" r="10" fill="#0284C7"/>
     <text x="24" y="25" fill="#FFFFFF" font-family="'Liberation Sans', sans-serif" font-size="11" font-weight="bold" text-anchor="middle">🎙️</text>
@@ -166,7 +192,7 @@ class GCPConsoleRenderer:
       TUTORIAL GOOGLE CLOUD
     </text>
     <text x="260" y="26" fill="#38BDF8" font-family="'Liberation Sans', sans-serif" font-size="13">
-      • Explicación didáctica paso a paso
+      • Explicación paso a paso con la consola oficial
     </text>
     
     <text x="{w - 180}" y="26" fill="#10B981" font-family="'Liberation Sans', sans-serif" font-size="13" font-weight="bold" text-anchor="end">
@@ -364,10 +390,11 @@ class GCPConsoleRenderer:
         """
 
     def _build_storage_analogies(self, w: int, h: int, data: Dict[str, Any]) -> str:
-        """Visual real-world metaphors for Cloud Storage classes (Desk Drawer, Closet, Storage Unit, Vault)."""
+        """Visual real-world metaphors with 100% visible text (no foreignObject) & sequential focus."""
         card_w = 410
         card_h = 720
         gap = 25
+        active_card_idx = data.get("active_index", None)
 
         analogies = [
             {
@@ -375,7 +402,7 @@ class GCPConsoleRenderer:
                 "metaphor": "EL CAJÓN DE TU ESCRITORIO",
                 "icon": "📦",
                 "frequency": "Todos los días",
-                "use_case": "Imágenes web, APIs activas, streaming y archivos de uso constante.",
+                "use_case": "Imágenes web, APIs activas, streaming y archivos de uso constante sin coste por lectura.",
                 "cost": "$0.020 / GB",
                 "border": "#38BDF8",
                 "badge_bg": "#0284C7",
@@ -386,7 +413,7 @@ class GCPConsoleRenderer:
                 "metaphor": "EL ARMARIO DE TU CASA",
                 "icon": "🗄️",
                 "frequency": "1 vez al mes",
-                "use_case": "Backups mensuales, reportes contables que consultas ocasionalmente.",
+                "use_case": "Backups mensuales y reportes periódicos que consultas de vez en cuando.",
                 "cost": "$0.010 / GB",
                 "border": "#34D399",
                 "badge_bg": "#059669",
@@ -408,7 +435,7 @@ class GCPConsoleRenderer:
                 "metaphor": "CAJA FUERTE BAJO TIERRA",
                 "icon": "🔒",
                 "frequency": "Solo auditorías legales",
-                "use_case": "Copias de respaldo obligatorias por ley guardadas por 5 o 10 años.",
+                "use_case": "Copias de respaldo obligatorias por ley guardadas por 5 o 10 años a costo casi cero.",
                 "cost": "$0.0012 / GB",
                 "border": "#A78BFA",
                 "badge_bg": "#7C3AED",
@@ -419,9 +446,27 @@ class GCPConsoleRenderer:
         cards_svg = ""
         for i, item in enumerate(analogies):
             x = 40 + i * (card_w + gap)
+            is_active = (active_card_idx is not None and active_card_idx == i)
+            opacity_val = "1.0" if (active_card_idx is None or is_active) else "0.45"
+            card_stroke = item['border'] if not is_active else "#00F0FF"
+            card_stroke_w = "3.5" if is_active else "2"
+            glow_attr = 'filter="url(#neonGlow)"' if is_active else 'filter="url(#boxShadow)"'
+
+            focus_badge = ""
+            if is_active:
+                focus_badge = f"""
+                <rect x="{card_w - 140}" y="20" width="120" height="28" rx="6" fill="#00F0FF"/>
+                <text x="{card_w - 80}" y="39" fill="#000000" font-family="'Liberation Sans', sans-serif" font-size="12" font-weight="bold" text-anchor="middle">
+                  ▶ EN ENFOQUE
+                </text>"""
+
+            # Wrap use case text cleanly using native SVG text & tspans
+            use_case_svg = wrap_svg_tspan(item['use_case'], x=40, y_start=370, line_height=26, max_chars=34)
+
             cards_svg += f"""
-            <g transform="translate({x}, 40)" filter="url(#boxShadow)">
-              <rect x="0" y="0" width="{card_w}" height="{card_h}" rx="18" fill="#0F172A" stroke="{item['border']}" stroke-width="2.5"/>
+            <g transform="translate({x}, 40)" opacity="{opacity_val}" {glow_attr}>
+              <rect x="0" y="0" width="{card_w}" height="{card_h}" rx="18" fill="#0F172A" stroke="{card_stroke}" stroke-width="{card_stroke_w}"/>
+              {focus_badge}
 
               <!-- Class Badge -->
               <rect x="25" y="25" width="{card_w - 50}" height="42" rx="10" fill="{item['badge_bg']}"/>
@@ -441,14 +486,10 @@ class GCPConsoleRenderer:
                 📅 Acceso: {item['frequency']}
               </text>
 
-              <!-- Practical Description -->
+              <!-- Practical Description with 100% visible standard SVG text -->
               <rect x="25" y="295" width="{card_w - 50}" height="180" rx="12" fill="#0A0E17"/>
               <text x="40" y="335" fill="#94A3B8" font-family="'Liberation Sans', sans-serif" font-size="14" font-weight="bold">CASO DE USO IDEAL:</text>
-              <foreignObject x="40" y="350" width="{card_w - 80}" height="110">
-                <p xmlns="http://www.w3.org/1999/xhtml" style="color: #E2E8F0; font-family: 'Liberation Sans', sans-serif; font-size: 16px; line-height: 1.4; margin: 0;">
-                  {item['use_case']}
-                </p>
-              </foreignObject>
+              {use_case_svg}
 
               <!-- Pricing Highlight Tag -->
               <g transform="translate(25, 500)">
@@ -552,7 +593,7 @@ class GCPConsoleRenderer:
 
             <rect x="0" y="70" width="{w - 280}" height="130" rx="12" fill="#0C1A30" stroke="#0284C7" stroke-width="2"/>
             <text x="40" y="130" fill="#38BDF8" font-family="monospace" font-size="28" font-weight="bold">
-              $ gcloud storage buckets create gs://mi-empresa-backups-2025 \
+              $ gcloud storage buckets create gs://mi-empresa-backups-2025 \\
             </text>
             <text x="75" y="175" fill="#38BDF8" font-family="monospace" font-size="28" font-weight="bold">
                 --location=us-central1 --default-storage-class=COLDLINE

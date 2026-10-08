@@ -1,23 +1,24 @@
 """
 GCP Tutorial & Console Simulator Video Builder - Flagship Edition.
 Features:
-- Authentic Mexican Male Narrator (warm chest resonance, natural fluent pace).
+- Authentic Mexican Male Narrator ('es-MX-JorgeNeural' via edge-tts at calibrated +8% pace).
 - Direct, Practical Hook & Storytelling (no boring theory or fake synthetic debates).
 - Hyper-Realistic Google Cloud Console UI Simulation:
   * Alerta de factura real vs solución Cloud Storage
   * Creación interactiva de bucket en GCP Console
-  * Las 4 metáforas cotidianas (Cajón, Armario, Bodega, Caja fuerte)
+  * Las 4 metáforas cotidianas (Cajón, Armario, Bodega, Caja fuerte) con resaltado secuencial dinámico
   * Drag & Drop de archivos con cifrado bancario automático
-  * Zoom enfocado a comandos de gcloud storage CLI
+  * Zoom enfocado a comandos de gcloud storage CLI con diálogo fluido
   * Reglas de oro para ahorrar el 80%
 - Extreme File Size & Bitrate Optimization:
   * 15 FPS
   * -tune stillimage with CRF 26
   * 96 kbps AAC audio
   * Zero Ken Burns / 100% vector sharpness
-  * Compact single-pill bottom captions
+  * Subtítulos flotantes sin superposición (y=h-96)
 """
 
+import asyncio
 import json
 import subprocess
 import time
@@ -57,7 +58,7 @@ def wrap_text_for_subtitles(text: str, max_chars_per_line: int = 80) -> str:
 
 
 class GCPVideoBuilder:
-    """Builds hands-on audiovisual tutorials with GCP Console simulation and Mexican male narrator."""
+    """Builds hands-on audiovisual tutorials with GCP Console simulation and JorgeNeural Mexican male narrator."""
 
     def __init__(
         self,
@@ -67,7 +68,7 @@ class GCPVideoBuilder:
         height: int = 1080,
         burn_subtitles: bool = True,
         enable_music: bool = True,
-        speech_speed: float = 1.15,
+        speech_speed: float = 1.08,
         fps: int = 15,
         crf: int = 26,
         codec: str = "libx264",
@@ -79,7 +80,7 @@ class GCPVideoBuilder:
         self.height = height
         self.burn_subtitles = burn_subtitles
         self.enable_music = enable_music
-        self.speech_speed = max(1.0, min(1.4, speech_speed))
+        self.speech_speed = max(1.0, min(1.3, speech_speed))
         self.fps = fps
         self.crf = crf
         self.codec = codec if codec in ("libx265", "libx264") else "libx264"
@@ -108,9 +109,9 @@ class GCPVideoBuilder:
     ) -> Path:
         """
         Builds dynamic Google Cloud Console hands-on walkthrough:
-        - Real Console UI scenes (Hook, Bucket creation, Analogies, Upload, CLI, Summary)
-        - Single Mexican male narrator
-        - Direct to the point (~2.5 - 3 minutes)
+        - Real Console UI scenes with sequential active focus
+        - Neural Mexican male voice (es-MX-JorgeNeural at +8%)
+        - Direct to the point (~1.5 minutes)
         - 15 FPS, CRF 26, AAC 96k
         """
         topic_slug = lesson.get("topic", "gcp_storage").lower().replace(" ", "_")
@@ -125,7 +126,7 @@ class GCPVideoBuilder:
         print(f"\n🚀 [GCP Console Simulator Video Builder]")
         print(f"   • Título: '{lesson.get('title')}'")
         print(f"   • Formato: Simulación Visual de Google Cloud Console + Metáforas Cotidianas")
-        print(f"   • Locutor: Hombre Mexicano (Ingeniero Cloud en primera persona)")
+        print(f"   • Locutor: es-MX-JorgeNeural (Voz masculina mexicana neural a +8%)")
         print(f"   • Escenas prácticas: {total_scenes}")
         print(f"   • Optimización: {self.width}x{self.height} @ {self.fps} FPS ({self.codec}, CRF {self.crf})")
 
@@ -151,12 +152,17 @@ class GCPVideoBuilder:
             s_title = scene.get("title", "Google Cloud Storage")
             s_keyword = scene.get("keyword", "")
             dialogue_text = scene.get("dialogue", "")
+            
+            extra_data = {}
+            if "active_index" in scene:
+                extra_data["active_index"] = scene["active_index"]
 
             # 1. Render Console Scene SVG to PNG
             scene_svg = self.console_renderer.render_console_scene_svg(
                 scene_type=s_type,
                 title=s_title,
-                highlight_keyword=s_keyword
+                highlight_keyword=s_keyword,
+                extra_data=extra_data
             )
             scene_img = scenes_dir / f"scene_{idx:02d}_{s_type}.png"
             self.console_renderer.rasterize_svg_to_png(scene_svg, scene_img)
@@ -208,7 +214,7 @@ class GCPVideoBuilder:
                 ]
                 subprocess.run(cmd_fb, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-            # Sleek, compact bottom caption
+            # Sleek, compact bottom caption positioned at y=h-96 to avoid bottom bar overlap
             subtitle_filter = ""
             if self.burn_subtitles:
                 sub_file = subs_dir / f"caption_{idx:02d}.txt"
@@ -219,7 +225,7 @@ class GCPVideoBuilder:
                 subtitle_filter = (
                     f",drawtext={font_param}:textfile='{escaped_sub_path}':"
                     f"fontcolor=white:fontsize=17:line_spacing=4:box=1:boxcolor=0x000000@0.75:boxborderw=8:"
-                    f"x=(w-text_w)/2:y=h-64"
+                    f"x=(w-text_w)/2:y=h-96"
                 )
 
             vf_string = f"scale={self.width}:{self.height},format=yuv420p{subtitle_filter}"
@@ -279,7 +285,7 @@ class GCPVideoBuilder:
                 "-stream_loop", "-1",
                 "-i", str(bg_music),
                 "-filter_complex",
-                f"[1:a]volume=0.05,afade=t=out:st={max(0, total_dur - 3)}:d=3[bg];"
+                f"[1:a]volume=0.04,afade=t=out:st={max(0, total_dur - 3)}:d=3[bg];"
                 f"[0:a][bg]amix=inputs=2:duration=first:dropout_transition=2[aout]",
                 "-map", "0:v",
                 "-map", "[aout]",
@@ -303,7 +309,7 @@ class GCPVideoBuilder:
                 "topic": lesson.get("topic"),
                 "category": lesson.get("category"),
                 "summary": lesson.get("summary"),
-                "narrator": "Carlos (Ingeniero Cloud Mexicano)",
+                "narrator": "es-MX-JorgeNeural (Hombre Mexicano)",
                 "total_duration": total_seconds,
                 "scenes_count": total_scenes,
                 "video_path": str(final_video_path),
@@ -361,10 +367,47 @@ class GCPVideoBuilder:
             self.slide_renderer.rasterize_svg_to_png(svg_standalone, export_png)
 
         turn_assets = []
+        # Calculate turn counts per slide to sequence focus dynamically across turns
+        slide_turn_counts: Dict[int, int] = {}
+        for turn in dialogue_turns:
+            s_id = turn.get("slide_id", 1)
+            slide_turn_counts[s_id] = slide_turn_counts.get(s_id, 0) + 1
+
+        slide_turn_tracker: Dict[int, int] = {}
+
         for idx, turn in enumerate(dialogue_turns, start=1):
             slide_id = turn.get("slide_id", 1)
             dialogue_text = turn.get("text", "")
+            speaker = turn.get("speaker", "Alex")
             slide_data = slides_dict.get(slide_id, list(slides_dict.values())[0])
+
+            turn_on_slide = slide_turn_tracker.get(slide_id, 0)
+            slide_turn_tracker[slide_id] = turn_on_slide + 1
+            turns_for_slide = slide_turn_counts.get(slide_id, 1)
+
+            # Sequential highlighting logic based on slide layout
+            layout = slide_data.get("layout", "concept_card")
+            focus_idx: Optional[int] = None
+            show_exec: bool = False
+
+            if layout == "comparison_table":
+                rows_count = len(slide_data.get("rows", []))
+                if rows_count > 0:
+                    focus_idx = turn_on_slide % rows_count
+            elif layout == "architecture_flow":
+                steps_count = len(slide_data.get("steps", []))
+                if steps_count > 0:
+                    focus_idx = turn_on_slide % steps_count
+            elif layout == "concept_card":
+                bullets_count = len(slide_data.get("bullet_points", []))
+                if bullets_count > 0:
+                    focus_idx = min(turn_on_slide, bullets_count)
+            elif layout == "terminal_code":
+                show_exec = (turn_on_slide > 0 or turns_for_slide == 1)
+            elif layout == "hierarchy_tree":
+                nodes_count = len(slide_data.get("nodes", []))
+                if nodes_count > 0:
+                    focus_idx = turn_on_slide % nodes_count
 
             audio_path = audio_dir / f"turn_{idx:02d}.mp3"
             self._synthesize_mexican_male_voice(dialogue_text, audio_path)
@@ -373,10 +416,12 @@ class GCPVideoBuilder:
 
             slide_svg = self.slide_renderer.render_slide_svg(
                 slide=slide_data,
-                active_speaker="Alex",
+                active_speaker=speaker,
                 current_slide_num=slide_id,
                 total_slides=total_slides,
-                series_category=lesson.get("category", "Google Cloud Architecture")
+                series_category=lesson.get("category", "Google Cloud Architecture"),
+                focus_index=focus_idx,
+                show_execution=show_exec
             )
             slide_img_path = slides_cache_dir / f"frame_{idx:02d}.png"
             self.slide_renderer.rasterize_svg_to_png(slide_svg, slide_img_path)
@@ -384,6 +429,7 @@ class GCPVideoBuilder:
             turn_assets.append({
                 "turn_id": idx,
                 "text": dialogue_text,
+                "speaker": speaker,
                 "audio_path": audio_path,
                 "slide_img": slide_img_path,
                 "duration": duration
@@ -399,16 +445,27 @@ class GCPVideoBuilder:
             aud = asset["audio_path"]
             seg_out = segments_dir / f"segment_{idx:02d}.mp4"
 
+            # Guaranteed image fallback if rasterization had an issue
+            if not img.exists() or img.stat().st_size == 0:
+                cmd_fb = [
+                    "ffmpeg", "-y",
+                    "-f", "lavfi",
+                    "-i", f"color=c=0x0B0F19:s={self.width}x{self.height}:d=1",
+                    "-vframes", "1",
+                    str(img)
+                ]
+                subprocess.run(cmd_fb, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
             subtitle_filter = ""
             if self.burn_subtitles:
                 sub_file = subs_dir / f"caption_{idx:02d}.txt"
-                wrapped = wrap_text_for_subtitles(asset["text"])
+                wrapped = wrap_text_for_subtitles(asset["text"], max_chars_per_line=85)
                 sub_file.write_text(wrapped, encoding="utf-8")
                 escaped_sub_path = str(sub_file.resolve()).replace("\\", "/").replace(":", "\\:")
                 subtitle_filter = (
                     f",drawtext={font_param}:textfile='{escaped_sub_path}':"
                     f"fontcolor=white:fontsize=17:line_spacing=4:box=1:boxcolor=0x000000@0.75:boxborderw=8:"
-                    f"x=(w-text_w)/2:y=h-64"
+                    f"x=(w-text_w)/2:y=h-96"
                 )
 
             vf_string = f"scale={self.width}:{self.height},format=yuv420p{subtitle_filter}"
@@ -443,25 +500,98 @@ class GCPVideoBuilder:
 
         raw_stitched = self.temp_dir / "raw_stitched.mp4"
         subprocess.run(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(concat_list_file), "-c", "copy", str(raw_stitched)], check=True)
-        raw_stitched.rename(final_video_path)
+
+        # Ambient soundtrack mixing
+        bg_music = self._find_ambient_soundtrack()
+        if self.enable_music and bg_music and bg_music.exists():
+            print(f"   🎶 Añadiendo música ambiental: {bg_music.name}")
+            total_dur = sum(a["duration"] for a in turn_assets)
+            cmd_mix = [
+                "ffmpeg", "-y",
+                "-i", str(raw_stitched),
+                "-stream_loop", "-1",
+                "-i", str(bg_music),
+                "-filter_complex",
+                f"[1:a]volume=0.04,afade=t=out:st={max(0, total_dur - 3)}:d=3[bg];"
+                f"[0:a][bg]amix=inputs=2:duration=first:dropout_transition=2[aout]",
+                "-map", "0:v",
+                "-map", "[aout]",
+                "-c:v", "copy",
+                "-c:a", "aac",
+                "-b:a", self.audio_bitrate,
+                str(final_video_path)
+            ]
+            subprocess.run(cmd_mix, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        else:
+            raw_stitched.rename(final_video_path)
+
+        total_seconds = sum(a["duration"] for a in turn_assets)
+        file_bytes = final_video_path.stat().st_size if final_video_path.exists() else 0
+        file_mb = file_bytes / (1024 * 1024)
+
+        meta_path = self.output_dir / f"{topic_slug}_metadata.json"
+        with open(meta_path, "w", encoding="utf-8") as f:
+            json.dump({
+                "title": lesson.get("title"),
+                "topic": lesson.get("topic"),
+                "category": lesson.get("category"),
+                "summary": lesson.get("summary"),
+                "narrator": "es-MX-JorgeNeural (Hombre Mexicano)",
+                "total_duration": total_seconds,
+                "turns_count": len(turn_assets),
+                "slides_count": total_slides,
+                "video_path": str(final_video_path),
+                "file_size_mb": round(file_mb, 2),
+                "fps": self.fps,
+                "codec": self.codec,
+                "slides_dir": str(user_slides_export_dir)
+            }, f, indent=2, ensure_ascii=False)
+
+        print(f"\n✅ [Completado Exitosamente] Video tutorial generado:")
+        print(f"   📹 Archivo: {final_video_path}")
+        print(f"   📦 Tamaño: {file_mb:.2f} MB ({file_bytes:,} bytes)")
+        print(f"   ⏱️ Duración: {total_seconds:.1f} segundos (~{round(total_seconds / 60, 1)} minutos)")
+        print(f"   📂 Diapositivas HD: {user_slides_export_dir}")
+
         return final_video_path
 
     def _synthesize_mexican_male_voice(self, text: str, output_path: Path):
         """
         Synthesizes an authentic Mexican male voice:
-        - Uses Mexican Spanish TTS endpoint (es-MX)
-        - Transforms pitch and formant into a warm, resonant male chest voice (asetrate=44100*0.84)
-        - Adjusts tempo to natural fluent pace (atempo=speech_speed / 0.84)
-        - Studio microphone EQ for presence and clarity
+        - Primary: Microsoft Neural Voice 'es-MX-JorgeNeural' via edge-tts with rate='+8%'
+        - Fallback: Google Translate es-MX with male formant & resonance DSP
         """
-        import urllib.request
-        import urllib.parse
-
         spoken_text = clean_phonetics_for_speech(text)
         if not spoken_text:
             spoken_text = "Google Cloud Platform."
 
-        # Split into short natural clauses (< 110 chars) so Google Translate never rejects or truncates
+        # Try edge-tts with es-MX-JorgeNeural at +8%
+        try:
+            import edge_tts
+
+            rate_pct = f"+{int((self.speech_speed - 1.0) * 100)}%" if self.speech_speed >= 1.0 else f"{int((self.speech_speed - 1.0) * 100)}%"
+            if rate_pct == "+0%":
+                rate_pct = "+8%"
+
+            async def _run_edge():
+                comm = edge_tts.Communicate(
+                    text=spoken_text,
+                    voice="es-MX-JorgeNeural",
+                    rate=rate_pct
+                )
+                await comm.save(str(output_path))
+
+            asyncio.run(_run_edge())
+
+            if output_path.exists() and output_path.stat().st_size > 1000:
+                return
+        except Exception as e:
+            print(f"  ⚠️ EdgeTTS fallback activado: {e}")
+
+        # Fallback to chunked Google Translate with male formant
+        import urllib.request
+        import urllib.parse
+
         clauses = split_into_tts_clauses(spoken_text, max_clause_len=110)
         clause_files: List[Path] = []
         clause_dir = output_path.parent / f"_clauses_{output_path.stem}"
@@ -514,9 +644,7 @@ class GCPVideoBuilder:
             ]
             subprocess.run(cmd_cat, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
 
-        # Mexican Male Formant & Pitch Transformation:
-        # asetrate=44100*0.84 lowers pitch by ~16% into masculine range
-        # atempo compensates for pitch shift and applies user's target speed
+        # Mexican Male Formant & Pitch Transformation
         tempo_compensation = self.speech_speed / 0.84
         dsp_af = (
             f"asetrate=44100*0.84,aresample=44100,"
@@ -537,7 +665,6 @@ class GCPVideoBuilder:
         ]
         subprocess.run(cmd_fx, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
 
-        # Clean up temporary clause files
         try:
             for cf in clause_files:
                 cf.unlink(missing_ok=True)

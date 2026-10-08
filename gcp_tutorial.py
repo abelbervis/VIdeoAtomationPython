@@ -92,8 +92,8 @@ def parse_args():
     parser.add_argument(
         "--speed",
         type=float,
-        default=1.20,
-        help="Velocidad de locución de las voces (por defecto: 1.20x para ritmo ágil sin pausas muertas)."
+        default=1.08,
+        help="Velocidad de locución de las voces (por defecto: 1.08x / +8% para ritmo natural y profesional)."
     )
     parser.add_argument(
         "--fps",
