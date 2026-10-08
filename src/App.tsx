@@ -321,12 +321,14 @@ const GCP_PRESET_LESSONS = {
 };
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'terminal' | 'gcp_studio'>('gcp_studio');
+  const [activeTab, setActiveTab] = useState<'terminal' | 'gcp_studio' | 'ai_motion'>('gcp_studio');
   const [selectedLessonKey, setSelectedLessonKey] = useState<keyof typeof GCP_PRESET_LESSONS>('cloud_storage');
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
   const [activeDialogueIndex, setActiveDialogueIndex] = useState(0);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [copiedCmd, setCopiedCmd] = useState(false);
+  const [motionTopic, setMotionTopic] = useState('Google Cloud Pub/Sub Fan-Out');
+  const [motionStage, setMotionStage] = useState(0);
 
   // Terminal state
   const [logs, setLogs] = useState<string[]>([
@@ -486,28 +488,40 @@ export default function App() {
         </div>
 
         {/* Mode Switcher Tabs */}
-        <div className="flex items-center bg-slate-900/80 p-1 rounded-xl border border-slate-800">
+        <div className="flex items-center bg-slate-900/80 p-1 rounded-xl border border-slate-800 gap-1">
           <button
             onClick={() => setActiveTab('gcp_studio')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
               activeTab === 'gcp_studio'
                 ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
             <Layers className="w-3.5 h-3.5" />
-            Estudio Visual de Diapositivas
+            Diapositivas y Consola
+          </button>
+          <button
+            onClick={() => setActiveTab('ai_motion')}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              activeTab === 'ai_motion'
+                ? 'bg-gradient-to-r from-sky-500 to-emerald-500 text-white shadow-md shadow-sky-500/20'
+                : 'text-sky-400 hover:text-white'
+            }`}
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            Animaciones IA en Vivo
+            <span className="text-[9px] bg-sky-900/80 text-sky-200 px-1.5 py-0.2 rounded font-bold uppercase">Ligero</span>
           </button>
           <button
             onClick={() => setActiveTab('terminal')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
               activeTab === 'terminal'
                 ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
             <Terminal className="w-3.5 h-3.5" />
-            Consola Terminal CLI
+            Consola CLI
           </button>
         </div>
       </header>
@@ -876,6 +890,197 @@ export default function App() {
               >
                 <Play className="w-4 h-4 fill-current" /> Renderizar Video Tutorial Completo
               </button>
+            </div>
+          </div>
+        </main>
+      ) : activeTab === 'ai_motion' ? (
+        /* AI Motion Studio View */
+        <main className="flex-1 p-6 max-w-7xl mx-auto w-full flex flex-col gap-6">
+          <div className="bg-[#0D1424] border border-slate-800 rounded-2xl p-6 shadow-xl">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-sky-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-sky-400" /> Animación Conceptual en Código por IA
+                  </span>
+                  <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">
+                    ~75 KB / Video 1080p
+                  </span>
+                </div>
+                <h2 className="text-xl font-bold text-white mt-1">Generador de Video Explicativo al Vuelo con Gemini</h2>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  La IA analiza el concepto en el momento, diseña la arquitectura animada en vectores y compila un MP4 ultra liviano.
+                </p>
+              </div>
+
+              {/* Quick Topic Chips */}
+              <div className="flex flex-wrap items-center gap-2">
+                {[
+                  'Google Cloud Pub/Sub Fan-Out',
+                  'Cloud Run Serverless',
+                  'Cloud Storage Cifrado y Ciclo de Vida',
+                  'IAM Least Privilege'
+                ].map((preset) => (
+                  <button
+                    key={preset}
+                    onClick={() => {
+                      setMotionTopic(preset);
+                      setMotionStage(0);
+                    }}
+                    className={`text-xs px-3 py-1.5 rounded-lg border transition ${
+                      motionTopic === preset
+                        ? 'bg-blue-600/30 border-sky-400 text-sky-200'
+                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    {preset.split(' ')[0]} {preset.split(' ')[1] || ''}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Stage Selector Tabs */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
+              {[
+                { stage: 0, title: 'Fase 1: Entrada / Reposo', badge: 'INICIAL', metric: '0€ en reposo' },
+                { stage: 1, title: 'Fase 2: Procesamiento Activo', badge: 'PETICIÓN ACTIVA', metric: 'Latencia ~300ms' },
+                { stage: 2, title: 'Fase 3: Persistencia / Fan-Out', badge: 'ESCALADO', metric: '100% Elástico' }
+              ].map((item) => (
+                <button
+                  key={item.stage}
+                  onClick={() => setMotionStage(item.stage)}
+                  className={`p-3 rounded-xl border text-left transition ${
+                    motionStage === item.stage
+                      ? 'bg-sky-950/40 border-sky-400 text-white shadow-lg shadow-sky-500/10'
+                      : 'bg-slate-900/60 border-slate-800/80 text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold text-sky-400">{item.badge}</span>
+                    <span className="text-[10px] text-emerald-400 font-mono">{item.metric}</span>
+                  </div>
+                  <div className="text-sm font-semibold mt-1">{item.title}</div>
+                </button>
+              ))}
+            </div>
+
+            {/* Interactive Visual Animated Canvas Simulation */}
+            <div className="relative bg-[#070b14] border border-slate-800 rounded-xl p-8 min-h-[340px] flex flex-col justify-between overflow-hidden shadow-inner">
+              {/* Background Glow */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
+
+              {/* Canvas Header */}
+              <div className="flex items-center justify-between z-10">
+                <div>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-sky-400">
+                    ⚡ SIMULACIÓN VISUAL EN VIVO
+                  </span>
+                  <h3 className="text-lg font-bold text-white">{motionTopic}</h3>
+                </div>
+                <div className="flex items-center gap-2 bg-slate-900/80 border border-slate-800 px-3 py-1 rounded-full text-xs text-slate-300">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  1080p @ 10 FPS • ~75 KB
+                </div>
+              </div>
+
+              {/* Node Network Flow */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center my-6 z-10">
+                {/* Node 1 */}
+                <div
+                  className={`p-4 rounded-xl border transition-all ${
+                    motionStage === 0
+                      ? 'bg-blue-950/60 border-sky-400 shadow-lg shadow-sky-500/20 scale-105'
+                      : 'bg-slate-900/70 border-slate-800 opacity-60'
+                  }`}
+                >
+                  <div className="text-[10px] font-bold uppercase text-sky-400 mb-1">CLIENTE / ENTRADA</div>
+                  <div className="text-base font-bold text-white">Tráfico de Peticiones</div>
+                  <div className="text-xs text-slate-400 mt-1">Llamadas REST / Eventos IoT</div>
+                </div>
+
+                {/* Node 2 */}
+                <div
+                  className={`p-4 rounded-xl border transition-all ${
+                    motionStage === 1
+                      ? 'bg-blue-950/60 border-sky-400 shadow-lg shadow-sky-500/20 scale-105'
+                      : 'bg-slate-900/70 border-slate-800 opacity-60'
+                  }`}
+                >
+                  <div className="text-[10px] font-bold uppercase text-amber-400 mb-1">SERVICIO GCP</div>
+                  <div className="text-base font-bold text-white">Escalado Dinámico</div>
+                  <div className="text-xs text-slate-400 mt-1">Multiplicación de réplicas</div>
+                </div>
+
+                {/* Node 3 */}
+                <div
+                  className={`p-4 rounded-xl border transition-all ${
+                    motionStage === 2
+                      ? 'bg-blue-950/60 border-emerald-400 shadow-lg shadow-emerald-500/20 scale-105'
+                      : 'bg-slate-900/70 border-slate-800 opacity-60'
+                  }`}
+                >
+                  <div className="text-[10px] font-bold uppercase text-emerald-400 mb-1">DESTINO / STORAGE</div>
+                  <div className="text-base font-bold text-white">Persistencia Cifrada</div>
+                  <div className="text-xs text-slate-400 mt-1">AES-256 sin sobrecoste</div>
+                </div>
+              </div>
+
+              {/* HUD Bottom Bar */}
+              <div className="bg-slate-900/90 border border-slate-800/80 rounded-lg p-3 flex flex-col md:flex-row items-center justify-between gap-3 z-10">
+                <div className="text-xs text-slate-300">
+                  <span className="text-sky-400 font-bold">Explicación Fase {motionStage + 1}: </span>
+                  {motionStage === 0 && 'Sin peticiones activas, el servicio permanece apagado a cero para ahorrar el 100% del presupuesto.'}
+                  {motionStage === 1 && 'Llegan solicitudes concurrentes y el motor de Google Cloud aprovisiona instancias en paralelo en 300ms.'}
+                  {motionStage === 2 && 'La carga se distribuye sin colisiones y los datos se protegen con cifrado bancario automático.'}
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setMotionStage((prev) => (prev + 1) % 3)}
+                    className="text-xs bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition"
+                  >
+                    Avanzar Fase <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Render & CLI Execution Trigger */}
+            <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-800/80">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400">
+                  <Terminal className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-xs text-slate-400">Comando CLI equivalente:</div>
+                  <code className="text-xs text-emerald-400 font-mono font-bold">
+                    python gcp_tutorial.py --motion "{motionTopic}"
+                  </code>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(`python gcp_tutorial.py --motion "${motionTopic}"`);
+                    setCopiedCmd(true);
+                    setTimeout(() => setCopiedCmd(false), 2000);
+                  }}
+                  className="bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                  {copiedCmd ? '¡Copiado!' : 'Copiar Comando'}
+                </button>
+                <button
+                  onClick={() => {
+                    runTerminalCommand(`python gcp_tutorial.py --motion "${motionTopic}"`);
+                    setActiveTab('terminal');
+                  }}
+                  className="bg-gradient-to-r from-blue-600 to-sky-500 hover:from-blue-500 hover:to-sky-400 text-white px-5 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-lg shadow-sky-500/20 transition"
+                >
+                  <Play className="w-4 h-4 fill-current" />
+                  Renderizar Video con IA Ahora
+                </button>
+              </div>
             </div>
           </div>
         </main>

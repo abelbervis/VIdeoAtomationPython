@@ -114,6 +114,12 @@ def parse_args():
         help="Factor de tasa constante (por defecto: 26 para alta nitidez de texto y compresión máxima)."
     )
     parser.add_argument(
+        "--motion",
+        type=str,
+        default=None,
+        help="Genera un clip explicativo animado ultra-ligero con IA para el tema indicado (ej. --motion 'Pub/Sub')."
+    )
+    parser.add_argument(
         "--interactive", "-i",
         action="store_true",
         help="Modo interactivo: revisa el guion y el esquema de diapositivas en la terminal antes de renderizar."
@@ -135,6 +141,21 @@ def main():
         sys.exit(1)
 
     generator = GCPTutorialGenerator()
+
+    # 1.1 Handle --motion (Standalone AI Motion Clip Generation)
+    if args.motion:
+        from video.ai_motion_generator import AIMotionGenerator
+        m_gen = AIMotionGenerator(fps=args.fps, crf=args.crf)
+        video_path, choreo = m_gen.generate_motion_for_topic(args.motion)
+        file_kb = video_path.stat().st_size / 1024 if video_path.exists() else 0
+        print("\n" + "=" * 70)
+        print("⚡  ¡ANIMACIÓN EXPLICATIVA POR IA GENERADA CON ÉXITO!  🎉")
+        print(f"   📹 Archivo: {video_path}")
+        print(f"   📦 Tamaño: {file_kb:.1f} KB (Ultra ligero)")
+        print(f"   🎯 Concepto: {choreo.get('title')}")
+        print(f"   💡 Fases animadas: {len(choreo.get('stages', []))}")
+        print("=" * 70 + "\n")
+        return
 
     # 2. Handle --list-topics
     if args.list_topics:
