@@ -90,6 +90,11 @@ def parse_args():
         help="Desactiva los subtítulos sobreimpresos."
     )
     parser.add_argument(
+        "--no-motion",
+        action="store_true",
+        help="Desactiva el movimiento de cámara cinemático (Ken Burns zoompan)."
+    )
+    parser.add_argument(
         "--interactive", "-i",
         action="store_true",
         help="Modo interactivo: revisa el guion y el esquema de diapositivas en la terminal antes de renderizar."
@@ -222,7 +227,8 @@ def main():
         width=width,
         height=height,
         burn_subtitles=not args.no_subtitles,
-        enable_music=not args.no_music
+        enable_music=not args.no_music,
+        enable_motion=not args.no_motion
     )
 
     out_file = Path(args.output).name if args.output else None

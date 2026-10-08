@@ -751,6 +751,15 @@ export default function App() {
                         {currentSlide.explanation}
                       </div>
                     )}
+                    <div className="m-3 bg-emerald-950/30 border border-emerald-500/40 rounded-lg p-3 font-mono text-xs space-y-1">
+                      <div className="flex items-center justify-between text-emerald-400 font-bold mb-1">
+                        <span>✓ [CLOUD SHELL SIMULATOR] Ejecutado</span>
+                        <span className="text-[10px] bg-emerald-500/20 px-2 py-0.5 rounded text-emerald-300">Exit Code: 0</span>
+                      </div>
+                      <p className="text-slate-300 text-[11px]">Creating revision & setting routing 100%... [OK]</p>
+                      <p className="text-slate-300 text-[11px]">Setting IAM policy bindings (member: allUsers)... [OK]</p>
+                      <p className="text-emerald-300 font-semibold text-[11px]">STATUS 200 OK: Servicio desplegado con éxito en europe-west1</p>
+                    </div>
                   </div>
                 ) : null}
               </div>
