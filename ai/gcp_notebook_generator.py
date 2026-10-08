@@ -641,7 +641,7 @@ class GCPTutorialGenerator:
                     print(f"  🤖 [Gemini LLM] Generando guion técnico y diapositivas para: '{topic}'...")
                     dynamic_lesson = self._call_gemini_for_lesson(topic, user_notes, language)
                     if dynamic_lesson and "slides" in dynamic_lesson and "dialogue" in dynamic_lesson:
-                        return dynamic_lesson
+                        return self._normalize_lesson(dynamic_lesson, topic)
                 except Exception as e:
                     err_str = str(e)
                     if "429" in err_str or "Too Many Requests" in err_str:
@@ -659,7 +659,7 @@ class GCPTutorialGenerator:
                     print(f"  ⚡ [Groq LPU] Generando guion técnico y diapositivas con {self.groq_model} para: '{topic}'...")
                     dynamic_lesson = self._call_groq_for_lesson(topic, user_notes, language)
                     if dynamic_lesson and "slides" in dynamic_lesson and "dialogue" in dynamic_lesson:
-                        return dynamic_lesson
+                        return self._normalize_lesson(dynamic_lesson, topic)
                 except Exception as e:
                     print(f"  ⚠️ Error en generación con Groq ({e}).")
                     if has_gemini and "gemini" in provider_order and prov != provider_order[-1]:
@@ -833,6 +833,85 @@ Requisitos del JSON de salida:
             data = json.loads(resp.read().decode("utf-8"))
             content = data["choices"][0]["message"]["content"]
             return json.loads(content)
+
+    def _normalize_lesson(self, lesson: Dict[str, Any], topic: str) -> Dict[str, Any]:
+        """
+        Guarantees that every slide has an integer 'slide_id', valid layout and text fields,
+        and every dialogue turn has a valid speaker and 'slide_id'.
+        Prevents KeyError: 'slide_id' across the entire video rendering pipeline.
+        """
+        if not isinstance(lesson, dict):
+            return lesson
+
+        slides = lesson.get("slides", [])
+        if not isinstance(slides, list) or not slides:
+            slides = [
+                {
+                    "slide_id": 1,
+                    "layout": "concept_card",
+                    "badge": "Concepto Clave",
+                    "title": lesson.get("title", topic),
+                    "subtitle": lesson.get("summary", "Arquitectura oficial de Google Cloud"),
+                    "concept_title": topic,
+                    "bullet_points": ["Diseño modular de infraestructura", "Políticas de menor privilegio", "Gestión centralizada"]
+                }
+            ]
+
+        normalized_slides = []
+        for s_idx, s in enumerate(slides, start=1):
+            if not isinstance(s, dict):
+                continue
+            raw_id = s.get("slide_id") or s.get("id") or s.get("slide_number") or s.get("number") or s_idx
+            try:
+                s_id = int(raw_id)
+            except (ValueError, TypeError):
+                s_id = s_idx
+
+            s["slide_id"] = s_id
+            s.setdefault("layout", "concept_card")
+            s.setdefault("title", f"Concepto {s_id}")
+            s.setdefault("subtitle", "")
+            s.setdefault("badge", "GCP")
+            normalized_slides.append(s)
+
+        lesson["slides"] = normalized_slides
+        valid_slide_ids = [s["slide_id"] for s in normalized_slides] or [1]
+
+        dialogue = lesson.get("dialogue", [])
+        if not isinstance(dialogue, list) or not dialogue:
+            dialogue = [
+                {"speaker": "Alex", "slide_id": 1, "text": f"Bienvenidos. Hoy analizamos {topic}."},
+                {"speaker": "Sam", "slide_id": 1, "text": "¿Cuáles son las ventajas arquitectónicas principales?"}
+            ]
+
+        normalized_dialogue = []
+        for t_idx, turn in enumerate(dialogue, start=1):
+            if not isinstance(turn, dict):
+                continue
+            raw_s_id = turn.get("slide_id") or turn.get("id")
+            if raw_s_id is not None:
+                try:
+                    t_slide_id = int(raw_s_id)
+                except (ValueError, TypeError):
+                    t_slide_id = valid_slide_ids[min(t_idx - 1, len(valid_slide_ids) - 1)]
+            else:
+                pct = (t_idx - 1) / max(1, len(dialogue) - 1)
+                t_slide_id = valid_slide_ids[int(pct * (len(valid_slide_ids) - 1))]
+
+            if t_slide_id not in valid_slide_ids:
+                t_slide_id = valid_slide_ids[min(t_idx - 1, len(valid_slide_ids) - 1)]
+
+            turn["slide_id"] = t_slide_id
+            turn.setdefault("speaker", "Alex" if t_idx % 2 != 0 else "Sam")
+            turn.setdefault("text", "")
+            normalized_dialogue.append(turn)
+
+        lesson["dialogue"] = normalized_dialogue
+        lesson.setdefault("topic", topic)
+        lesson.setdefault("title", topic.title())
+        lesson.setdefault("category", "Google Cloud")
+        lesson.setdefault("summary", f"Tutorial técnico sobre {topic}")
+        return lesson
 
     def _generate_procedural_lesson(self, topic: str, user_notes: Optional[str]) -> Dict[str, Any]:
         """Constructs a custom technical lesson based on input parameters without hallucinating."""

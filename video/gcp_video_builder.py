@@ -623,9 +623,20 @@ class GCPVideoBuilder:
         target_name = output_file_name or f"tutorial_{topic_slug}.mp4"
         final_video_path = self.output_dir / target_name
 
-        slides_dict = {s["slide_id"]: s for s in lesson.get("slides", [])}
+        slides_dict = {}
+        slides_list = lesson.get("slides", [])
+        for s_idx, s in enumerate(slides_list, start=1):
+            if isinstance(s, dict):
+                s_id = s.get("slide_id") or s.get("id") or s.get("slide_number") or s.get("number") or s_idx
+                try:
+                    s_id = int(s_id)
+                except (ValueError, TypeError):
+                    s_id = s_idx
+                s["slide_id"] = s_id
+                slides_dict[s_id] = s
+
         dialogue_turns = lesson.get("dialogue", [])
-        total_slides = len(slides_dict)
+        total_slides = max(len(slides_dict), 1)
 
         audio_dir = self.temp_dir / "audio"
         slides_cache_dir = self.temp_dir / "slides"
@@ -644,11 +655,11 @@ class GCPVideoBuilder:
             svg_standalone = self.slide_renderer.render_slide_svg(
                 slide=s_data,
                 active_speaker="Alex",
-                current_slide_num=s_id,
+                current_slide_num=int(s_id),
                 total_slides=total_slides,
                 series_category=lesson.get("category", "Google Cloud Architecture")
             )
-            export_png = user_slides_export_dir / f"slide_{s_id:02d}.png"
+            export_png = user_slides_export_dir / f"slide_{int(s_id):02d}.png"
             self.slide_renderer.rasterize_svg_to_png(svg_standalone, export_png)
 
         turn_assets = []

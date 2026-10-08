@@ -339,11 +339,12 @@ def main():
     # 6. Interactive review if requested
     if args.interactive:
         print("\n--- ESQUEMA DE DIAPOSITIVAS ---")
-        for s in lesson.get("slides", []):
-            print(f"  [Slide {s['slide_id']}] ({s['layout']}) {s['title']} — {s.get('subtitle', '')}")
+        for s_idx, s in enumerate(lesson.get("slides", []), start=1):
+            s_id = s.get("slide_id") or s.get("id") or s_idx
+            print(f"  [Slide {s_id}] ({s.get('layout', 'concept_card')}) {s.get('title', '')} — {s.get('subtitle', '')}")
         print("\n--- DIÁLOGO NOTEBOOK LM ---")
         for d in lesson.get("dialogue", []):
-            print(f"  🎙️ {d['speaker']}: \"{d['text']}\"")
+            print(f"  🎙️ {d.get('speaker', 'Alex')}: \"{d.get('text', '')}\"")
         try:
             proceed = input("\n¿Deseas proceder con el renderizado? (S/n): ").strip().lower()
             if proceed and proceed != "s" and proceed != "y" and proceed != "si":
@@ -364,17 +365,18 @@ def main():
         out_slides_dir.mkdir(parents=True, exist_ok=True)
         renderer = GCPSlideRenderer(width, height)
         slides = lesson.get("slides", [])
-        for s in slides:
+        for s_idx, s in enumerate(slides, start=1):
+            s_id = s.get("slide_id") or s.get("id") or s_idx
             svg = renderer.render_slide_svg(
                 slide=s,
                 active_speaker="Alex",
-                current_slide_num=s["slide_id"],
+                current_slide_num=int(s_id),
                 total_slides=len(slides),
                 series_category=lesson.get("category", "Google Cloud")
             )
-            out_png = out_slides_dir / f"slide_{s['slide_id']:02d}.png"
+            out_png = out_slides_dir / f"slide_{int(s_id):02d}.png"
             renderer.rasterize_svg_to_png(svg, out_png)
-            print(f"   ✅ Diapositiva {s['slide_id']:02d} guardada en: {out_png}")
+            print(f"   ✅ Diapositiva {int(s_id):02d} guardada en: {out_png}")
         print(f"\n🎉 ¡Todas las diapositivas han sido guardadas en: {out_slides_dir}")
         return
 

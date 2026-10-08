@@ -235,15 +235,36 @@ class VisualResourceRouter:
             return timeline
 
         # Case B: Classic lesson with slides and dialogue turns
-        slides_dict = {s["slide_id"]: s for s in lesson.get("slides", [])}
+        slides_dict = {}
+        slides_list = lesson.get("slides", [])
+        for s_idx, s in enumerate(slides_list, start=1):
+            if isinstance(s, dict):
+                s_id = s.get("slide_id") or s.get("id") or s.get("slide_number") or s.get("number") or s_idx
+                try:
+                    s_id = int(s_id)
+                except (ValueError, TypeError):
+                    s_id = s_idx
+                s["slide_id"] = s_id
+                slides_dict[s_id] = s
+
         dialogue_turns = lesson.get("dialogue", [])
 
         # To maintain dynamic rhythm: alternating didactic pacing
         # Intro: Slide -> Deep-dive: Motion Animation -> Detail: Slide / Terminal -> Conclusion: Slide
         for idx, turn in enumerate(dialogue_turns, start=1):
             text = turn.get("text", "")
-            slide_id = turn.get("slide_id", 1)
-            slide_data = slides_dict.get(slide_id, {})
+            raw_s_id = turn.get("slide_id") or turn.get("id") or 1
+            try:
+                slide_id = int(raw_s_id)
+            except (ValueError, TypeError):
+                slide_id = 1
+
+            slide_data = slides_dict.get(slide_id)
+            if not slide_data and slides_dict:
+                keys = list(slides_dict.keys())
+                slide_data = slides_dict.get(keys[min(idx - 1, len(keys) - 1)], {})
+            elif not slide_data:
+                slide_data = {}
             user_override = turn.get("resource_kind")
 
             # Route turn
@@ -260,6 +281,7 @@ class VisualResourceRouter:
 
             timeline.append({
                 "scene_index": idx,
+                "title": slide_data.get("title", f"Escena {idx}: {topic}"),
                 "resource_kind": kind,
                 "resource_id": r_id,
                 "confidence": conf,
