@@ -20,7 +20,27 @@ from config import (
     MUSIC_DIR
 )
 from utils.files import get_media_duration
+from utils.fonts import resolve_best_font_path
 from video.slide_renderer import GCPSlideRenderer
+
+
+def wrap_text_for_subtitles(text: str, max_chars_per_line: int = 68) -> str:
+    """Wraps dialogue text cleanly into readable subtitle lines without splitting words."""
+    words = text.split()
+    lines: List[str] = []
+    current_line: List[str] = []
+    current_len = 0
+    for word in words:
+        if current_len + len(word) + 1 > max_chars_per_line and current_line:
+            lines.append(" ".join(current_line))
+            current_line = [word]
+            current_len = len(word)
+        else:
+            current_line.append(word)
+            current_len += len(word) + 1
+    if current_line:
+        lines.append(" ".join(current_line))
+    return "\n".join(lines)
 
 
 class GCPVideoBuilder:
@@ -152,13 +172,17 @@ class GCPVideoBuilder:
             # Optional burned subtitles
             subtitle_filter = ""
             if self.burn_subtitles:
-                clean_caption = asset["text"].replace("'", "").replace('"', '').replace(":", " -")
-                # Format 2-line caption at bottom center
-                draw_spk = f"[{asset['speaker'].upper()}]: "
+                subs_dir = self.temp_dir / "subtitles"
+                subs_dir.mkdir(parents=True, exist_ok=True)
+                sub_file = subs_dir / f"caption_{idx:02d}.txt"
+                wrapped_caption = wrap_text_for_subtitles(f"[{asset['speaker'].upper()}]: {asset['text']}")
+                sub_file.write_text(wrapped_caption, encoding="utf-8")
+                escaped_sub_path = str(sub_file.resolve()).replace("\\", "/").replace(":", "\\:")
+                font_param, _ = resolve_best_font_path()
                 subtitle_filter = (
-                    f",drawtext=text='{draw_spk}{clean_caption[:70]}':"
-                    f"fontcolor=white:fontsize=22:box=1:boxcolor=0x000000@0.75:boxborderw=10:"
-                    f"x=(w-text_w)/2:y=h-140"
+                    f",drawtext={font_param}:textfile='{escaped_sub_path}':"
+                    f"fontcolor=white:fontsize=22:line_spacing=6:box=1:boxcolor=0x000000@0.80:boxborderw=10:"
+                    f"x=(w-text_w)/2:y=h-155"
                 )
 
             vf_string = f"scale={self.width}:{self.height},format=yuv420p{subtitle_filter}"
@@ -178,7 +202,12 @@ class GCPVideoBuilder:
                 "-shortest",
                 str(seg_out)
             ]
-            subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+            try:
+                subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+            except subprocess.CalledProcessError as err:
+                err_log = err.stderr.decode("utf-8", errors="ignore") if err.stderr else ""
+                print(f"\n❌ Error codificando segmento {idx:02d} con FFmpeg:\n{err_log[-800:]}")
+                raise err
             segment_files.append(seg_out)
 
         # Step 3: Concat all segments into a single master video
