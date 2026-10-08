@@ -18,6 +18,58 @@ from config import GEMINI_API_KEY, sanitize_env_value
 
 # Curated high-impact GCP lessons covering the most essential topics
 CURATED_GCP_LESSONS: Dict[str, Dict[str, Any]] = {
+    "cloud_storage": {
+        "title": "Google Cloud Storage: Ahorra el 80% y Domina tus Buckets en 3 Minutos",
+        "topic": "Google Cloud Storage & Cost Optimization",
+        "category": "Google Cloud • Storage & Cost Optimization",
+        "summary": "Tutorial práctico en primera persona con la consola real de GCP, analogías cotidianas y optimización de costos.",
+        "mode": "console_tutorial",
+        "narrator": "Carlos (Ingeniero Cloud Mexicano)",
+        "scenes": [
+            {
+                "scene_id": 1,
+                "scene_type": "hook_bill_alert",
+                "title": "¿Factura Gigantesca por Guardar Archivos?",
+                "keyword": "ALERTA COSTO",
+                "dialogue": "¿Te ha llegado una factura gigantesca por guardar archivos en la nube o no sabes dónde guardar tus fotos y respaldos sin arruinarte? Hoy te explico en 3 minutos cómo funcionan los buckets de Google Cloud y cómo pagar solo centavos en lugar de cientos de dólares."
+            },
+            {
+                "scene_id": 2,
+                "scene_type": "create_bucket_ui",
+                "title": "Creando un Bucket en la Consola Real de GCP",
+                "keyword": "CREAR BUCKET",
+                "dialogue": "Entramos a la consola de Google Cloud, vamos a Cloud Storage y damos clic al botón azul Crear Bucket. El nombre debe ser único a nivel mundial. Y aquí viene el primer truco: elegimos región única, por ejemplo us-central1, lo que de entrada reduce la tarifa base."
+            },
+            {
+                "scene_id": 3,
+                "scene_type": "storage_analogies",
+                "title": "Las 4 Clases de Almacenamiento con Metáforas Reales",
+                "keyword": "METÁFORAS",
+                "dialogue": "Para no pagar de más, piensa en esto con objetos de tu casa. Standard es el cajón de tu escritorio: lo usas todos los días para tu web o fotos activas. Nearline es el armario: lo abres una vez al mes para respaldos periódicos y ahorras el 50 por ciento. Coldline es la bodega o trastero: accedes una vez al año para archivos históricos y ahorras el 75 por ciento. Y Archive es una caja fuerte bajo tierra: solo para auditorías legales, a un costo prácticamente de cero."
+            },
+            {
+                "scene_id": 4,
+                "scene_type": "drag_and_drop_upload",
+                "title": "Subiendo Archivos con Cifrado Bancario Automático",
+                "keyword": "SUBIR ARCHIVOS",
+                "dialogue": "Una vez creado tu bucket, subir archivos es tan fácil como arrastrar y soltar tu carpeta o archivo comprimido directamente en el navegador. Lo mejor es que Google Cloud cifra automáticamente toda tu información en reposo con el estándar bancario AES-256 sin que tengas que configurar llaves complejas."
+            },
+            {
+                "scene_id": 5,
+                "scene_type": "cli_zoom",
+                "title": "Comando Rápido con gcloud storage CLI",
+                "keyword": "GCLOUD CLI",
+                "dialogue": "Y si prefieres la terminal, con una sola línea de gcloud storage buckets create con la opción default-storage-class igual a Coldline, automatizas tus respaldos en tus scripts de integración continua en menos de 2 segundos."
+            },
+            {
+                "scene_id": 6,
+                "scene_type": "golden_rules_summary",
+                "title": "Las 3 Reglas de Oro para Ahorrar el 80%",
+                "keyword": "AHORRA 80%",
+                "dialogue": "En resumen: guarda en Standard solo lo que uses a diario, pasa tus respaldos a Coldline o Archive, y elige una sola región. Con estas tres reglas, tus archivos estarán seguros y tu factura será mínima. Si te sirvió, ponlo en práctica hoy mismo en tu consola de Google Cloud."
+            }
+        ]
+    },
     "cloud_run": {
         "title": "Cloud Run: De Servidores a Serverless sin Perder el Control",
         "topic": "Cloud Run vs Compute Engine & Arquitectura Serverless",
@@ -514,6 +566,8 @@ class GCPTutorialGenerator:
             if key in clean_topic or clean_topic in key:
                 print(f"  📚 [Curated Curriculum] Coincidencia exacta encontrada para '{key}': {lesson['title']}")
                 return lesson
+            if any(w in clean_topic for w in ["storage", "bucket", "almacenamiento", "archivo", "backup", "s3", "blob", "fotos"]):
+                return CURATED_GCP_LESSONS["cloud_storage"]
             if "run" in clean_topic or "serverless" in clean_topic:
                 return CURATED_GCP_LESSONS["cloud_run"]
             if "iam" in clean_topic or "permiso" in clean_topic or "seguridad" in clean_topic or "service account" in clean_topic:

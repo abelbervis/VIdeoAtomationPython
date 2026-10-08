@@ -55,7 +55,7 @@ def parse_args():
         "--sample", "--demo",
         dest="sample",
         action="store_true",
-        help="Ejecuta una demostración instantánea completa sobre Cloud Run vs Compute Engine."
+        help="Ejecuta la demo interactiva en la consola de GCP: Cloud Storage, metáforas de costos y locución mexicana."
     )
     parser.add_argument(
         "--format",
@@ -160,32 +160,35 @@ def main():
     # 4. Resolve topic
     topic = args.topic
     if args.sample:
-        topic = "cloud_run"
-        print("💡 Modo DEMO activado: Seleccionando lección 'Cloud Run vs Compute Engine'.")
+        topic = "cloud_storage"
+        print("💡 Modo DEMO interactivo: Seleccionando 'Google Cloud Storage: Ahorra el 80% en tus Buckets'.")
     elif not topic:
         if user_notes:
             topic = "Conceptos de mis Notas de GCP"
         else:
             # Interactive prompt
             print("\nIntroduce el tema de GCP que quieres aprender o debatir:")
-            print("  [1] Cloud Run (Microservicios & Serverless)")
-            print("  [2] IAM & Service Accounts (Menor Privilegio)")
-            print("  [3] VPC & Redes Privadas (Cloud SQL & NAT)")
-            print("  [4] Tema personalizado...")
+            print("  [1] Cloud Storage (Buckets, Consola Real & Ahorro de Costos)")
+            print("  [2] Cloud Run (Microservicios & Serverless)")
+            print("  [3] IAM & Service Accounts (Menor Privilegio)")
+            print("  [4] VPC & Redes Privadas (Cloud SQL & NAT)")
+            print("  [5] Tema personalizado...")
             try:
-                choice = input("\nElige una opción (1-4) o escribe el nombre del tema: ").strip()
+                choice = input("\nElige una opción (1-5) o escribe el nombre del tema: ").strip()
             except (EOFError, KeyboardInterrupt):
                 print("\nOperación cancelada.")
                 sys.exit(0)
 
             if choice == "1":
-                topic = "cloud_run"
+                topic = "cloud_storage"
             elif choice == "2":
-                topic = "iam_security"
+                topic = "cloud_run"
             elif choice == "3":
+                topic = "iam_security"
+            elif choice == "4":
                 topic = "vpc_networking"
-            elif choice == "4" or not choice:
-                topic = input("Nombre del tema de GCP (ej. BigQuery, Pub/Sub, GKE): ").strip() or "cloud_run"
+            elif choice == "5" or not choice:
+                topic = input("Nombre del tema de GCP (ej. BigQuery, Pub/Sub, GKE): ").strip() or "cloud_storage"
             else:
                 topic = choice
 
@@ -196,8 +199,12 @@ def main():
     print(f"\n✨ Lección Estructurada: {lesson.get('title')}")
     print(f"   Categoría: {lesson.get('category')}")
     print(f"   Resumen: {lesson.get('summary')}")
-    print(f"   Diapositivas diseñadas: {len(lesson.get('slides', []))}")
-    print(f"   Líneas de debate: {len(lesson.get('dialogue', []))}")
+    if "scenes" in lesson:
+        print(f"   Escenas interactivas de consola: {len(lesson.get('scenes', []))}")
+        print(f"   Locutor: {lesson.get('narrator', 'Carlos (Ingeniero Cloud Mexicano)')}")
+    else:
+        print(f"   Diapositivas diseñadas: {len(lesson.get('slides', []))}")
+        print(f"   Líneas de diálogo: {len(lesson.get('dialogue', []))}")
 
     # 6. Interactive review if requested
     if args.interactive:

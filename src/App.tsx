@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Terminal, Cloud, Sparkles, Play, CheckCircle2, Copy, Monitor, Cpu, Shield, Network, ChevronRight, Layers, Volume2, ArrowRight } from 'lucide-react';
+import { Terminal, Cloud, Sparkles, Play, CheckCircle2, Copy, Monitor, Cpu, Shield, Network, HardDrive, ChevronRight, Layers, Volume2, ArrowRight } from 'lucide-react';
 
 interface SlideData {
   id: number;
@@ -25,6 +25,66 @@ interface DialogueTurn {
 }
 
 const GCP_PRESET_LESSONS = {
+  cloud_storage: {
+    key: 'cloud_storage',
+    title: 'Google Cloud Storage: Ahorra el 80% en tus Buckets',
+    category: 'Google Cloud • Storage & Cost Optimization',
+    summary: 'Consola real de GCP, las 4 metáforas cotidianas (Cajón, Armario, Bodega, Caja fuerte) y locución de hombre mexicano en primera persona.',
+    icon: HardDrive,
+    slides: [
+      {
+        id: 1,
+        layout: 'concept_card' as const,
+        badge: 'Alerta de Costos vs Solución',
+        title: '¿Factura Gigantesca por Guardar Archivos?',
+        subtitle: 'El error de pagar por servidores cuando solo necesitas guardar archivos',
+        conceptTitle: 'Cero Servidores • Solo Centavos',
+        bullets: [
+          'Dejar discos SSD 24/7 sin usar te cuesta hasta $1,100 USD/mes por error.',
+          'Con Cloud Storage solo pagas por los gigabytes que realmente ocupas.',
+          'Escalabilidad infinita: sube 1 foto o 10 millones de backups sin crear particiones.',
+          'Cifrado bancario automático AES-256 gestionado por Google.'
+        ],
+        callout: '💡 Regla de Oro: En lugar de tener un servidor encendido solo para servir archivos, usa Buckets y reduce tu factura hasta un 90%.'
+      },
+      {
+        id: 2,
+        layout: 'comparison_table' as const,
+        badge: 'Las 4 Metáforas Cotidianas',
+        title: 'Las 4 Clases de Almacenamiento con Metáforas Reales',
+        subtitle: 'Asocia cada clase a un objeto de tu vida diaria para no pagar de más',
+        headers: ['Clase', 'Metáfora Cotidiana', 'Frecuencia de Uso', 'Ahorro'],
+        rows: [
+          ['STANDARD', '📦 El cajón de tu escritorio', 'Diario (Web, fotos, APIs)', 'Tarifa base'],
+          ['NEARLINE', '🗄️ El armario de tu casa', '1 vez al mes (Backups)', 'Ahorras 50%'],
+          ['COLDLINE', '🏚️ La bodega o trastero', '1 vez al año (Históricos)', 'Ahorras 75%'],
+          ['ARCHIVE', '🔒 Caja fuerte bajo tierra', 'Solo auditorías legales', 'Ahorras 90%']
+        ]
+      },
+      {
+        id: 3,
+        layout: 'terminal_code' as const,
+        badge: 'Consola de GCP en Vivo',
+        title: 'Creación Rápida con gcloud storage CLI',
+        subtitle: 'Una sola línea para automatizar tus respaldos a bajo costo',
+        codeLines: [
+          '# Crear bucket con región única y clase COLDLINE para ahorrar 75%',
+          '$ gcloud storage buckets create gs://mi-empresa-backups-2025 \\',
+          '    --location=us-central1 \\',
+          '    --default-storage-class=COLDLINE',
+          '',
+          '# Subir archivos con cifrado automático',
+          '$ gcloud storage cp -r ./mis-fotos gs://mi-empresa-backups-2025/'
+        ],
+        explanation: '✓ Bucket creado en 1.8 segundos con cifrado automático AES-256 en us-central1.'
+      }
+    ],
+    dialogue: [
+      { speaker: 'Alex' as const, role: 'Carlos (Ingeniero Cloud Mexicano)', slideId: 1, text: '¿Te ha llegado una factura gigantesca por guardar archivos en la nube o no sabes dónde guardar tus fotos y respaldos sin arruinarte? Hoy te explico en 3 minutos cómo funcionan los buckets de Google Cloud y cómo pagar solo centavos en lugar de cientos de dólares.' },
+      { speaker: 'Alex' as const, role: 'Carlos (Ingeniero Cloud Mexicano)', slideId: 2, text: 'Para no pagar de más, piensa en esto con objetos de tu casa. Standard es el cajón de tu escritorio para el día a día. Nearline es el armario para una vez al mes. Coldline es la bodega para una vez al año. Y Archive es una caja fuerte bajo tierra a costo casi cero.' },
+      { speaker: 'Alex' as const, role: 'Carlos (Ingeniero Cloud Mexicano)', slideId: 3, text: 'En resumen: guarda en Standard solo lo que uses a diario, pasa tus respaldos a Coldline o Archive, y elige una sola región. Con estas tres reglas, tus archivos estarán seguros y tu factura será mínima.' }
+    ]
+  },
   cloud_run: {
     key: 'cloud_run',
     title: 'Cloud Run: De Servidores a Serverless',
@@ -262,7 +322,7 @@ const GCP_PRESET_LESSONS = {
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'terminal' | 'gcp_studio'>('gcp_studio');
-  const [selectedLessonKey, setSelectedLessonKey] = useState<keyof typeof GCP_PRESET_LESSONS>('cloud_run');
+  const [selectedLessonKey, setSelectedLessonKey] = useState<keyof typeof GCP_PRESET_LESSONS>('cloud_storage');
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
   const [activeDialogueIndex, setActiveDialogueIndex] = useState(0);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
