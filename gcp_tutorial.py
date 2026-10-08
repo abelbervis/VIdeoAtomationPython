@@ -136,9 +136,14 @@ def parse_args():
     )
     parser.add_argument(
         "--llm",
-        choices=["auto", "gemini", "groq"],
+        choices=["auto", "gemini", "groq", "local", "ollama"],
         default="auto",
-        help="Proveedor de IA para generar guiones y animaciones: 'auto' (Gemini con fallback a Groq), 'groq' (Groq LPU ultra-rápido) o 'gemini'."
+        help="Proveedor de IA: 'auto' (Gemini/Groq), 'local' (SLM local / Ollama sin llamadas cloud), 'groq' o 'gemini'."
+    )
+    parser.add_argument(
+        "--local",
+        action="store_true",
+        help="Modo Local Zero-Cloud: Utiliza SLM local (Ollama) o motor semántico en memoria para poblar animaciones sin tocar APIs en la nube ni gastar cuota."
     )
     parser.add_argument(
         "--groq-key",
@@ -212,6 +217,9 @@ def main():
         print(f"Total recursos registrados: {len(router.catalog)}.")
         print("Ejecución Híbrida: python gcp_tutorial.py --hybrid --sample\n")
         return
+
+    if args.local:
+        args.llm = "local"
 
     generator = GCPTutorialGenerator(
         gemini_key=args.gemini_key,

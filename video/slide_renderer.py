@@ -35,7 +35,8 @@ class GCPSlideRenderer:
         total_slides: int = 5,
         series_category: str = "Google Cloud • Architecture Series",
         focus_index: Optional[int] = None,
-        show_execution: bool = False
+        show_execution: bool = False,
+        single_voice: bool = False
     ) -> str:
         """Generates clean, scalable SVG markup for a given slide definition with dynamic focus."""
         w, h = self.width, self.height
@@ -131,7 +132,28 @@ class GCPSlideRenderer:
     {content_svg}
   </g>
 
-  <!-- FOOTER: NOTEBOOK LM CO-HOSTS STATUS BAR -->
+  {f'''<!-- FOOTER: SINGLE INSTRUCTOR MASTERCLASS -->
+  <g id="footer" transform="translate(60, {h - 110})">
+    <rect x="0" y="0" width="{w - 120}" height="76" rx="16" fill="#080D1A" stroke="#1E293B" stroke-width="1.5"/>
+    <g transform="translate(20, 12)">
+      <rect x="0" y="0" width="460" height="52" rx="12" fill="#1E293B" stroke="#3B82F6" stroke-width="2"/>
+      <circle cx="28" cy="26" r="14" fill="#2563EB"/>
+      <text x="28" y="31" fill="#FFFFFF" font-family="'Liberation Sans', 'DejaVu Sans', sans-serif" font-size="14" font-weight="bold" text-anchor="middle">G</text>
+      <text x="52" y="24" fill="#FFFFFF" font-family="'Liberation Sans', 'DejaVu Sans', sans-serif" font-size="15" font-weight="bold">Instructor Técnico Cloud</text>
+      <text x="52" y="42" fill="#60A5FA" font-family="'Liberation Sans', 'DejaVu Sans', sans-serif" font-size="12">Masterclass Oficial de Google Cloud</text>
+      <g transform="translate(365, 16)">
+        <rect x="0" y="6" width="3" height="12" rx="1.5" fill="#60A5FA"/>
+        <rect x="7" y="2" width="3" height="18" rx="1.5" fill="#60A5FA"/>
+        <rect x="14" y="0" width="3" height="22" rx="1.5" fill="#38BDF8"/>
+        <rect x="21" y="4" width="3" height="15" rx="1.5" fill="#60A5FA"/>
+        <rect x="28" y="8" width="3" height="9" rx="1.5" fill="#60A5FA"/>
+        <text x="38" y="16" fill="#38BDF8" font-family="'Liberation Sans', 'DejaVu Sans', sans-serif" font-size="11" font-weight="bold">VOZ EN OFF</text>
+      </g>
+    </g>
+    <text x="{w - 120 - 40}" y="44" fill="#64748B" font-family="'Liberation Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="bold" letter-spacing="2" text-anchor="end">
+      🎙️ MODO MASTERCLASS • NARRACIÓN CONTINUA
+    </text>
+  </g>''' if single_voice else f'''<!-- FOOTER: NOTEBOOK LM CO-HOSTS STATUS BAR -->
   <g id="footer" transform="translate(60, {h - 110})">
     <rect x="0" y="0" width="{w - 120}" height="76" rx="16" fill="#080D1A" stroke="#1E293B" stroke-width="1.5"/>
 
@@ -177,7 +199,7 @@ class GCPSlideRenderer:
         <text x="38" y="16" fill="#34D399" font-family="'Liberation Sans', 'DejaVu Sans', sans-serif" font-size="11" font-weight="bold">HABLANDO</text>
       </g>
     </g>
-  </g>
+  </g>'''}
 </svg>"""
         return svg
 

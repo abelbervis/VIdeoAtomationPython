@@ -77,7 +77,8 @@ class GCPVideoBuilder:
         gemini_key: Optional[str] = None,
         groq_key: Optional[str] = None,
         llm_provider: str = "auto",
-        strict_mode: bool = False
+        strict_mode: bool = False,
+        single_voice: bool = True
     ):
         self.output_dir = Path(output_dir)
         self.temp_dir = Path(temp_dir)
@@ -94,6 +95,7 @@ class GCPVideoBuilder:
         self.groq_key = groq_key
         self.llm_provider = llm_provider
         self.strict_mode = strict_mode
+        self.single_voice = single_voice
         self.slide_renderer = GCPSlideRenderer(width, height)
         self.console_renderer = GCPConsoleRenderer(width, height)
         self.router = VisualResourceRouter()
@@ -105,9 +107,12 @@ class GCPVideoBuilder:
         self,
         lesson: Dict[str, Any],
         output_file_name: Optional[str] = None,
-        force_hybrid: bool = False
+        force_hybrid: bool = False,
+        single_voice: Optional[bool] = None
     ) -> Path:
         """Dispatches to hybrid multi-resource router, console tutorial simulation, or classic slide builder."""
+        if single_voice is not None:
+            self.single_voice = single_voice
         if force_hybrid or lesson.get("mode") == "hybrid" or lesson.get("hybrid_timeline"):
             return self._build_hybrid_timeline_video(lesson, output_file_name)
         elif lesson.get("mode") == "console_tutorial" or "scenes" in lesson:
@@ -186,11 +191,11 @@ class GCPVideoBuilder:
             r_id = item.get("resource_id", "default")
             dialogue_text = item.get("dialogue", "")
             slide_data = item.get("slide_data", {})
-            speaker = item.get("speaker", "Carlos")
+            speaker = item.get("speaker", "Alex")
 
-            # 1. Synthesize neural audio
+            # 1. Synthesize neural audio with speaker personality
             audio_path = audio_dir / f"turn_{idx:02d}.mp3"
-            self._synthesize_mexican_male_voice(dialogue_text, audio_path)
+            self._synthesize_voice(dialogue_text, audio_path, speaker=speaker)
             duration = max(get_media_duration(audio_path), 2.5)
 
             # 2. Render visual asset based on resource_kind
@@ -232,11 +237,12 @@ class GCPVideoBuilder:
                 }
                 slide_svg = self.slide_renderer.render_slide_svg(
                     slide=slide_data_to_use,
-                    active_speaker=speaker,
+                    active_speaker=speaker if not self.single_voice else "Instructor",
                     current_slide_num=idx,
                     total_slides=total_scenes,
                     series_category=lesson.get("category", "Google Cloud Architecture"),
-                    focus_index=idx % 3
+                    focus_index=idx % 3,
+                    single_voice=self.single_voice
                 )
                 visual_img_path = slides_cache_dir / f"slide_{idx:02d}.png"
                 self.slide_renderer.rasterize_svg_to_png(slide_svg, visual_img_path)
@@ -654,10 +660,11 @@ class GCPVideoBuilder:
         for s_id, s_data in slides_dict.items():
             svg_standalone = self.slide_renderer.render_slide_svg(
                 slide=s_data,
-                active_speaker="Alex",
+                active_speaker="Alex" if not self.single_voice else "Instructor",
                 current_slide_num=int(s_id),
                 total_slides=total_slides,
-                series_category=lesson.get("category", "Google Cloud Architecture")
+                series_category=lesson.get("category", "Google Cloud Architecture"),
+                single_voice=self.single_voice
             )
             export_png = user_slides_export_dir / f"slide_{int(s_id):02d}.png"
             self.slide_renderer.rasterize_svg_to_png(svg_standalone, export_png)
@@ -706,18 +713,19 @@ class GCPVideoBuilder:
                     focus_idx = turn_on_slide % nodes_count
 
             audio_path = audio_dir / f"turn_{idx:02d}.mp3"
-            self._synthesize_mexican_male_voice(dialogue_text, audio_path)
+            self._synthesize_voice(dialogue_text, audio_path, speaker=speaker)
 
             duration = max(get_media_duration(audio_path), 2.5)
 
             slide_svg = self.slide_renderer.render_slide_svg(
                 slide=slide_data,
-                active_speaker=speaker,
+                active_speaker=speaker if not self.single_voice else "Instructor",
                 current_slide_num=slide_id,
                 total_slides=total_slides,
                 series_category=lesson.get("category", "Google Cloud Architecture"),
                 focus_index=focus_idx,
-                show_execution=show_exec
+                show_execution=show_exec,
+                single_voice=self.single_voice
             )
             slide_img_path = slides_cache_dir / f"frame_{idx:02d}.png"
             self.slide_renderer.rasterize_svg_to_png(slide_svg, slide_img_path)
@@ -851,40 +859,42 @@ class GCPVideoBuilder:
 
         return final_video_path
 
-    def _synthesize_mexican_male_voice(self, text: str, output_path: Path):
+    def _synthesize_voice(self, text: str, output_path: Path, speaker: str = "Alex"):
         """
-        Synthesizes an authentic Mexican male voice:
-        - Primary: Microsoft Neural Voice 'es-MX-JorgeNeural' via edge-tts with rate='+8%'
-        - Fallback: Google Translate es-MX with male formant & resonance DSP
+        Synthesizes speech with distinct character profiles:
+        - Alex / Single Instructor: Deep, resonant Mexican male architect voice (es-MX, lower pitch, bass presence)
+        - Sam (DevOps): Brisk, higher-pitched, bright DevOps engineer voice (es-ES, treble clarity, dynamic cadence)
+        - Single Voice mode: All turns are voiced by Lead Instructor.
         """
         spoken_text = clean_phonetics_for_speech(text)
         if not spoken_text:
             spoken_text = "Google Cloud Platform."
 
-        # Try edge-tts with es-MX-JorgeNeural at +8%
+        is_sam = ("sam" in (speaker or "").lower()) and not self.single_voice
+
+        # 1. Try edge-tts if installed
         try:
             import edge_tts
-
             rate_pct = f"+{int((self.speech_speed - 1.0) * 100)}%" if self.speech_speed >= 1.0 else f"{int((self.speech_speed - 1.0) * 100)}%"
             if rate_pct == "+0%":
                 rate_pct = "+8%"
+            edge_voice = "es-ES-ElviraNeural" if is_sam else "es-MX-JorgeNeural"
 
             async def _run_edge():
                 comm = edge_tts.Communicate(
                     text=spoken_text,
-                    voice="es-MX-JorgeNeural",
+                    voice=edge_voice,
                     rate=rate_pct
                 )
                 await comm.save(str(output_path))
 
             asyncio.run(_run_edge())
-
             if output_path.exists() and output_path.stat().st_size > 1000:
                 return
-        except Exception as e:
-            print(f"  ⚠️ EdgeTTS fallback activado: {e}")
+        except Exception:
+            pass
 
-        # Fallback to chunked Google Translate with male formant
+        # 2. Resilient Google Translate TTS with Character DSP Formant Transformation
         import urllib.request
         import urllib.parse
 
@@ -893,10 +903,12 @@ class GCPVideoBuilder:
         clause_dir = output_path.parent / f"_clauses_{output_path.stem}"
         clause_dir.mkdir(parents=True, exist_ok=True)
 
+        tl_code = "es-ES" if is_sam else "es-MX"
+
         for c_idx, clause in enumerate(clauses):
             c_file = clause_dir / f"clause_{c_idx:02d}.mp3"
             encoded_clause = urllib.parse.quote(clause)
-            url = f"https://translate.google.com/translate_tts?ie=UTF-8&q={encoded_clause}&tl=es-MX&client=tw-ob"
+            url = f"https://translate.google.com/translate_tts?ie=UTF-8&q={encoded_clause}&tl={tl_code}&client=tw-ob"
 
             req = urllib.request.Request(
                 url,
@@ -940,16 +952,29 @@ class GCPVideoBuilder:
             ]
             subprocess.run(cmd_cat, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
 
-        # Mexican Male Formant & Pitch Transformation
-        tempo_compensation = self.speech_speed / 0.84
-        dsp_af = (
-            f"asetrate=44100*0.84,aresample=44100,"
-            f"atempo={tempo_compensation:.3f},"
-            f"bass=g=4.0:f=120:w=0.6,"
-            f"equalizer=f=200:width_type=h:width=100:g=2.5,"
-            f"treble=g=1.5:f=3500,"
-            f"volume=1.30"
-        )
+        # Apply distinct DSP character profile
+        if is_sam:
+            # Sam: Distinct bright DevOps voice (+2.5 semitones higher, clear mid-treble)
+            tempo_compensation = self.speech_speed / 1.15
+            dsp_af = (
+                f"asetrate=44100*1.15,aresample=44100,"
+                f"atempo={tempo_compensation:.3f},"
+                f"highpass=f=120,"
+                f"equalizer=f=1500:width_type=h:width=400:g=2.5,"
+                f"treble=g=3.0:f=3500,"
+                f"volume=1.25"
+            )
+        else:
+            # Alex / Single Instructor: Deep, resonant Mexican male architect voice
+            tempo_compensation = self.speech_speed / 0.84
+            dsp_af = (
+                f"asetrate=44100*0.84,aresample=44100,"
+                f"atempo={tempo_compensation:.3f},"
+                f"bass=g=4.0:f=120:w=0.6,"
+                f"equalizer=f=200:width_type=h:width=100:g=2.5,"
+                f"treble=g=1.5:f=3500,"
+                f"volume=1.30"
+            )
 
         cmd_fx = [
             "ffmpeg", "-y",
@@ -970,6 +995,10 @@ class GCPVideoBuilder:
                 raw_concat.unlink(missing_ok=True)
         except Exception:
             pass
+
+    def _synthesize_mexican_male_voice(self, text: str, output_path: Path):
+        """Compatibility wrapper for legacy calls."""
+        return self._synthesize_voice(text, output_path, speaker="Alex")
 
     def _find_ambient_soundtrack(self) -> Optional[Path]:
         """Looks for ambient lo-fi / tech audio track."""
