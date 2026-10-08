@@ -167,7 +167,7 @@ Devuelve ÚNICAMENTE un objeto JSON válido con este formato exacto, sin markdow
         }).encode("utf-8")
 
         req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
-        with urllib.request.urlopen(req, timeout=4) as res:
+        with urllib.request.urlopen(req, timeout=20) as res:
             data = json.loads(res.read().decode("utf-8"))
             raw_text = data["candidates"][0]["content"]["parts"][0]["text"].strip()
             # Clean possible markdown wrap
