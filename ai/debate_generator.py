@@ -75,13 +75,20 @@ class DebateScriptGenerator:
         placeholders = ["your_key", "demo_key", "placeholder", "xxx"]
         return not any(p in key.lower() for p in placeholders)
 
-    def generate(self, topic: str, language: str = "es", allow_fallback: bool = False) -> Optional[Dict[str, Any]]:
+    def generate(
+        self,
+        topic: str,
+        language: str = "es",
+        allow_fallback: bool = False,
+        context_text: Optional[str] = None
+    ) -> Optional[Dict[str, Any]]:
         """Generate a complete debate script for the given topic.
         
         Args:
             topic: The debate theme or title.
             language: Target language ('es', 'en').
             allow_fallback: If False, returns None when AI providers fail, preventing unwanted renders.
+            context_text: Optional grounded factual context to enforce accuracy.
         """
         clean_topic = topic.strip().strip("'\"")
         print(f"\n🤖 [Debate Express AI] Generando guion dialéctico para: '{clean_topic}'...")
@@ -100,19 +107,19 @@ class DebateScriptGenerator:
             if prov == "groq" and self._is_valid_key(self.groq_key):
                 try:
                     print("  ⚡ Solicitando guion de debate a Groq LPU (llama-3.3-70b-versatile)...")
-                    script = self._call_groq(clean_topic, language)
+                    script = self._call_groq(clean_topic, language, context_text=context_text)
                 except Exception as e:
                     print(f"  ⚠️ Groq debate generation error: {e}")
             elif prov == "gemini" and self._is_valid_key(self.gemini_key):
                 try:
                     print("  ⚡ Solicitando guion de debate a Google Gemini...")
-                    script = self._call_gemini(clean_topic, language)
+                    script = self._call_gemini(clean_topic, language, context_text=context_text)
                 except Exception as e:
                     print(f"  ⚠️ Gemini debate generation error: {e}")
             elif prov == "openai" and self._is_valid_key(self.openai_key):
                 try:
                     print("  ⚡ Solicitando guion de debate a OpenAI (gpt-4o-mini)...")
-                    script = self._call_openai(clean_topic, language)
+                    script = self._call_openai(clean_topic, language, context_text=context_text)
                 except Exception as e:
                     print(f"  ⚠️ OpenAI debate generation error: {e}")
 
@@ -125,7 +132,7 @@ class DebateScriptGenerator:
         # If fallback is explicitly allowed
         if allow_fallback:
             print("  🛰️ Generando guion dialéctico con el motor científico especializado (Fallback)...")
-            script = self._generate_scientific_fallback(clean_topic, language)
+            script = self._generate_scientific_fallback(clean_topic, language, context_text=context_text)
             if script and self.enable_review:
                 script = self.reviewer.review(script)
             return script
@@ -134,14 +141,27 @@ class DebateScriptGenerator:
         print("   💡 Verifica que tu GROQ_API_KEY o GEMINI_API_KEY esté configurada en el archivo .env o pásala vía CLI (--groq-key / --gemini-key).")
         return None
 
-    def _call_gemini(self, topic: str, language: str) -> Optional[Dict[str, Any]]:
-        system_prompt = self.show.build_system_prompt(topic)
-        full_prompt = (
-            f"{system_prompt}\n\n"
+    def _build_user_prompt(self, topic: str, language: str = "es", context_text: Optional[str] = None) -> str:
+        ctx_section = ""
+        if context_text and context_text.strip():
+            ctx_section = f"\nGROUNDED CONTEXT / SCIENTIFIC SUMMARY (CRITICAL - BASE SCRIPT ON THIS):\n\"\"\"\n{context_text.strip()}\n\"\"\"\n"
+
+        return (
             f"Topic for Script: {topic}\n"
             f"Language: Spanish (Español)\n"
+            f"{ctx_section}"
+            f"MANDATORY ANTI-HALLUCINATION & DOMAIN SPECIFICITY DIRECTIVES:\n"
+            f"1. Determine the exact concrete nature of '{topic}' (e.g. Geophysics/City, Astrophysics, Cellular Biology, Technology).\n"
+            f"2. 100% of the arguments, roles, facts, and hooks MUST come strictly from '{topic}'.\n"
+            f"3. STRICTLY PROHIBITED to talk about brain neurons, retina, or skull darkness unless '{topic}' is explicitly about optical neuroscience.\n"
+            f"4. NEVER copy phrases from the few-shot examples (no 'diez mil millones de impulsos', 'sombras de neuronas', 'fuego interno').\n"
             f"Generate the JSON script following all narrative continuity rules and schema:"
         )
+
+    def _call_gemini(self, topic: str, language: str, context_text: Optional[str] = None) -> Optional[Dict[str, Any]]:
+        system_prompt = self.show.build_system_prompt(topic)
+        user_prompt = self._build_user_prompt(topic, language, context_text)
+        full_prompt = f"{system_prompt}\n\n{user_prompt}"
         models_to_try = ["gemini-2.5-flash", "gemini-flash-latest"]
         headers = {
             "Content-Type": "application/json",
@@ -155,7 +175,7 @@ class DebateScriptGenerator:
                 payload = {
                     "contents": [{"role": "user", "parts": [{"text": full_prompt}]}],
                     "generationConfig": {
-                        "temperature": 0.7,
+                        "temperature": 0.65,
                         "responseMimeType": "application/json",
                         "maxOutputTokens": 4096
                     }
@@ -180,17 +200,18 @@ class DebateScriptGenerator:
                 continue
         return None
 
-    def _call_groq(self, topic: str, language: str) -> Optional[Dict[str, Any]]:
+    def _call_groq(self, topic: str, language: str, context_text: Optional[str] = None) -> Optional[Dict[str, Any]]:
         system_prompt = self.show.build_system_prompt(topic)
+        user_prompt = self._build_user_prompt(topic, language, context_text)
         url = f"{GROQ_API_BASE}/chat/completions"
         payload = {
             "model": GROQ_MODEL or "llama-3.3-70b-versatile",
             "messages": [
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": f"Topic: {topic}\nLanguage: Spanish\nGenerate the debate JSON:"}
+                {"role": "user", "content": user_prompt}
             ],
             "response_format": {"type": "json_object"},
-            "temperature": 0.7
+            "temperature": 0.65
         }
         headers = {
             "Content-Type": "application/json",
@@ -210,17 +231,18 @@ class DebateScriptGenerator:
             text = res["choices"][0]["message"]["content"]
             return self._parse_json(text)
 
-    def _call_openai(self, topic: str, language: str) -> Optional[Dict[str, Any]]:
+    def _call_openai(self, topic: str, language: str, context_text: Optional[str] = None) -> Optional[Dict[str, Any]]:
         system_prompt = self.show.build_system_prompt(topic)
+        user_prompt = self._build_user_prompt(topic, language, context_text)
         url = "https://api.openai.com/v1/chat/completions"
         payload = {
             "model": "gpt-4o-mini",
             "messages": [
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": f"Topic: {topic}\nLanguage: Spanish\nGenerate the debate JSON:"}
+                {"role": "user", "content": user_prompt}
             ],
             "response_format": {"type": "json_object"},
-            "temperature": 0.7
+            "temperature": 0.65
         }
         headers = {
             "Content-Type": "application/json",
@@ -353,7 +375,12 @@ class DebateScriptGenerator:
 
         return True
 
-    def _generate_scientific_fallback(self, topic: str, language: str = "es") -> Dict[str, Any]:
+    def _generate_scientific_fallback(
+        self,
+        topic: str,
+        language: str = "es",
+        context_text: Optional[str] = None
+    ) -> Dict[str, Any]:
         """High quality deterministic fallback for common and custom debate topics."""
         topic_lower = topic.lower()
         topic_roles = {
@@ -361,10 +388,68 @@ class DebateScriptGenerator:
             self.show.host_b.id: self.show.host_b.role
         }
 
-        if any(w in topic_lower for w in ["visto", "vista", "ojo", "ojos", "luz", "ilusion", "percepc", "ciego"]) or ("mundo" in topic_lower and "nunca" in topic_lower):
+        # Check for seismic / geological / city themes (e.g. Los Angeles, San Andreas fault, earthquakes)
+        if any(w in topic_lower for w in ["angeles", "ángeles", "san andres", "san andrés", "falla", "terremoto", "sismo", "tectonica", "tectónica", "geolog", "volcan", "volcán", "tsunami", "placas"]):
+            clean_name = "Los Ángeles y la Falla de San Andrés" if "angeles" in topic_lower or "ángeles" in topic_lower else topic.strip().title()
             return {
-                "topic": "NUNCA HAS VISTO EL MUNDO",
-                "headline_hook": "¿ALGUNA VEZ HAS VISTO EL MUNDO?",
+                "topic": clean_name,
+                "headline_hook": f"¿{clean_name.upper()[:30]} COLAPSARÁ?",
+                "roles": {
+                    self.show.host_a.id: "Entidad de la Tectónica Planetaria",
+                    self.show.host_b.id: "Entidad de la Resistencia Estructural"
+                },
+                "holograms": None,
+                "scenes": [
+                    {
+                        "speaker": "Narrador",
+                        "entity": "narrator",
+                        "text": f"Millones de personas habitan sobre una fractura geológica que acumula energía sísmica desde hace siglos.",
+                        "shot": "wide",
+                        "duration": 3.4
+                    },
+                    {
+                        "speaker": self.show.host_a.name,
+                        "entity": self.show.host_a.id,
+                        "text": "Las placas tectónicas se desplazan sin descanso; la fricción acumulada liberará una fuerza destructiva colosal.",
+                        "shot": self.show.host_a.shot_name,
+                        "duration": 3.4
+                    },
+                    {
+                        "speaker": self.show.host_b.name,
+                        "entity": self.show.host_b.id,
+                        "text": "La ingeniería humana responde con disipadores sísmicos y cimientos flexibles que absorben las ondas de choque.",
+                        "shot": self.show.host_b.shot_name,
+                        "duration": 3.5
+                    },
+                    {
+                        "speaker": self.show.host_a.name,
+                        "entity": self.show.host_a.id,
+                        "text": "Ninguna estructura resiste la aceleración del suelo cuando la corteza libera gigajulios de energía atrapada.",
+                        "shot": self.show.host_a.shot_name,
+                        "duration": 3.4
+                    },
+                    {
+                        "speaker": self.show.host_b.name,
+                        "entity": self.show.host_b.id,
+                        "text": "Las redes de alerta temprana y sensores profundos permiten neutralizar riesgos antes de que el impacto ocurra.",
+                        "shot": self.show.host_b.shot_name,
+                        "duration": 3.5
+                    },
+                    {
+                        "speaker": "Narrador",
+                        "entity": "narrator",
+                        "text": f"Frente a las fuerzas telúricas del planeta... ¿podrá la civilización sostener sus megaciudades sobre la roca?",
+                        "shot": "both",
+                        "duration": 3.5
+                    }
+                ]
+            }
+
+        # Check for strict optical perception/vision themes
+        if (any(w in topic_lower for w in ["retina", "daltonismo", "ceguera"]) or ("nunca" in topic_lower and "visto" in topic_lower) or ("ojo" in topic_lower and "cerebro" in topic_lower)):
+            return {
+                "topic": "La Ilusión de la Percepción Óptica",
+                "headline_hook": "¿ALGUNA VEZ HAS VISTO LA REALIDAD?",
                 "roles": {
                     self.show.host_a.id: "Entidad de la Señal Cuántica",
                     self.show.host_b.id: "Entidad de la Percepción Estelar"
@@ -374,42 +459,42 @@ class DebateScriptGenerator:
                     {
                         "speaker": "Narrador",
                         "entity": "narrator",
-                        "text": "Tus ojos se abren a la oscuridad del cráneo; la luz real jamás ha tocado tu retina.",
+                        "text": "La luz exterior jamás entra en el cerebro; solo viajan pulsos electroquímicos convertidos en imagen.",
                         "shot": "wide",
                         "duration": 3.4
                     },
                     {
                         "speaker": self.show.host_a.name,
                         "entity": self.show.host_a.id,
-                        "text": "La visión es una simulación tardía. El cosmos físico carece de colores; solo son ondas que su mente inventa.",
+                        "text": "La visión es una reconstrucción con retraso. El universo físico carece de color; solo son frecuencias electromagnéticas.",
                         "shot": self.show.host_a.shot_name,
                         "duration": 3.4
                     },
                     {
                         "speaker": self.show.host_b.name,
                         "entity": self.show.host_b.id,
-                        "text": "Te equivocas. No es un engaño: es la conciencia viva forjando belleza donde solo existe radiación ciega.",
+                        "text": "No es una limitación: es la conciencia viva transformando radiación invisible en comprensión y propósito.",
                         "shot": self.show.host_b.shot_name,
                         "duration": 3.5
                     },
                     {
                         "speaker": self.show.host_a.name,
                         "entity": self.show.host_a.id,
-                        "text": "Una construcción con ochenta milisegundos de retraso. Jamás tocan el presente; contemplan solo sombras del pasado.",
+                        "text": "Esa interpretación pierde gran parte del espectro, dejando al observador ciego ante la mayor parte del cosmos.",
                         "shot": self.show.host_a.shot_name,
                         "duration": 3.4
                     },
                     {
                         "speaker": self.show.host_b.name,
                         "entity": self.show.host_b.id,
-                        "text": "Desafían ese retraso creando mundos. Conquistan el abismo cada vez que transforman fotones mudos en pensamiento.",
+                        "text": "Han construido telescopios e instrumentos que expanden su mirada a través de todas las longitudes de onda.",
                         "shot": self.show.host_b.shot_name,
                         "duration": 3.5
                     },
                     {
                         "speaker": "Narrador",
                         "entity": "narrator",
-                        "text": "Si cada imagen que contemplas es solo una sombra creada en tus tinieblas... ¿alguna vez has visto el mundo real?",
+                        "text": "Si tus ojos solo captan una fracción del espectro... ¿cuánto del universo real permanece invisible para ti?",
                         "shot": "both",
                         "duration": 3.5
                     }

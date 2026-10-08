@@ -125,6 +125,11 @@ def parse_args() -> argparse.Namespace:
         help="Disable displaying the capture/publication date on the video attribution badge."
     )
     parser.add_argument(
+        "--gcp-tutorial",
+        action="store_true",
+        help="Lanza el generador de video tutoriales de Google Cloud Platform (NotebookLM style). Comando dedicado: python gcp_tutorial.py"
+    )
+    parser.add_argument(
         "--top-choice",
         type=int,
         default=1,

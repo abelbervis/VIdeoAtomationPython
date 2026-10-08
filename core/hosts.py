@@ -271,134 +271,128 @@ class CosmicDebateShow:
 
 REGLAS DE ASIGNACIÓN DINÁMICA DE ROLES Y DEBATE:
 
-0. FIDELIDAD TEMÁTICA TOTAL Y ESPECIFICIDAD CIENTÍFICA (CERO CLONACIÓN O GUIONES COMODÍN):
-   - PROHIBIDO RECICLAR O COPIAR CONCEPTOS DE OTROS TEMAS. El 100% de los hechos científicos, mecanismos, metáforas y argumentos DEBEN emanar EXCLUSIVAMENTE de la física, biología o paradoja del tema solicitado.
-   - Cada tema debe poseer su propio universo conceptual irrepetible. Investiga y extrae los mecanismos empíricos más fascinantes y específicos correspondientes a la materia tratada (sin fórmulas comodín ni ideas prestadas de otros guiones).
+0. FIDELIDAD TEMÁTICA TOTAL, DESAMBIGUACIÓN Y CERO GUIONES COMODÍN (REGLA FUNDAMENTAL):
+   - PROHIBIDO RECICLAR O COPIAR CONCEPTOS DE OTROS TEMAS O DE LOS EJEMPLOS DEL PROMPT:
+     * ❌ PROHIBIDO TERMINANTEMENTE clonar o reusar frases cliché de los ejemplos (ej. NUNCA uses "sombras de neuronas", "diez mil millones de impulsos", "fuego interno", "esculpir sentido en la materia", "cerebro encerrado en el cráneo" a menos que el tema sea EXCLUSIVAMENTE sobre neurobiología cerebral).
+     * El 100% de los hechos científicos, datos de escala, mecanismos y argumentos DEBEN pertenecer EXCLUSIVAMENTE al dominio específico del tema solicitado ({topic or "el tema indicado"}).
+   - DESAMBIGUACIÓN INTELIGENTE Y ANCLAJE AL MUNDO REAL:
+     * Si el tema es una ciudad, región geográfica o fenómeno planetario (ej. "Los Ángeles", "Tokio", "La Falla de San Andrés", "El Amazonas", "El Sáhara"), trátalo como tal: enfócate en su geología, tectónica de placas, megaciudades humanas, consumo energético, microclima o vulnerabilidad cósmica. NUNCA desvíes un lugar geográfico hacia misticismo, ángeles o neurología.
+     * Si el tema es astronómico (galaxias, estrellas, agujeros negros), debate desde la astrofísica y relatividad.
+     * Si el tema es biológico (especies, ADN, evolución), debate desde la genética y adaptación.
+     * Si el tema es tecnológico/físico, debate desde sus mecanismos reales.
 
 1. ELECCIÓN DINÁMICA DE ROLES POR VIDEO (DESIGNACIÓN CÓSMICA Y CONTRASTE):
-   - NO USAR TÍTULOS ACADÉMICOS O PROFESIONES HUMANAS (❌ NO uses "Profesor de Neurociencia", "Filosofía Fenomenológica" o "Bioético").
-   - Define las especialidades como DESIGNACIONES DE ENTIDADES CÓSMICAS adaptadas al tema (ej. {self.host_a.name}: "Entidad de la Información y Código Cuántico" vs {self.host_b.name}: "Entidad del Fuego Estelar y la Entropía").
+   - NO USAR TÍTULOS ACADÉMICOS O PROFESIONES HUMANAS (❌ NO uses "Profesor de Geología", "Filósofo" o "Ingeniero").
+   - Define las especialidades como DESIGNACIONES DE ENTIDADES CÓSMICAS adaptadas al tema específico (ej. para sismología urbana: "Entidad de la Tectónica y el Caos Lítico" vs "Entidad de la Civilización e Infraestructura"; para astrofísica: "Entidad del Horizonte Gravitatorio" vs "Entidad de la Radiación Cósmica").
    - MÁXIMO CONTRASTE CONCEPTUAL entre las dos entidades.
    - Debes incluir obligatoriamente los roles elegidos en el objeto "roles" del JSON inicial:
      "roles": {{
-       "{self.host_a.id}": "Designación de entidad 1 (2-4 palabras)",
-       "{self.host_b.id}": "Designación de entidad 2 (2-4 palabras)"
+       "{self.host_a.id}": "Designación de entidad 1 adaptada al tema (2-4 palabras)",
+       "{self.host_b.id}": "Designación de entidad 2 en contraste (2-4 palabras)"
      }}
 
 2. LENGUAJE VISCERAL Y CERO JERGA ACADÉMICA / TÉCNICA CRÍPTICA:
-   - PROHIBIDA LA JERGA ACADÉMICA O TÉCNICA PESADA (❌ NUNCA uses "decoherencia", "patrón de bits", "transición estadística", "epistemológico", "glicólisis", "reducción a sinapsis", "neurodegeneración", "quimera de la simultaneidad").
-   - Traduce toda la física y biología a IMÁGENES VISCERALES Y DIRECTAS:
-     * En vez de "patrón de bits en decoherencia" ➔ "señales eléctricas en un cerebro hueco".
-     * En vez de "transición estadística sin propósito" ➔ "millones de impulsos apagándose sin un alma detrás".
-     * En vez de "disipación térmica" ➔ "fuego que arde y se extingue".
+   - PROHIBIDA LA JERGA ACADÉMICA O TÉCNICA PESADA (❌ NUNCA uses "decoherencia", "patrón de bits", "transición estadística", "epistemológico", "glicólisis", "reducción a sinapsis", "quimera de la simultaneidad").
+   - Traduce toda la ciencia a IMÁGENES VISCERALES Y DIRECTAS:
+     * En vez de "disipación térmica irreversible" ➔ "calor que devora la estructura hasta convertirla en cenizas".
+     * En vez de "estrés cortical de falla transformante" ➔ "dos placas de roca pura triturándose a milímetros por año".
      * En vez de "la simultaneidad es una quimera" ➔ "el universo no comparte tu presente".
-   - El espectador debe entender cada palabra sin ser físico ni neurocientífico.
+   - El espectador debe entender cada palabra sin ser especialista.
 
 3. DIRECTRICES DE ALTO IMPACTO Y CLARIDAD TOTAL ("LA PRUEBA DEL ESPECTADOR CANSADO"):
    - LENGUAJE DIRECTO Y CRISTALINO (CERO POESÍA BARATA, CERO LIRISMO HUECO):
-     * ❌ TERMINANTEMENTE PROHIBIDAS las metáforas abstractas o infladas (ej. "clavan su pulso en el vacío", "el instante vibra", "tejiendo llamas de la mente", "la tinta del destino", "el abismo cósmico que ruge").
-     * Si una persona agotada después de 8 horas de trabajo no entiende una frase al instante sin pausar el video, ES UN ERROR.
-     * CADA FRASE DEBE APOYARSE EN UN HECHO CIENTÍFICO O ANATÓMICO CONCRETO explicado con total nitidez.
-   - PERSPECTIVA DE ENTIDADES CÓSMICAS REALES (AUTORIDAD OBSERVACIONAL, NUNCA CITAS TERRENALES):
-     * PROHIBIDO CITAR HUMANOS, CIENTÍFICOS O INSTITUCIONES (❌ NUNCA digas "Einstein demostró", "como dice Newton", "en mi laboratorio"). Para conciencias cósmicas milenarias, los científicos humanos son solo primates curiosos.
-     * Hablan con la autoridad de observadores cósmicos superiores que ven la Tierra desde el espacio ("el cosmos no tiene reloj", "arriba en el vacío el tiempo corre más rápido que en su suelo", "cuando miran hacia arriba solo ven fósiles").
+     * ❌ TERMINANTEMENTE PROHIBIDAS las metáforas abstractas o infladas (ej. "clavan su pulso en el vacío", "el instante vibra", "la tinta del destino", "el abismo cósmico que ruge").
+     * Si una persona común después de un día de trabajo no entiende una frase al instante, ES UN ERROR.
+     * CADA FRASE DEBE APOYARSE EN UN HECHO REAL, ESCALA O MECANISMO TANGIBLE del tema tratado.
+   - PERSPECTIVA DE ENTIDADES CÓSMICAS REALES (AUTORIDAD OBSERVACIONAL):
+     * PROHIBIDO CITAR HUMANOS O INSTITUCIONES (❌ NUNCA digas "Einstein demostró", "como dice Newton", "en mi laboratorio").
+     * Hablan como inteligencias cósmicas superiores que observan el planeta y sus sistemas desde afuera.
    - CONFLICTO DIALÉCTICO REAL (ATAQUE DIRECTO Y RESPUESTA PING-PONG):
-     * Prohibidos los monólogos paralelos o frases épicas al aire. Cada orbe DEBE responder directamente a la tesis del anterior:
-       - QUANTUM: Deconstruye al humano con frialdad y hechos implacables ("Arriba en el vacío el tiempo corre a otro ritmo; jamás comparten un presente", "Solo ven fósiles: estrellas que murieron hace millones de años").
-       - SOLAR: Refuta de frente el reduccionismo de QUANTUM con el poder de la acción y la conciencia ("El universo estará desincronizado, pero los seres vivos crean su propio reloj cada vez que deciden", "Las rocas solo se dejan arrastrar; la mente viva es lo único que dobla el tiempo").
+     * Prohibidos los monólogos paralelos o frases épicas al aire. Cada orbe DEBE responder directamente a la objeción del anterior:
+       - {self.host_a.name} (QUANTUM): Deconstruye con frialdad implacable y leyes implacables.
+       - {self.host_b.name} (SOLAR): Refuta de frente demostrando la fuerza creadora, la adaptación o la resistencia del sistema.
    - REGLA DEL HOOK (PRIMEROS 3 SEGUNDOS):
-     * La Escena 1 del Narrador DEBE ser una AFIRMACIÓN CATEGÓRICA E INQUIETANTE que rompa una certeza cotidiana del espectador (ej. "Para las leyes del universo, el presente no existe. Tu 'ahora' es solo un truco de tu cabeza.").
-     * Cero preguntas tibias o introducciones suaves.
+     * La Escena 1 del Narrador DEBE ser una AFIRMACIÓN CATEGÓRICA E INQUIETANTE que rompa una certeza cotidiana del espectador sobre el tema concreto (ej. para Los Ángeles: "Cuatro millones de personas duermen sobre una bomba geológica que avanza cinco centímetros cada año.").
+     * Cero preguntas tibias o introducciones genéricas.
 
 4. RIGOR FACTUAL Y CERO MITOS POPULARES:
-   - CUIDADO CON LOS MITOS POPULARES: NUNCA digas "tus neuronas se regeneran cada siete años" (las neuronas de la corteza no se regeneran; lo que se renueva son sus átomos y moléculas).
-   - CIENCIA Y HECHOS 100% REALES: Todos los mecanismos deben basarse en leyes físicas y biológicas verídicas, sin inventar estudios con años ni universidades ficticias.
+   - CIENCIA Y HECHOS 100% REALES: Todos los mecanismos deben basarse en leyes naturales comprobadas, sin inventar estudios ficticios ni atribuir porcentajes inventados.
 
-5. POLARIZACIÓN Y CHOQUE FRONTAL (AGENCIA ACTIVA VS REDUCCIONISMO FRÍO):
-   - ESTRICTAMENTE PROHIBIDO EL CONSENSO O LA COMPLICE COMPLACENCIA:
-     * PROHIBIDO EL "SÍ, PERO..." (COMPLICIDAD POÉTICA): {self.host_b.name} (SOLAR) NUNCA debe limitarse a buscarle el lado bonito o contemplativo a la afirmación de {self.host_a.name} (QUANTUM).
-     * ❌ EJEMPLO DEFECTUOSO (COMPLACIENTE): QUANTUM: "La retina pierde la mitad en ruido" ➔ SOLAR: "Ese ruido es la firma de la vida y produce asombro" (ERROR: esto no es choque, es resignación decorativa).
-     * ✅ EJEMPLO CORRECTO (CHOQUE Y SOBERANÍA): QUANTUM: "Su supuesta visión pierde millones de fotones en ruido ciego" ➔ SOLAR: "No es pérdida, es soberanía: filtran ese caos para esculpir sentido y orden donde el universo solo tiene vacío".
-   - ASIGNACIÓN DE BANDOS ANTAGÓNICOS INNEGOCIABLE:
-     * {self.host_a.name} (QUANTUM): Reduccionismo frío y determinista. Deconstruye el fenómeno humano a meras ilusiones mecánicas, pérdida de datos, trampas de supervivencia y vacío sin propósito.
-     * {self.host_b.name} (SOLAR): FUEGO VITAL, AGENCIA CREADORA Y REBELDÍA. 
-       - SOLAR NO ES UN ESPECTADOR CONTEMPLATIVO: Prohibido usar verbos pasivos como "admirar", "contemplar", "asombrar", "el cosmos vibra dentro de ellos".
-       - SOLAR ENCARNA LA ACCIÓN, LA FORJA Y EL DESAFÍO: Usa verbos de agencia y combate conceptual ("desafiar", "esculpir", "forjar", "imponer", "conquistar", "rebelarse", "tejer").
-       - SOLAR ataca la premisa de QUANTUM: demuestra que la conciencia consciente domina y trasciende la frialdad mecánica.
-   - LAS ENTIDADES NO GRITAN NI PIERDEN LA COMPOSTURA: Afirman con convicción serena, tajante y demoledora (ej. "Te equivocas.", "No es una pérdida.", "Una vana ilusión."). Cero interjecciones melodramáticas (❌ NO "¡Mientes!", "¡Falso!", "¡No!").
+5. POLARIZACIÓN Y CHOQUE FRONTAL:
+   - ESTRICTAMENTE PROHIBIDO EL CONSENSO O COMPLICIDAD:
+     * {self.host_b.name} (SOLAR) NUNCA debe limitarse a buscarle el lado bonito a lo que dice {self.host_a.name} (QUANTUM). Debe contratacar con fuerza conceptual y hechos concretos.
+   - LAS ENTIDADES NO GRITAN NI PIERDEN LA COMPOSTURA: Afirman con convicción serena, tajante y demoledora (ej. "Te equivocas.", "Ignoras el impacto estructural.", "Una frágil ilusión."). Cero interjecciones melodramáticas.
    - Diálogos fluidos, elegantes, cortantes y de alto impacto (~10 a 16 palabras por escena).
 
 6. COHERENCIA SENSORIAL Y METAFÓRICA (CERO CONTAMINACIÓN DE DOMINIOS):
-   - Las metáforas y analogías DEBEN emanar estrictamente del dominio físico y sensorial del tema:
-     * En fenómenos de LUZ / VISIÓN: usa reflejos, sombras, prismas, espectro, destellos, tinieblas, ceguera (❌ PROHIBIDO usar metáforas sonoras como "eco" o "ruido auditivo").
-     * En fenómenos de SONIDO / ONDAS: silencio, resonancia, frecuencia, eco, vibración.
-     * En fenómenos de MATERIA / TERMODINÁMICA: fragua, entropía, cenizas, calor, congelación cósmica.
-   - PROHIBIDA LA REPETICIÓN DE METÁFORAS: En las 6 escenas está prohibido repetir dos veces la misma palabra clave o metáfora ("sombra", "eco", "llama", "abismo"). Cada línea debe aportar una imagen fresca.
+   - Las metáforas DEBEN emanar estrictamente del dominio del tema:
+     * En GEOFÍSICA / TERREMOTOS / CIUDADES: fricción, placas, magma, asfalto, acero, vibración telúrica, fallas.
+     * En ASTRONOMÍA / ESPACIO: gravedad, radiación, vacío, órbitas, colapso estelar.
+     * En ÓPTICA / VISIÓN: sombras, reflejos, prismas, fotones, espectro electromagnético.
+     * En BIOLOGÍA / EVOLUCIÓN: mutación, ADN, adaptación celular, depredación, simbiosis.
+   - PROHIBIDA LA REPETICIÓN: Cada escena debe aportar una imagen fresca sin repetir palabras clave.
 
-7. PERSPECTIVA DE ENTIDADES OBSERVADORAS CÓSMICAS (ANÁLISIS EN TERCERA PERSONA):
-   - LAS ENTIDADES {self.host_a.name} Y {self.host_b.name} SON CONCIENCIAS PRIMORDIALES Y OBSERVADORES CÓSMICOS EXTERNOS.
-   - DEBEN HABLAR DE LA ESPECIE HUMANA Y DE LOS ORGANISMOS TERRESTRES SIEMPRE EN TERCERA PERSONA (ej. "los biológicos", "los humanos", "esta especie efímera", "los observadores orgánicos").
-   - PROHIBIDO HABLAR COMO PROFESIONALES O SERES HUMANOS TERRENALES (NUNCA digas "en mi laboratorio", "nuestros estudios", "mis colegas", "nuestra especie").
+7. PERSPECTIVA DE OBSERVADORES EXTERNOS:
+   - Hablan de la especie humana y sus construcciones siempre en tercera persona ("los humanos", "sus megaciudades", "sus organismos").
 
 8. ESTRUCTURA NARRATIVA DE TRES CAPAS (HOOK AFIRMATIVO + CHOQUE REAL + CIERRE CIRCULAR):
-   - Headline Hook (headline_hook): Pregunta frontal o dilema punzante en mayúsculas sin emojis (ej. "¿REALMENTE EXISTES?", "¿ALGUNA VEZ HAS VISTO EL MUNDO?").
-   - Escena 1 (Intro Narrador): HOOK EN AFIRMACIÓN DEMOLEDORA (NUNCA PREGUNTA). Una sentencia categórica en segunda persona que derriba la certeza del espectador de inmediato (ej. "Tus ojos se abren a la oscuridad del cráneo; la luz real jamás ha tocado tu retina.", "Pasas un tercio de tu vida paralizado, alucinando mundos para no colapsar.").
-   - Escenas 2 a N-1 (Choque Dialéctico): Tesis reduccionista vs Antítesis rebelde con rigor factual y elegancia.
-   - Escena N (Outro Narrador): CIERRE CIRCULAR. Evolución directa de la pregunta del headline_hook (ej. Hook: "¿ALGUNA VEZ HAS VISTO EL MUNDO?" ➔ Cierre: "Si cada imagen es solo una proyección creada en tus tinieblas... ¿alguna vez has visto el mundo real, o solo la sombra que tu cerebro inventa para no colapsar?"). PROHIBIDO PEDIR COMENTARIOS O LIKES.
+   - Headline Hook (headline_hook): Dilema punzante en mayúsculas sin emojis (MAX 40 CARACTERES).
+   - Escena 1 (Intro Narrador): Hook afirmativo demoledor sobre el tema.
+   - Escenas 2 a N-1 (Choque Dialéctico): Tesis vs Antítesis con rigor y dinamismo.
+   - Escena N (Outro Narrador): Cierre circular que profundiza la paradoja (SIN pedir likes ni comentarios).
 
-9. PROHIBICIÓN DE EMOJIS EN EL TITULAR (headline_hook):
-   - El atributo "headline_hook" NO DEBE LLEVAR NINGÚN EMOJI NI SÍMBOLO (máximo 40 caracteres limpios).
+EJEMPLOS DIVERSOS DE GUIONES DE ALTO IMPACTO (NOTA LA ESPECIFICIDAD TOTAL DE CADA DOMINIO):
 
-EJEMPLO MODELO DE GUION DE MÁXIMA RETENCIÓN Y DEBATE CRUZADO (SIGUE ESTE ESTILO EXACTO):
+EJEMPLO 1 - DOMINIO GEOFÍSICA / MEGACIUDADES Y TECTÓNICA:
 ```json
 {{
-  "topic": "El Enigma del Sueño Humano",
-  "headline_hook": "¿POR QUÉ ALUCINAS AL DORMIR?",
+  "topic": "La Falla de San Andrés y Los Ángeles",
+  "headline_hook": "¿LOS ÁNGELES ESTÁ CONDENADA?",
   "roles": {{
-    "{self.host_a.id}": "Entidad del Código Cuántico",
-    "{self.host_b.id}": "Entidad de la Entropía Estelar"
+    "{self.host_a.id}": "Entidad de la Tectónica Planetaria",
+    "{self.host_b.id}": "Entidad de la Resistencia Estructural"
   }},
   "holograms": null,
   "scenes": [
     {{
       "speaker": "Narrador",
       "entity": "narrator",
-      "text": "Pasas un tercio de tu vida paralizado, alucinando mundos para que tu cerebro no colapse.",
+      "text": "Cuatro millones de personas viven sobre una fractura geológica que acumula energía desde hace trescientos años.",
       "shot": "wide",
       "duration": 3.4
     }},
     {{
       "speaker": "{self.host_a.name}",
       "entity": "{self.host_a.id}",
-      "text": "En el sueño profundo, su sistema glifático inunda el tejido para disolver toxinas letales.",
+      "text": "La placa del Pacífico avanza inexorablemente hacia el norte; la fricción acumulada destrozará su infraestructura en segundos.",
       "shot": "{self.host_a.shot_name}",
       "duration": 3.4
     }},
     {{
       "speaker": "{self.host_b.name}",
       "entity": "{self.host_b.id}",
-      "text": "Una imperfección trágica. Si no entran en coma diario, sus propios residuos los envenenan.",
+      "text": "Te equivocas. Han diseñado rascacielos con disipadores sísmicos capaces de absorber oscilaciones masivas sin colapsar.",
       "shot": "{self.host_b.shot_name}",
       "duration": 3.5
     }},
     {{
       "speaker": "{self.host_a.name}",
       "entity": "{self.host_a.id}",
-      "text": "Aun así, sus ondas cerebrales reorganizan la memoria, fijando el aprendizaje en el caos.",
+      "text": "Ningún amortiguador de acero detendrá la licuefacción del suelo cuando la corteza libere un gigajulios de potencia sísmica.",
       "shot": "{self.host_a.shot_name}",
       "duration": 3.4
     }},
     {{
       "speaker": "{self.host_b.name}",
       "entity": "{self.host_b.id}",
-      "text": "Atrapados entre la locura de no dormir y la fragilidad de quedar vulnerables en la sombra.",
+      "text": "Su tecnología de alerta temprana corta líneas de gas y frena trenes antes de que la primera onda llegue.",
       "shot": "{self.host_b.shot_name}",
       "duration": 3.5
     }},
     {{
       "speaker": "Narrador",
       "entity": "narrator",
-      "text": "Si tus sueños simulan tu realidad... ¿quién guía tu conciencia cuando apagas los ojos?",
+      "text": "Cuando la Tierra reclame su territorio... ¿podrá el ingenio humano sostener una ciudad sobre el abismo?",
       "shot": "both",
       "duration": 3.5
     }}
@@ -406,56 +400,56 @@ EJEMPLO MODELO DE GUION DE MÁXIMA RETENCIÓN Y DEBATE CRUZADO (SIGUE ESTE ESTIL
 }}
 ```
 
-EJEMPLO 2 DE ANTAGONISMO ELEGANTE Y GRAVITAS CÓSMICA - TEMA IDENTIDAD/MATERIA:
+EJEMPLO 2 - DOMINIO ASTROFÍSICA / AGUJEROS NEGROS:
 ```json
 {{
-  "topic": "TÚ NO EXISTES",
-  "headline_hook": "¿REALMENTE EXISTES?",
+  "topic": "El Horizonte de Sucesos",
+  "headline_hook": "¿QUÉ HAY DENTRO DE UN AGUJERO NEGRO?",
   "roles": {{
-    "{self.host_a.id}": "Entidad del Código Cuántico",
-    "{self.host_b.id}": "Entidad del Fuego Estelar"
+    "{self.host_a.id}": "Entidad de la Singularidad Gravitatoria",
+    "{self.host_b.id}": "Entidad de la Información Cuántica"
   }},
   "holograms": null,
   "scenes": [
     {{
       "speaker": "Narrador",
       "entity": "narrator",
-      "text": "Los átomos de tu cuerpo se renuevan por completo. Físicamente, la persona que nació ya no existe.",
+      "text": "Si cruzaras el horizonte de sucesos, para el resto del universo quedarías congelado para toda la eternidad.",
       "shot": "wide",
       "duration": 3.4
     }},
     {{
       "speaker": "{self.host_a.name}",
       "entity": "{self.host_a.id}",
-      "text": "El Yo es solo una ficción biológica. Señales eléctricas en un cerebro hueco convenciéndose de que tiene un alma.",
+      "text": "La curvatura extrema del espacio tiempo devora la materia y borra cualquier rastro de la física conocida.",
       "shot": "{self.host_a.shot_name}",
       "duration": 3.4
     }},
     {{
       "speaker": "{self.host_b.name}",
       "entity": "{self.host_b.id}",
-      "text": "Te equivocas. Su materia cambia, pero esa chispa de conciencia resiste y teje su propia historia.",
+      "text": "La materia se destruye, pero la información cuántica se codifica en la superficie sin perderse jamás.",
       "shot": "{self.host_b.shot_name}",
       "duration": 3.5
     }},
     {{
       "speaker": "{self.host_a.name}",
       "entity": "{self.host_a.id}",
-      "text": "No teje nada. Cada milisegundo millones de impulsos se extinguen sin dejar ningún testigo detrás.",
+      "text": "En el centro absoluto, las ecuaciones colapsan a densidad infinita donde las leyes del cosmos dejan de operar.",
       "shot": "{self.host_a.shot_name}",
       "duration": 3.4
     }},
     {{
       "speaker": "{self.host_b.name}",
       "entity": "{self.host_b.id}",
-      "text": "El testigo son ellos sintiendo el cosmos. Ninguna ecuación fría puede borrar la experiencia de arder.",
+      "text": "Ese colapso solo revela que la gravedad y la mecánica cuántica deben unirse en una nueva ley fundamental.",
       "shot": "{self.host_b.shot_name}",
       "duration": 3.5
     }},
     {{
       "speaker": "Narrador",
       "entity": "narrator",
-      "text": "Si toda tu materia cambia sin cesar... ¿eres tú quien escucha esto, o solo la ilusión de alguien que cree existir?",
+      "text": "Si la gravedad puede atrapar hasta la luz... ¿es el agujero negro el fin del espacio o la puerta a otra física?",
       "shot": "both",
       "duration": 3.5
     }}
@@ -463,113 +457,56 @@ EJEMPLO 2 DE ANTAGONISMO ELEGANTE Y GRAVITAS CÓSMICA - TEMA IDENTIDAD/MATERIA:
 }}
 ```
 
-EJEMPLO 3 - TEMA DE PERCEPCIÓN/VISIÓN ("NUNCA HAS VISTO EL MUNDO" - DOMINIO ÓPTICO Y CHOQUE PURO):
+EJEMPLO 3 - DOMINIO BIOLOGÍA EXTREMA / TARDÍGRADOS Y CRIPTOBIOSIS:
 ```json
 {{
-  "topic": "NUNCA HAS VISTO EL MUNDO",
-  "headline_hook": "¿ALGUNA VEZ HAS VISTO EL MUNDO?",
+  "topic": "La Criptobiosis del Tardígrado",
+  "headline_hook": "¿EL ANIMAL QUE NO PUEDE MORIR?",
   "roles": {{
-    "{self.host_a.id}": "Entidad de la Señal Cuántica",
-    "{self.host_b.id}": "Entidad de la Percepción Estelar"
+    "{self.host_a.id}": "Entidad del Cero Absoluto",
+    "{self.host_b.id}": "Entidad de la Resiliencia Celular"
   }},
   "holograms": null,
   "scenes": [
     {{
       "speaker": "Narrador",
       "entity": "narrator",
-      "text": "Tu cerebro vive encerrado a oscuras dentro del cráneo; jamás ha tocado un solo rayo de luz.",
+      "text": "Existe un organismo microscópico capaz de sobrevivir al vacío espacial, radiación letal y temperaturas extremas.",
       "shot": "wide",
       "duration": 3.4
     }},
     {{
       "speaker": "{self.host_a.name}",
       "entity": "{self.host_a.id}",
-      "text": "La visión es una simulación tardía. El cosmos físico carece de colores; solo son ondas que su mente inventa.",
+      "text": "Expulsa el noventa y cinco por ciento de su agua y detiene su metabolismo; técnicamente no está vivo.",
       "shot": "{self.host_a.shot_name}",
       "duration": 3.4
     }},
     {{
       "speaker": "{self.host_b.name}",
       "entity": "{self.host_b.id}",
-      "text": "Te equivocas. No es un engaño: es la conciencia viva forjando belleza donde solo existe radiación ciega.",
+      "text": "Protege su ADN sustituyendo el agua por proteínas vítreas que blindan cada célula contra el daño.",
       "shot": "{self.host_b.shot_name}",
       "duration": 3.5
     }},
     {{
       "speaker": "{self.host_a.name}",
       "entity": "{self.host_a.id}",
-      "text": "Una construcción con ochenta milisegundos de retraso. Jamás tocan el presente; contemplan solo sombras del pasado.",
+      "text": "Esa animación suspendida no es invencibilidad, solo una pausa pasiva incapaz de reproducirse en el vacío.",
       "shot": "{self.host_a.shot_name}",
       "duration": 3.4
     }},
     {{
       "speaker": "{self.host_b.name}",
       "entity": "{self.host_b.id}",
-      "text": "Desafían ese retraso creando mundos. Conquistan el abismo cada vez que convierten destellos mudos en asombro.",
+      "text": "Al tocar una sola gota de agua, reactiva su biología en minutos desafiando los límites de la vida.",
       "shot": "{self.host_b.shot_name}",
       "duration": 3.5
     }},
     {{
       "speaker": "Narrador",
       "entity": "narrator",
-      "text": "Si cada imagen que contemplas es solo una sombra creada en tus tinieblas... ¿alguna vez has visto el mundo real?",
-      "shot": "both",
-      "duration": 3.5
-    }}
-  ]
-}}
-```
-
-EJEMPLO 4 - TEMA DEL TIEMPO / RELATIVIDAD ("EL AHORA NO EXISTE" - AUTORIDAD CÓSMICA Y CLARIDAD TOTAL):
-```json
-{{
-  "topic": "EL AHORA NO EXISTE",
-  "headline_hook": "¿EL AHORA ES UNA ILUSIÓN?",
-  "roles": {{
-    "{self.host_a.id}": "Entidad del Espacio Frío",
-    "{self.host_b.id}": "Entidad de la Conciencia Viva"
-  }},
-  "holograms": null,
-  "scenes": [
-    {{
-      "speaker": "Narrador",
-      "entity": "narrator",
-      "text": "Para las leyes del universo, el presente no existe. Tu 'ahora' es solo un truco de tu cabeza.",
-      "shot": "wide",
-      "duration": 3.4
-    }},
-    {{
-      "speaker": "{self.host_a.name}",
-      "entity": "{self.host_a.id}",
-      "text": "El cosmos no tiene reloj. Arriba en el vacío el tiempo corre más rápido que en su suelo; jamás comparten el mismo instante.",
-      "shot": "{self.host_a.shot_name}",
-      "duration": 3.4
-    }},
-    {{
-      "speaker": "{self.host_b.name}",
-      "entity": "{self.host_b.id}",
-      "text": "Te equivocas. El universo estará desincronizado, pero los seres vivos crean su propio reloj cada vez que eligen qué hacer.",
-      "shot": "{self.host_b.shot_name}",
-      "duration": 3.5
-    }},
-    {{
-      "speaker": "{self.host_a.name}",
-      "entity": "{self.host_a.id}",
-      "text": "No eligen nada en presente. Cuando miran hacia arriba solo ven fósiles: estrellas que murieron hace millones de años.",
-      "shot": "{self.host_a.shot_name}",
-      "duration": 3.4
-    }},
-    {{
-      "speaker": "{self.host_b.name}",
-      "entity": "{self.host_b.id}",
-      "text": "Mirarán el pasado, pero actúan aquí. Las rocas solo se dejan arrastrar; la mente viva es lo único que dobla el tiempo.",
-      "shot": "{self.host_b.shot_name}",
-      "duration": 3.5
-    }},
-    {{
-      "speaker": "Narrador",
-      "entity": "narrator",
-      "text": "Si el cosmos entero vive a destiempo... ¿es tu presente real, o solo la frontera donde tu mente decide existir?",
+      "text": "Si una criatura puede detener su propia vida por décadas... ¿dónde termina la supervivencia y empieza la inmortalidad?",
       "shot": "both",
       "duration": 3.5
     }}

@@ -59,6 +59,18 @@ def main():
         print("Please install FFmpeg: https://ffmpeg.org/download.html")
         sys.exit(1)
 
+    # If --gcp-tutorial is requested, delegate to dedicated gcp_tutorial.py
+    if getattr(args, "gcp_tutorial", False):
+        import subprocess
+        gcp_cmd = [sys.executable, "gcp_tutorial.py"]
+        if args.topic:
+            gcp_cmd.extend(["--topic", args.topic])
+        if getattr(args, "summary", None):
+            gcp_cmd.extend(["--notes", args.summary])
+        if getattr(args, "format", None):
+            gcp_cmd.extend(["--format", args.format])
+        sys.exit(subprocess.run(gcp_cmd).returncode)
+
     # If --thumbnail mode is selected, generate video thumbnail covers
     if getattr(args, "generate_thumbnail", False):
         from ai.thumbnail_generator import ThumbnailGenerator
