@@ -93,7 +93,7 @@ def parse_args():
         "--speed",
         type=float,
         default=1.08,
-        help="Velocidad de locución de las voces (por defecto: 1.08x / +8% para ritmo natural y profesional)."
+        help="Velocidad de locución de las voces (por defecto: 1.08x / +8%% para ritmo natural y profesional)."
     )
     parser.add_argument(
         "--fps",
@@ -125,9 +125,37 @@ def parse_args():
         help="Lista las plantillas de animación registradas e indexadas en la base de datos ligera (RAG de Componentes)."
     )
     parser.add_argument(
+        "--visual-resources", "--list-resources",
+        action="store_true",
+        help="Lista el catálogo de recursos visuales registrados (Diapositivas, Animaciones RAG, Consola, Terminal) y sus triggers semánticos."
+    )
+    parser.add_argument(
         "--hybrid",
         action="store_true",
         help="Línea de tiempo híbrida inteligente: orquesta y combina automáticamente diapositivas, animaciones RAG y consola según la intención semántica de cada escena."
+    )
+    parser.add_argument(
+        "--llm",
+        choices=["auto", "gemini", "groq"],
+        default="auto",
+        help="Proveedor de IA para generar guiones y animaciones: 'auto' (Gemini con fallback a Groq), 'groq' (Groq LPU ultra-rápido) o 'gemini'."
+    )
+    parser.add_argument(
+        "--groq-key",
+        type=str,
+        default=None,
+        help="API Key de Groq (https://console.groq.com/keys) para conmutación inmediata si Gemini da error 429 Too Many Requests."
+    )
+    parser.add_argument(
+        "--gemini-key",
+        type=str,
+        default=None,
+        help="API Key de Google Gemini."
+    )
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="Modo estricto: Si la llamada a la IA (Gemini/Groq) falla por límite de tasa (429) o cuota, detiene la ejecución inmediatamente en vez de usar generación procedimental."
     )
     parser.add_argument(
         "--interactive", "-i",
@@ -169,7 +197,28 @@ def main():
         print("Ejecución: python gcp_tutorial.py --motion \"<tema>\"\n")
         return
 
-    generator = GCPTutorialGenerator()
+    # 1.0b Handle --visual-resources (List Visual Resources Catalog)
+    if args.visual_resources:
+        from video.visual_resource_router import VisualResourceRouter
+        router = VisualResourceRouter()
+        print("\n🎨  CATÁLOGO DE RECURSOS VISUALES REGISTRADOS (ROUTER SEMÁNTICO):")
+        print("   Evita la saturación del prompt clasificando localmente (<1ms) cada escena.")
+        print("-" * 70)
+        for r_id, desc in router.catalog.items():
+            print(f"  • ID: {desc.id} [Tipo: {desc.kind.upper()}] (Prioridad: {desc.priority})")
+            print(f"    Nombre: {desc.name}")
+            print(f"    Descripción: {desc.description}")
+            print(f"    Triggers Semánticos: {', '.join(desc.intent_keywords[:8])}...\n")
+        print(f"Total recursos registrados: {len(router.catalog)}.")
+        print("Ejecución Híbrida: python gcp_tutorial.py --hybrid --sample\n")
+        return
+
+    generator = GCPTutorialGenerator(
+        gemini_key=args.gemini_key,
+        groq_key=args.groq_key,
+        llm_provider=args.llm,
+        strict_mode=args.strict
+    )
 
     # 1.1 Handle --motion (Standalone AI Motion Clip Generation via RAG)
     if args.motion:
@@ -180,8 +229,22 @@ def main():
             if p.exists():
                 user_notes = p.read_text(encoding="utf-8")
 
-        m_gen = AIMotionGenerator(fps=args.fps, crf=args.crf)
-        video_path, choreo = m_gen.generate_motion_for_topic(args.motion, user_notes=user_notes)
+        m_gen = AIMotionGenerator(
+            fps=args.fps,
+            crf=args.crf,
+            gemini_key=args.gemini_key,
+            groq_key=args.groq_key,
+            llm_provider=args.llm,
+            strict_mode=args.strict
+        )
+        try:
+            video_path, choreo = m_gen.generate_motion_for_topic(args.motion, user_notes=user_notes)
+        except RuntimeError as err:
+            print("\n" + "=" * 70)
+            print("❌ [GENERACIÓN DETENIDA - ERROR EN LLAMADA A IA]")
+            print(f"{err}")
+            print("=" * 70 + "\n")
+            return
         file_kb = video_path.stat().st_size / 1024 if video_path.exists() else 0
         layout_name = choreo.get("renderer_type", "network_flow")
         tpl_id = choreo.get("template_id", "procedural")
@@ -254,7 +317,14 @@ def main():
 
     # 5. Generate lesson specification (Slides + Dialogue)
     print(f"\n🧠 [NotebookLM Generator] Diseñando lección para: '{topic}'...")
-    lesson = generator.generate_lesson(topic=topic, user_notes=user_notes)
+    try:
+        lesson = generator.generate_lesson(topic=topic, user_notes=user_notes)
+    except RuntimeError as err:
+        print("\n" + "=" * 70)
+        print("❌ [GENERACIÓN DETENIDA - ERROR EN LLAMADA A IA]")
+        print(f"{err}")
+        print("=" * 70 + "\n")
+        return
 
     print(f"\n✨ Lección Estructurada: {lesson.get('title')}")
     print(f"   Categoría: {lesson.get('category')}")
@@ -318,7 +388,11 @@ def main():
         speech_speed=args.speed,
         fps=args.fps,
         crf=args.crf,
-        codec=selected_codec
+        codec=selected_codec,
+        gemini_key=args.gemini_key,
+        groq_key=args.groq_key,
+        llm_provider=args.llm,
+        strict_mode=args.strict
     )
 
     out_file = Path(args.output).name if args.output else None

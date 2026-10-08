@@ -14,7 +14,17 @@ import urllib.error
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Tuple
 
-from config import BASE_DIR, OUTPUT_DIR, TEMP_DIR, GEMINI_API_KEY, sanitize_env_value
+from config import (
+    BASE_DIR,
+    OUTPUT_DIR,
+    TEMP_DIR,
+    GEMINI_API_KEY,
+    GROQ_API_KEY,
+    GROQ_MODEL,
+    GROQ_API_BASE,
+    LLM_PROVIDER,
+    sanitize_env_value
+)
 from utils.fonts import resolve_best_font_path
 from video.motion_template_registry import MotionTemplateRegistry, MotionTemplate
 
@@ -30,7 +40,7 @@ def escape_xml(text: Any) -> str:
 
 
 class AIMotionGenerator:
-    """Generates on-the-fly animated explanatory video clips for any GCP concept using Gemini Flash and RAG Templates."""
+    """Generates on-the-fly animated explanatory video clips for any GCP concept using Gemini Flash, Groq LPU, and RAG Templates."""
 
     def __init__(
         self,
@@ -39,7 +49,13 @@ class AIMotionGenerator:
         fps: int = 10,
         crf: int = 26,
         temp_dir: Optional[Path] = None,
-        output_dir: Optional[Path] = None
+        output_dir: Optional[Path] = None,
+        gemini_key: Optional[str] = None,
+        groq_key: Optional[str] = None,
+        groq_model: Optional[str] = None,
+        groq_api_base: Optional[str] = None,
+        llm_provider: Optional[str] = None,
+        strict_mode: bool = False
     ):
         self.width = width
         self.height = height
@@ -52,7 +68,12 @@ class AIMotionGenerator:
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
         self.registry = MotionTemplateRegistry()
-        self.gemini_key = sanitize_env_value(os.getenv("GEMINI_API_KEY", GEMINI_API_KEY))
+        self.gemini_key = sanitize_env_value(gemini_key or os.getenv("GEMINI_API_KEY", GEMINI_API_KEY))
+        self.groq_key = sanitize_env_value(groq_key or os.getenv("GROQ_API_KEY", GROQ_API_KEY))
+        self.groq_model = sanitize_env_value(groq_model or os.getenv("GROQ_MODEL", GROQ_MODEL)) or "llama-3.3-70b-versatile"
+        self.groq_api_base = (sanitize_env_value(groq_api_base or os.getenv("GROQ_API_BASE", GROQ_API_BASE)) or "https://api.groq.com/openai/v1").rstrip("/")
+        self.llm_provider = (llm_provider or os.getenv("LLM_PROVIDER", LLM_PROVIDER) or "auto").lower()
+        self.strict_mode = strict_mode
 
     def generate_motion_for_topic(
         self,
@@ -94,35 +115,37 @@ class AIMotionGenerator:
         topic: str,
         user_notes: str
     ) -> Dict[str, Any]:
-        """Uses surgical prompt with Gemini to populate only the specific selected template schema."""
+        """Uses surgical prompt with Gemini/Groq to populate only the specific selected template schema."""
         self.registry.record_usage(template.id)
         surgical_prompt = self.registry.build_surgical_prompt(template, topic, user_notes)
         prompt_bytes = len(surgical_prompt.encode("utf-8"))
-        print(f"   🎯 [Prompt Quirúrgico] Inyección mínima de {prompt_bytes} bytes enviada a Gemini...")
+        print(f"   🎯 [Prompt Quirúrgico] Inyección mínima de {prompt_bytes} bytes...")
 
-        if self._is_valid_key(self.gemini_key):
-            try:
-                ai_data = self._call_gemini_json(surgical_prompt, timeout_secs=15)
-                if ai_data and ("stages" in ai_data or "etapas" in ai_data):
-                    # Normalize stages key
-                    if "etapas" in ai_data and "stages" not in ai_data:
-                        ai_data["stages"] = ai_data.pop("etapas")
-                    ai_data["renderer_type"] = template.renderer_type
-                    ai_data["template_id"] = template.id
-                    print(f"   ⚡ Gemini pobló con éxito la plantilla '{template.id}'.")
-                    return ai_data
-            except Exception as e:
-                print(f"   ⚠️ Aviso: Gemini API ({e}), usando datos curados de alta fidelidad.")
+        ai_data, prov = self._call_llm_json_with_fallback(
+            prompt=surgical_prompt,
+            system_prompt=f"Devuelve exclusivamente un JSON que cumpla el schema de la plantilla '{template.id}'."
+        )
 
-        # Fallback to template default high-fidelity data adapted to topic
-        fallback = json.loads(json.dumps(template.default_example))
-        fallback["renderer_type"] = template.renderer_type
-        fallback["template_id"] = template.id
-        fallback["title"] = f"{template.name}: {topic.title()}"
-        return fallback
+        if ai_data and ("stages" in ai_data or "etapas" in ai_data):
+            # Normalize stages key
+            if "etapas" in ai_data and "stages" not in ai_data:
+                ai_data["stages"] = ai_data.pop("etapas")
+            ai_data["renderer_type"] = template.renderer_type
+            ai_data["template_id"] = template.id
+            prov_label = "Groq LPU" if prov == "groq" else "Gemini Flash"
+            print(f"   ⚡ {prov_label} pobló con éxito la plantilla '{template.id}' en tiempo récord.")
+            return ai_data
+
+        # If LLM failed, do not show mismatched or fabricated data: cancel truthfully
+        raise RuntimeError(
+            f"No se pudo generar la animación vectorizada para '{topic}' porque las APIs de IA (Gemini/Groq) "
+            f"no respondieron satisfactoriamente (HTTP 429 Too Many Requests o cuota agotada).\n"
+            f"🛑 Operación cancelada para evitar mostrar diagramas o animaciones inexactas que no corresponden al tema.\n"
+            f"💡 Solución: Configura tu clave gratuita de Groq (https://console.groq.com/keys) pasando --groq-key o en la UI."
+        )
 
     def _resolve_organic_new_template(self, topic: str, user_notes: str) -> Dict[str, Any]:
-        """Generates a novel animation layout and auto-indexes it into SQLite."""
+        """Generates a novel animation layout and auto-indexes it into SQLite using Gemini or Groq."""
         prompt = f"""Actúa como Diseñador de Motion Graphics y Arquitecto Cloud.
 Crea una nueva plantilla de animación para explicar este tema técnico de Google Cloud: "{topic}".
 Devuelve ÚNICAMENTE un JSON con:
@@ -146,72 +169,257 @@ Devuelve ÚNICAMENTE un JSON con:
   ]
 }}"""
 
-        if self._is_valid_key(self.gemini_key):
-            try:
-                ai_data = self._call_gemini_json(prompt, timeout_secs=15)
-                if ai_data and "stages" in ai_data:
-                    # Auto-index into SQLite
-                    tpl_id = ai_data.get("template_id", f"plantilla_{re.sub(r'[^a-z0-9_]', '_', topic.lower()[:20])}")
-                    self.registry.auto_index_template(
-                        template_id=tpl_id,
-                        name=ai_data.get("name", f"Plantilla Dinámica de {topic}"),
-                        description=ai_data.get("description", f"Animación para {topic}"),
-                        tags=ai_data.get("tags", ["gcp", topic.lower()]),
-                        schema={"title": "str", "subtitle": "str", "nodes": "list", "stages": "list"},
-                        default_example=ai_data,
-                        renderer_type=ai_data.get("renderer_type", "network_flow")
-                    )
-                    return ai_data
-            except Exception as e:
-                print(f"   ⚠️ Aviso: Error generando nueva plantilla ({e}), usando motor procedimental.")
+        ai_data, prov = self._call_llm_json_with_fallback(
+            prompt=prompt,
+            system_prompt="Eres un arquitecto cloud experto. Devuelve exclusivamente JSON válido."
+        )
 
-        # Procedural fallback for novel topic
-        default_choreo = {
-            "title": f"Arquitectura Dinámica: {topic.title()}",
-            "subtitle": "Simulación visual interactiva de componentes",
-            "renderer_type": "network_flow",
-            "nodes": [
-                {"id": 0, "name": "Usuario / Petición", "type": "client", "subtext": "Entrada de tráfico"},
-                {"id": 1, "name": f"{topic.title()} Core", "type": "compute", "subtext": "Procesamiento elástico"},
-                {"id": 2, "name": "Destino de Datos", "type": "database", "subtext": "Persistencia de alta disponibilidad"}
-            ],
-            "stages": [
+        if ai_data and "stages" in ai_data:
+            prov_label = "Groq LPU" if prov == "groq" else "Gemini Flash"
+            print(f"   ⚡ {prov_label} generó una nueva plantilla orgánica para '{topic}'.")
+            # Auto-index into SQLite
+            tpl_id = ai_data.get("template_id", f"plantilla_{re.sub(r'[^a-z0-9_]', '_', topic.lower()[:20])}")
+            self.registry.auto_index_template(
+                template_id=tpl_id,
+                name=ai_data.get("name", f"Plantilla Dinámica de {topic}"),
+                description=ai_data.get("description", f"Animación para {topic}"),
+                tags=ai_data.get("tags", ["gcp", topic.lower()]),
+                schema={"title": "str", "subtitle": "str", "nodes": "list", "stages": "list"},
+                default_example=ai_data,
+                renderer_type=ai_data.get("renderer_type", "network_flow")
+            )
+            return ai_data
+
+        raise RuntimeError(
+            f"No se pudo crear la plantilla dinámica para '{topic}' porque las APIs de IA (Gemini/Groq) "
+            f"no respondieron satisfactoriamente (HTTP 429 Too Many Requests o cuota agotada).\n"
+            f"🛑 Operación cancelada para evitar mostrar diagramas o animaciones inexactas que no corresponden al tema.\n"
+            f"💡 Solución: Configura tu clave gratuita de Groq (https://console.groq.com/keys) pasando --groq-key o en la UI."
+        )
+
+    def _build_contextual_choreo_for_topic(
+        self,
+        template: MotionTemplate,
+        topic: str,
+        user_notes: str = ""
+    ) -> Dict[str, Any]:
+        """
+        Dynamically adapts the choreography to the EXACT topic requested by the user,
+        ensuring that even in procedural mode, the nodes, labels, and explanations
+        are strictly relevant and never show unrelated placeholder data from another topic.
+        """
+        clean_topic = topic.strip()
+        words = clean_topic.lower()
+
+        choreo = {
+            "template_id": template.id,
+            "renderer_type": template.renderer_type,
+            "title": f"{clean_topic.title()}",
+            "subtitle": f"Arquitectura y Dinámica de {clean_topic.title()} en GCP",
+            "topic": clean_topic
+        }
+
+        if template.renderer_type == "hierarchy_tree":
+            choreo["title"] = f"Estructura Organizacional: {clean_topic.title()}"
+            choreo["subtitle"] = "Jerarquía de Recursos, Carpetas y Herencia de Políticas en GCP"
+            choreo["nodes"] = [
+                {"id": "root", "label": "Organización GCP", "type": "org", "subtext": "Dominio Raíz (Políticas Globales)"},
+                {"id": "f_prod", "label": "Carpeta: Producción", "type": "folder", "parent": "root", "subtext": "Entorno Crítico"},
+                {"id": "f_dev", "label": "Carpeta: Desarrollo", "type": "folder", "parent": "root", "subtext": "Sandbox / QA"},
+                {"id": "p_app", "label": "Proyecto: proj-prod-api", "type": "project", "parent": "f_prod", "subtext": "Recursos Aislados"},
+                {"id": "p_test", "label": "Proyecto: proj-dev-test", "type": "project", "parent": "f_dev", "subtext": "Testing Continuo"}
+            ]
+            choreo["stages"] = [
                 {
                     "stage_num": 1,
-                    "title": "Fase Inicial en Reposo",
-                    "badge": "REPOSO",
-                    "active_node_id": 0,
-                    "packet_from": None,
-                    "packet_to": None,
-                    "metric_label": "Consumo",
-                    "metric_value": "0€ sin actividad",
-                    "explanation": f"La infraestructura de {topic} permanece lista sin incurrir en costes innecesarios."
+                    "title": "Fase 1: Raíz de Organización",
+                    "badge": "GOBIERNO",
+                    "active_node_id": "root",
+                    "explanation": f"Punto central de gobierno para {clean_topic}. Las políticas de IAM fluyen hacia abajo."
                 },
                 {
                     "stage_num": 2,
-                    "title": "Llegada de Carga y Activación",
-                    "badge": "EN EJECUCIÓN",
-                    "active_node_id": 1,
-                    "packet_from": 0,
-                    "packet_to": 1,
-                    "metric_label": "Latencia",
-                    "metric_value": "Respuesta subsegundo",
-                    "explanation": f"Llegan las peticiones y el sistema procesa el flujo de trabajo de {topic}."
+                    "title": "Fase 2: Aislamiento por Carpetas",
+                    "badge": "ENTORNOS",
+                    "active_node_id": "f_prod",
+                    "explanation": "Las carpetas dividen presupuestos, accesos y permisos entre Producción y Desarrollo."
                 },
                 {
                     "stage_num": 3,
-                    "title": "Persistencia y Auditoría",
-                    "badge": "FINALIZADO",
+                    "title": "Fase 3: Proyectos de Cargas de Trabajo",
+                    "badge": "PROYECTOS",
+                    "active_node_id": "p_app",
+                    "explanation": "Cada proyecto es el límite de seguridad y facturación donde residen los recursos cloud."
+                }
+            ]
+
+        elif template.renderer_type == "scaling_elastic":
+            service_name = "Cloud Run" if "run" in words else ("Compute Engine" if "vm" in words or "compute" in words else clean_topic.title())
+            choreo["title"] = f"Escalado Elástico: {service_name}"
+            choreo["subtitle"] = "Auto-Scaling Serverless de 0 a N Réplicas en Milisegundos"
+            choreo["nodes"] = [
+                {"id": 0, "name": "Tráfico de Entrada", "type": "client", "subtext": "Peticiones HTTPS"},
+                {"id": 1, "name": f"{service_name} Contenedores", "type": "compute", "subtext": "Escalado Automático"},
+                {"id": 2, "name": "Persistencia Cloud SQL", "type": "database", "subtext": "IP Privada Segura"}
+            ]
+            choreo["stages"] = [
+                {
+                    "stage_num": 1,
+                    "title": "Fase 1: Reposo (0 Instancias)",
+                    "badge": "0 COSTE",
+                    "active_node_id": 1,
+                    "metric_label": "Réplicas",
+                    "metric_value": "0",
+                    "explanation": f"{service_name} escala a cero cuando no hay peticiones activas, ahorrando el 100% de cómputo."
+                },
+                {
+                    "stage_num": 2,
+                    "title": "Fase 2: Tráfico Creciente",
+                    "badge": "ESCALANDO",
+                    "active_node_id": 1,
+                    "metric_label": "Réplicas",
+                    "metric_value": "8 pods",
+                    "explanation": "Ante la demanda, se multiplican instancias en segundos atendiendo la concurrencia sin caída de servicio."
+                },
+                {
+                    "stage_num": 3,
+                    "title": "Fase 3: Estabilización y Vuelta a Cero",
+                    "badge": "OPTIMIZADO",
+                    "active_node_id": 1,
+                    "metric_label": "Réplicas",
+                    "metric_value": "0 pods",
+                    "explanation": "Al terminar la carga, las réplicas se destruyen automáticamente sin costes remanentes."
+                }
+            ]
+
+        elif template.renderer_type == "network_flow":
+            source_comp = "Publicador / API" if "pubsub" in words else "Cliente / Webhook"
+            broker_comp = clean_topic.title() if len(clean_topic) < 25 else "GCP Message Broker"
+            dest_comp = "Suscriptor / Worker" if "pubsub" in words else "Cloud Storage / DB"
+            choreo["title"] = f"Flujo de Red: {clean_topic.title()}"
+            choreo["subtitle"] = "Tráfico de Paquetes y Eventos en Tiempo Real"
+            choreo["nodes"] = [
+                {"id": 0, "name": source_comp, "type": "client", "subtext": "Generación de eventos"},
+                {"id": 1, "name": broker_comp, "type": "network", "subtext": "Distribución asíncrona"},
+                {"id": 2, "name": dest_comp, "type": "compute", "subtext": "Consumo y procesamiento"}
+            ]
+            choreo["stages"] = [
+                {
+                    "stage_num": 1,
+                    "title": "Fase 1: Emisión de Paquete",
+                    "badge": "ENVÍO",
+                    "active_node_id": 0,
+                    "packet_from": None,
+                    "packet_to": None,
+                    "metric_label": "Latencia",
+                    "metric_value": "1.2 ms",
+                    "explanation": f"El emisor envía el paquete a {broker_comp} con cifrado TLS 1.3."
+                },
+                {
+                    "stage_num": 2,
+                    "title": "Fase 2: Enrutamiento en Malla",
+                    "badge": "TRÁFICO",
+                    "active_node_id": 1,
+                    "packet_from": 0,
+                    "packet_to": 1,
+                    "metric_label": "Throughput",
+                    "metric_value": "50K msg/s",
+                    "explanation": "El componente enruta y distribuye con tolerancia a fallos por la red troncal de Google."
+                },
+                {
+                    "stage_num": 3,
+                    "title": "Fase 3: Entrega Garantizada",
+                    "badge": "ENTREGA",
                     "active_node_id": 2,
                     "packet_from": 1,
                     "packet_to": 2,
-                    "metric_label": "Confiabilidad",
-                    "metric_value": "99.99% SLA",
-                    "explanation": "Los resultados se guardan de forma segura y se genera la métrica de observabilidad."
+                    "metric_label": "ACK",
+                    "metric_value": "100% OK",
+                    "explanation": "El suscriptor confirma recepción (ACK) completando el ciclo sin pérdida de datos."
                 }
             ]
-        }
-        return default_choreo
+
+        elif template.renderer_type == "storage_lifecycle":
+            choreo["title"] = f"Ciclo de Vida: {clean_topic.title()}"
+            choreo["subtitle"] = "Transición Automática de Clases y Cifrado AES-256"
+            choreo["nodes"] = [
+                {"id": 0, "name": "STANDARD", "type": "storage_hot", "subtext": "Acceso Diario (Cajón)"},
+                {"id": 1, "name": "NEARLINE / COLDLINE", "type": "storage_warm", "subtext": "Mensual / Anual (Bodega)"},
+                {"id": 2, "name": "ARCHIVE", "type": "storage_cold", "subtext": "Legal a Largo Plazo (Caja fuerte)"}
+            ]
+            choreo["stages"] = [
+                {
+                    "stage_num": 1,
+                    "title": "Fase 1: Creación en Clase Caliente",
+                    "badge": "STANDARD",
+                    "active_node_id": 0,
+                    "metric_label": "Costo",
+                    "metric_value": "Tarifa Base",
+                    "explanation": f"Datos subidos a {clean_topic}. Disponibilidad inmediata para lectura frecuente."
+                },
+                {
+                    "stage_num": 2,
+                    "title": "Fase 2: Regla de Ciclo de Vida (30 días)",
+                    "badge": "COLDLINE",
+                    "active_node_id": 1,
+                    "metric_label": "Ahorro",
+                    "metric_value": "75% Menos",
+                    "explanation": "Sin mover URLs, Google Cloud transiciona el objeto a Coldline reduciendo la factura."
+                },
+                {
+                    "stage_num": 3,
+                    "title": "Fase 3: Archivo Definitivo (365 días)",
+                    "badge": "ARCHIVE",
+                    "active_node_id": 2,
+                    "metric_label": "Ahorro",
+                    "metric_value": "90% Menos",
+                    "explanation": "Almacenamiento a costo casi cero con cifrado bancario automático AES-256."
+                }
+            ]
+
+        elif template.renderer_type == "iam_security":
+            choreo["title"] = f"Seguridad & Menor Privilegio: {clean_topic.title()}"
+            choreo["subtitle"] = "Identidades de Servicio, Roles Granulares y Auditoría"
+            choreo["nodes"] = [
+                {"id": 0, "name": "Petición / Service Account", "type": "identity", "subtext": "Identidad Gestionada"},
+                {"id": 1, "name": "Motor de Políticas IAM", "type": "security", "subtext": "Evaluación de Rol Granular"},
+                {"id": 2, "name": "Recurso Protegido", "type": "resource", "subtext": "Acceso Estrictamente Acotado"}
+            ]
+            choreo["stages"] = [
+                {
+                    "stage_num": 1,
+                    "title": "Fase 1: Petición con Identidad",
+                    "badge": "AUTENTICACIÓN",
+                    "active_node_id": 0,
+                    "metric_label": "Identidad",
+                    "metric_value": "sa-api@gcp",
+                    "explanation": f"El servicio solicita acceso a {clean_topic} usando token temporal sin claves estáticas descargadas."
+                },
+                {
+                    "stage_num": 2,
+                    "title": "Fase 2: Verificación de Rol Granular",
+                    "badge": "AUTORIZACIÓN",
+                    "active_node_id": 1,
+                    "metric_label": "Principio",
+                    "metric_value": "Menor Privilegio",
+                    "explanation": "IAM evalúa permisos específicos (ej. datastore.user), bloqueando accesos innecesarios de administrador."
+                },
+                {
+                    "stage_num": 3,
+                    "title": "Fase 3: Registro en Cloud Audit Logs",
+                    "badge": "AUDITORÍA",
+                    "active_node_id": 2,
+                    "metric_label": "Registro",
+                    "metric_value": "Auditado 100%",
+                    "explanation": "Toda acción autorizada o denegada queda grabada para cumplimiento normativo e investigación."
+                }
+            ]
+
+        else:
+            choreo["nodes"] = template.default_example.get("nodes", [])
+            choreo["stages"] = template.default_example.get("stages", [])
+
+        return choreo
 
     def _is_valid_key(self, key: Optional[str]) -> bool:
         if not key or len(key) < 15:
@@ -233,6 +441,99 @@ Devuelve ÚNICAMENTE un JSON con:
             raw_text = re.sub(r"^```json\s*", "", raw_text)
             raw_text = re.sub(r"\s*```$", "", raw_text)
             return json.loads(raw_text)
+
+    def _call_groq_json(self, prompt: str, system_prompt: str = "", timeout_secs: int = 20) -> Optional[Dict[str, Any]]:
+        """Makes a direct, high-speed JSON call to Groq LPU (Llama 3.3 70B)."""
+        url = f"{self.groq_api_base}/chat/completions"
+        sys_msg = system_prompt or "Eres un diseñador de arquitecturas cloud. Devuelve ÚNICAMENTE un JSON válido que cumpla con el esquema requerido, sin markdown."
+        payload = json.dumps({
+            "model": self.groq_model,
+            "messages": [
+                {"role": "system", "content": sys_msg},
+                {"role": "user", "content": prompt}
+            ],
+            "response_format": {"type": "json_object"},
+            "temperature": 0.2
+        }).encode("utf-8")
+
+        headers = {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "Authorization": f"Bearer {self.groq_key}",
+            "User-Agent": "GCPTutorialGenerator/1.0"
+        }
+
+        req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
+        with urllib.request.urlopen(req, timeout=timeout_secs) as res:
+            data = json.loads(res.read().decode("utf-8"))
+            raw_text = data["choices"][0]["message"]["content"].strip()
+            raw_text = re.sub(r"^```json\s*", "", raw_text)
+            raw_text = re.sub(r"\s*```$", "", raw_text)
+            return json.loads(raw_text)
+
+    def _call_llm_json_with_fallback(
+        self,
+        prompt: str,
+        system_prompt: str = "",
+        timeout_secs: int = 15
+    ) -> Tuple[Optional[Dict[str, Any]], str]:
+        """
+        Executes LLM call with automatic multi-provider fallback:
+        - If 'groq' is preferred, tries Groq first, then Gemini.
+        - If 'gemini' or 'auto', tries Gemini first. If 429 Too Many Requests or error occurs,
+          automatically switches to Groq LPU.
+        Returns: (data, provider_used)
+        """
+        has_gemini = self._is_valid_key(self.gemini_key)
+        has_groq = self._is_valid_key(self.groq_key)
+
+        provider_order = []
+        if self.llm_provider == "groq":
+            if has_groq: provider_order.append("groq")
+            if has_gemini: provider_order.append("gemini")
+        else:
+            if has_gemini: provider_order.append("gemini")
+            if has_groq: provider_order.append("groq")
+
+        if not provider_order:
+            if not has_gemini and not has_groq:
+                print("   ℹ️ [IA] No hay claves API configuradas para Gemini ni Groq.")
+            return None, "none"
+
+        errors = []
+        for prov in provider_order:
+            if prov == "gemini":
+                try:
+                    data = self._call_gemini_json(prompt, timeout_secs=timeout_secs)
+                    if data:
+                        return data, "gemini"
+                except Exception as e:
+                    err_msg = str(e)
+                    errors.append(f"Gemini ({err_msg})")
+                    if "429" in err_msg or "Too Many Requests" in err_msg:
+                        print("   ⚠️ Gemini API saturado (HTTP Error 429: Too Many Requests / Quota).")
+                    else:
+                        print(f"   ⚠️ Gemini API error: {err_msg}")
+                    if has_groq and "groq" in provider_order and prov != provider_order[-1]:
+                        print(f"   ⚡ Conmutando automáticamente a Groq LPU ({self.groq_model})...")
+                    elif not has_groq:
+                        print(f"   💡 Groq LPU no está configurado (falta GROQ_API_KEY o --groq-key) para conmutar sin esperas.")
+
+            elif prov == "groq":
+                try:
+                    data = self._call_groq_json(prompt, system_prompt=system_prompt, timeout_secs=timeout_secs)
+                    if data:
+                        return data, "groq"
+                except Exception as e:
+                    err_msg = str(e)
+                    errors.append(f"Groq ({err_msg})")
+                    print(f"   ⚠️ Groq API error: {err_msg}")
+                    if has_gemini and "gemini" in provider_order and prov != provider_order[-1]:
+                        print("   ⚡ Conmutando automáticamente a Gemini...")
+
+        if errors:
+            print(f"   ⚠️ Proveedores de IA no disponibles ({'; '.join(errors)})")
+        return None, "none"
 
     def _render_choreography_to_video(self, choreo: Dict[str, Any], output_path: Path) -> Path:
         """Renders the stages into a sequence of animated SVG frames and compiles to MP4."""

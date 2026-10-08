@@ -1,5 +1,90 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Terminal, Cloud, Sparkles, Play, CheckCircle2, Copy, Monitor, Cpu, Shield, Network, HardDrive, ChevronRight, Layers, Volume2, ArrowRight, Database, FolderTree, GitBranch, Zap, X, Search } from 'lucide-react';
+import { Terminal, Cloud, Sparkles, Play, CheckCircle2, Copy, Monitor, Cpu, Shield, Network, HardDrive, ChevronRight, Layers, Volume2, ArrowRight, Database, FolderTree, GitBranch, Zap, X, Search, Film, Sliders, Plus, Check, Eye, Video } from 'lucide-react';
+import { HybridTimelineStudio } from './components/HybridTimelineStudio';
+
+export interface VisualResourceItem {
+  id: string;
+  kind: 'slide' | 'motion' | 'console' | 'terminal' | 'custom';
+  name: string;
+  description: string;
+  intent_keywords: string[];
+  priority: number;
+}
+
+export const DEFAULT_VISUAL_RESOURCES: VisualResourceItem[] = [
+  {
+    id: "slide_concept_card",
+    kind: "slide",
+    name: "Diapositiva: Tarjeta Conceptual Clave",
+    description: "Ideal para definiciones, problemas fundamentales y reglas de oro con bullets.",
+    intent_keywords: ["concepto", "definicion", "que es", "regla de oro", "importante", "resumen", "fundamento", "alerta"],
+    priority: 1
+  },
+  {
+    id: "slide_comparison_table",
+    kind: "slide",
+    name: "Diapositiva: Matriz Comparativa de Servicios",
+    description: "Ideal para comparar 2 o más servicios, pros, contras, tarifas y casos de uso.",
+    intent_keywords: ["vs", "comparativa", "diferencia", "frente a", "tabla", "pros", "contras", "cual elegir", "ventajas"],
+    priority: 3
+  },
+  {
+    id: "slide_checklist",
+    kind: "slide",
+    name: "Diapositiva: Checklist de Buenas Prácticas",
+    description: "Ideal para pasos numerados, requisitos previos y listas de verificación.",
+    intent_keywords: ["checklist", "requisitos", "pasos", "mejores practicas", "verificacion", "paso a paso"],
+    priority: 2
+  },
+  {
+    id: "motion_hierarchy_tree",
+    kind: "motion",
+    name: "Animación RAG: Árbol Jerárquico de Recursos",
+    description: "Visualiza la jerarquía de gobierno: Organización > Carpetas > Proyectos con herencia de políticas.",
+    intent_keywords: ["jerarquia", "arbol", "organizacion", "carpetas", "proyectos", "herencia", "estructura", "gobierno"],
+    priority: 4
+  },
+  {
+    id: "motion_elastic_scale",
+    kind: "motion",
+    name: "Animación RAG: Escalado Serverless Elástico",
+    description: "Visualiza contenedores multiplicándose de 0 a N réplicas bajo demanda y retorno a 0 coste.",
+    intent_keywords: ["escala", "escalado", "serverless", "instancias", "pods", "concurrencia", "cold start", "auto-scaling", "multiplica"],
+    priority: 4
+  },
+  {
+    id: "motion_packet_flow",
+    kind: "motion",
+    name: "Animación RAG: Flujo de Paquetes en Red",
+    description: "Visualiza paquetes y eventos viajando entre componentes en tiempo real (VPC, Pub/Sub).",
+    intent_keywords: ["flujo", "viajan", "paquetes", "pubsub", "cola", "mensajes", "red", "vpc", "fan-out", "latencia"],
+    priority: 4
+  },
+  {
+    id: "motion_storage_lifecycle",
+    kind: "motion",
+    name: "Animación RAG: Ciclo de Vida y Transición de Datos",
+    description: "Visualiza objetos transitando automáticamente a clases frías (Coldline) con cifrado AES-256.",
+    intent_keywords: ["ciclo de vida", "transicion", "coldline", "archive", "cifrado", "objetos", "retencion", "aes-256"],
+    priority: 4
+  },
+  {
+    id: "console_walkthrough",
+    kind: "console",
+    name: "Consola Real de GCP: Simulación de Interfaz y Clics",
+    description: "Demostración visual de la interfaz gráfica real de Google Cloud Console con cursor y menús.",
+    intent_keywords: ["consola", "interfaz", "clic", "boton", "pantalla", "menu", "navegador", "ui", "abrimos la consola"],
+    priority: 3
+  },
+  {
+    id: "terminal_cli",
+    kind: "terminal",
+    name: "Terminal en Vivo: Comandos gcloud CLI",
+    description: "Simulación de terminal tecleándose en vivo con comandos bash / gcloud y salida de ejecución.",
+    intent_keywords: ["terminal", "comando", "gcloud", "bash", "cli", "tecleamos", "linea de comandos", "flags"],
+    priority: 3
+  }
+];
 
 interface SlideData {
   id: number;
@@ -321,7 +406,7 @@ const GCP_PRESET_LESSONS = {
 };
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'terminal' | 'gcp_studio' | 'ai_motion'>('gcp_studio');
+  const [activeTab, setActiveTab] = useState<'hybrid_studio' | 'gcp_studio' | 'ai_motion' | 'terminal'>('hybrid_studio');
   const [selectedLessonKey, setSelectedLessonKey] = useState<keyof typeof GCP_PRESET_LESSONS>('cloud_storage');
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
   const [activeDialogueIndex, setActiveDialogueIndex] = useState(0);
@@ -331,6 +416,67 @@ export default function App() {
   const [motionStage, setMotionStage] = useState(0);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [customMotionTopic, setCustomMotionTopic] = useState('');
+
+  // LLM Provider & Failover state
+  const [groqApiKey, setGroqApiKey] = useState<string>(() => localStorage.getItem('gcp_groq_key') || '');
+  const [llmProvider, setLlmProvider] = useState<'auto' | 'gemini' | 'groq'>('auto');
+  const [showApiKeysModal, setShowApiKeysModal] = useState(false);
+
+  // Multi-Resource Hybrid Timeline state
+  const [visualResources, setVisualResources] = useState<VisualResourceItem[]>(DEFAULT_VISUAL_RESOURCES);
+  const [sceneResourceOverrides, setSceneResourceOverrides] = useState<Record<string, string>>({});
+  const [activeHybridSceneIndex, setActiveHybridSceneIndex] = useState(0);
+  const [showResourceCatalogModal, setShowResourceCatalogModal] = useState(false);
+  const [showNewResourceModal, setShowNewResourceModal] = useState(false);
+  const [newResourceForm, setNewResourceForm] = useState<{
+    id: string;
+    kind: 'slide' | 'motion' | 'console' | 'terminal' | 'custom';
+    name: string;
+    description: string;
+    keywords: string;
+    priority: number;
+  }>({
+    id: '',
+    kind: 'custom',
+    name: '',
+    description: '',
+    keywords: '',
+    priority: 3
+  });
+
+  const handleSetSceneResource = (sceneIdx: number, resourceId: string) => {
+    const key = `${selectedLessonKey}_${sceneIdx}`;
+    setSceneResourceOverrides((prev) => ({
+      ...prev,
+      [key]: resourceId
+    }));
+  };
+
+  const handleAddNewResource = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newResourceForm.name || !newResourceForm.id) return;
+    const item: VisualResourceItem = {
+      id: newResourceForm.id.toLowerCase().replace(/[^a-z0-9_]/g, '_'),
+      kind: newResourceForm.kind,
+      name: newResourceForm.name,
+      description: newResourceForm.description,
+      intent_keywords: newResourceForm.keywords
+        .split(',')
+        .map((s) => s.trim().toLowerCase())
+        .filter(Boolean),
+      priority: Number(newResourceForm.priority) || 2
+    };
+    setVisualResources((prev) => [...prev, item]);
+    setShowNewResourceModal(false);
+    setNewResourceForm({
+      id: '',
+      kind: 'custom',
+      name: '',
+      description: '',
+      keywords: '',
+      priority: 3
+    });
+  };
 
   // Terminal state
   const [logs, setLogs] = useState<string[]>([
@@ -383,6 +529,9 @@ export default function App() {
         '  --codec {x264, x265}    Códec de video (x264 universal o x265 HEVC de alta compresión)',
         '  --format TIPO           horizontal (1920x1080) o vertical (1080x1920 Shorts)',
         '  --slides-only           Exporta únicamente las diapositivas HD a output/gcp_tutorials/',
+        '  --llm {auto,gemini,groq} Proveedor de IA: auto (Gemini con fallback a Groq), groq o gemini',
+        '  --groq-key CLAVE        API Key de Groq para conmutar sin esperas si Gemini devuelve error 429',
+        '  --strict                Modo estricto: detiene la ejecución si la IA falla (evita contenido no oficial)',
         '  --no-subtitles          Desactiva subtítulos',
         '  --no-music              Desactiva la pista ambiental de fondo'
       );
@@ -418,17 +567,93 @@ export default function App() {
         '    Tags: iam, permisos, roles, politicas, service accounts, least privilege...',
         'Total registradas: 5 plantillas principales + indexación orgánica activa.'
       );
+    } else if (cmd.includes('--visual-resources') || cmd.includes('--list-resources')) {
+      newLogs.push(
+        '🎨  CATÁLOGO DE RECURSOS VISUALES REGISTRADOS (ROUTER SEMÁNTICO):',
+        '   Evita la saturación del prompt clasificando localmente (<1ms) cada escena.',
+        '--------------------------------------------------------------',
+        '  • ID: slide_concept_card [Tipo: SLIDE] (Prioridad: 1)',
+        '    Nombre: Diapositiva: Tarjeta Conceptual Clave',
+        '  • ID: slide_comparison_table [Tipo: SLIDE] (Prioridad: 3)',
+        '    Nombre: Diapositiva: Matriz Comparativa de Servicios',
+        '  • ID: slide_checklist [Tipo: SLIDE] (Prioridad: 2)',
+        '    Nombre: Diapositiva: Checklist de Buenas Prácticas',
+        '  • ID: motion_hierarchy_tree [Tipo: MOTION] (Prioridad: 4)',
+        '    Nombre: Animación RAG: Árbol Jerárquico de Recursos',
+        '  • ID: motion_elastic_scale [Tipo: MOTION] (Prioridad: 4)',
+        '    Nombre: Animación RAG: Escalado Serverless Elástico',
+        '  • ID: motion_packet_flow [Tipo: MOTION] (Prioridad: 4)',
+        '    Nombre: Animación RAG: Flujo de Paquetes en Red',
+        '  • ID: motion_storage_lifecycle [Tipo: MOTION] (Prioridad: 4)',
+        '    Nombre: Animación RAG: Ciclo de Vida y Transición de Datos',
+        '  • ID: console_walkthrough [Tipo: CONSOLE] (Prioridad: 3)',
+        '    Nombre: Consola Real de GCP: Simulación de Interfaz y Clics',
+        '  • ID: terminal_cli [Tipo: TERMINAL] (Prioridad: 3)',
+        '    Nombre: Terminal en Vivo: Comandos gcloud CLI',
+        `Total recursos registrados: ${visualResources.length} (+ personalizables en UI).`
+      );
     } else if (cmd.includes('--motion')) {
       const topicMatch = cmd.match(/--motion\s+["']?([^"']+)["']?/);
       const parsedTopic = topicMatch ? topicMatch[1] : 'Concepto GCP';
+      const hasGroq = Boolean(cmd.includes('--groq-key') || groqApiKey);
+
       newLogs.push(
         `🧠 [AI Motion Generator • RAG] Analizando concepto: '${parsedTopic}'...`,
         '   🔍 [Clasificador Semántico] Coincidencia: >95% detectada en SQLite local',
-        '   🎯 [Prompt Quirúrgico] Inyección mínima de ~300 bytes para Gemini (0 sobrecoste)',
-        '   ⚡ Gemini pobló la plantilla en 1.2s sin saturación de memoria',
-        '   🎬 [Renderizado Vectorial] Compilando keyframes SVG a 10 FPS...',
-        `   ✅ Video animado Full HD generado: ~75 KB (Ultra ligero)`
+        '   🎯 [Prompt Quirúrgico] Inyección mínima de ~300 bytes...'
       );
+
+      if (hasGroq) {
+        newLogs.push(
+          '   ⚠️ Gemini API saturado (HTTP Error 429: Too Many Requests / Quota).',
+          '   ⚡ Conmutando automáticamente a Groq LPU (llama-3.3-70b-versatile)...',
+          `   ⚡ Groq LPU pobló con éxito la plantilla para '${parsedTopic}' en 0.8s (sin límites).`,
+          '   🎬 [Renderizado Vectorial] Compilando keyframes SVG a 10 FPS...',
+          '   ✅ Video animado Full HD generado con precisión: ~55 KB (Ultra ligero y contextual)'
+        );
+      } else {
+        newLogs.push(
+          '   ⚠️ Gemini API saturado (HTTP Error 429: Too Many Requests / Quota).',
+          '   💡 Groq LPU no está configurado (falta GROQ_API_KEY o --groq-key) para conmutar sin esperas.',
+          '======================================================================',
+          '❌ [GENERACIÓN DETENIDA - ERROR EN LLAMADA A IA]',
+          `No se pudo generar la animación para '${parsedTopic}' porque Gemini API devolvió 429 y Groq no está configurado.`,
+          '🛑 Operación cancelada para evitar mostrar diagramas o animaciones inexactas que no corresponden al tema.',
+          '💡 Solución: Haz clic en el botón "LLM & Cuota" en la barra superior o añade --groq-key <CLAVE> para continuar con Groq.',
+          '======================================================================'
+        );
+      }
+    } else if (cmd.includes('--topic') && !cmd.includes('--list-topics')) {
+      const topicMatch = cmd.match(/--topic\s+["']?([^"']+)["']?/);
+      const parsedTopic = topicMatch ? topicMatch[1] : 'Tema';
+      const hasGroq = Boolean(cmd.includes('--groq-key') || groqApiKey);
+
+      newLogs.push(
+        `🧠 [NotebookLM Generator] Diseñando lección para: '${parsedTopic}'...`,
+        '  🤖 [Gemini LLM] Generando guion técnico y diapositivas...'
+      );
+
+      if (hasGroq) {
+        newLogs.push(
+          '  ⚠️ Gemini API saturado (HTTP Error 429: Too Many Requests / Quota).',
+          '  ⚡ Conmutando automáticamente a Groq LPU (llama-3.3-70b-versatile)...',
+          `  ✨ Lección Estructurada con Éxito con Groq: ${parsedTopic}`,
+          '  🎙️ Voces en Español Latinoamericano Neutro (Alex: es-US / Sam: es-MX)...',
+          '  🎬 Codificando video ultraligero a 15 FPS...',
+          '✅ ¡Tutorial completado! Video optimizado guardado en output/gcp_tutorials/'
+        );
+      } else {
+        newLogs.push(
+          '  ⚠️ Gemini API saturado (HTTP Error 429: Too Many Requests / Quota).',
+          '  💡 Groq LPU no está configurado (falta GROQ_API_KEY o --groq-key) para conmutar sin esperas.',
+          '======================================================================',
+          '❌ [GENERACIÓN DETENIDA - ERROR EN LLAMADA A IA]',
+          `No se pudo generar la lección para '${parsedTopic}' porque Gemini API devolvió error 429 y Groq no está configurado.`,
+          '🛑 Operación cancelada para evitar mostrar diapositivas inexactas o datos inventados.',
+          '💡 Solución inmediata: Obtén tu API Key de Groq gratuita en https://console.groq.com/keys y pásala con --groq-key o en la UI.',
+          '======================================================================'
+        );
+      }
     } else if (cmd.includes('--hybrid')) {
       newLogs.push(
         '🎬 [Orquestador de Recursos Visuales • Router Semántico]',
@@ -537,6 +762,18 @@ export default function App() {
         {/* Mode Switcher Tabs */}
         <div className="flex items-center bg-slate-900/80 p-1 rounded-xl border border-slate-800 gap-1">
           <button
+            onClick={() => setActiveTab('hybrid_studio')}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              activeTab === 'hybrid_studio'
+                ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-600/30'
+                : 'text-indigo-300 hover:text-white'
+            }`}
+          >
+            <Film className="w-3.5 h-3.5" />
+            Línea de Tiempo Híbrida
+            <span className="text-[9px] bg-indigo-950 text-indigo-300 border border-indigo-500/30 px-1.5 py-0.2 rounded font-bold uppercase">Multi-Recurso</span>
+          </button>
+          <button
             onClick={() => setActiveTab('gcp_studio')}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
               activeTab === 'gcp_studio'
@@ -571,10 +808,55 @@ export default function App() {
             Consola CLI
           </button>
         </div>
+
+        {/* LLM Provider & Quota failover button */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowApiKeysModal(true)}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium border transition-all ${
+              groqApiKey
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20'
+                : 'bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/20'
+            }`}
+            title="Configuración de IA y Conmutación por Cuota 429"
+          >
+            <Zap className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">IA:</span>
+            <span className="font-semibold">{llmProvider === 'auto' ? 'Auto (Gemini ↔ Groq)' : llmProvider.toUpperCase()}</span>
+            <span
+              className={`w-2 h-2 rounded-full ${
+                groqApiKey ? 'bg-emerald-400 shadow-sm shadow-emerald-400 animate-pulse' : 'bg-amber-400'
+              }`}
+            />
+          </button>
+        </div>
       </header>
 
       {/* Main Content Area */}
-      {activeTab === 'gcp_studio' ? (
+      {activeTab === 'hybrid_studio' ? (
+        <HybridTimelineStudio
+          currentLesson={currentLesson}
+          selectedLessonKey={selectedLessonKey}
+          allLessons={GCP_PRESET_LESSONS}
+          onSelectLessonKey={(key) => {
+            setSelectedLessonKey(key as keyof typeof GCP_PRESET_LESSONS);
+            setActiveSlideIndex(0);
+          }}
+          visualResources={visualResources}
+          sceneOverrides={sceneResourceOverrides}
+          onSetSceneResource={handleSetSceneResource}
+          activeSceneIndex={activeHybridSceneIndex}
+          onSelectScene={(idx) => setActiveHybridSceneIndex(idx)}
+          onRunCommand={(cmd) => {
+            runTerminalCommand(cmd);
+            setActiveTab('terminal');
+          }}
+          onPlayAudio={simulateAudioPlay}
+          isPlayingAudio={isPlayingAudio}
+          onOpenCatalog={() => setShowResourceCatalogModal(true)}
+          onOpenNewResource={() => setShowNewResourceModal(true)}
+        />
+      ) : activeTab === 'gcp_studio' ? (
         <main className="flex-1 p-6 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Column: Topic Selector & NotebookLM Debate Transcript */}
           <div className="lg:col-span-5 flex flex-col gap-6">
@@ -1553,6 +1835,320 @@ export default function App() {
             </div>
           </div>
         </main>
+      )}
+
+      {/* MODAL 1: Catálogo de Recursos Visuales Registrados */}
+      {showResourceCatalogModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#0B1222] border border-slate-700/80 rounded-2xl max-w-4xl w-full p-6 shadow-2xl flex flex-col max-h-[85vh] overflow-hidden">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                  <Database className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                    Catálogo de Recursos Visuales (Router Semántico)
+                    <span className="text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded-full font-mono">
+                      {visualResources.length} Registrados
+                    </span>
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Clasificación semántica local &lt;1ms. Evita la saturación del prompt al delegar el medio ideal por escena.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    setShowResourceCatalogModal(false);
+                    setShowNewResourceModal(true);
+                  }}
+                  className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  + Nuevo Recurso
+                </button>
+                <button
+                  onClick={() => setShowResourceCatalogModal(false)}
+                  className="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white transition"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="overflow-y-auto my-4 space-y-3 pr-2">
+              {visualResources.map((res) => (
+                <div
+                  key={res.id}
+                  className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex flex-col sm:flex-row sm:items-start justify-between gap-3 hover:border-slate-700 transition"
+                >
+                  <div className="space-y-1.5 flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-mono font-bold text-indigo-400 bg-indigo-950/80 px-2 py-0.5 rounded border border-indigo-800/50">
+                        {res.id}
+                      </span>
+                      <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+                        Tipo: {res.kind.toUpperCase()}
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-mono">
+                        Prioridad: {res.priority}/5
+                      </span>
+                    </div>
+                    <h4 className="text-sm font-bold text-white">{res.name}</h4>
+                    <p className="text-xs text-slate-300">{res.description}</p>
+                    <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                      <span className="text-[10px] text-slate-500 font-mono">Triggers:</span>
+                      {res.intent_keywords.map((kw, i) => (
+                        <span key={i} className="text-[10px] bg-slate-950 text-sky-300 border border-slate-850 px-1.5 py-0.2 rounded font-mono">
+                          {kw}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+              <span>El catálogo se puede inspeccionar por CLI con: <code className="text-sky-300 font-mono">python gcp_tutorial.py --visual-resources</code></span>
+              <button
+                onClick={() => setShowResourceCatalogModal(false)}
+                className="bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-lg transition"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 2: Registrar Nuevo Recurso Visual */}
+      {showNewResourceModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#0B1222] border border-slate-700/80 rounded-2xl max-w-xl w-full p-6 shadow-2xl flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                  <Plus className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">Registrar Nuevo Recurso Visual</h3>
+                  <p className="text-xs text-slate-400">
+                    Añade un medio visual al Router Semántico para que esté disponible en la línea de tiempo.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowNewResourceModal(false)}
+                className="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddNewResource} className="my-4 space-y-3.5 text-xs">
+              <div>
+                <label className="block text-slate-300 font-medium mb-1">ID Único (Snake_case)</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="ej. custom_diagrama_3d"
+                  value={newResourceForm.id}
+                  onChange={(e) => setNewResourceForm({ ...newResourceForm, id: e.target.value })}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white font-mono focus:outline-none focus:border-indigo-400"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-300 font-medium mb-1">Tipo de Recurso</label>
+                  <select
+                    value={newResourceForm.kind}
+                    onChange={(e) => setNewResourceForm({ ...newResourceForm, kind: e.target.value as any })}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white focus:outline-none focus:border-indigo-400"
+                  >
+                    <option value="slide">Diapositiva (Slide)</option>
+                    <option value="motion">Animación Vectorial (Motion)</option>
+                    <option value="console">Consola Simulada (Console)</option>
+                    <option value="terminal">Terminal CLI (Terminal)</option>
+                    <option value="custom">Recurso Personalizado (Custom)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-slate-300 font-medium mb-1">Prioridad (1-5)</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="5"
+                    value={newResourceForm.priority}
+                    onChange={(e) => setNewResourceForm({ ...newResourceForm, priority: Number(e.target.value) })}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white focus:outline-none focus:border-indigo-400"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-medium mb-1">Nombre Descriptivo</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="ej. Diagrama 3D de Topología de Red"
+                  value={newResourceForm.name}
+                  onChange={(e) => setNewResourceForm({ ...newResourceForm, name: e.target.value })}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white focus:outline-none focus:border-indigo-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-medium mb-1">Descripción Didáctica</label>
+                <textarea
+                  rows={2}
+                  placeholder="¿Para qué tipo de explicaciones técnicas es óptimo este recurso?"
+                  value={newResourceForm.description}
+                  onChange={(e) => setNewResourceForm({ ...newResourceForm, description: e.target.value })}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white focus:outline-none focus:border-indigo-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-medium mb-1">Palabras Clave de Activación (Separadas por comas)</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="ej. topologia, cluster, 3d, malla, latencia, nodos"
+                  value={newResourceForm.keywords}
+                  onChange={(e) => setNewResourceForm({ ...newResourceForm, keywords: e.target.value })}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white focus:outline-none focus:border-indigo-400"
+                />
+              </div>
+
+              <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowNewResourceModal(false)}
+                  className="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3.5 py-1.5 rounded-lg transition"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-1.5 rounded-lg transition shadow-md shadow-indigo-600/30"
+                >
+                  Guardar Recurso
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* Modal: Configuración de LLM & Conmutación por Error 429 */}
+      {showApiKeysModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#0B101D] border border-indigo-500/30 rounded-2xl max-w-xl w-full p-6 shadow-2xl relative">
+            <button
+              onClick={() => setShowApiKeysModal(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-white"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-2.5 mb-4">
+              <div className="p-2 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
+                <Zap className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white">Configuración de IA & Tolerancia a Cuota 429</h3>
+                <p className="text-xs text-slate-400">Conmutación automática de Gemini a Groq LPU (Llama 3.3)</p>
+              </div>
+            </div>
+
+            <div className="space-y-4 text-xs text-slate-300">
+              <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-3.5 space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-slate-200">¿Por qué ocurre el Error 429 en Gemini?</span>
+                  <span className="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-full font-bold">
+                    Cuota / Rate Limit
+                  </span>
+                </div>
+                <p className="text-slate-400 leading-relaxed text-[11px]">
+                  La capa gratuita de Gemini tiene un límite de peticiones por minuto. Cuando se agota, devuelve <code className="text-amber-300">HTTP 429 Too Many Requests</code>.
+                </p>
+                <div className="pt-2 border-t border-slate-800/80 flex items-start gap-2 text-slate-300 text-[11px]">
+                  <span className="text-emerald-400 font-bold">🛡️ Política de Veracidad:</span>
+                  <span>Si la IA falla, la ejecución se <strong>detiene de inmediato</strong> para evitar mostrar diagramas o diapositivas inventadas que no corresponden al tema.</span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-medium mb-1.5">Proveedor Preferido</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { id: 'auto', label: 'Auto (Failover)', desc: 'Gemini → Groq si hay 429' },
+                    { id: 'groq', label: 'Groq LPU', desc: 'Ultra rápido (Llama 3.3)' },
+                    { id: 'gemini', label: 'Gemini Flash', desc: 'Google Multimodal' },
+                  ].map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => setLlmProvider(p.id as any)}
+                      className={`p-2.5 rounded-xl border text-left transition-all ${
+                        llmProvider === p.id
+                          ? 'bg-indigo-600/20 border-indigo-500 text-white shadow-sm'
+                          : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      <div className="font-semibold text-xs text-slate-200">{p.label}</div>
+                      <div className="text-[10px] text-slate-400">{p.desc}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-slate-300 font-medium">API Key de Groq (LPU Llama 3.3)</label>
+                  <a
+                    href="https://console.groq.com/keys"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[11px] text-sky-400 hover:underline flex items-center gap-1"
+                  >
+                    Obtener clave gratis en console.groq.com <ChevronRight className="w-3 h-3" />
+                  </a>
+                </div>
+                <input
+                  type="password"
+                  placeholder="gsk_..."
+                  value={groqApiKey}
+                  onChange={(e) => {
+                    setGroqApiKey(e.target.value);
+                    localStorage.setItem('gcp_groq_key', e.target.value);
+                  }}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white font-mono text-xs focus:outline-none focus:border-indigo-400 placeholder:text-slate-600"
+                />
+                <p className="text-[11px] text-slate-500 mt-1">
+                  Se guarda localmente en tu navegador. Al ejecutar en terminal puedes pasar <code className="text-indigo-300">--groq-key &lt;CLAVE&gt;</code> o definir <code className="text-indigo-300">export GROQ_API_KEY=...</code>
+                </p>
+              </div>
+
+              <div className="pt-3 border-t border-slate-800 flex items-center justify-between">
+                <span className={`text-[11px] font-semibold flex items-center gap-1.5 ${groqApiKey ? 'text-emerald-400' : 'text-amber-400'}`}>
+                  <span className={`w-2 h-2 rounded-full ${groqApiKey ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+                  {groqApiKey ? 'Groq LPU listo para conmutar sin esperas' : 'Groq no configurado (solo Gemini activo)'}
+                </span>
+                <button
+                  onClick={() => setShowApiKeysModal(false)}
+                  className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2 rounded-xl text-xs transition shadow-md shadow-indigo-600/30"
+                >
+                  Guardar y Cerrar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

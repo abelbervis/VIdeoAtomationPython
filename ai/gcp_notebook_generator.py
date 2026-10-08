@@ -8,13 +8,21 @@ Hosts:
 """
 
 import json
+import os
 import re
 import urllib.request
 import urllib.error
 from typing import Dict, Any, List, Optional
 from pathlib import Path
 
-from config import GEMINI_API_KEY, sanitize_env_value
+from config import (
+    GEMINI_API_KEY,
+    GROQ_API_KEY,
+    GROQ_MODEL,
+    GROQ_API_BASE,
+    LLM_PROVIDER,
+    sanitize_env_value
+)
 
 # Curated high-impact GCP lessons covering the most essential topics
 CURATED_GCP_LESSONS: Dict[str, Dict[str, Any]] = {
@@ -555,11 +563,24 @@ CURATED_GCP_LESSONS: Dict[str, Dict[str, Any]] = {
 
 
 class GCPTutorialGenerator:
-    """Generates structured NotebookLM deep dive lessons about Google Cloud Platform."""
+    """Generates structured NotebookLM deep dive lessons about Google Cloud Platform using Gemini Flash or Groq LPU."""
 
-    def __init__(self, gemini_key: Optional[str] = None):
+    def __init__(
+        self,
+        gemini_key: Optional[str] = None,
+        groq_key: Optional[str] = None,
+        groq_model: Optional[str] = None,
+        groq_api_base: Optional[str] = None,
+        llm_provider: Optional[str] = None,
+        strict_mode: bool = False
+    ):
         raw_key = gemini_key or GEMINI_API_KEY
         self.gemini_key = sanitize_env_value(raw_key)
+        self.groq_key = sanitize_env_value(groq_key or os.getenv("GROQ_API_KEY", GROQ_API_KEY))
+        self.groq_model = sanitize_env_value(groq_model or os.getenv("GROQ_MODEL", GROQ_MODEL)) or "llama-3.3-70b-versatile"
+        self.groq_api_base = (sanitize_env_value(groq_api_base or os.getenv("GROQ_API_BASE", GROQ_API_BASE)) or "https://api.groq.com/openai/v1").rstrip("/")
+        self.llm_provider = (llm_provider or os.getenv("LLM_PROVIDER", LLM_PROVIDER) or "auto").lower()
+        self.strict_mode = strict_mode
 
     def list_curated_topics(self) -> List[Dict[str, str]]:
         """Returns list of curated GCP lessons ready for instant generation."""
@@ -583,35 +604,88 @@ class GCPTutorialGenerator:
     ) -> Dict[str, Any]:
         """
         Generates or matches a full GCP tutorial lesson with slide specifications and 2-host debate dialogue.
+        Supports multi-provider fallback between Gemini and Groq.
         """
         clean_topic = topic.strip().lower()
         
-        # 1. Match curated high-fidelity curriculum if matches keywords
+        # 1. Match curated high-fidelity curriculum ONLY if there is an exact or strong match
         for key, lesson in CURATED_GCP_LESSONS.items():
             if key in clean_topic or clean_topic in key:
                 print(f"  📚 [Curated Curriculum] Coincidencia exacta encontrada para '{key}': {lesson['title']}")
                 return lesson
-            if any(w in clean_topic for w in ["storage", "bucket", "almacenamiento", "archivo", "backup", "s3", "blob", "fotos"]):
-                return CURATED_GCP_LESSONS["cloud_storage"]
-            if "run" in clean_topic or "serverless" in clean_topic:
-                return CURATED_GCP_LESSONS["cloud_run"]
-            if "iam" in clean_topic or "permiso" in clean_topic or "seguridad" in clean_topic or "service account" in clean_topic:
-                return CURATED_GCP_LESSONS["iam_security"]
-            if "vpc" in clean_topic or "red" in clean_topic or "network" in clean_topic or "nat" in clean_topic:
-                return CURATED_GCP_LESSONS["vpc_networking"]
+        if clean_topic in ["cloud storage", "google cloud storage", "storage"]:
+            return CURATED_GCP_LESSONS["cloud_storage"]
+        if clean_topic in ["cloud run", "cloudrun", "serverless containers"]:
+            return CURATED_GCP_LESSONS["cloud_run"]
+        if clean_topic in ["iam", "identity and access management", "roles iam", "permisos iam"]:
+            return CURATED_GCP_LESSONS["iam_security"]
+        if clean_topic in ["vpc", "virtual private cloud", "redes vpc", "networking"]:
+            return CURATED_GCP_LESSONS["vpc_networking"]
 
-        # 2. If Gemini API key is valid, try dynamic LLM generation
-        if self._is_valid_key(self.gemini_key):
-            try:
-                print(f"  🤖 [Gemini LLM] Generando guion técnico y diapositivas personalizadas para: '{topic}'...")
-                dynamic_lesson = self._call_gemini_for_lesson(topic, user_notes, language)
-                if dynamic_lesson and "slides" in dynamic_lesson and "dialogue" in dynamic_lesson:
-                    return dynamic_lesson
-            except Exception as e:
-                print(f"  ⚠️ Error en generación dinámica con Gemini ({e}), usando fallback inteligente.")
+        # 2. Try dynamic LLM generation with multi-provider fallback (Gemini <-> Groq)
+        has_gemini = self._is_valid_key(self.gemini_key)
+        has_groq = self._is_valid_key(self.groq_key)
 
-        # 3. Dynamic procedural fallback based on user's notes and topic
-        return self._generate_procedural_lesson(topic, user_notes)
+        provider_order = []
+        if self.llm_provider == "groq":
+            if has_groq: provider_order.append("groq")
+            if has_gemini: provider_order.append("gemini")
+        else:
+            if has_gemini: provider_order.append("gemini")
+            if has_groq: provider_order.append("groq")
+
+        gemini_429_occurred = False
+        for prov in provider_order:
+            if prov == "gemini":
+                try:
+                    print(f"  🤖 [Gemini LLM] Generando guion técnico y diapositivas para: '{topic}'...")
+                    dynamic_lesson = self._call_gemini_for_lesson(topic, user_notes, language)
+                    if dynamic_lesson and "slides" in dynamic_lesson and "dialogue" in dynamic_lesson:
+                        return dynamic_lesson
+                except Exception as e:
+                    err_str = str(e)
+                    if "429" in err_str or "Too Many Requests" in err_str:
+                        gemini_429_occurred = True
+                        print("  ⚠️ Gemini API saturado (HTTP Error 429: Too Many Requests / Quota).")
+                    else:
+                        print(f"  ⚠️ Error en generación con Gemini ({err_str}).")
+                    if has_groq and "groq" in provider_order and prov != provider_order[-1]:
+                        print(f"  ⚡ Conmutando automáticamente a Groq LPU ({self.groq_model})...")
+                    elif not has_groq:
+                        print(f"  💡 Groq LPU no está configurado (falta GROQ_API_KEY o --groq-key) para conmutar sin esperas.")
+
+            elif prov == "groq":
+                try:
+                    print(f"  ⚡ [Groq LPU] Generando guion técnico y diapositivas con {self.groq_model} para: '{topic}'...")
+                    dynamic_lesson = self._call_groq_for_lesson(topic, user_notes, language)
+                    if dynamic_lesson and "slides" in dynamic_lesson and "dialogue" in dynamic_lesson:
+                        return dynamic_lesson
+                except Exception as e:
+                    print(f"  ⚠️ Error en generación con Groq ({e}).")
+                    if has_gemini and "gemini" in provider_order and prov != provider_order[-1]:
+                        print("  ⚡ Conmutando automáticamente a Gemini...")
+
+        # 3. Handle failure strictly: Never substitute misleading or fabricated content
+        if gemini_429_occurred and not has_groq:
+            raise RuntimeError(
+                f"No se pudo generar la lección para '{topic}' porque Gemini API devolvió error 429 (Too Many Requests / Cuota excedida) "
+                f"y Groq LPU no está configurado (falta clave API).\n"
+                f"🛑 Operación cancelada para evitar mostrar diapositivas inexactas o datos inventados.\n"
+                f"💡 Solución inmediata: Obtén tu API Key de Groq gratuita en https://console.groq.com/keys y ejecuta:\n"
+                f"   python gcp_tutorial.py --topic \"{topic}\" --groq-key <TU_CLAVE>\n"
+                f"   o define: export GROQ_API_KEY=<TU_CLAVE>"
+            )
+
+        if not has_gemini and not has_groq:
+            raise RuntimeError(
+                f"No se pudo generar la lección para '{topic}' porque no hay ninguna clave de IA configurada (Gemini ni Groq).\n"
+                f"🛑 Operación cancelada para garantizar fidelidad técnica."
+            )
+
+        raise RuntimeError(
+            f"Fallo en la llamada a la IA para el tema '{topic}'. Las APIs no respondieron satisfactoriamente.\n"
+            f"🛑 Operación cancelada para evitar mostrar contenido inexacto."
+        )
 
     def _is_valid_key(self, key: Optional[str]) -> bool:
         if not key or len(key) < 15:
@@ -725,6 +799,40 @@ Requisitos del JSON de salida:
             data = json.loads(resp.read().decode("utf-8"))
             candidate_text = data["candidates"][0]["content"]["parts"][0]["text"]
             return json.loads(candidate_text)
+
+    def _call_groq_for_lesson(self, topic: str, user_notes: Optional[str], language: str) -> Optional[Dict[str, Any]]:
+        """Generates dynamic lesson using Groq LPU with Llama 3.3 70B."""
+        url = f"{self.groq_api_base}/chat/completions"
+        system_instructions = (
+            "Eres un Arquitecto Principal de Google Cloud y productor de podcasts técnicos estilo NotebookLM. "
+            "Crea una lección técnica en formato de debate conversacional entre dos presentadores: "
+            "Alex (Cloud Solutions Architect) y Sam (Senior DevOps). "
+            "Debes devolver ÚNICAMENTE un objeto JSON válido con las claves 'title', 'topic', 'category', 'summary', 'slides' (5 diapositivas) y 'dialogue' (6-8 turnos)."
+        )
+        user_prompt = f"Tema de GCP: {topic}\nNotas de estudio: {user_notes or 'Conceptos clave de arquitectura oficial de Google Cloud.'}"
+
+        payload = {
+            "model": self.groq_model,
+            "messages": [
+                {"role": "system", "content": system_instructions},
+                {"role": "user", "content": user_prompt}
+            ],
+            "response_format": {"type": "json_object"},
+            "temperature": 0.3
+        }
+
+        headers = {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "Authorization": f"Bearer {self.groq_key}",
+            "User-Agent": "GCPNotebookLM/1.0"
+        }
+
+        req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=headers, method="POST")
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            content = data["choices"][0]["message"]["content"]
+            return json.loads(content)
 
     def _generate_procedural_lesson(self, topic: str, user_notes: Optional[str]) -> Dict[str, Any]:
         """Constructs a custom technical lesson based on input parameters without hallucinating."""

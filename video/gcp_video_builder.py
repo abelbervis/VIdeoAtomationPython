@@ -73,7 +73,11 @@ class GCPVideoBuilder:
         fps: int = 15,
         crf: int = 26,
         codec: str = "libx264",
-        audio_bitrate: str = "96k"
+        audio_bitrate: str = "96k",
+        gemini_key: Optional[str] = None,
+        groq_key: Optional[str] = None,
+        llm_provider: str = "auto",
+        strict_mode: bool = False
     ):
         self.output_dir = Path(output_dir)
         self.temp_dir = Path(temp_dir)
@@ -86,6 +90,10 @@ class GCPVideoBuilder:
         self.crf = crf
         self.codec = codec if codec in ("libx265", "libx264") else "libx264"
         self.audio_bitrate = audio_bitrate
+        self.gemini_key = gemini_key
+        self.groq_key = groq_key
+        self.llm_provider = llm_provider
+        self.strict_mode = strict_mode
         self.slide_renderer = GCPSlideRenderer(width, height)
         self.console_renderer = GCPConsoleRenderer(width, height)
         self.router = VisualResourceRouter()
@@ -163,7 +171,11 @@ class GCPVideoBuilder:
             fps=self.fps,
             crf=self.crf,
             temp_dir=self.temp_dir / "motion_tmp",
-            output_dir=motion_cache_dir
+            output_dir=motion_cache_dir,
+            gemini_key=self.gemini_key,
+            groq_key=self.groq_key,
+            llm_provider=self.llm_provider,
+            strict_mode=self.strict_mode
         )
 
         segment_assets = []

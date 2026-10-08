@@ -119,6 +119,23 @@ class VisualResourceRouter:
             )
         }
 
+        # Load persisted custom visual resources if present
+        try:
+            custom_file = BASE_DIR / "data" / "custom_visual_resources.json"
+            if custom_file.exists():
+                saved = json.loads(custom_file.read_text(encoding="utf-8"))
+                for k, v in saved.items():
+                    self.catalog[k] = VisualResourceDescriptor(
+                        id=v["id"],
+                        kind=v["kind"],
+                        name=v["name"],
+                        description=v["description"],
+                        intent_keywords=v.get("intent_keywords", []),
+                        priority=v.get("priority", 2)
+                    )
+        except Exception:
+            pass
+
     def route_text_to_resource(
         self,
         text: str,
@@ -158,6 +175,31 @@ class VisualResourceRouter:
             if kw in text:
                 score += 1.5 * desc.priority
         return score
+
+    def register_resource(self, descriptor: VisualResourceDescriptor, persist: bool = True):
+        """Registers a new visual resource into the catalog dynamically."""
+        self.catalog[descriptor.id] = descriptor
+        if persist:
+            self._save_custom_resources()
+
+    def _save_custom_resources(self):
+        try:
+            custom_dir = BASE_DIR / "data"
+            custom_dir.mkdir(parents=True, exist_ok=True)
+            custom_file = custom_dir / "custom_visual_resources.json"
+            data = {}
+            for k, v in self.catalog.items():
+                data[k] = {
+                    "id": v.id,
+                    "kind": v.kind,
+                    "name": v.name,
+                    "description": v.description,
+                    "intent_keywords": v.intent_keywords,
+                    "priority": v.priority
+                }
+            custom_file.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+        except Exception:
+            pass
 
     def plan_hybrid_timeline(self, lesson: Dict[str, Any]) -> List[Dict[str, Any]]:
         """
