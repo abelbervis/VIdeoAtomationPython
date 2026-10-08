@@ -90,9 +90,28 @@ def parse_args():
         help="Desactiva los subtítulos sobreimpresos."
     )
     parser.add_argument(
-        "--no-motion",
-        action="store_true",
-        help="Desactiva el movimiento de cámara cinemático (Ken Burns zoompan)."
+        "--speed",
+        type=float,
+        default=1.20,
+        help="Velocidad de locución de las voces (por defecto: 1.20x para ritmo ágil sin pausas muertas)."
+    )
+    parser.add_argument(
+        "--fps",
+        type=int,
+        default=15,
+        help="Cuadros por segundo para exportación (por defecto: 15 FPS para reducir el tamaño al mínimo)."
+    )
+    parser.add_argument(
+        "--codec",
+        choices=["x264", "x265"],
+        default="x264",
+        help="Códec de video: 'x264' (universal para todo navegador y móvil) o 'x265' (máxima compresión HEVC)."
+    )
+    parser.add_argument(
+        "--crf",
+        type=int,
+        default=26,
+        help="Factor de tasa constante (por defecto: 26 para alta nitidez de texto y compresión máxima)."
     )
     parser.add_argument(
         "--interactive", "-i",
@@ -223,12 +242,16 @@ def main():
         return
 
     # 9. Build full audiovisual tutorial video
+    selected_codec = "libx265" if args.codec == "x265" else "libx264"
     builder = GCPVideoBuilder(
         width=width,
         height=height,
         burn_subtitles=not args.no_subtitles,
         enable_music=not args.no_music,
-        enable_motion=not args.no_motion
+        speech_speed=args.speed,
+        fps=args.fps,
+        crf=args.crf,
+        codec=selected_codec
     )
 
     out_file = Path(args.output).name if args.output else None

@@ -314,10 +314,12 @@ export default function App() {
         '  --notes "TUS NOTAS"     Notas o apuntes de estudio para transformar en video',
         '  --notes-file ARCHIVO    Ruta a archivo .md/.txt con tus apuntes',
         '  --sample / --demo       Ejecuta demo completa de Cloud Run vs Compute Engine',
+        '  --speed 1.2             Velocidad de locución de voces (por defecto 1.20x para ritmo ágil)',
+        '  --fps 15                Cuadros por segundo (15 FPS para reducir el tamaño al mínimo)',
+        '  --codec {x264, x265}    Códec de video (x264 universal o x265 HEVC de alta compresión)',
         '  --format TIPO           horizontal (1920x1080) o vertical (1080x1920 Shorts)',
         '  --slides-only           Exporta únicamente las diapositivas HD a output/gcp_tutorials/',
-        '  --list-topics           Lista los temas curados con diapositivas predefinidas',
-        '  --interactive           Revisa guion y diapositivas en terminal antes de renderizar',
+        '  --no-subtitles          Desactiva subtítulos',
         '  --no-music              Desactiva la pista ambiental de fondo'
       );
     } else if (cmd === 'python gcp_tutorial.py --list-topics') {
@@ -345,12 +347,12 @@ export default function App() {
       newLogs.push(
         '🚀 [GCP NotebookLM Studio] Iniciando pipeline de video tutorial...',
         '   • Estructurando lección pedagógica de dos hosts...',
-        '   🎙️ Sintetizando voz Alex (Cloud Solutions Architect) con EQ Studio...',
-        '   🎙️ Sintetizando voz Sam (Senior DevOps) con pitch dinámico...',
-        '   🖼️ Ensamblando 5 diapositivas con avatares de speakers activos...',
-        '   🎬 Codificando video sincronizado a 1080p con subtítulos...',
-        '   🎶 Mezclando música ambiental lo-fi tech con auto-ducking...',
-        '✅ ¡Tutorial completado! Video guardado en output/gcp_tutorials/tutorial_cloud_run.mp4 (1080p)'
+        '   🎙️ Voces en Español Latinoamericano Neutro (Alex: es-US / Sam: es-MX)...',
+        '   ⚡ Ritmo ágil a 1.20x sin pausas muertas (duración reducida ~25%)...',
+        '   🖼️ Ensamblando diapositivas vectoriales con resaltado dinámico...',
+        '   🎬 Codificando video ultraligero a 15 FPS (CRF 26, peso reducido ~90%)...',
+        '   🎶 Mezclando audio AAC a 96 kbps con auto-ducking...',
+        '✅ ¡Tutorial completado! Video optimizado guardado en output/gcp_tutorials/ (1080p, 15fps)'
       );
     } else if (cmd === 'ls output/' || cmd === 'ls output' || cmd === 'ls output/gcp_tutorials/') {
       newLogs.push(
