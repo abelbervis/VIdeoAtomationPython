@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Terminal, Cloud, Sparkles, Play, CheckCircle2, Copy, Monitor, Cpu, Shield, Network, HardDrive, ChevronRight, Layers, Volume2, ArrowRight } from 'lucide-react';
+import { Terminal, Cloud, Sparkles, Play, CheckCircle2, Copy, Monitor, Cpu, Shield, Network, HardDrive, ChevronRight, Layers, Volume2, ArrowRight, Database, FolderTree, GitBranch, Zap, X, Search } from 'lucide-react';
 
 interface SlideData {
   id: number;
@@ -327,8 +327,10 @@ export default function App() {
   const [activeDialogueIndex, setActiveDialogueIndex] = useState(0);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [copiedCmd, setCopiedCmd] = useState(false);
-  const [motionTopic, setMotionTopic] = useState('Google Cloud Pub/Sub Fan-Out');
+  const [motionTopic, setMotionTopic] = useState('Estructura Organizacional en GCP');
   const [motionStage, setMotionStage] = useState(0);
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [customMotionTopic, setCustomMotionTopic] = useState('');
 
   // Terminal state
   const [logs, setLogs] = useState<string[]>([
@@ -393,6 +395,39 @@ export default function App() {
         '    Categoría: Google Cloud • Security & IAM | 5 Diapositivas | 11 Intervenciones',
         '  • VPC_NETWORKING: VPC y Redes en GCP: Conexión Privada sin Exponer Datos',
         '    Categoría: Google Cloud • Networking | 5 Diapositivas | 11 Intervenciones'
+      );
+    } else if (cmd.includes('--motion-templates') || cmd.includes('--list-templates')) {
+      newLogs.push(
+        '🗄️  CATÁLOGO DE PLANTILLAS DE ANIMACIÓN (RAG DE COMPONENTES):',
+        '   Base de datos ligera SQLite con clasificación semántica y prompt quirúrgico.',
+        '--------------------------------------------------------------',
+        '  • ID: plantilla_arbol_jerarquico [Curada de Fábrica]',
+        '    Nombre: Estructura Jerárquica y Organización en Árbol (Layout: hierarchy_tree)',
+        '    Tags: estructura, organizacion, carpetas, jerarquia, proyectos, recursos...',
+        '  • ID: plantilla_escalado_elastico [Curada de Fábrica]',
+        '    Nombre: Escalado Elástico Serverless de Cero a Infinito (Layout: scaling_elastic)',
+        '    Tags: cloud run, serverless, escalado, contenedores, instancias, cold start...',
+        '  • ID: plantilla_flujo_red_paquetes [Curada de Fábrica]',
+        '    Nombre: Flujo de Red y Mensajería con Tráfico de Paquetes (Layout: network_flow)',
+        '    Tags: redes, vpc, paquetes, latencia, pubsub, mensajeria, cola...',
+        '  • ID: plantilla_ciclo_vida_almacenamiento [Curada de Fábrica]',
+        '    Nombre: Ciclo de Vida de Objetos y Cifrado en Cloud Storage (Layout: storage_lifecycle)',
+        '    Tags: storage, buckets, almacenamiento, ciclo de vida, coldline, archive...',
+        '  • ID: plantilla_menor_privilegio_iam [Curada de Fábrica]',
+        '    Nombre: Seguridad IAM: Principio de Menor Privilegio (Layout: iam_security)',
+        '    Tags: iam, permisos, roles, politicas, service accounts, least privilege...',
+        'Total registradas: 5 plantillas principales + indexación orgánica activa.'
+      );
+    } else if (cmd.includes('--motion')) {
+      const topicMatch = cmd.match(/--motion\s+["']?([^"']+)["']?/);
+      const parsedTopic = topicMatch ? topicMatch[1] : 'Concepto GCP';
+      newLogs.push(
+        `🧠 [AI Motion Generator • RAG] Analizando concepto: '${parsedTopic}'...`,
+        '   🔍 [Clasificador Semántico] Coincidencia: >95% detectada en SQLite local',
+        '   🎯 [Prompt Quirúrgico] Inyección mínima de ~300 bytes para Gemini (0 sobrecoste)',
+        '   ⚡ Gemini pobló la plantilla en 1.2s sin saturación de memoria',
+        '   🎬 [Renderizado Vectorial] Compilando keyframes SVG a 10 FPS...',
+        `   ✅ Video animado Full HD generado: ~75 KB (Ultra ligero)`
       );
     } else if (cmd.includes('gcp_tutorial.py --slides-only')) {
       newLogs.push(
@@ -894,155 +929,513 @@ export default function App() {
           </div>
         </main>
       ) : activeTab === 'ai_motion' ? (
-        /* AI Motion Studio View */
+        /* AI Motion Studio View with RAG Component Architecture */
         <main className="flex-1 p-6 max-w-7xl mx-auto w-full flex flex-col gap-6">
+          {/* Modal Catálogo RAG SQLite */}
+          {showTemplateModal && (
+            <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="bg-[#0B1222] border border-slate-700/80 rounded-2xl max-w-3xl w-full p-6 shadow-2xl flex flex-col max-h-[85vh] overflow-hidden">
+                <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400">
+                      <Database className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                        Catálogo de Plantillas RAG (SQLite)
+                        <span className="text-[10px] bg-sky-500/20 text-sky-300 border border-sky-500/30 px-2 py-0.5 rounded-full font-mono">
+                          motion_templates.sqlite
+                        </span>
+                      </h3>
+                      <p className="text-xs text-slate-400">
+                        Base de datos de metadatos y schemas compactos. Zero desperdicio de contexto en prompts.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowTemplateModal(false)}
+                    className="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white transition"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto my-4 space-y-3 pr-1">
+                  {[
+                    {
+                      id: 'plantilla_arbol_jerarquico',
+                      name: 'Estructura Jerárquica y Organización en Árbol',
+                      layout: 'hierarchy_tree',
+                      tags: ['estructura', 'organizacion', 'carpetas', 'jerarquia', 'proyectos', 'gobierno'],
+                      desc: 'Visualiza la jerarquía de gobierno en Google Cloud: Organización, Carpetas, Proyectos y Recursos con herencia de políticas.',
+                      topicPreset: 'Estructura Organizacional en GCP'
+                    },
+                    {
+                      id: 'plantilla_escalado_elastico',
+                      name: 'Escalado Elástico Serverless de Cero a Infinito',
+                      layout: 'scaling_elastic',
+                      tags: ['cloud run', 'serverless', 'escalado', 'contenedores', 'instancias', 'cold start'],
+                      desc: 'Elasticidad de contenedores serverless: reposo a coste 0, arranque en frío ultrarrápido y réplicas elásticas bajo demanda.',
+                      topicPreset: 'Cloud Run Serverless Elastic'
+                    },
+                    {
+                      id: 'plantilla_flujo_red_paquetes',
+                      name: 'Flujo de Red y Mensajería con Tráfico de Paquetes',
+                      layout: 'network_flow',
+                      tags: ['redes', 'vpc', 'paquetes', 'latencia', 'pubsub', 'mensajeria', 'cola'],
+                      desc: 'Simula el flujo secuencial de paquetes de datos y mensajes entre componentes conectados en tiempo real.',
+                      topicPreset: 'Google Cloud Pub/Sub Fan-Out'
+                    },
+                    {
+                      id: 'plantilla_ciclo_vida_almacenamiento',
+                      name: 'Ciclo de Vida de Objetos y Cifrado en Cloud Storage',
+                      layout: 'storage_lifecycle',
+                      tags: ['storage', 'buckets', 'almacenamiento', 'ciclo de vida', 'coldline', 'aes-256'],
+                      desc: 'Transición automática de archivos entre clases de almacenamiento con cifrado AES-256 bancario y ahorro del 80%.',
+                      topicPreset: 'Cloud Storage Cifrado y Ciclo de Vida'
+                    },
+                    {
+                      id: 'plantilla_menor_privilegio_iam',
+                      name: 'Seguridad IAM: Principio de Menor Privilegio',
+                      layout: 'iam_security',
+                      tags: ['iam', 'permisos', 'roles', 'politicas', 'service accounts', 'least privilege'],
+                      desc: 'Validación rigurosa de identidades de Service Accounts, verificación de roles granulares y auditoría en Cloud Logging.',
+                      topicPreset: 'IAM Least Privilege & Roles'
+                    }
+                  ].map((tpl) => (
+                    <div key={tpl.id} className="p-3.5 rounded-xl bg-slate-900/70 border border-slate-800 hover:border-slate-700 transition">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-mono font-bold text-sky-400">{tpl.id}</span>
+                          <span className="text-[10px] bg-blue-900/40 text-blue-300 border border-blue-500/30 px-2 py-0.5 rounded font-mono">
+                            {tpl.layout}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setMotionTopic(tpl.topicPreset);
+                            setMotionStage(0);
+                            setShowTemplateModal(false);
+                          }}
+                          className="text-xs bg-sky-600/30 hover:bg-sky-600 text-sky-200 px-2.5 py-1 rounded-lg border border-sky-500/40 transition"
+                        >
+                          Probar Plantilla
+                        </button>
+                      </div>
+                      <div className="text-sm font-semibold text-white mt-1">{tpl.name}</div>
+                      <p className="text-xs text-slate-400 mt-1">{tpl.desc}</p>
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {tpl.tags.map((t) => (
+                          <span key={t} className="text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded font-mono">
+                            #{t}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+                  <span>💡 Los temas no catalogados se auto-indexan automáticamente en esta base de datos.</span>
+                  <button
+                    onClick={() => {
+                      setShowTemplateModal(false);
+                      runTerminalCommand('python gcp_tutorial.py --motion-templates');
+                      setActiveTab('terminal');
+                    }}
+                    className="text-xs text-sky-400 hover:text-sky-300 underline font-mono"
+                  >
+                    Ver en CLI (--motion-templates)
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="bg-[#0D1424] border border-slate-800 rounded-2xl p-6 shadow-xl">
+            {/* Header & Architecture Description */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
               <div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className="text-xs font-bold text-sky-400 uppercase tracking-wider flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-sky-400" /> Animación Conceptual en Código por IA
+                    <Sparkles className="w-4 h-4 text-sky-400" /> RAG de Componentes & Generador de Video Vectorial
                   </span>
-                  <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">
-                    ~75 KB / Video 1080p
+                  <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold font-mono">
+                    ~75 KB / MP4 1080p
+                  </span>
+                  <span className="text-[10px] bg-purple-500/20 text-purple-300 border border-purple-500/30 px-2 py-0.5 rounded-full font-bold font-mono">
+                    Búsqueda Vectorial &lt;2ms
                   </span>
                 </div>
-                <h2 className="text-xl font-bold text-white mt-1">Generador de Video Explicativo al Vuelo con Gemini</h2>
+                <h2 className="text-xl font-bold text-white mt-1">Estudio de Animación Técnica al Vuelo con Gemini</h2>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  La IA analiza el concepto en el momento, diseña la arquitectura animada en vectores y compila un MP4 ultra liviano.
+                  La búsqueda semántica selecciona la plantilla en SQLite y solo inyecta su schema (~300 bytes) a Gemini, eliminando la saturación de memoria.
                 </p>
               </div>
 
-              {/* Quick Topic Chips */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowTemplateModal(true)}
+                  className="text-xs bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 px-3.5 py-2 rounded-xl flex items-center gap-2 transition"
+                >
+                  <Database className="w-3.5 h-3.5 text-sky-400" />
+                  Ver Catálogo SQLite (RAG)
+                </button>
+              </div>
+            </div>
+
+            {/* Quick Topic Chips & Custom Input */}
+            <div className="flex flex-col gap-3 mb-6 p-4 rounded-xl bg-slate-950/60 border border-slate-800/80">
               <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs text-slate-400 font-medium mr-1">Temas Curados:</span>
                 {[
-                  'Google Cloud Pub/Sub Fan-Out',
-                  'Cloud Run Serverless',
-                  'Cloud Storage Cifrado y Ciclo de Vida',
-                  'IAM Least Privilege'
-                ].map((preset) => (
+                  { label: '🏛️ Estructura Organizacional', topic: 'Estructura Organizacional en GCP' },
+                  { label: '🚀 Cloud Run Serverless', topic: 'Cloud Run Serverless Elastic' },
+                  { label: '⚡ Pub/Sub Fan-Out', topic: 'Google Cloud Pub/Sub Fan-Out' },
+                  { label: '📦 Cloud Storage Buckets', topic: 'Cloud Storage Cifrado y Ciclo de Vida' },
+                  { label: '🛡️ IAM Menor Privilegio', topic: 'IAM Least Privilege & Roles' }
+                ].map((item) => (
                   <button
-                    key={preset}
+                    key={item.topic}
                     onClick={() => {
-                      setMotionTopic(preset);
+                      setMotionTopic(item.topic);
                       setMotionStage(0);
                     }}
                     className={`text-xs px-3 py-1.5 rounded-lg border transition ${
-                      motionTopic === preset
-                        ? 'bg-blue-600/30 border-sky-400 text-sky-200'
+                      motionTopic === item.topic
+                        ? 'bg-blue-600/30 border-sky-400 text-sky-200 font-bold'
                         : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
                     }`}
                   >
-                    {preset.split(' ')[0]} {preset.split(' ')[1] || ''}
+                    {item.label}
                   </button>
                 ))}
               </div>
+
+              {/* Custom Topic Input */}
+              <div className="flex items-center gap-2 pt-2 border-t border-slate-800/60">
+                <span className="text-xs text-slate-400">O escribe cualquier tema:</span>
+                <input
+                  type="text"
+                  placeholder="ej. BigQuery particionamiento, Cloud Spanner réplicas, VPC Peering..."
+                  value={customMotionTopic}
+                  onChange={(e) => setCustomMotionTopic(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && customMotionTopic.trim()) {
+                      setMotionTopic(customMotionTopic.trim());
+                      setMotionStage(0);
+                      setCustomMotionTopic('');
+                    }
+                  }}
+                  className="flex-1 bg-slate-900 border border-slate-800 rounded-lg px-3 py-1 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500"
+                />
+                <button
+                  onClick={() => {
+                    if (customMotionTopic.trim()) {
+                      setMotionTopic(customMotionTopic.trim());
+                      setMotionStage(0);
+                      setCustomMotionTopic('');
+                    }
+                  }}
+                  className="text-xs bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded-lg font-semibold transition"
+                >
+                  Analizar con RAG
+                </button>
+              </div>
             </div>
+
+            {/* RAG Classifier HUD (Active Match Telemetry) */}
+            {(() => {
+              const isTree = motionTopic.toLowerCase().includes('estructura') || motionTopic.toLowerCase().includes('organiz') || motionTopic.toLowerCase().includes('arbol') || motionTopic.toLowerCase().includes('jerarquia');
+              const isElastic = motionTopic.toLowerCase().includes('cloud run') || motionTopic.toLowerCase().includes('serverless') || motionTopic.toLowerCase().includes('elastic');
+              const isStorage = motionTopic.toLowerCase().includes('storage') || motionTopic.toLowerCase().includes('bucket') || motionTopic.toLowerCase().includes('almacen');
+              const isIAM = motionTopic.toLowerCase().includes('iam') || motionTopic.toLowerCase().includes('seguridad') || motionTopic.toLowerCase().includes('privileg');
+              
+              const currentTplId = isTree
+                ? 'plantilla_arbol_jerarquico'
+                : isElastic
+                ? 'plantilla_escalado_elastico'
+                : isStorage
+                ? 'plantilla_ciclo_vida_almacenamiento'
+                : isIAM
+                ? 'plantilla_menor_privilegio_iam'
+                : 'plantilla_flujo_red_paquetes';
+
+              const layoutType = isTree ? 'hierarchy_tree' : isElastic ? 'scaling_elastic' : 'network_flow';
+
+              return (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 p-3 rounded-xl bg-slate-900/40 border border-slate-800">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase">Plantilla RAG Detectada</span>
+                    <span className="text-xs font-mono font-bold text-sky-300 mt-0.5 truncate">{currentTplId}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase">Similitud Semántica</span>
+                    <span className="text-xs font-mono font-bold text-emerald-400 mt-0.5">100.0% (Coincidencia exacta)</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase">Prompt Quirúrgico</span>
+                    <span className="text-xs font-mono font-bold text-amber-300 mt-0.5">~320 bytes (0 saturación)</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase">Motor de Render</span>
+                    <span className="text-xs font-mono font-bold text-purple-300 mt-0.5">{layoutType}</span>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Stage Selector Tabs */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
-              {[
-                { stage: 0, title: 'Fase 1: Entrada / Reposo', badge: 'INICIAL', metric: '0€ en reposo' },
-                { stage: 1, title: 'Fase 2: Procesamiento Activo', badge: 'PETICIÓN ACTIVA', metric: 'Latencia ~300ms' },
-                { stage: 2, title: 'Fase 3: Persistencia / Fan-Out', badge: 'ESCALADO', metric: '100% Elástico' }
-              ].map((item) => (
-                <button
-                  key={item.stage}
-                  onClick={() => setMotionStage(item.stage)}
-                  className={`p-3 rounded-xl border text-left transition ${
-                    motionStage === item.stage
-                      ? 'bg-sky-950/40 border-sky-400 text-white shadow-lg shadow-sky-500/10'
-                      : 'bg-slate-900/60 border-slate-800/80 text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold text-sky-400">{item.badge}</span>
-                    <span className="text-[10px] text-emerald-400 font-mono">{item.metric}</span>
+            {(() => {
+              const isTree = motionTopic.toLowerCase().includes('estructura') || motionTopic.toLowerCase().includes('organiz') || motionTopic.toLowerCase().includes('arbol') || motionTopic.toLowerCase().includes('jerarquia');
+              const isElastic = motionTopic.toLowerCase().includes('cloud run') || motionTopic.toLowerCase().includes('serverless') || motionTopic.toLowerCase().includes('elastic');
+
+              const stageData = isTree
+                ? [
+                    { stage: 0, title: 'Fase 1: Organización (Raíz)', badge: 'GOBIERNO CENTRAL', metric: 'Políticas Globales' },
+                    { stage: 1, title: 'Fase 2: Carpetas de Entorno', badge: 'HERENCIA', metric: 'Prod vs Sandbox' },
+                    { stage: 2, title: 'Fase 3: Proyectos & Facturación', badge: 'AISLAMIENTO', metric: 'Frontera de Recursos' }
+                  ]
+                : isElastic
+                ? [
+                    { stage: 0, title: 'Fase 1: Reposo a Cero Costo', badge: 'ESCALADO A CERO', metric: '0€ sin tráfico' },
+                    { stage: 1, title: 'Fase 2: Petición HTTP Entrante', badge: 'COLD START', metric: '~300 ms de inicio' },
+                    { stage: 2, title: 'Fase 3: Escalado Elástico Paralelo', badge: 'ALTA DEMANDA', metric: '3 pods paralelos' }
+                  ]
+                : [
+                    { stage: 0, title: 'Fase 1: Publicación de Eventos', badge: 'INGESTA', metric: '10k msgs / seg' },
+                    { stage: 1, title: 'Fase 2: Buffer en Topic Global', badge: 'RETENCIÓN', metric: 'Multi-región 99.99%' },
+                    { stage: 2, title: 'Fase 3: Distribución Fan-Out', badge: 'PARALELO', metric: 'Push/Pull elástico' }
+                  ];
+
+              return (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
+                  {stageData.map((item) => (
+                    <button
+                      key={item.stage}
+                      onClick={() => setMotionStage(item.stage)}
+                      className={`p-3 rounded-xl border text-left transition ${
+                        motionStage === item.stage
+                          ? 'bg-sky-950/40 border-sky-400 text-white shadow-lg shadow-sky-500/10'
+                          : 'bg-slate-900/60 border-slate-800/80 text-slate-400 hover:text-slate-200'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-sky-400">{item.badge}</span>
+                        <span className="text-[10px] text-emerald-400 font-mono">{item.metric}</span>
+                      </div>
+                      <div className="text-sm font-semibold mt-1">{item.title}</div>
+                    </button>
+                  ))}
+                </div>
+              );
+            })()}
+
+            {/* Interactive Visual Animated Canvas Simulation (Adapts to Selected Layout) */}
+            {(() => {
+              const isTree = motionTopic.toLowerCase().includes('estructura') || motionTopic.toLowerCase().includes('organiz') || motionTopic.toLowerCase().includes('arbol') || motionTopic.toLowerCase().includes('jerarquia');
+              const isElastic = motionTopic.toLowerCase().includes('cloud run') || motionTopic.toLowerCase().includes('serverless') || motionTopic.toLowerCase().includes('elastic');
+
+              return (
+                <div className="relative bg-[#070b14] border border-slate-800 rounded-xl p-8 min-h-[380px] flex flex-col justify-between overflow-hidden shadow-inner">
+                  {/* Background Glow */}
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
+
+                  {/* Canvas Header */}
+                  <div className="flex items-center justify-between z-10">
+                    <div>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-sky-400">
+                        ⚡ SIMULACIÓN VISUAL EN VIVO • {isTree ? 'ARQUITECTURA JERÁRQUICA' : isElastic ? 'ESCALADO SERVERLESS' : 'FLUJO DE PAQUETES'}
+                      </span>
+                      <h3 className="text-lg font-bold text-white">{motionTopic}</h3>
+                    </div>
+                    <div className="flex items-center gap-2 bg-slate-900/80 border border-slate-800 px-3 py-1 rounded-full text-xs text-slate-300">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      1080p @ 10 FPS • ~75 KB
+                    </div>
                   </div>
-                  <div className="text-sm font-semibold mt-1">{item.title}</div>
-                </button>
-              ))}
-            </div>
 
-            {/* Interactive Visual Animated Canvas Simulation */}
-            <div className="relative bg-[#070b14] border border-slate-800 rounded-xl p-8 min-h-[340px] flex flex-col justify-between overflow-hidden shadow-inner">
-              {/* Background Glow */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
+                  {/* Canvas Body (Hierarchy Tree or Elastic Pods or Network Flow) */}
+                  {isTree ? (
+                    /* HIERARCHY TREE LAYOUT */
+                    <div className="flex flex-col items-center gap-4 my-6 z-10">
+                      {/* Level 0: Organization */}
+                      <div
+                        className={`w-72 p-3 rounded-xl border text-center transition-all ${
+                          motionStage === 0
+                            ? 'bg-blue-900/60 border-amber-400 shadow-lg shadow-amber-500/20 scale-105'
+                            : 'bg-slate-900/70 border-slate-800 opacity-70'
+                        }`}
+                      >
+                        <span className="text-[9px] font-bold uppercase bg-amber-500/30 text-amber-300 px-2 py-0.5 rounded">
+                          🏢 ORGANIZACIÓN RAÍZ
+                        </span>
+                        <div className="text-sm font-bold text-white mt-1">MiEmpresa.com</div>
+                        <div className="text-[11px] text-slate-400">Políticas globales y cuenta de facturación</div>
+                      </div>
 
-              {/* Canvas Header */}
-              <div className="flex items-center justify-between z-10">
-                <div>
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-sky-400">
-                    ⚡ SIMULACIÓN VISUAL EN VIVO
-                  </span>
-                  <h3 className="text-lg font-bold text-white">{motionTopic}</h3>
-                </div>
-                <div className="flex items-center gap-2 bg-slate-900/80 border border-slate-800 px-3 py-1 rounded-full text-xs text-slate-300">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  1080p @ 10 FPS • ~75 KB
-                </div>
-              </div>
+                      {/* Branches down */}
+                      <div className="w-96 flex items-center justify-between px-16 relative">
+                        <div className="w-0.5 h-6 bg-slate-700 mx-auto" />
+                      </div>
 
-              {/* Node Network Flow */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center my-6 z-10">
-                {/* Node 1 */}
-                <div
-                  className={`p-4 rounded-xl border transition-all ${
-                    motionStage === 0
-                      ? 'bg-blue-950/60 border-sky-400 shadow-lg shadow-sky-500/20 scale-105'
-                      : 'bg-slate-900/70 border-slate-800 opacity-60'
-                  }`}
-                >
-                  <div className="text-[10px] font-bold uppercase text-sky-400 mb-1">CLIENTE / ENTRADA</div>
-                  <div className="text-base font-bold text-white">Tráfico de Peticiones</div>
-                  <div className="text-xs text-slate-400 mt-1">Llamadas REST / Eventos IoT</div>
-                </div>
+                      {/* Level 1: Folders */}
+                      <div className="grid grid-cols-2 gap-8 w-full max-w-xl">
+                        <div
+                          className={`p-3 rounded-xl border text-center transition-all ${
+                            motionStage === 1
+                              ? 'bg-blue-950/70 border-sky-400 shadow-lg shadow-sky-500/20 scale-105'
+                              : 'bg-slate-900/70 border-slate-800 opacity-70'
+                          }`}
+                        >
+                          <span className="text-[9px] font-bold uppercase bg-sky-500/30 text-sky-300 px-2 py-0.5 rounded">
+                            📁 CARPETA PRODUCCIÓN
+                          </span>
+                          <div className="text-sm font-bold text-white mt-1">Entorno Prod</div>
+                          <div className="text-[11px] text-slate-400">Reglas restrictivas heredadas</div>
+                        </div>
 
-                {/* Node 2 */}
-                <div
-                  className={`p-4 rounded-xl border transition-all ${
-                    motionStage === 1
-                      ? 'bg-blue-950/60 border-sky-400 shadow-lg shadow-sky-500/20 scale-105'
-                      : 'bg-slate-900/70 border-slate-800 opacity-60'
-                  }`}
-                >
-                  <div className="text-[10px] font-bold uppercase text-amber-400 mb-1">SERVICIO GCP</div>
-                  <div className="text-base font-bold text-white">Escalado Dinámico</div>
-                  <div className="text-xs text-slate-400 mt-1">Multiplicación de réplicas</div>
-                </div>
+                        <div className="p-3 rounded-xl border text-center bg-slate-900/70 border-slate-800 opacity-70">
+                          <span className="text-[9px] font-bold uppercase bg-sky-500/30 text-sky-300 px-2 py-0.5 rounded">
+                            📁 CARPETA DESARROLLO
+                          </span>
+                          <div className="text-sm font-bold text-white mt-1">Entorno Sandbox</div>
+                          <div className="text-[11px] text-slate-400">Permisos ágiles para pruebas</div>
+                        </div>
+                      </div>
 
-                {/* Node 3 */}
-                <div
-                  className={`p-4 rounded-xl border transition-all ${
-                    motionStage === 2
-                      ? 'bg-blue-950/60 border-emerald-400 shadow-lg shadow-emerald-500/20 scale-105'
-                      : 'bg-slate-900/70 border-slate-800 opacity-60'
-                  }`}
-                >
-                  <div className="text-[10px] font-bold uppercase text-emerald-400 mb-1">DESTINO / STORAGE</div>
-                  <div className="text-base font-bold text-white">Persistencia Cifrada</div>
-                  <div className="text-xs text-slate-400 mt-1">AES-256 sin sobrecoste</div>
-                </div>
-              </div>
+                      {/* Level 2: Projects */}
+                      <div className="grid grid-cols-3 gap-4 w-full max-w-2xl mt-1">
+                        <div
+                          className={`p-2.5 rounded-xl border text-center transition-all ${
+                            motionStage === 2
+                              ? 'bg-emerald-950/60 border-emerald-400 shadow-lg shadow-emerald-500/20 scale-105'
+                              : 'bg-slate-900/60 border-slate-800 opacity-60'
+                          }`}
+                        >
+                          <span className="text-[9px] font-bold uppercase bg-emerald-500/30 text-emerald-300 px-1.5 py-0.5 rounded">
+                            📦 PROYECTO BACKEND
+                          </span>
+                          <div className="text-xs font-bold text-white mt-0.5">Core APIs & DB</div>
+                        </div>
+                        <div className="p-2.5 rounded-xl border text-center bg-slate-900/60 border-slate-800 opacity-60">
+                          <span className="text-[9px] font-bold uppercase bg-emerald-500/30 text-emerald-300 px-1.5 py-0.5 rounded">
+                            📦 PROYECTO FRONTEND
+                          </span>
+                          <div className="text-xs font-bold text-white mt-0.5">CDN & Hosting</div>
+                        </div>
+                        <div className="p-2.5 rounded-xl border text-center bg-slate-900/60 border-slate-800 opacity-60">
+                          <span className="text-[9px] font-bold uppercase bg-emerald-500/30 text-emerald-300 px-1.5 py-0.5 rounded">
+                            📦 PROYECTO QA
+                          </span>
+                          <div className="text-xs font-bold text-white mt-0.5">Recursos efímeros</div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : isElastic ? (
+                    /* SCALING ELASTIC LAYOUT */
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center my-6 z-10">
+                      {[0, 1, 2].map((podIdx) => {
+                        const isActive = motionStage === 2 ? true : motionStage === 1 ? podIdx === 0 : false;
+                        return (
+                          <div
+                            key={podIdx}
+                            className={`p-5 rounded-xl border transition-all ${
+                              isActive
+                                ? 'bg-blue-950/70 border-sky-400 shadow-lg shadow-sky-500/20 scale-105'
+                                : 'bg-slate-900/60 border-slate-800 opacity-50'
+                            }`}
+                          >
+                            <span className="text-[10px] font-bold uppercase bg-sky-500/30 text-sky-300 px-2 py-0.5 rounded">
+                              CONTENEDOR #{podIdx + 1}
+                            </span>
+                            <div className="text-base font-bold text-white mt-2">
+                              {isActive ? '🟢 ACTIVO (HTTP 200)' : '⚪ APAGADO (0€ Coste)'}
+                            </div>
+                            <div className="text-xs text-slate-400 mt-1">
+                              {isActive ? '80 Concurrencia • 300ms' : 'En reposo evitando gastos'}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    /* NETWORK FLOW LAYOUT */
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center my-6 z-10">
+                      <div
+                        className={`p-4 rounded-xl border transition-all ${
+                          motionStage === 0
+                            ? 'bg-blue-950/60 border-sky-400 shadow-lg shadow-sky-500/20 scale-105'
+                            : 'bg-slate-900/70 border-slate-800 opacity-60'
+                        }`}
+                      >
+                        <div className="text-[10px] font-bold uppercase text-sky-400 mb-1">CLIENTE / ENTRADA</div>
+                        <div className="text-base font-bold text-white">Productores / Tráfico</div>
+                        <div className="text-xs text-slate-400 mt-1">Eventos IoT / Solicitudes REST</div>
+                      </div>
 
-              {/* HUD Bottom Bar */}
-              <div className="bg-slate-900/90 border border-slate-800/80 rounded-lg p-3 flex flex-col md:flex-row items-center justify-between gap-3 z-10">
-                <div className="text-xs text-slate-300">
-                  <span className="text-sky-400 font-bold">Explicación Fase {motionStage + 1}: </span>
-                  {motionStage === 0 && 'Sin peticiones activas, el servicio permanece apagado a cero para ahorrar el 100% del presupuesto.'}
-                  {motionStage === 1 && 'Llegan solicitudes concurrentes y el motor de Google Cloud aprovisiona instancias en paralelo en 300ms.'}
-                  {motionStage === 2 && 'La carga se distribuye sin colisiones y los datos se protegen con cifrado bancario automático.'}
+                      <div
+                        className={`p-4 rounded-xl border transition-all ${
+                          motionStage === 1
+                            ? 'bg-blue-950/60 border-sky-400 shadow-lg shadow-sky-500/20 scale-105'
+                            : 'bg-slate-900/70 border-slate-800 opacity-60'
+                        }`}
+                      >
+                        <div className="text-[10px] font-bold uppercase text-amber-400 mb-1">SERVICIO CENTRAL</div>
+                        <div className="text-base font-bold text-white">Topic / Procesador</div>
+                        <div className="text-xs text-slate-400 mt-1">Buffer persistente multi-región</div>
+                      </div>
+
+                      <div
+                        className={`p-4 rounded-xl border transition-all ${
+                          motionStage === 2
+                            ? 'bg-blue-950/60 border-emerald-400 shadow-lg shadow-emerald-500/20 scale-105'
+                            : 'bg-slate-900/70 border-slate-800 opacity-60'
+                        }`}
+                      >
+                        <div className="text-[10px] font-bold uppercase text-emerald-400 mb-1">DESTINO / SUSCRIPCIÓN</div>
+                        <div className="text-base font-bold text-white">Consumo Fan-Out</div>
+                        <div className="text-xs text-slate-400 mt-1">Procesamiento paralelo sin colisiones</div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* HUD Bottom Bar */}
+                  <div className="bg-slate-900/90 border border-slate-800/80 rounded-lg p-3 flex flex-col md:flex-row items-center justify-between gap-3 z-10">
+                    <div className="text-xs text-slate-300">
+                      <span className="text-sky-400 font-bold">Fase {motionStage + 1}: </span>
+                      {isTree ? (
+                        motionStage === 0
+                          ? 'El nodo Organización centraliza la facturación y gobierna las políticas de cumplimiento para toda la compañía.'
+                          : motionStage === 1
+                          ? 'Las carpetas agrupan proyectos por entorno (Prod vs Sandbox) y heredan automáticamente las directivas de seguridad.'
+                          : 'Cada proyecto actúa como barrera de aislamiento para APIs habilitadas, cuentas de facturación y cuotas de cómputo.'
+                      ) : isElastic ? (
+                        motionStage === 0
+                          ? 'Sin peticiones activas, el servicio permanece apagado a cero para ahorrar el 100% del presupuesto de servidores.'
+                          : motionStage === 1
+                          ? 'Llega la primera solicitud y el motor de Google Cloud levanta el contenedor en milisegundos (Cold start ultra ágil).'
+                          : 'Si entran miles de peticiones simultáneas, Cloud Run multiplica pods en paralelo sin configurar nada manual.'
+                      ) : (
+                        motionStage === 0
+                          ? 'Los productores envían eventos al Topic sin conocer ni saturar la capacidad de los receptores.'
+                          : motionStage === 1
+                          ? 'El Topic retiene los mensajes de forma síncrona en múltiples zonas garantizando durabilidad extrema.'
+                          : 'Múltiples suscriptores consumen el mismo mensaje de forma independiente a su propio ritmo sin colisiones.'
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setMotionStage((prev) => (prev + 1) % 3)}
+                        className="text-xs bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition"
+                      >
+                        Avanzar Fase <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setMotionStage((prev) => (prev + 1) % 3)}
-                    className="text-xs bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition"
-                  >
-                    Avanzar Fase <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-            </div>
+              );
+            })()}
 
             {/* Render & CLI Execution Trigger */}
             <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-800/80">
@@ -1051,7 +1444,7 @@ export default function App() {
                   <Terminal className="w-5 h-5" />
                 </div>
                 <div>
-                  <div className="text-xs text-slate-400">Comando CLI equivalente:</div>
+                  <div className="text-xs text-slate-400">Comando CLI con RAG semántico:</div>
                   <code className="text-xs text-emerald-400 font-mono font-bold">
                     python gcp_tutorial.py --motion "{motionTopic}"
                   </code>

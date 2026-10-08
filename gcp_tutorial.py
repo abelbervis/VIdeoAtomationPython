@@ -117,7 +117,12 @@ def parse_args():
         "--motion",
         type=str,
         default=None,
-        help="Genera un clip explicativo animado ultra-ligero con IA para el tema indicado (ej. --motion 'Pub/Sub')."
+        help="Genera un clip explicativo animado ultra-ligero con IA para el tema indicado (ej. --motion 'estructura organizacional en GCP')."
+    )
+    parser.add_argument(
+        "--motion-templates", "--list-templates",
+        action="store_true",
+        help="Lista las plantillas de animación registradas e indexadas en la base de datos ligera (RAG de Componentes)."
     )
     parser.add_argument(
         "--interactive", "-i",
@@ -140,19 +145,48 @@ def main():
         print("\n❌ Error: FFmpeg es requerido para renderizar diapositivas y video.")
         sys.exit(1)
 
+    # 1.0 Handle --motion-templates (List RAG Templates)
+    if args.motion_templates:
+        from video.motion_template_registry import MotionTemplateRegistry
+        reg = MotionTemplateRegistry()
+        templates = reg.list_templates()
+        print("\n🗄️  CATÁLOGO DE PLANTILLAS DE ANIMACIÓN (RAG DE COMPONENTES):")
+        print("   Base de datos ligera SQLite con clasificación semántica y prompt quirúrgico.")
+        print("-" * 70)
+        for tpl in templates:
+            custom_tag = " [Personalizada/Auto-indexada]" if tpl.is_custom else " [Curada de Fábrica]"
+            print(f"  • ID: {tpl.id}{custom_tag}")
+            print(f"    Nombre: {tpl.name}")
+            print(f"    Layout: {tpl.renderer_type} | Usos: {tpl.usage_count}")
+            print(f"    Tags: {', '.join(tpl.tags[:7])}...")
+            print(f"    Descripción: {tpl.description[:95]}...\n")
+        print(f"Total registradas: {len(templates)} plantillas.")
+        print("Ejecución: python gcp_tutorial.py --motion \"<tema>\"\n")
+        return
+
     generator = GCPTutorialGenerator()
 
-    # 1.1 Handle --motion (Standalone AI Motion Clip Generation)
+    # 1.1 Handle --motion (Standalone AI Motion Clip Generation via RAG)
     if args.motion:
         from video.ai_motion_generator import AIMotionGenerator
+        user_notes = args.notes or ""
+        if args.notes_file:
+            p = Path(args.notes_file)
+            if p.exists():
+                user_notes = p.read_text(encoding="utf-8")
+
         m_gen = AIMotionGenerator(fps=args.fps, crf=args.crf)
-        video_path, choreo = m_gen.generate_motion_for_topic(args.motion)
+        video_path, choreo = m_gen.generate_motion_for_topic(args.motion, user_notes=user_notes)
         file_kb = video_path.stat().st_size / 1024 if video_path.exists() else 0
+        layout_name = choreo.get("renderer_type", "network_flow")
+        tpl_id = choreo.get("template_id", "procedural")
+
         print("\n" + "=" * 70)
         print("⚡  ¡ANIMACIÓN EXPLICATIVA POR IA GENERADA CON ÉXITO!  🎉")
         print(f"   📹 Archivo: {video_path}")
         print(f"   📦 Tamaño: {file_kb:.1f} KB (Ultra ligero)")
         print(f"   🎯 Concepto: {choreo.get('title')}")
+        print(f"   🗂️ Plantilla RAG: {tpl_id} (Layout: {layout_name})")
         print(f"   💡 Fases animadas: {len(choreo.get('stages', []))}")
         print("=" * 70 + "\n")
         return
