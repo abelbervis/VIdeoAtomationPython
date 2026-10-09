@@ -902,7 +902,7 @@ Requisitos del JSON de salida:
                 t_slide_id = valid_slide_ids[min(t_idx - 1, len(valid_slide_ids) - 1)]
 
             turn["slide_id"] = t_slide_id
-            turn.setdefault("speaker", "Alex" if t_idx % 2 != 0 else "Sam")
+            turn.setdefault("speaker", "Alex")
             turn.setdefault("text", "")
             normalized_dialogue.append(turn)
 
@@ -1003,9 +1003,9 @@ Requisitos del JSON de salida:
                     "expression": "explaining"
                 },
                 {
-                    "speaker": "Sam",
+                    "speaker": "Alex",
                     "slide_id": 1,
-                    "text": f"Y como siempre, Alex, la duda al empezar: ¿qué problema real viene a resolver {clean_title} en nuestro día a día como ingenieros?",
+                    "text": f"Y, como siempre, al empezar: ¿qué problema real viene a resolver {clean_title} en nuestro día a día como ingenieros?",
                     "expression": "questioning"
                 },
                 {
@@ -1015,7 +1015,7 @@ Requisitos del JSON de salida:
                     "expression": "explaining"
                 },
                 {
-                    "speaker": "Sam",
+                    "speaker": "Alex",
                     "slide_id": 2,
                     "text": "En esta tabla comparativa se ve muy claro el contraste con las soluciones tradicionales, sobre todo en automatización y control de seguridad.",
                     "expression": "insight"
@@ -1027,7 +1027,7 @@ Requisitos del JSON de salida:
                     "expression": "explaining"
                 },
                 {
-                    "speaker": "Sam",
+                    "speaker": "Alex",
                     "slide_id": 3,
                     "text": "¿Y cómo viajan los datos a través de los diferentes componentes de la arquitectura?",
                     "expression": "questioning"
@@ -1039,7 +1039,7 @@ Requisitos del JSON de salida:
                     "expression": "explaining"
                 },
                 {
-                    "speaker": "Sam",
+                    "speaker": "Alex",
                     "slide_id": 4,
                     "text": "Y para los que amamos la terminal, con gcloud podemos consultar el estado o automatizar el despliegue en un pipeline de GitHub Actions o Cloud Build.",
                     "expression": "insight"
@@ -1051,7 +1051,7 @@ Requisitos del JSON de salida:
                     "expression": "explaining"
                 },
                 {
-                    "speaker": "Sam",
+                    "speaker": "Alex",
                     "slide_id": 5,
                     "text": "Excelente síntesis. Una base sólida para continuar explorando Google Cloud.",
                     "expression": "insight"
